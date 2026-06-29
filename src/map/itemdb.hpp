@@ -3542,6 +3542,10 @@ struct item_data
 		// 若 vector 为空则表示这不是宠物捕捉道具, 若非空则记录此道具支持捕捉的魔物编号
 		std::vector<uint32> taming_mobid;
 #endif // Pandas_Struct_Item_Data_Taming_Mobid
+#ifdef Pandas_Struct_Item_Data_Has_CallFunc
+		// 使 item_data 可记录此物品的使用脚本是否执行了 callfunc 指令 [Sola丶小克]
+		bool has_callfunc = false;
+#endif // Pandas_Struct_Item_Data_Has_CallFunc
 	} pandas;
 #endif // Pandas_Struct_Item_Data_Pandas
 
