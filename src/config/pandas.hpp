@@ -283,6 +283,11 @@
 		// 结构体修改定位 mob.hpp -> mob_data.pandas.special_setunitdata
 		#define Pandas_Struct_Mob_Data_Special_SetUnitData
 
+		#ifdef Pandas_Struct_Mob_Data_Special_SetUnitData
+			// 使 setunitdata 对魔物状态数据的修改能够在状态重算后持久化 [Sola丶小克]
+			#define Pandas_Persistent_SetUnitData_For_Monster_StatusData
+		#endif // Pandas_Struct_Mob_Data_Special_SetUnitData
+
 		// 使 mob_data 结构体可记录此魔物特殊的基础经验或职业经验 [Sola丶小克]
 		// 结构体修改定位 mob.hpp -> mob_data.pandas.base_exp 和 job_exp
 		#define Pandas_Struct_Mob_Data_SpecialExperience

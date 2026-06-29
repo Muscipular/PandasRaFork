@@ -6532,6 +6532,70 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 		status_calc_regen_rate(&bl, status_get_regen_data(&bl), sc);
 }
 
+#ifdef Pandas_Persistent_SetUnitData_For_Monster_StatusData
+void restore_special_unitdata_for_mob(mob_data* md, status_data* status, status_data* previous_status, uint8 type) {
+	if (md == nullptr || status == nullptr || previous_status == nullptr)
+		return;
+	if (md->bl.type != BL_MOB)
+		return;
+	if (previous_status->max_hp == 0)
+		return;
+	if (!battle_config.mob_setunitdata_persistence)
+		return;
+	if (md->pandas.special_setunitdata == nullptr || md->pandas.special_setunitdata->empty())
+		return;
+
+	for (const auto& it : *md->pandas.special_setunitdata) {
+		if (type & 1) {
+			switch (it.first) {
+				case UMOB_ATKMIN:
+				case UMOB_ATKMAX:
+				case UMOB_MATKMIN:
+				case UMOB_MATKMAX:
+					break;
+				default:
+					continue;
+			}
+		}
+
+		switch (it.first) {
+			case UMOB_SIZE: status->size = previous_status->size; break;
+			case UMOB_MAXHP: status->max_hp = previous_status->max_hp; status->hp = previous_status->hp; break;
+			case UMOB_HP: status->hp = previous_status->hp; break;
+			case UMOB_SPEED: status->speed = previous_status->speed; break;
+			case UMOB_MODE: status->mode = previous_status->mode; break;
+			case UMOB_STR: status->str = previous_status->str; break;
+			case UMOB_AGI: status->agi = previous_status->agi; break;
+			case UMOB_VIT: status->vit = previous_status->vit; break;
+			case UMOB_INT: status->int_ = previous_status->int_; break;
+			case UMOB_DEX: status->dex = previous_status->dex; break;
+			case UMOB_LUK: status->luk = previous_status->luk; break;
+			case UMOB_ATKRANGE: status->rhw.range = previous_status->rhw.range; break;
+			case UMOB_ATKMIN: status->rhw.atk = previous_status->rhw.atk; break;
+			case UMOB_ATKMAX: status->rhw.atk2 = previous_status->rhw.atk2; break;
+			case UMOB_MATKMIN: status->matk_min = previous_status->matk_min; break;
+			case UMOB_MATKMAX: status->matk_max = previous_status->matk_max; break;
+			case UMOB_DEF: status->def = previous_status->def; break;
+			case UMOB_MDEF: status->mdef = previous_status->mdef; break;
+			case UMOB_HIT: status->hit = previous_status->hit; break;
+			case UMOB_FLEE: status->flee = previous_status->flee; break;
+			case UMOB_PDODGE: status->flee2 = previous_status->flee2; break;
+			case UMOB_CRIT: status->cri = previous_status->cri; break;
+			case UMOB_RACE: status->race = previous_status->race; break;
+			case UMOB_ELETYPE: status->def_ele = previous_status->def_ele; break;
+			case UMOB_ELELEVEL: status->ele_lv = previous_status->ele_lv; break;
+			case UMOB_AMOTION: status->amotion = previous_status->amotion; break;
+			case UMOB_ADELAY: status->adelay = previous_status->adelay; break;
+			case UMOB_DMOTION: status->dmotion = previous_status->dmotion; break;
+			case UMOB_RES: status->res = previous_status->res; break;
+			case UMOB_MRES: status->mres = previous_status->mres; break;
+			default:
+				break;
+		}
+	}
+}
+#endif // Pandas_Persistent_SetUnitData_For_Monster_StatusData
+
 /**
  * Recalculates parts of an objects status according to specified flags
  * Also sends updates to the client when necessary
@@ -6564,6 +6628,21 @@ void status_calc_bl_(block_list* bl, std::bitset<SCB_MAX> flag, uint8 opt)
 	// Remember previous values
 	memcpy(&b_status, status, sizeof(b_status));
 
+#ifdef Pandas_Persistent_SetUnitData_For_Monster_StatusData
+	status_data previous_b_status = {};
+	bool backed_up = false;
+
+	if (bl->type == BL_MOB) {
+		mob_data* md = BL_CAST(BL_MOB, bl);
+		status_data* base_status = status_get_base_status(bl);
+
+		if (md != nullptr && base_status != nullptr && md->pandas.special_setunitdata != nullptr && !md->pandas.special_setunitdata->empty()) {
+			memcpy(&previous_b_status, base_status, sizeof(status_data));
+			backed_up = true;
+		}
+	}
+#endif // Pandas_Persistent_SetUnitData_For_Monster_StatusData
+
 	if( flag[SCB_BASE] ) { // Calculate the object's base status too
 		switch( bl->type ) {
 		case BL_PC:  status_calc_pc_(BL_CAST(BL_PC,bl), opt);          break;
@@ -6576,6 +6655,18 @@ void status_calc_bl_(block_list* bl, std::bitset<SCB_MAX> flag, uint8 opt)
 		}
 	}
 
+#ifdef Pandas_Persistent_SetUnitData_For_Monster_StatusData
+	if (flag[SCB_BASE] && bl->type == BL_MOB && backed_up) {
+		mob_data* md = BL_CAST(BL_MOB, bl);
+
+		if (md != nullptr && md->base_status == nullptr && md->pandas.special_setunitdata != nullptr && !md->pandas.special_setunitdata->empty()) {
+			md->base_status = static_cast<status_data*>(aCalloc(1, sizeof(status_data)));
+			memcpy(md->base_status, &md->db->status, sizeof(status_data));
+			restore_special_unitdata_for_mob(md, md->base_status, &previous_b_status, 0);
+		}
+	}
+#endif // Pandas_Persistent_SetUnitData_For_Monster_StatusData
+
 	if( bl->type == BL_PET )
 		return; // Pets are not affected by statuses
 
@@ -6583,6 +6674,15 @@ void status_calc_bl_(block_list* bl, std::bitset<SCB_MAX> flag, uint8 opt)
 		return; // Assume there will be no statuses active
 
 	status_calc_bl_main(*bl, flag);
+
+#ifdef Pandas_Persistent_SetUnitData_For_Monster_StatusData
+	if (bl->type == BL_MOB && backed_up) {
+		mob_data* md = BL_CAST(BL_MOB, bl);
+
+		if (md != nullptr && md->pandas.special_setunitdata != nullptr && !md->pandas.special_setunitdata->empty())
+			restore_special_unitdata_for_mob(md, &md->status, &previous_b_status, 1);
+	}
+#endif // Pandas_Persistent_SetUnitData_For_Monster_StatusData
 
 	if (opt&SCO_FIRST && bl->type == BL_HOM)
 		return; // Client update handled by caller

@@ -20100,6 +20100,16 @@ BUILDIN_FUNC(setunitdata)
 				ShowError("buildin_setunitdata: Unknown data identifier %d for BL_MOB.\n", type);
 				return SCRIPT_CMD_FAILURE;
 			}
+#ifdef Pandas_Persistent_SetUnitData_For_Monster_StatusData
+			if (md->pandas.special_setunitdata) {
+				int32 data_type = type;
+
+				if (data_type == UMOB_SLAVECPYMSTRMD)
+					data_type = UMOB_MODE;
+
+				(*md->pandas.special_setunitdata)[data_type] = value;
+			}
+#endif // Pandas_Persistent_SetUnitData_For_Monster_StatusData
 			if (calc_status)
 				status_calc_bl_(md, status_db.getSCB_BATTLE());
 		} break;
