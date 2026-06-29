@@ -295,6 +295,7 @@
 	#define Pandas_Struct_Status_Change_Cloak_Reverting
 
 	// 使 map_data 能保存全部魔物的刷新点信息 [Sola丶小克]
+	#define Pandas_Struct_Map_Data_Mob_Spawns
 #endif // Pandas_StructIncrease
 
 // ============================================================================

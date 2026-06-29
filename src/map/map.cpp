@@ -4012,6 +4012,9 @@ int32 map_readallmaps (void)
 
 		mapdata->m = i;
 		memset(mapdata->moblist, 0, sizeof(mapdata->moblist));	//Initialize moblist [Skotlex]
+#ifdef Pandas_Struct_Map_Data_Mob_Spawns
+		mapdata->mobspawns.clear();
+#endif // Pandas_Struct_Map_Data_Mob_Spawns
 		mapdata->mob_delete_timer = INVALID_TIMER;	//Initialize timer [Skotlex]
 
 		mapdata->bxs = (mapdata->xs + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -5107,6 +5110,9 @@ void MapServer::finalize(){
 			for (int32 j=0; j<MAX_MOB_LIST_PER_MAP; j++)
 				if (mapdata->moblist[j]) aFree(mapdata->moblist[j]);
 		}
+#ifdef Pandas_Struct_Map_Data_Mob_Spawns
+		mapdata->mobspawns.clear();
+#endif // Pandas_Struct_Map_Data_Mob_Spawns
 		mapdata->damage_adjust = {};
 	}
 

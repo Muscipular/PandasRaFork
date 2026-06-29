@@ -5,9 +5,9 @@
 
 #include <cerrno>
 #include <cstdlib>
-#ifdef Pandas_ScriptEngine_Express
+#if defined(Pandas_ScriptEngine_Express) || defined(Pandas_Struct_Map_Data_Mob_Spawns)
 #include <algorithm>
-#endif // Pandas_ScriptEngine_Express
+#endif // Pandas_ScriptEngine_Express || Pandas_Struct_Map_Data_Mob_Spawns
 #if defined(Pandas_Struct_Map_Session_Data_EventHalt) || defined(Pandas_Struct_Map_Session_Data_EventTrigger)
 #include <exception>
 #endif // Pandas_Struct_Map_Session_Data_EventHalt || Pandas_Struct_Map_Session_Data_EventTrigger
@@ -5425,6 +5425,16 @@ static const char* npc_parse_mob(char* w1, char* w2, char* w3, char* w4, const c
 	data = (struct spawn_data*)aMalloc(sizeof(struct spawn_data));
 	memcpy(data, &mob, sizeof(struct spawn_data));
 
+#ifdef Pandas_Struct_Map_Data_Mob_Spawns
+	if (mapdata) {
+		auto it = std::find(mapdata->mobspawns.begin(), mapdata->mobspawns.end(), data);
+
+		if (it == mapdata->mobspawns.end()) {
+			mapdata->mobspawns.push_back(data);
+		}
+	}
+#endif // Pandas_Struct_Map_Data_Mob_Spawns
+
 	// spawn / cache the new mobs
 	if( battle_config.dynamic_mobs && map_addmobtolist(data->m, data) >= 0 )
 	{
@@ -6539,6 +6549,16 @@ int32 npc_reload(void) {
 			}
 		}
 	}
+
+#ifdef Pandas_Struct_Map_Data_Mob_Spawns
+	for (int32 i = 0; i < map_num; i++) {
+		struct map_data *mapdata = map_getmapdata(i);
+
+		if (mapdata) {
+			mapdata->mobspawns.clear();
+		}
+	}
+#endif // Pandas_Struct_Map_Data_Mob_Spawns
 
 	// clear mob spawn lookup index
 	mob_clear_spawninfo();
