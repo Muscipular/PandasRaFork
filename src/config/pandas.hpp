@@ -60,6 +60,36 @@
 
 	// 使 map_session_data 有一个独立的结构体用来存放 Pandas 的拓展 [Sola丶小克]
 	// 结构体修改定位 pc.hpp -> map_session_data.pandas
+	#define Pandas_Struct_Map_Session_Data_Pandas
+
+	#ifdef Pandas_Struct_Map_Session_Data_Pandas
+		// 使 map_session_data 可记录当前玩家正在处理哪一个脚本事件 [Sola丶小克]
+		// 结构体修改定位 pc.hpp -> map_session_data.pandas.workinevent
+
+		// 使 map_session_data 可记录事件中断请求 [Sola丶小克]
+		// 结构体修改定位 pc.hpp -> map_session_data.pandas.eventhalt
+
+		// 使 map_session_data 可记录事件触发请求 [Sola丶小克]
+		// 结构体修改定位 pc.hpp -> map_session_data.pandas.eventtrigger
+
+		// 使 map_session_data 可记录当前是否正在进行护身符能力计算 [Sola丶小克]
+		// 结构体修改定位 pc.hpp -> map_session_data.pandas.amulet_calculating
+
+		// 使 map_session_data 可记录即将支持捕捉的多个魔物编号 [Sola丶小克]
+
+		// 使 map_session_data 可记录接下来的 pc_setpos 调用是不是一次多人传送 [Sola丶小克]
+		// 结构体修改定位 pc.hpp -> map_session_data.pandas.multitransfer
+
+		// 使 map_session_data 可记录是否在 LoadEndAck 调用中不弹出队列中的事件 [Sola丶小克]
+		// 结构体修改定位 pc.hpp -> map_session_data.pandas.skip_loadendack_npc_event_dequeue
+
+		// 使 map_session_data 可记录离线挂店 / 挂机角色的朝向等状态数据 [Sola丶小克]
+		// rAthena 使用完成 autotrade 的朝向数据后就销毁掉了
+		// 为了能够支持离线挂店 / 挂机可以被 recall 召唤, 我们需要保留一部分数据
+
+		// 使 map_session_data 可记录玩家已经生成的 bonus_script 记录数 [Sola丶小克]
+		// 结构体修改定位 pc.hpp -> map_session_data.pandas.bonus_script_counter
+	#endif // Pandas_Struct_Map_Session_Data_Pandas
 
 	// 以下选项开关需要依赖 Pandas_Struct_Map_Session_Data_Pandas 的拓展
 

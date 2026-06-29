@@ -393,6 +393,10 @@ public:
 	status_change sc;
 	struct regen_data regen;
 	struct regen_data_sub sregen, ssregen;
+#ifdef Pandas_Struct_Map_Session_Data_Pandas
+	struct s_pandas {
+	} pandas;
+#endif // Pandas_Struct_Map_Session_Data_Pandas
 	//NOTE: When deciding to add a flag to state or special_state, take into consideration that state is preserved in
 	//status_calc_pc, while special_state is recalculated in each call. [Skotlex]
 	struct s_state {
