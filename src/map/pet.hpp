@@ -69,6 +69,9 @@ enum e_pet_catch_flag : uint8 {
 	PET_CATCH_NORMAL = 0,
 	PET_CATCH_UNIVERSAL_NO_BOSS, // The catch attempt is universal (ignoring MD_STATUS_IMMUNE/Boss)
 	PET_CATCH_UNIVERSAL_ALL,
+#ifdef Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
+	PET_CATCH_MULTI_TARGET,
+#endif // Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
 	PET_CATCH_MAX
 };
 

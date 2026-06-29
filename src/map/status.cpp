@@ -3880,6 +3880,9 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 	sd->percent_hp_regen.clear();
 	sd->percent_sp_regen.clear();
 
+#ifdef Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
+	sd->pandas.multi_catch_target_class.clear();
+#endif // Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
 	// Zero up structures...
 	memset(&sd->def_set_race, 0, sizeof(sd->def_set_race)
 		+ sizeof(sd->mdef_set_race)

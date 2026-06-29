@@ -193,6 +193,7 @@
 		#define Pandas_Struct_Map_Session_Data_AmuletCalculating
 
 		// 使 map_session_data 可记录即将支持捕捉的多个魔物编号 [Sola丶小克]
+		#define Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
 
 		// 使 map_session_data 可记录接下来的 pc_setpos 调用是不是一次多人传送 [Sola丶小克]
 		// 结构体修改定位 pc.hpp -> map_session_data.pandas.multitransfer

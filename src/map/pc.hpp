@@ -411,6 +411,9 @@ public:
 #ifdef Pandas_Struct_Map_Session_Data_AmuletCalculating
 		bool amulet_calculating = false; // 当前角色是否正在进行护身符能力计算
 #endif // Pandas_Struct_Map_Session_Data_AmuletCalculating
+#ifdef Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
+		std::vector<uint32> multi_catch_target_class; // 用于记录即将支持捕捉的多个魔物编号
+#endif // Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
 	} pandas;
 #endif // Pandas_Struct_Map_Session_Data_Pandas
 	//NOTE: When deciding to add a flag to state or special_state, take into consideration that state is preserved in

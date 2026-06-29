@@ -1299,6 +1299,19 @@ void pet_catch_process_end( map_session_data& sd, int32 target_id ){
 		case PET_CATCH_UNIVERSAL_ALL:
 			// No checks, catch anything.
 			break;
+
+#ifdef Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
+		case PET_CATCH_MULTI_TARGET:
+			// PET_CATCH_MULTI_TARGET is used for universal lures with a specific mob whitelist.
+			if( !md || !util::vector_exists( sd.pandas.multi_catch_target_class, md->mob_id ) ){
+				clif_pet_roulette( sd, false );
+				pet_catchprocesses.erase( sd.status.char_id );
+				sd.pandas.multi_catch_target_class.clear();
+
+				return;
+			}
+			break;
+#endif // Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
 	}
 
 	if( battle_config.pet_distance_check && distance_bl( &sd, md ) > battle_config.pet_distance_check ){
