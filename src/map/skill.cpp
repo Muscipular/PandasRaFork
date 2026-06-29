@@ -11937,7 +11937,11 @@ int32 skill_delunitgroup_(std::shared_ptr<s_skill_unit_group> group, const char*
 {
 	block_list* src;
 	struct unit_data *ud;
+#ifndef Pandas_CodeAnalysis_Suggestion
 	int16 i;
+#else
+	int32 i;
+#endif // Pandas_CodeAnalysis_Suggestion
 	int32 link_group_id;
 
 	if( group == nullptr ) {

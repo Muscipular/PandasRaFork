@@ -34,4 +34,5 @@
 
 	// 是否启用代码分析工具所建议的处理措施以避免潜在风险
 	// 包含的工具有: LGTM, CodeQL, Microsoft Code Analysis 等
+	#define Pandas_CodeAnalysis_Suggestion
 #endif // Pandas_Basic
