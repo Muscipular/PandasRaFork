@@ -3349,6 +3349,9 @@ struct s_random_opt_data
 	uint16 id;
 	std::string name;
 	script_code *script;
+#ifdef Pandas_Struct_S_Random_Opt_Data_With_Plaintext
+	std::string script_plaintext;
+#endif // Pandas_Struct_S_Random_Opt_Data_With_Plaintext
 
 	~s_random_opt_data() {
 		if (script)

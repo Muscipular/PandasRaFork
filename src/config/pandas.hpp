@@ -286,6 +286,7 @@
 	#define Pandas_Struct_S_Mail_With_Details
 
 	// 使 s_random_opt_data 能保存脚本的明文 [Sola丶小克]
+	#define Pandas_Struct_S_Random_Opt_Data_With_Plaintext
 
 	// 使 s_item_combo 能保存脚本的明文 [Sola丶小克]
 

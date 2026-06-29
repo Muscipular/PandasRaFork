@@ -4619,6 +4619,9 @@ uint64 RandomOptionDatabase::parseBodyNode(const ryml::NodeRef& node) {
 		}
 
 		randopt->script = parse_script(script.c_str(), this->getCurrentFile().c_str(), this->getLineNumber(node["Script"]), SCRIPT_IGNORE_EXTERNAL_BRACKETS);
+#ifdef Pandas_Struct_S_Random_Opt_Data_With_Plaintext
+		randopt->script_plaintext = util::trim_copy(script);
+#endif // Pandas_Struct_S_Random_Opt_Data_With_Plaintext
 	}
 
 	if (!exists)
