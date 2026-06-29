@@ -20,6 +20,9 @@
 
 #include "achievement.hpp"
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "chrif.hpp"
 #include "clif.hpp"
 #include "intif.hpp"
@@ -1037,6 +1040,9 @@ bool pet_data_init(map_session_data *sd, struct s_pet *pet)
 	pd->y = pd->ud.to_y;
 
 	map_addiddb(pd);
+#ifdef Pandas_BattleRecord
+	batrec_new(pd);
+#endif // Pandas_BattleRecord
 	status_calc_pet(pd,SCO_FIRST);
 
 	pd->last_thinktime = gettick();

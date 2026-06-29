@@ -57,6 +57,11 @@
 
 		// 使 s_unit_common_data 可记录战斗记录信息 [Sola丶小克]
 		#define Pandas_Struct_Unit_CommonData_BattleRecord
+
+		#ifdef Pandas_Struct_Unit_CommonData_BattleRecord
+			// 启用战斗记录机制 [Sola丶小克]
+			#define Pandas_BattleRecord
+		#endif // Pandas_Struct_Unit_CommonData_BattleRecord
 	#endif // Pandas_Struct_Unit_CommonData
 
 	// 以下选项开关需要依赖 Pandas_Struct_Unit_CommonData 的拓展
@@ -617,6 +622,20 @@
 	#define Pandas_ScriptCommand_UnlockCmd
 	// 是否启用战斗记录相关的脚本指令 [Sola丶小克]
 	// 此选项开关需要依赖 Pandas_BattleRecord 的拓展
+	#ifdef Pandas_BattleRecord
+		// 是否启用 batrec_query 脚本指令 [Sola丶小克]
+		// 查询指定单位的战斗记录, 查看与交互目标单位产生的具体记录值
+		// 是否启用 batrec_rank 脚本指令 [Sola丶小克]
+		// 查询指定单位的战斗记录并对记录的值进行排序, 返回排行榜单
+		// 是否启用 batrec_sortout 脚本指令 [Sola丶小克]
+		// 移除指定单位的战斗记录中交互单位已经不存在 (或下线) 的记录
+		// 是否启用 batrec_reset 脚本指令 [Sola丶小克]
+		// 清除指定单位的战斗记录
+		// 是否启用 enable_batrec 脚本指令 [Sola丶小克]
+		// 该指令用于启用指定单位的战斗记录
+		// 是否启用 disable_batrec 脚本指令 [Sola丶小克]
+		// 该指令用于禁用指定单位的战斗记录
+	#endif // Pandas_BattleRecord
 	// 是否启用 login 脚本指令 [Sola丶小克]
 	// 该指令用于将指定的角色以特定的登录模式拉上线
 	// 此选项开关需要依赖 Pandas_Player_Suspend_System 的拓展

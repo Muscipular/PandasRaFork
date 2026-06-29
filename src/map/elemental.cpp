@@ -18,6 +18,9 @@
 #include <common/utils.hpp>
 
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "clif.hpp"
 #include "intif.hpp"
 #include "itemdb.hpp"
@@ -265,6 +268,9 @@ int32 elemental_data_received(s_elemental *ele, bool flag) {
 		ed->regen.tick.sp = tick;
 
 		map_addiddb(ed);
+#ifdef Pandas_BattleRecord
+		batrec_new(ed);
+#endif // Pandas_BattleRecord
 		status_calc_elemental(ed,SCO_FIRST);
 		ed->last_spdrain_time = ed->last_thinktime = gettick();
 		ed->summon_timer = INVALID_TIMER;

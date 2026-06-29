@@ -18,6 +18,9 @@
 #include <common/utilities.hpp>
 #include <common/utils.hpp>
 
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "clif.hpp"
 #include "intif.hpp"
 #include "itemdb.hpp"
@@ -392,6 +395,9 @@ bool mercenary_recv_data(s_mercenary *merc, bool flag)
 		md->regen.tick.sp = tick;
 
 		map_addiddb(md);
+#ifdef Pandas_BattleRecord
+		batrec_new(md);
+#endif // Pandas_BattleRecord
 		status_calc_mercenary(md, SCO_FIRST);
 		md->contract_timer = INVALID_TIMER;
 		md->masterteleport_timer = INVALID_TIMER;

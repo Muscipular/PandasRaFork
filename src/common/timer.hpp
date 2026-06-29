@@ -7,6 +7,7 @@
 #include <ctime>
 
 #include "cbasetypes.hpp"
+#include <config/pandas.hpp>
 
 typedef int64 t_tick;
 #define PRtf PRId64
@@ -58,6 +59,11 @@ int32 delete_timer(int32 tid, TimerFunc func);
 
 t_tick addtick_timer(int32 tid, t_tick tick);
 t_tick settick_timer(int32 tid, t_tick tick);
+
+#ifdef Pandas_BattleRecord
+void exchange_timer_id(int32 origin_id, int32 new_id);
+void detect_invalid_timer(int32 id);
+#endif // Pandas_BattleRecord
 
 int32 add_timer_func_list(TimerFunc func, const char* name);
 

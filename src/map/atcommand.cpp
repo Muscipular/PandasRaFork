@@ -24,6 +24,9 @@
 
 #include "achievement.hpp"
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "buyingstore.hpp"
 #include "channel.hpp"
 #include "chat.hpp"
@@ -4413,6 +4416,16 @@ ACMD_FUNC(reloadscript){
 		bg_queue_leave(pl_sd);
 	}
 	mapit_free(iter);
+
+#ifdef Pandas_BattleRecord
+	block_list* bl = nullptr;
+	iter = mapit_geteachiddb();
+	for (bl = reinterpret_cast<block_list*>(mapit_first(iter)); mapit_exists(iter); bl = reinterpret_cast<block_list*>(mapit_next(iter))) {
+		if (bl->type == BL_NPC || bl->type == BL_MOB)
+			batrec_free(bl);
+	}
+	mapit_free(iter);
+#endif // Pandas_BattleRecord
 
 	for (auto &bg : bg_queues) {
 		for (auto &bg_sd : bg->teama_members)

@@ -26,6 +26,9 @@
 #include <common/utils.hpp>
 
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "chat.hpp"
 #include "clif.hpp"
 #include "date.hpp" // days of week enum
@@ -856,6 +859,9 @@ void BarterDatabase::loadingFinished(){
 
 			unit_dataset( nd );
 			nd->ud.dir = barter->dir;
+#ifdef Pandas_BattleRecord
+			batrec_new( nd );
+#endif // Pandas_BattleRecord
 
 			if( nd->class_ != JT_FAKENPC ){
 				status_set_viewdata( nd, nd->class_ );
@@ -866,6 +872,9 @@ void BarterDatabase::loadingFinished(){
 			}
 		}else{
 			map_addiddb( nd );
+#ifdef Pandas_BattleRecord
+			batrec_new( nd );
+#endif // Pandas_BattleRecord
 		}
 
 		strdb_put( npcname_db, nd->exname, nd );
@@ -3513,6 +3522,9 @@ int32 npc_unload(npc_data* nd, bool single) {
 	nullpo_ret(nd);
 
 	status_change_clear(nd, 1);
+#ifdef Pandas_BattleRecord
+	batrec_free(nd);
+#endif // Pandas_BattleRecord
 	npc_remove_map(nd);
 	map_deliddb(nd);
 	if( single )
@@ -3911,6 +3923,9 @@ npc_data* npc_add_warp(char* name, int16 from_mapid, int16 from_x, int16 from_y,
 		return nullptr;
 	status_set_viewdata(nd, nd->class_);
 	unit_dataset(nd);
+#ifdef Pandas_BattleRecord
+	batrec_new(nd);
+#endif // Pandas_BattleRecord
 	if( map_getmapdata(nd->m)->users )
 		clif_spawn(nd);
 	strdb_put(npcname_db, nd->exname, nd);
@@ -3991,6 +4006,9 @@ static const char* npc_parse_warp(char* w1, char* w2, char* w3, char* w4, const 
 		return strchr(start,'\n');
 	status_set_viewdata(nd, nd->class_);
 	unit_dataset(nd);
+#ifdef Pandas_BattleRecord
+	batrec_new(nd);
+#endif // Pandas_BattleRecord
 	if( map_getmapdata(nd->m)->users )
 		clif_spawn(nd);
 	strdb_put(npcname_db, nd->exname, nd);
@@ -4269,6 +4287,9 @@ static const char* npc_parse_shop(char* w1, char* w2, char* w3, char* w4, const 
 			return strchr(start,'\n');
 		unit_dataset(nd);
 		nd->ud.dir = (uint8)dir;
+#ifdef Pandas_BattleRecord
+		batrec_new(nd);
+#endif // Pandas_BattleRecord
 		if( nd->class_ != JT_FAKENPC ){
 			status_set_viewdata(nd, nd->class_);
 			if( map_getmapdata(nd->m)->users )
@@ -4277,6 +4298,9 @@ static const char* npc_parse_shop(char* w1, char* w2, char* w3, char* w4, const 
 	} else
 	{// 'floating' shop?
 		map_addiddb(nd);
+#ifdef Pandas_BattleRecord
+		batrec_new(nd);
+#endif // Pandas_BattleRecord
 	}
 	strdb_put(npcname_db, nd->exname, nd);
 	return strchr(start,'\n');// continue
@@ -4503,6 +4527,9 @@ static const char* npc_parse_script(char* w1, char* w2, char* w3, char* w4, cons
 		npc_setcells(nd);
 		if(map_addblock(nd))
 			return nullptr;
+#ifdef Pandas_BattleRecord
+		batrec_new(nd);
+#endif // Pandas_BattleRecord
 		if( nd->class_ != JT_FAKENPC )
 		{
 			status_set_viewdata(nd, nd->class_);
@@ -4514,6 +4541,9 @@ static const char* npc_parse_script(char* w1, char* w2, char* w3, char* w4, cons
 	{
 		// we skip map_addnpc, but still add it to the list of ID's
 		map_addiddb(nd);
+#ifdef Pandas_BattleRecord
+		batrec_new(nd);
+#endif // Pandas_BattleRecord
 	}
 	strdb_put(npcname_db, nd->exname, nd);
 
@@ -4680,6 +4710,9 @@ const char* npc_parse_duplicate( char* w1, char* w2, char* w3, char* w4, const c
 		npc_setcells(nd);
 		if(map_addblock(nd))
 			return end;
+#ifdef Pandas_BattleRecord
+		batrec_new(nd);
+#endif // Pandas_BattleRecord
 		if( nd->class_ != JT_FAKENPC ) {
 			status_set_viewdata(nd, nd->class_);
 			if( map_getmapdata(nd->m)->users )
@@ -4688,6 +4721,9 @@ const char* npc_parse_duplicate( char* w1, char* w2, char* w3, char* w4, const c
 	} else {
 		// we skip map_addnpc, but still add it to the list of ID's
 		map_addiddb(nd);
+#ifdef Pandas_BattleRecord
+		batrec_new(nd);
+#endif // Pandas_BattleRecord
 	}
 	strdb_put(npcname_db, nd->exname, nd);
 
@@ -4772,6 +4808,9 @@ int32 npc_duplicate4instance(npc_data *snd, int16 m) {
 			return 1;
 		status_set_viewdata(wnd, wnd->class_);
 		unit_dataset(wnd);
+#ifdef Pandas_BattleRecord
+		batrec_new(wnd);
+#endif // Pandas_BattleRecord
 		if( map_getmapdata(wnd->m)->users )
 			clif_spawn(wnd);
 		strdb_put(npcname_db, wnd->exname, wnd);
@@ -6830,5 +6869,8 @@ void do_init_npc(void){
 	strdb_put(npcname_db, fake_nd->exname, fake_nd);
 	fake_nd->u.scr.timerid = INVALID_TIMER;
 	map_addiddb(fake_nd);
+#ifdef Pandas_BattleRecord
+	batrec_new(fake_nd);
+#endif // Pandas_BattleRecord
 	// End of initialization
 }

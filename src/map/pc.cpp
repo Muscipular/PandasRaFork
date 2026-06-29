@@ -32,6 +32,9 @@
 #include "achievement.hpp"
 #include "atcommand.hpp" // get_atcommand_level()
 #include "battle.hpp" // battle_config
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "battleground.hpp"
 #include "buyingstore.hpp"  // struct s_buyingstore
 #include "channel.hpp"
@@ -2190,6 +2193,9 @@ bool pc_authok(map_session_data *sd, uint32 login_id2, time_t expiration_time, i
 	sd->sc.option = sd->status.option; //This is the actual option used in battle.
 
 	unit_dataset(sd);
+#ifdef Pandas_BattleRecord
+	batrec_new(sd);
+#endif // Pandas_BattleRecord
 
 	sd->guild_x = -1;
 	sd->guild_y = -1;

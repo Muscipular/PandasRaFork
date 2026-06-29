@@ -3,6 +3,9 @@
 
 #include "fullheal.hpp"
 
+#ifdef Pandas_BattleRecord
+#include "map/battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "map/clif.hpp"
 #include "map/mob.hpp"
 #include "map/status.hpp"
@@ -21,5 +24,8 @@ void SkillFullHeal::castendNoDamageId(block_list *src, block_list *target, uint1
 	if( dstmd )
 	{ // Reset Damage Logs
 		dstmd->dmglog.clear();
+#ifdef Pandas_BattleRecord
+		batrec_reset(dstmd);
+#endif // Pandas_BattleRecord
 	}
 }

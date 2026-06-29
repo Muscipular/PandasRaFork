@@ -25,6 +25,9 @@
 
 #include "achievement.hpp"
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "clif.hpp"
 #include "elemental.hpp"
 #include "guild.hpp"
@@ -506,6 +509,9 @@ mob_data* mob_spawn_dataset(struct spawn_data *data)
 #endif // Pandas_Struct_Mob_Data_Special_SetUnitData
 
 	map_addiddb(md);
+#ifdef Pandas_BattleRecord
+	batrec_new(md);
+#endif // Pandas_BattleRecord
 	return md;
 }
 
@@ -1065,6 +1071,9 @@ TIMER_FUNC(mob_delayspawn){
 			return 0;
 		}
 		md->spawn_timer = INVALID_TIMER;
+#ifdef Pandas_BattleRecord
+		map_mobiddb(md, npc_get_new_npc_id());
+#endif // Pandas_BattleRecord
 		mob_spawn(md);
 	}
 	return 0;
@@ -1215,6 +1224,9 @@ int32 mob_spawn (mob_data *md)
 #ifdef Pandas_Struct_Unit_CommonData_Aura
 	md->ucd.aura = {};
 #endif // Pandas_Struct_Unit_CommonData_Aura
+#ifdef Pandas_BattleRecord
+	batrec_reset(md);
+#endif // Pandas_BattleRecord
 
 #ifdef Pandas_Struct_Mob_Data_SpecialExperience
 	md->pandas.base_exp = -1;
@@ -3671,6 +3683,9 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 		delete_timer(md->deletetimer,mob_timer_delete);
 		md->deletetimer = INVALID_TIMER;
 	}
+#ifdef Pandas_BattleRecord
+	batrec_reset(md);
+#endif // Pandas_BattleRecord
 	/**
 	 * Only loops if necessary (e.g. a poring would never need to loop)
 	 **/
@@ -3726,6 +3741,9 @@ void mob_revive(mob_data *md, uint32 hp)
 	//We reset the damage log and then set the already lost damage as self damage so players don't get exp for it [Playtester]
 	md->dmglog.clear();
 	mob_log_damage(md, md, static_cast<int64>(md->status.max_hp - hp));
+#ifdef Pandas_BattleRecord
+	batrec_reset(md);
+#endif // Pandas_BattleRecord
 	if (!md->prev){
 		if(map_addblock(md))
 			return;
@@ -3906,6 +3924,9 @@ int32 mob_class_change (mob_data *md, int32 mob_id)
 
 	if (battle_config.monster_class_change_recover) {
 		md->dmglog.clear();
+#ifdef Pandas_BattleRecord
+		batrec_reset(md);
+#endif // Pandas_BattleRecord
 	} else {
 		md->status.hp = md->status.max_hp*hp_rate/100;
 		if(md->status.hp < 1) md->status.hp = 1;

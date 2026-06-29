@@ -51,6 +51,10 @@
 #include "pet.hpp"
 #include "quest.hpp"
 #include "storage.hpp"
+#ifdef Pandas_BattleRecord
+#include "status.hpp"
+#include "unit.hpp"
+#endif // Pandas_BattleRecord
 #include "trade.hpp"
 
 using namespace rathena;
@@ -2192,6 +2196,56 @@ void map_addiddb(block_list *bl)
 
 	idb_put(id_db,bl->id,bl);
 }
+
+#ifdef Pandas_BattleRecord
+void map_mobiddb(block_list* bl, int32 new_blockid)
+{
+	nullpo_retv(bl);
+
+	if (bl->type != BL_MOB)
+		return;
+
+	int32 origin_blockid = bl->id;
+	bl->id = new_blockid;
+
+	if (idb_exists(id_db, origin_blockid)) {
+		idb_remove(id_db, origin_blockid);
+		idb_put(id_db, bl->id, bl);
+	}
+	if (idb_exists(mobid_db, origin_blockid)) {
+		idb_remove(mobid_db, origin_blockid);
+		idb_put(mobid_db, bl->id, bl);
+	}
+	if (idb_exists(bossid_db, origin_blockid)) {
+		idb_remove(bossid_db, origin_blockid);
+		idb_put(bossid_db, bl->id, bl);
+
+		s_mapiterator* iter = mapit_getallusers();
+		for (map_session_data* pl_sd = reinterpret_cast<TBL_PC*>(mapit_first(iter)); mapit_exists(iter); pl_sd = reinterpret_cast<TBL_PC*>(mapit_next(iter))) {
+			status_change* sc = status_get_sc(&pl_sd->bl);
+			if (sc == nullptr)
+				continue;
+
+			status_change_entry* sce = sc->getSCE(SC_BOSSMAPINFO);
+			if (sce != nullptr && sce->val1 == origin_blockid)
+				sce->val1 = bl->id;
+		}
+		mapit_free(iter);
+	}
+
+	exchange_timer_id(origin_blockid, new_blockid);
+
+	unit_data* ud = unit_bl2ud(bl);
+	if (ud != nullptr) {
+		for (const auto& su : ud->skillunits) {
+			if (su != nullptr && su->src_id == origin_blockid)
+				su->src_id = bl->id;
+		}
+	}
+
+	detect_invalid_timer(origin_blockid);
+}
+#endif // Pandas_BattleRecord
 
 /*==========================================
  * remove bl from id_db

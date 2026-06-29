@@ -16,6 +16,9 @@
 #include <common/utils.hpp>
 
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "clif.hpp"
 #include "intif.hpp"
 #include "itemdb.hpp"
@@ -240,6 +243,10 @@ int32 hom_dead(homun_data *hd)
 	hom_hungry_timer_delete(hd);
 	hd->homunculus.hp = 0;
 
+#ifdef Pandas_BattleRecord
+	batrec_reset(hd);
+#endif // Pandas_BattleRecord
+
 	if (!sd) //unit remove map will invoke unit free
 		return 3;
 
@@ -279,6 +286,9 @@ int32 hom_vaporize(map_session_data *sd, int32 flag)
 	if (battle_config.hom_delay_reset_vaporize) {
 		skill_blockhomun_clear(*hd);
 	}
+#ifdef Pandas_BattleRecord
+	batrec_reset(hd);
+#endif // Pandas_BattleRecord
 	status_change_clear(hd, 1);
 	clif_hominfo(sd, sd->hd, 0);
 	hom_save(hd);
@@ -1085,6 +1095,9 @@ void hom_alloc(map_session_data *sd, struct s_homunculus *hom)
 	hd->regen.tick.sp = tick;
 
 	map_addiddb(hd);
+#ifdef Pandas_BattleRecord
+	batrec_new(hd);
+#endif // Pandas_BattleRecord
 	status_calc_homunculus(hd, SCO_FIRST);
 
 	hd->hungry_timer = INVALID_TIMER;

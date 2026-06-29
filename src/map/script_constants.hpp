@@ -233,6 +233,15 @@
 	export_constant(SUSPEND_MODE_AFK);
 	export_constant(SUSPEND_MODE_NORMAL);
 #endif // Pandas_Player_Suspend_System
+#ifdef Pandas_BattleRecord
+	/* battle record values */
+	export_constant(BRT_DMG_RECEIVE);
+	export_constant(BRT_DMG_CAUSE);
+	export_constant(BRS_DESC);
+	export_constant(BRS_ASC);
+	export_constant(BRA_COMBINE);
+	export_constant(BRA_DISCRETE);
+#endif // Pandas_BattleRecord
 #endif // Pandas_ScriptCommands
 
 	/* min and maximum variable value */

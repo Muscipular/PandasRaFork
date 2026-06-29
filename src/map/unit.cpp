@@ -18,6 +18,9 @@
 
 #include "achievement.hpp"
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "battleground.hpp"
 #include "channel.hpp"
 #include "chat.hpp"
@@ -3922,6 +3925,9 @@ int32 unit_free(block_list *bl, clr_type clrtype)
 	struct unit_data *ud = unit_bl2ud( bl );
 
 	nullpo_ret(ud);
+#ifdef Pandas_BattleRecord
+	batrec_free(bl);
+#endif // Pandas_BattleRecord
 
 	FreeBlockLock freeLock;
 

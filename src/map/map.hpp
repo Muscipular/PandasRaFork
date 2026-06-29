@@ -1213,6 +1213,9 @@ int32 map_setipport(uint16 map, uint32 ip, uint16 port);
 int32 map_eraseipport(uint16 map, uint32 ip, uint16 port);
 int32 map_eraseallipport(void);
 void map_addiddb(block_list *);
+#ifdef Pandas_BattleRecord
+void map_mobiddb(block_list* bl, int32 new_blockid);
+#endif // Pandas_BattleRecord
 void map_deliddb(block_list *bl);
 void map_foreachpc(int32 (*func)(map_session_data* sd, va_list args), ...);
 void map_foreachmob(int32 (*func)(mob_data* md, va_list args), ...);

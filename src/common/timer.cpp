@@ -352,6 +352,25 @@ t_tick settick_timer(int32 tid, t_tick tick)
 	return tick;
 }
 
+#ifdef Pandas_BattleRecord
+void exchange_timer_id(int32 origin_id, int32 new_id)
+{
+	for (int32 tid = 0; tid < timer_data_num; tid++) {
+		if (timer_data[tid].id > 0 && timer_data[tid].id == origin_id)
+			timer_data[tid].id = new_id;
+	}
+}
+
+void detect_invalid_timer(int32 id)
+{
+	for (int32 tid = 0; tid < timer_data_max; tid++) {
+		if (timer_data[tid].type && timer_data[tid].id == id && timer_data[tid].func) {
+			ShowWarning("%s: found invalid timer point to %d (timer id = %d, func = %s)\n", __func__, id, tid, search_timer_func_list(timer_data[tid].func));
+		}
+	}
+}
+#endif // Pandas_BattleRecord
+
 /// Executes all expired timers.
 /// Returns the value of the smallest non-expired timer (or 1 second if there aren't any).
 t_tick do_timer(t_tick tick)

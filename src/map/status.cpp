@@ -20,6 +20,9 @@
 #include <common/utils.hpp>
 
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "battleground.hpp"
 #include "clif.hpp"
 #include "elemental.hpp"
@@ -1632,6 +1635,12 @@ int32 status_damage(block_list *src,block_list *target,int64 dhp, int64 dsp, int
 	status->hp-= hp;
 	status->sp-= sp;
 	status->ap-= ap;
+#ifdef Pandas_BattleRecord
+	if (src != nullptr && target != nullptr) {
+		batrec_cause(src, target, hp);
+		batrec_receive(target, src, hp);
+	}
+#endif // Pandas_BattleRecord
 
 	// Coma
 	if (flag&16) {

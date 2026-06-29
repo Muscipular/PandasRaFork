@@ -39,6 +39,9 @@
 #include "achievement.hpp"
 #include "atcommand.hpp"
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "battleground.hpp"
 #include "cashshop.hpp"
 #include "channel.hpp"
@@ -28613,6 +28616,9 @@ BUILDIN_FUNC(mobremove) {
 		unit_remove_map(bl, CLR_OUTSIGHT);
 		if (!(md->sc.getSCE(SC_KAIZEL) || (md->sc.getSCE(SC_REBIRTH) && !md->state.rebirth)))
 			mob_setdelayspawn(md);
+#ifdef Pandas_BattleRecord
+		map_mobiddb(bl, npc_get_new_npc_id());
+#endif // Pandas_BattleRecord
 	}
 
 	return SCRIPT_CMD_SUCCESS;

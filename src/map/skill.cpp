@@ -23,6 +23,9 @@
 
 #include "achievement.hpp"
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "battleground.hpp"
 #include "chrif.hpp"
 #include "clif.hpp"
@@ -4611,6 +4614,12 @@ int32 skill_castend_nodamage_id (block_list *src, block_list *bl, uint16 skill_i
 			mob_log_damage(dstmd, src, 0); //Log interaction (counts as 'attacker' for the exp bonus)
 		mobskill_event(dstmd, src, tick, MSC_SKILLUSED|(skill_id<<16));
 	}
+#ifdef Pandas_BattleRecord
+	if (battle_check_target(src, bl, BCT_ENEMY) > 0) {
+		batrec_cause(src, bl, 0);
+		batrec_receive(bl, src, 0);
+	}
+#endif // Pandas_BattleRecord
 
 	if( sd && !(flag&1) )
 	{// ensure that the skill last-cast tick is recorded
