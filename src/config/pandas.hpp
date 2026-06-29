@@ -212,6 +212,12 @@
 		// 使 state.autotrade 支持更多离线交易/挂起状态位 [Sola丶小克]
 		#define Pandas_Struct_Autotrade_Extend
 
+		// 以下选项开关需要依赖 Pandas_Struct_Autotrade_Extend 的拓展
+		#ifdef Pandas_Struct_Autotrade_Extend
+			// 启用玩家挂起系统, 支持离线挂机、离开模式和普通召回 [Sola丶小克]
+			#define Pandas_Player_Suspend_System
+		#endif // Pandas_Struct_Autotrade_Extend
+
 		// 使 map_session_data 可记录玩家已经生成的 bonus_script 记录数 [Sola丶小克]
 		// 结构体修改定位 pc.hpp -> map_session_data.pandas.bonus_script_counter
 		#define Pandas_Struct_Map_Session_Data_BonusScript_Counter

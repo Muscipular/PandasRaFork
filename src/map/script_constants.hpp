@@ -226,6 +226,13 @@
 	export_constant(EVENT_TRIGGER_EVER);
 	export_constant(EVENT_TRIGGER_MAX);
 #endif // Pandas_Struct_Map_Session_Data_EventTrigger
+#ifdef Pandas_Player_Suspend_System
+	/* e_suspend_mode values */
+	export_constant(SUSPEND_MODE_NONE);
+	export_constant(SUSPEND_MODE_OFFLINE);
+	export_constant(SUSPEND_MODE_AFK);
+	export_constant(SUSPEND_MODE_NORMAL);
+#endif // Pandas_Player_Suspend_System
 #endif // Pandas_ScriptCommands
 
 	/* min and maximum variable value */

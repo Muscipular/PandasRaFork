@@ -14873,6 +14873,17 @@ void pc_scdata_received(map_session_data *sd) {
 
 	sd->state.pc_loaded = true;
 
+#ifdef Pandas_Player_Suspend_System
+	if (sd->state.pc_loaded && sd->state.autotrade) {
+		// 走到这里说明已经完成了背包、仓库、手推车的道具信息以及 sc_data 数据的加载。
+		if (pc_autotrade_suspend(sd)) {
+			clif_parse_LoadEndAck(sd->fd, sd);
+			suspend_recall_postfix(sd);
+			return;
+		}
+	}
+#endif // Pandas_Player_Suspend_System
+
 	if (sd->state.connect_new == 0 && sd->fd) { // Character already loaded map! Gotta trigger LoadEndAck manually.
 		sd->state.connect_new = 1;
 		clif_parse_LoadEndAck(sd->fd, sd);

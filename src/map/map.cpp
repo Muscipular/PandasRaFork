@@ -92,6 +92,9 @@ char market_table[32] = "market";
 char partybookings_table[32] = "party_bookings";
 char roulette_table[32] = "db_roulette";
 char guild_storage_log_table[32] = "guild_storage_log";
+#ifdef Pandas_Player_Suspend_System
+char suspend_table[32] = "suspend";
+#endif // Pandas_Player_Suspend_System
 
 // log database
 std::string log_db_ip = "127.0.0.1";
@@ -2228,6 +2231,10 @@ int32 map_quit(map_session_data *sd) {
 			buyingstore_close(sd);
 	}
 
+#ifdef Pandas_Player_Suspend_System
+	suspend_deactive(sd, sd->state.keepsuspend);
+#endif // Pandas_Player_Suspend_System
+
 	if(!sd->state.active) { //Removing a player that is not active.
 		struct auth_node *node = chrif_search(sd->status.account_id);
 		if (node && node->char_id == sd->status.char_id &&
@@ -4351,6 +4358,10 @@ int32 inter_config_read(const char *cfgName)
 			safestrncpy(sales_table, w2, sizeof(sales_table));
 		else if (strcmpi(w1, "guild_storage_log") == 0)
 			safestrncpy(guild_storage_log_table, w2, sizeof(guild_storage_log_table));
+#ifdef Pandas_Player_Suspend_System
+		else if (strcmpi(w1, "suspend_table") == 0)
+			safestrncpy(suspend_table, w2, sizeof(suspend_table));
+#endif // Pandas_Player_Suspend_System
 		else
 		//Map Server SQL DB
 		if(strcmpi(w1,"map_server_ip")==0)
@@ -5095,6 +5106,9 @@ void MapServer::finalize(){
 	do_final_vending();
 	do_final_buyingstore();
 	do_final_path();
+#ifdef Pandas_Player_Suspend_System
+	do_final_suspend();
+#endif // Pandas_Player_Suspend_System
 
 	map_db->destroy(map_db, map_db_final);
 
@@ -5472,6 +5486,9 @@ bool MapServer::initialize( int32 argc, char *argv[] ){
 	do_init_duel();
 	do_init_vending();
 	do_init_buyingstore();
+#ifdef Pandas_Player_Suspend_System
+	do_init_suspend();
+#endif // Pandas_Player_Suspend_System
 
 	npc_event_do_oninit();	// Init npcs (OnInit)
 

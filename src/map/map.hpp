@@ -1341,6 +1341,9 @@ extern char market_table[32];
 extern char partybookings_table[32];
 extern char roulette_table[32];
 extern char guild_storage_log_table[32];
+#ifdef Pandas_Player_Suspend_System
+extern char suspend_table[32];
+#endif // Pandas_Player_Suspend_System
 
 void do_shutdown(void);
 

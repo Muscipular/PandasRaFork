@@ -1201,6 +1201,11 @@ static void clif_set_unit_idle( const block_list* bl, bool walking, send_target 
 	safestrncpy(p.name, status_get_name( *bl ), NAME_LENGTH);
 #endif
 
+#ifdef Pandas_Player_Suspend_System
+	if (sd != nullptr && bl->type == BL_PC)
+		suspend_set_unit_idle(sd, &p);
+#endif // Pandas_Player_Suspend_System
+
 	clif_send( &p, sizeof( p ), tbl, target );
 	// if disguised, send to self
 	if( disguised( bl ) ){
@@ -1455,6 +1460,11 @@ static void clif_set_unit_walking( const block_list& bl, const map_session_data*
 #if PACKETVER >= 20131223
 	safestrncpy(p.name, status_get_name( bl ), NAME_LENGTH);
 #endif
+
+#ifdef Pandas_Player_Suspend_System
+	if (sd != nullptr && bl.type == BL_PC)
+		suspend_set_unit_walking(sd, &p);
+#endif // Pandas_Player_Suspend_System
 
 	clif_send( &p, sizeof(p), tsd ? tsd : &bl, target );
 
@@ -9573,8 +9583,12 @@ void clif_GM_kick( map_session_data *sd, map_session_data *tsd)
 {
 	nullpo_retv(tsd);
 
-	if (sd == nullptr)
+	if (sd == nullptr) {
 		tsd->state.keepshop = true;
+#ifdef Pandas_Player_Suspend_System
+		tsd->state.keepsuspend = true;
+#endif // Pandas_Player_Suspend_System
+	}
 
 	if (session_isActive(tsd->fd))
 		clif_authfail_fd(tsd->fd, 15);
