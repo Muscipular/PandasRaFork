@@ -3546,6 +3546,14 @@ struct item_data
 		// 使 item_data 可记录此物品的使用脚本是否执行了 callfunc 指令 [Sola丶小克]
 		bool has_callfunc = false;
 #endif // Pandas_Struct_Item_Data_Has_CallFunc
+#ifdef Pandas_Struct_Item_Data_Properties
+		// 使 item_data 可记录此物品的特殊属性 [Sola丶小克]
+		struct {
+			uint32 special_mask = 0;
+			uint32 noview_mask = 0;
+			uint32 annouce_mask = 0;
+		} properties;
+#endif // Pandas_Struct_Item_Data_Properties
 	} pandas;
 #endif // Pandas_Struct_Item_Data_Pandas
 

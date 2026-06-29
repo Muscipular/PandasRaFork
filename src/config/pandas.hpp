@@ -236,6 +236,7 @@
 		// 使 item_data 可记录此物品的特殊属性 [Sola丶小克]
 		// 效果与 item_data.flag 类似, 只是数据源为 item_properties.yml
 		// 结构体修改定位 itemdb.hpp -> item_data.pandas.properties
+		#define Pandas_Struct_Item_Data_Properties
 	#endif // Pandas_Struct_Item_Data_Pandas
 
 	// 使 npc_data 有一个独立的结构体用来存放 Pandas 的拓展 [Sola丶小克]
