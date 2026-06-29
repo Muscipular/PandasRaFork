@@ -14,6 +14,11 @@
 #include <csetjmp>
 #include <cstdlib> // atoi, strtol, strtoll, exit
 
+#ifdef Pandas_ScriptEngine_Express
+#include <algorithm>
+#include <cctype>
+#endif // Pandas_ScriptEngine_Express
+
 #ifdef PCRE_SUPPORT
 #include <pcre.h> // preg_match
 #endif
@@ -4134,6 +4139,35 @@ int32 run_func(struct script_state *st)
 			script_reportsrc(st);
 		}
 #endif
+
+#ifdef Pandas_ScriptEngine_Express
+		if (st && st->rid && !st->unlockcmd) {
+			map_session_data *sd = map_id2sd(st->rid);
+			if (sd && npc_event_is_realtime(sd->pandas.workinevent)) {
+				// 以下为实时事件和过滤器事件中禁止使用的脚本指令, 需要定期更新 [Sola丶小克]
+				static std::vector<std::string> blockcmd = {
+					"mes", "next", "close", "close2", "menu", "select", "prompt", "input",
+					"openstorage", "guildopenstorage", "produce", "cooking", "birthpet",
+					"callshop", "sleep", "sleep2", "openmail", "openauction", "progressbar",
+					"buyingstore", "makerune", "opendressroom", "openstorage2"
+				};
+				std::vector<std::string>::iterator iter;
+				std::string funcname = std::string(get_str(func));
+				std::transform(
+					funcname.begin(), funcname.end(), funcname.begin(),
+					static_cast<int(*)(int)>(std::tolower)
+				);
+				iter = std::find(blockcmd.begin(), blockcmd.end(), funcname);
+				if (iter != blockcmd.end()) {
+					ShowWarning("Please don't use '%s' command in '%s' event.\n", funcname.c_str(), npc_get_script_event_name(sd->pandas.workinevent));
+					ShowWarning("If you insist and know what you are doing, you can use the 'unlockcmd' command to lift the restriction.\n");
+					script_reportsrc(st);
+					st->state = END;
+					return 1;
+				}
+			}
+		}
+#endif // Pandas_ScriptEngine_Express
 
 		if (str_data[func].func(st) == SCRIPT_CMD_FAILURE) {
 			//Report error
@@ -10974,6 +11008,13 @@ BUILDIN_FUNC(end)
 	sd = map_id2sd(st->rid);
 
 	st->state = END;
+
+#ifdef Pandas_ScriptEngine_Express
+	// 防止在穿透事件的脚本代码中使用 end 指令, 会导致角色正在执行的脚本或对话被强制中断,
+	// 或与 NPC 进行中的对话框直接显示出 [关闭] 按钮的问题 [Sola丶小克]
+	if (sd && npc_event_is_realtime(sd->pandas.workinevent))
+		return SCRIPT_CMD_SUCCESS;
+#endif // Pandas_ScriptEngine_Express
 
 	npc_data* nd = map_id2nd( st->oid );
 

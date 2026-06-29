@@ -137,6 +137,64 @@
 
 #ifdef Pandas_ScriptEngine
 	// 使脚本引擎能够支持穿越事件队列机制, 直接执行某些事件 [Sola丶小克]
+	#define Pandas_ScriptEngine_Express
+
+	#ifdef Pandas_ScriptEngine_Express
+		/************************************************************************/
+		/* Express 类型的快速事件，这些事件将会被立刻执行, 不进事件队列                */
+		/************************************************************************/
+
+		// 当角色能力被重新计算时触发事件 [Sola丶小克]
+		// 事件类型: Express / 事件名称: OnPCStatCalcEvent
+		// 常量名称: NPCE_STATCALC / 变量名称: statcalc_express_name
+		// 正常按照命名规范这个事件应该叫 NPCX_STATCALC 和 OnPCStatCalcExpress
+		// 但这个事件比较特殊, 之前 rAthena 官方出现过. 考虑到对老脚本的兼容, 继续沿用老的事件常量和名称
+
+		// 当玩家成功解除一个状态(Buff)后触发实时事件 [Sola丶小克]
+		// 事件类型: Express / 事件名称: OnPCBuffEndExpress
+		// 常量名称: NPCX_SC_END / 变量名称: sc_end_express_name
+
+		// 当玩家成功获得一个状态(Buff)后触发实时事件 [Sola丶小克]
+		// 事件类型: Express / 事件名称: OnPCBuffStartExpress
+		// 常量名称: NPCX_SC_START / 变量名称: sc_start_express_name
+
+		// 当玩家进入或者改变地图时触发实时事件 [Sola丶小克]
+		// 事件类型: Express / 事件名称: OnPCEnterMapExpress
+		// 常量名称: NPCX_ENTERMAP / 变量名称: entermap_express_name
+
+		// 当 progressbar 进度条被打断时触发实时事件 [Sola丶小克]
+		// 事件类型: Express / 事件名称: OnPCProgressAbortExpress
+		// 常量名称: NPCX_PROGRESSABORT / 变量名称: progressabort_express_name
+
+		// 当某个单位被击杀时触发实时事件 [Sola丶小克]
+		// 事件类型: Express / 事件名称: OnUnitKillExpress
+		// 常量名称: NPCX_UNIT_KILL / 变量名称: unit_kill_express_name
+
+		// 当魔物即将掉落道具时触发实时事件 [Sola丶小克]
+		// 事件类型: Express / 事件名称: OnMobDropItemExpress
+		// 常量名称: NPCX_MOBDROPITEM / 变量名称: mobdropitem_express_name
+
+		// 当玩家发起攻击并即将进行结算时触发实时事件 [聽風]
+		// 事件类型: Express / 事件名称: OnPCAttackExpress
+		// 常量名称: NPCX_PCATTACK / 变量名称: pcattack_express_name
+
+		// 当玩家成功召唤出佣兵时触发实时事件 [HongShin]
+		// 事件类型: Express / 事件名称: OnPCMerCallExpress
+		// 常量名称: NPCX_MER_CALL / 变量名称: mer_call_express_name
+
+		// 当佣兵离开玩家时触发实时事件 [HongShin]
+		// 事件类型: Express / 事件名称: OnPCMerLeaveExpress
+		// 常量名称: NPCX_MER_LEAVE / 变量名称: mer_leave_express_name
+
+		// 当玩家往聊天框发送信息时触发实时事件 [人鱼姬的思念]
+		// 事件类型: Express / 事件名称: OnPCTalkExpress
+		// 常量名称: NPCX_PC_TALK / 变量名称: pc_talk_express_name
+
+		// 当玩家受到伤害并即将进行结算时触发实时事件 [人鱼姬的思念]
+		// 事件类型: Express / 事件名称: OnPCHarmedExpress
+		// 常量名称: NPCX_PCHARMED / 变量名称: pcharmed_express_name
+		// PYHELP - NPCEVENT - INSERT POINT - <Section 13>
+	#endif // Pandas_ScriptEngine_Express
 
 	// 调整脚本引擎在 add_str 中分配内存的步进空间 [Sola丶小克]
 	// 避免过于频繁的 RECREATE 申请并移动内存中的数据, 减少内存分配开销

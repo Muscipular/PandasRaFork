@@ -1639,6 +1639,11 @@ const char *npc_get_script_event_name(int32 npce_index);
 #ifdef Pandas_Struct_Map_Session_Data_WorkInEvent
 enum npce_event npc_get_script_event_type(const char* eventname);
 #endif // Pandas_Struct_Map_Session_Data_WorkInEvent
+#ifdef Pandas_ScriptEngine_Express
+bool npc_event_is_express(enum npce_event eventtype);
+bool npc_event_is_filter(enum npce_event eventtype);
+bool npc_event_is_realtime(enum npce_event eventtype);
+#endif // Pandas_ScriptEngine_Express
 npc_data* npc_duplicate_npc( npc_data& nd, char name[NPC_NAME_LENGTH + 1], int16 mapid, int16 x, int16 y, int32 class_, uint8 dir, int16 xs, int16 ys, map_session_data* owner = nullptr );
 npc_data* npc_duplicate_npc_for_player( npc_data& nd, map_session_data& sd );
 
