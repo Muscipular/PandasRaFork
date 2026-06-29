@@ -289,6 +289,7 @@
 	#define Pandas_Struct_S_Random_Opt_Data_With_Plaintext
 
 	// 使 s_item_combo 能保存脚本的明文 [Sola丶小克]
+	#define Pandas_Struct_S_Item_Combo_With_Plaintext
 
 	// 使 status_change 能保存 cloak 是否正在进行中的状态 [Sola丶小克]
 

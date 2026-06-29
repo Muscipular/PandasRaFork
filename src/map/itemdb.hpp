@@ -3310,6 +3310,9 @@ enum e_group_algorithm_type : uint8 {
 struct s_item_combo {
 	std::vector<t_itemid> nameid;
 	script_code *script;
+#ifdef Pandas_Struct_S_Item_Combo_With_Plaintext
+	std::string script_plaintext;
+#endif // Pandas_Struct_S_Item_Combo_With_Plaintext
 	uint16 id;
 
 	~s_item_combo() {

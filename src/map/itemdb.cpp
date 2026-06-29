@@ -4026,6 +4026,9 @@ uint64 ComboDatabase::parseBodyNode(const ryml::NodeRef& node) {
 				combo->script = nullptr;
 			}
 			combo->script = parse_script(script.c_str(), this->getCurrentFile().c_str(), this->getLineNumber(node["Script"]), SCRIPT_IGNORE_EXTERNAL_BRACKETS);
+#ifdef Pandas_Struct_S_Item_Combo_With_Plaintext
+			combo->script_plaintext = util::trim_copy(script);
+#endif // Pandas_Struct_S_Item_Combo_With_Plaintext
 		} else {
 			if (!exists) {
 				combo->script = nullptr;
