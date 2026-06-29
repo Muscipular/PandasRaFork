@@ -854,6 +854,9 @@ public:
 		struct {
 			t_itemid nameid;
 			int32 index, amount;
+#ifdef Pandas_Struct_S_Mail_With_Details
+			struct item details = {};
+#endif // Pandas_Struct_S_Mail_With_Details
 		} item[MAIL_MAX_ITEM];
 		int32 zeny;
 		struct mail_data inbox;

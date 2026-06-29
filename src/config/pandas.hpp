@@ -283,6 +283,7 @@
 	// 我们需要将唯一编号引入到我们需要拓展的相关数据结构体中
 
 	// 使 s_mail.item 能有一个 details 字段用来记录附件道具更详细的信息 [Sola丶小克]
+	#define Pandas_Struct_S_Mail_With_Details
 
 	// 使 s_random_opt_data 能保存脚本的明文 [Sola丶小克]
 

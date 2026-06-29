@@ -29,6 +29,9 @@ void mail_clear(map_session_data *sd)
 		sd->mail.item[i].nameid = 0;
 		sd->mail.item[i].index = 0;
 		sd->mail.item[i].amount = 0;
+#ifdef Pandas_Struct_S_Mail_With_Details
+		sd->mail.item[i].details = {};
+#endif // Pandas_Struct_S_Mail_With_Details
 	}
 	sd->mail.zeny = 0;
 	sd->mail.dest_id = 0;
@@ -83,6 +86,9 @@ int32 mail_removeitem(map_session_data *sd, int16 flag, int32 idx, int32 amount)
 				sd->mail.item[i].index = sd->mail.item[i+1].index;
 				sd->mail.item[i].nameid = sd->mail.item[i+1].nameid;
 				sd->mail.item[i].amount = sd->mail.item[i+1].amount;
+#ifdef Pandas_Struct_S_Mail_With_Details
+				sd->mail.item[i].details = sd->mail.item[i+1].details;
+#endif // Pandas_Struct_S_Mail_With_Details
 			}
 
 			// Zero the rest
@@ -90,6 +96,9 @@ int32 mail_removeitem(map_session_data *sd, int16 flag, int32 idx, int32 amount)
 				sd->mail.item[i].index = 0;
 				sd->mail.item[i].nameid = 0;
 				sd->mail.item[i].amount = 0;
+#ifdef Pandas_Struct_S_Mail_With_Details
+				sd->mail.item[i].details = {};
+#endif // Pandas_Struct_S_Mail_With_Details
 			}
 		}
 
@@ -276,6 +285,9 @@ enum mail_attach_result mail_setitem(map_session_data *sd, int16 idx, uint32 amo
 		sd->mail.item[i].index = idx;
 		sd->mail.item[i].nameid = sd->inventory.u.items_inventory[idx].nameid;
 		sd->mail.item[i].amount = amount;
+#ifdef Pandas_Struct_S_Mail_With_Details
+		sd->mail.item[i].details = sd->inventory.u.items_inventory[idx];
+#endif // Pandas_Struct_S_Mail_With_Details
 		return MAIL_ATTACH_SUCCESS;
 	}
 }
