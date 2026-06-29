@@ -27,6 +27,10 @@
 #include "unit.hpp" // unit_data
 #include "vending.hpp" // struct s_vending
 
+#ifdef Pandas_Struct_Map_Session_Data_WorkInEvent
+#include "npc.hpp" // enum npce_event
+#endif // Pandas_Struct_Map_Session_Data_WorkInEvent
+
 enum AtCommandType : uint8;
 enum e_instance_mode : uint8;
 //enum e_log_chat_type : uint8;
@@ -395,6 +399,9 @@ public:
 	struct regen_data_sub sregen, ssregen;
 #ifdef Pandas_Struct_Map_Session_Data_Pandas
 	struct s_pandas {
+#ifdef Pandas_Struct_Map_Session_Data_WorkInEvent
+		enum npce_event workinevent = NPCE_MAX; // 角色当前正在执行的事件
+#endif // Pandas_Struct_Map_Session_Data_WorkInEvent
 	} pandas;
 #endif // Pandas_Struct_Map_Session_Data_Pandas
 	//NOTE: When deciding to add a flag to state or special_state, take into consideration that state is preserved in

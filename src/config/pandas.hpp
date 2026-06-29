@@ -65,6 +65,7 @@
 	#ifdef Pandas_Struct_Map_Session_Data_Pandas
 		// 使 map_session_data 可记录当前玩家正在处理哪一个脚本事件 [Sola丶小克]
 		// 结构体修改定位 pc.hpp -> map_session_data.pandas.workinevent
+		#define Pandas_Struct_Map_Session_Data_WorkInEvent
 
 		// 使 map_session_data 可记录事件中断请求 [Sola丶小克]
 		// 结构体修改定位 pc.hpp -> map_session_data.pandas.eventhalt

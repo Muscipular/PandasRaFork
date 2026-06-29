@@ -1803,7 +1803,14 @@ int32 npc_event_sub(map_session_data* sd, struct event_data* ev, const char* eve
 			return 2;
 		}
 	}
+#ifdef Pandas_Struct_Map_Session_Data_WorkInEvent
+	enum npce_event workinevent_backup = sd->pandas.workinevent;
+	sd->pandas.workinevent = npc_get_script_event_type(eventname);
+#endif // Pandas_Struct_Map_Session_Data_WorkInEvent
 	run_script(ev->nd->u.scr.script,ev->pos,sd->id,ev->nd->id);
+#ifdef Pandas_Struct_Map_Session_Data_WorkInEvent
+	sd->pandas.workinevent = workinevent_backup;
+#endif // Pandas_Struct_Map_Session_Data_WorkInEvent
 	return 0;
 }
 
@@ -6019,6 +6026,24 @@ const char *npc_get_script_event_name(int32 npce_index)
 		return nullptr;
 	}
 }
+
+#ifdef Pandas_Struct_Map_Session_Data_WorkInEvent
+enum npce_event npc_get_script_event_type(const char* eventname)
+{
+	std::string ename = std::string(eventname), label;
+
+	if (ename.find(':') != std::string::npos) {
+		label = ename.substr(ename.rfind(':') + 1);
+		int32 search_i = 0;
+		ARR_FIND(0, NPCE_MAX, search_i, !stricmp(label.c_str(), npc_get_script_event_name(search_i)));
+
+		if (search_i != NPCE_MAX)
+			return static_cast<enum npce_event>(search_i);
+	}
+
+	return NPCE_MAX;
+}
+#endif // Pandas_Struct_Map_Session_Data_WorkInEvent
 
 void npc_read_event_script(void)
 {
