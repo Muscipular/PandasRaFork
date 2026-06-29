@@ -414,6 +414,9 @@ public:
 #ifdef Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
 		std::vector<uint32> multi_catch_target_class; // 用于记录即将支持捕捉的多个魔物编号
 #endif // Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
+#ifdef Pandas_Struct_Map_Session_Data_MultiTransfer
+		bool multitransfer = false; // 用于标记接下来的 pc_setpos 调用是一次多人传送
+#endif // Pandas_Struct_Map_Session_Data_MultiTransfer
 	} pandas;
 #endif // Pandas_Struct_Map_Session_Data_Pandas
 	//NOTE: When deciding to add a flag to state or special_state, take into consideration that state is preserved in

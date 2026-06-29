@@ -197,6 +197,7 @@
 
 		// 使 map_session_data 可记录接下来的 pc_setpos 调用是不是一次多人传送 [Sola丶小克]
 		// 结构体修改定位 pc.hpp -> map_session_data.pandas.multitransfer
+		#define Pandas_Struct_Map_Session_Data_MultiTransfer
 
 		// 使 map_session_data 可记录是否在 LoadEndAck 调用中不弹出队列中的事件 [Sola丶小克]
 		// 结构体修改定位 pc.hpp -> map_session_data.pandas.skip_loadendack_npc_event_dequeue
