@@ -420,6 +420,12 @@ public:
 #ifdef Pandas_Struct_Map_Session_Data_Skip_LoadEndAck_NPC_Event_Dequeue
 		bool skip_loadendack_npc_event_dequeue = false;
 #endif // Pandas_Struct_Map_Session_Data_Skip_LoadEndAck_NPC_Event_Dequeue
+#ifdef Pandas_Struct_Map_Session_Data_Autotrade_Configure
+		unsigned char at_sex; // 性别 (M 表示男性, F 表示女性)
+		unsigned char at_dir; // 纸娃娃身体朝向
+		unsigned char at_head_dir; // 纸娃娃头部朝向
+		unsigned char at_sit; // 是否坐下
+#endif // Pandas_Struct_Map_Session_Data_Autotrade_Configure
 	} pandas;
 #endif // Pandas_Struct_Map_Session_Data_Pandas
 	//NOTE: When deciding to add a flag to state or special_state, take into consideration that state is preserved in

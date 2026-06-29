@@ -206,6 +206,7 @@
 		// 使 map_session_data 可记录离线挂店 / 挂机角色的朝向等状态数据 [Sola丶小克]
 		// rAthena 使用完成 autotrade 的朝向数据后就销毁掉了
 		// 为了能够支持离线挂店 / 挂机可以被 recall 召唤, 我们需要保留一部分数据
+		#define Pandas_Struct_Map_Session_Data_Autotrade_Configure
 
 		// 使 map_session_data 可记录玩家已经生成的 bonus_script 记录数 [Sola丶小克]
 		// 结构体修改定位 pc.hpp -> map_session_data.pandas.bonus_script_counter

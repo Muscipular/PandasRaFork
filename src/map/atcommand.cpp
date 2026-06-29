@@ -6841,6 +6841,13 @@ ACMD_FUNC(autotrade) {
 	}
 
 	sd->state.autotrade = 1;
+#ifdef Pandas_Struct_Map_Session_Data_Autotrade_Configure
+	// 这里需要立刻填充相关的备份信息, 避免在完成指令下线后,
+	// 服务器没还重启的情况下, 角色就被 recall 导致朝向等数据无法恢复
+	sd->pandas.at_dir = sd->ud.dir;
+	sd->pandas.at_head_dir = sd->head_dir;
+	sd->pandas.at_sit = pc_issit(sd);
+#endif // Pandas_Struct_Map_Session_Data_Autotrade_Configure
 	if (battle_config.autotrade_monsterignore)
 		sd->state.block_action |= PCBLOCK_IMMUNE;
 
