@@ -786,6 +786,10 @@ struct Battle_Config
 	int32 suspend_monsterignore; // 当玩家使用挂机系列指令时, 处于哪些模式不会被魔物攻击
 #endif // Pandas_BattleConfig_Suspend_MonsterIgnore
 
+#ifdef Pandas_BattleConfig_Suspend_Offline_BodyDirection
+	int32 suspend_offline_bodydirection; // 当玩家进入离线挂机模式时, 地图服务器重启后的身体朝向哪里
+#endif // Pandas_BattleConfig_Suspend_Offline_BodyDirection
+
 #include <custom/battle_config_struct.inc>
 };
 

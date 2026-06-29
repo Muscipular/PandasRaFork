@@ -320,6 +320,10 @@
 // 此选项用于指定当玩家使用挂机系列指令时, 哪些模式不会被魔物攻击 (掩码选项)
 #define Pandas_BattleConfig_Suspend_MonsterIgnore
 
+// 是否启用 suspend_offline_bodydirection 配置选项及其功能 [Sola丶小克]
+// 此选项用于指定玩家进入离线挂机模式时, 地图服务器重启后的身体朝向哪里
+#define Pandas_BattleConfig_Suspend_Offline_BodyDirection
+
 // ============================================================================
 // 脚本引擎修改组 - Pandas_ScriptEngine
 // ============================================================================
