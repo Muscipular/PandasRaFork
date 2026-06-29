@@ -8913,6 +8913,10 @@ static const struct _battle_data {
 	{ "hide_cloaked_units",                 &battle_config.hide_cloaked_units,              0,      0,      BL_ALL,         },
 	{ "oridecon_research_fix",              &battle_config.oridecon_research_fix,           0,      0,      1,              },
 
+#ifdef Pandas_BattleConfig_Suspend_MonsterIgnore
+	{ "suspend_monsterignore",              &battle_config.suspend_monsterignore,           3,      0,      7,              },
+#endif // Pandas_BattleConfig_Suspend_MonsterIgnore
+
 #include <custom/battle_config_init.inc>
 };
 

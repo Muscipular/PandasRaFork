@@ -782,6 +782,10 @@ struct Battle_Config
 	int32 hide_cloaked_units;
 	int32 oridecon_research_fix;
 
+#ifdef Pandas_BattleConfig_Suspend_MonsterIgnore
+	int32 suspend_monsterignore; // 当玩家使用挂机系列指令时, 处于哪些模式不会被魔物攻击
+#endif // Pandas_BattleConfig_Suspend_MonsterIgnore
+
 #include <custom/battle_config_struct.inc>
 };
 
