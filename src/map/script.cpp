@@ -28590,6 +28590,35 @@ BUILDIN_FUNC(login) {
 	return SCRIPT_CMD_SUCCESS;
 }
 #endif // Pandas_ScriptCommand_Login
+
+#ifdef Pandas_ScriptCommand_MobRemove
+/* ===========================================================
+ * 指令: mobremove
+ * 描述: 根据 GID 移除一个魔物单位 (只是移除, 不会让魔物死亡)
+ * 用法: mobremove <魔物的GID>;
+ * 返回: 该指令无论成功失败, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(mobremove) {
+	block_list* bl = map_id2bl(script_getnum(st, 2));
+
+	if (bl == nullptr || bl->type != BL_MOB)
+		return SCRIPT_CMD_SUCCESS;
+
+	TBL_MOB* md = reinterpret_cast<TBL_MOB*>(bl);
+
+	if (md->spawn == nullptr) {
+		unit_free(bl, CLR_OUTSIGHT);
+	} else {
+		unit_remove_map(bl, CLR_OUTSIGHT);
+		if (!(md->sc.getSCE(SC_KAIZEL) || (md->sc.getSCE(SC_REBIRTH) && !md->state.rebirth)))
+			mob_setdelayspawn(md);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_MobRemove
+
 /// script command definitions
 /// for an explanation on args, see add_buildin_func
 struct script_function buildin_func[] = {
@@ -28920,6 +28949,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_Login
 	BUILDIN_DEF(login, "i????"), // 将指定的角色以特定的登录模式拉上线 [Sola丶小克]
 #endif // Pandas_ScriptCommand_Login
+#ifdef Pandas_ScriptCommand_MobRemove
+	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
+#endif // Pandas_ScriptCommand_MobRemove
 	BUILDIN_DEF(dispbottom,"s??"), //added from jA [Lupus]
 	BUILDIN_DEF(recovery,"i???"),
 	BUILDIN_DEF(getpetinfo,"i?"),
