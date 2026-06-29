@@ -223,6 +223,7 @@
 	#ifdef Pandas_Struct_Item_Data_Pandas
 		// 使 item_data 可记录当前物品的使用、穿戴、卸装脚本的原文 [Sola丶小克]
 		// 结构体修改定位 itemdb.hpp -> item_data.pandas.script_plaintext
+		#define Pandas_Struct_Item_Data_Script_Plaintext
 
 		// 使 item_data 可记录当前物品可捕捉的魔物编号 [Sola丶小克]
 		// 结构体修改定位 itemdb.hpp -> item_data.pandas.taming_mobid

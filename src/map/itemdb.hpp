@@ -3530,6 +3530,13 @@ struct item_data
 
 #ifdef Pandas_Struct_Item_Data_Pandas
 	struct s_pandas {
+#ifdef Pandas_Struct_Item_Data_Script_Plaintext
+		struct s_script_plaintext {
+			std::string script;
+			std::string equip_script;
+			std::string unequip_script;
+		} script_plaintext;
+#endif // Pandas_Struct_Item_Data_Script_Plaintext
 	} pandas;
 #endif // Pandas_Struct_Item_Data_Pandas
 
