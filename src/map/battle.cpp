@@ -8961,6 +8961,10 @@ static const struct _battle_data {
 	{ "suspend_normal_sitdown",             &battle_config.suspend_normal_sitdown,          -1,     -1,     1,              },
 #endif // Pandas_BattleConfig_Suspend_Normal_Sitdown
 
+#ifdef Pandas_BattleConfig_BattleRecord_AutoEnabled_Unit
+	{ "batrec_autoenabled_unit",            &battle_config.batrec_autoenabled_unit,         542,    0,      BL_ALL,         },
+#endif // Pandas_BattleConfig_BattleRecord_AutoEnabled_Unit
+
 #include <custom/battle_config_init.inc>
 };
 

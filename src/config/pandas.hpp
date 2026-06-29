@@ -373,6 +373,10 @@
 // 此选项用于指定玩家进入普通模式时, 被拉上线的角色处于站立还是坐下状态
 #define Pandas_BattleConfig_Suspend_Normal_Sitdown
 
+// 是否启用 batrec_autoenabled_unit 配置选项及其功能 [Sola丶小克]
+// 此选项用于指定哪些单位默认开启战斗记录
+#define Pandas_BattleConfig_BattleRecord_AutoEnabled_Unit
+
 // ============================================================================
 // 脚本引擎修改组 - Pandas_ScriptEngine
 // ============================================================================

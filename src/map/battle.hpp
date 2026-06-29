@@ -830,6 +830,10 @@ struct Battle_Config
 	int32 suspend_normal_sitdown; // 当玩家进入普通模式时, 被拉上线的角色处于站立还是坐下状态
 #endif // Pandas_BattleConfig_Suspend_Normal_Sitdown
 
+#ifdef Pandas_BattleConfig_BattleRecord_AutoEnabled_Unit
+	int32 batrec_autoenabled_unit; // 有哪些单位默认开启战斗记录
+#endif // Pandas_BattleConfig_BattleRecord_AutoEnabled_Unit
+
 #include <custom/battle_config_struct.inc>
 };
 
