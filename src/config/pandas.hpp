@@ -332,6 +332,10 @@
 // 此选项用于指定玩家进入离线挂机模式时, 地图服务器重启后的头部朝向哪里
 #define Pandas_BattleConfig_Suspend_Offline_HeadDirection
 
+// 是否启用 suspend_offline_sitdown 配置选项及其功能 [Sola丶小克]
+// 此选项用于指定玩家进入离线挂机模式时, 地图服务器重启后处于站立还是坐下状态
+#define Pandas_BattleConfig_Suspend_Offline_Sitdown
+
 // ============================================================================
 // 脚本引擎修改组 - Pandas_ScriptEngine
 // ============================================================================

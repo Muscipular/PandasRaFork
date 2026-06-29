@@ -798,6 +798,10 @@ struct Battle_Config
 	int32 suspend_offline_headdirection; // 当玩家进入离线挂机模式时, 地图服务器重启后的头部朝向哪里
 #endif // Pandas_BattleConfig_Suspend_Offline_HeadDirection
 
+#ifdef Pandas_BattleConfig_Suspend_Offline_Sitdown
+	int32 suspend_offline_sitdown; // 当玩家进入离线挂机模式时, 地图服务器重启后处于站立还是坐下状态
+#endif // Pandas_BattleConfig_Suspend_Offline_Sitdown
+
 #include <custom/battle_config_struct.inc>
 };
 
