@@ -612,6 +612,9 @@
 	// 是否启用 login 脚本指令 [Sola丶小克]
 	// 该指令用于将指定的角色以特定的登录模式拉上线
 	// 此选项开关需要依赖 Pandas_Player_Suspend_System 的拓展
+	#ifdef Pandas_Player_Suspend_System
+		#define Pandas_ScriptCommand_Login
+	#endif // Pandas_Player_Suspend_System
 	// 是否启用 checksuspend 脚本指令 [Sola丶小克]
 	// 该指令用于获取指定角色或指定账号当前在线角色的挂机模式
 	// 此选项开关需要依赖 Pandas_Struct_Autotrade_Extend 的拓展

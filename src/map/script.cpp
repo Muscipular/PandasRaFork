@@ -28523,6 +28523,58 @@ BUILDIN_FUNC(unlockcmd) {
 	return SCRIPT_CMD_SUCCESS;
 }
 #endif // Pandas_ScriptCommand_UnlockCmd
+
+#ifdef Pandas_ScriptCommand_Login
+/* ===========================================================
+ * 指令: login
+ * 描述: 将指定的角色以特定的登录模式拉上线
+ * 用法: login <角色编号>{,<默认是否坐下>{,<默认身体朝向>{,<默认脑袋朝向>{,<登录模式>}}}};
+ * 返回: 成功返回 1, 失败返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(login) {
+	uint32 charid = static_cast<uint32>(script_getnum(st, 2));
+
+	int sit = 0;
+	if (!script_get_optnum(st, 3, "Sitdown or not", sit, true, 0)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+	sit = cap_value(sit, 0, 1);
+
+	int body_dir = DIR_SOUTH;
+	if (!script_get_optnum(st, 4, "Body Direction", body_dir, true, DIR_SOUTH)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+	body_dir = cap_value(body_dir, 0, 7);
+
+	int head_dir = 0;
+	if (!script_get_optnum(st, 5, "Head Direction", head_dir, true, 0)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+	head_dir = cap_value(head_dir, 0, 2);
+
+	int mode = SUSPEND_MODE_NONE;
+	if (!script_get_optnum(st, 6, "Login Mode", mode, true, SUSPEND_MODE_NORMAL)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (!suspend_mode_valid(mode)) {
+		mode = SUSPEND_MODE_NORMAL;
+	}
+
+	if (suspend_recall(charid, static_cast<e_suspend_mode>(mode), static_cast<unsigned char>(body_dir), static_cast<unsigned char>(head_dir), static_cast<unsigned char>(sit))) {
+		script_pushint(st, 1);
+	} else {
+		script_pushint(st, 0);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_Login
 /// script command definitions
 /// for an explanation on args, see add_buildin_func
 struct script_function buildin_func[] = {
@@ -28850,6 +28902,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_UnlockCmd
 	BUILDIN_DEF(unlockcmd, ""), // 解锁实时事件和过滤器事件的指令限制 [Sola丶小克]
 #endif // Pandas_ScriptCommand_UnlockCmd
+#ifdef Pandas_ScriptCommand_Login
+	BUILDIN_DEF(login, "i????"), // 将指定的角色以特定的登录模式拉上线 [Sola丶小克]
+#endif // Pandas_ScriptCommand_Login
 	BUILDIN_DEF(dispbottom,"s??"), //added from jA [Lupus]
 	BUILDIN_DEF(recovery,"i???"),
 	BUILDIN_DEF(getpetinfo,"i?"),
