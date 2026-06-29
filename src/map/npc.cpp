@@ -8,9 +8,9 @@
 #ifdef Pandas_ScriptEngine_Express
 #include <algorithm>
 #endif // Pandas_ScriptEngine_Express
-#ifdef Pandas_Struct_Map_Session_Data_EventHalt
+#if defined(Pandas_Struct_Map_Session_Data_EventHalt) || defined(Pandas_Struct_Map_Session_Data_EventTrigger)
 #include <exception>
-#endif // Pandas_Struct_Map_Session_Data_EventHalt
+#endif // Pandas_Struct_Map_Session_Data_EventHalt || Pandas_Struct_Map_Session_Data_EventTrigger
 #include <map>
 #include <vector>
 
@@ -6095,6 +6095,10 @@ size_t npc_script_event( map_session_data& sd, enum npce_event type ){
 	if (type == NPCE_MAX)
 		return 0;
 
+#ifdef Pandas_Struct_Map_Session_Data_EventTrigger
+	if (getEventTrigger(&sd, type) == EVENT_TRIGGER_DISABLED)
+		return 0;
+#endif // Pandas_Struct_Map_Session_Data_EventTrigger
 	std::vector<struct script_event_s>& vector = script_event[type];
 
 	for( struct script_event_s& evt : vector ){
@@ -6176,6 +6180,64 @@ bool npc_script_filter(map_session_data* sd, const char* eventname) {
 	return getProcessHalt(sd, type);
 }
 #endif // Pandas_Struct_Map_Session_Data_EventHalt
+
+#ifdef Pandas_Struct_Map_Session_Data_EventTrigger
+// Method:      setEventTrigger
+// Description: 设置一个事件的触发行为
+// Parameter:   map_session_data * sd
+// Parameter:   enum npce_event event
+// Parameter:   uint16 next_trigger_flag
+// Returns:     bool 设置成功与否
+bool setEventTrigger(map_session_data *sd, enum npce_event event, enum npce_trigger trigger_flag) {
+	nullpo_retr(false, sd);
+	try
+	{
+		sd->pandas.eventtrigger[event] = trigger_flag;
+		return true;
+	}
+	catch (const std::exception&)
+	{
+		return false;
+	}
+}
+
+// Method:      getEventTrigger
+// Description: 获取一个事件的触发行为
+// Parameter:   map_session_data * sd
+// Parameter:   enum npce_event event
+// Returns:     uint16 当前的触发行为
+npce_trigger getEventTrigger(map_session_data *sd, enum npce_event event) {
+	nullpo_retr(EVENT_TRIGGER_NONE, sd);
+	return (npce_trigger)sd->pandas.eventtrigger[event];
+}
+
+// Method:      isAllowTriggerEvent
+// Description: 判断是否允许执行一个指定的事件
+// Parameter:   map_session_data * sd
+// Parameter:   enum npce_event event
+// Returns:     bool
+// Author:      Sola丶小克(CairoLee)  2019/11/03 14:29
+bool isAllowTriggerEvent(map_session_data* sd, enum npce_event event) {
+	nullpo_retr(false, sd);
+	enum npce_trigger trigger = getEventTrigger(sd, event);
+	switch (trigger)
+	{
+	case EVENT_TRIGGER_NONE:
+	case EVENT_TRIGGER_DISABLED:
+	case EVENT_TRIGGER_MAX:
+		return false;
+		break;
+	case EVENT_TRIGGER_ONCE:
+		setEventTrigger(sd, event, EVENT_TRIGGER_NONE);
+		return true;
+		break;
+	case EVENT_TRIGGER_EVER:
+		return true;
+		break;
+	}
+	return false;
+}
+#endif // Pandas_Struct_Map_Session_Data_EventTrigger
 /**
  * Duplicates a NPC.
  * nd: Original NPC data

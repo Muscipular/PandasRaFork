@@ -218,6 +218,14 @@
 	export_constant(NPCX_PCHARMED);	// pcharmed_express_name	// OnPCHarmedExpress		// 当玩家受到伤害并即将进行结算时触发实时事件 [人鱼姬的思念]
 #endif // Pandas_NpcExpress_PCHARMED
 	// PYHELP - NPCEVENT - INSERT POINT - <Section 18>
+#ifdef Pandas_Struct_Map_Session_Data_EventTrigger
+	/* npce_trigger values */
+	export_constant(EVENT_TRIGGER_NONE);
+	export_constant(EVENT_TRIGGER_DISABLED);
+	export_constant(EVENT_TRIGGER_ONCE);
+	export_constant(EVENT_TRIGGER_EVER);
+	export_constant(EVENT_TRIGGER_MAX);
+#endif // Pandas_Struct_Map_Session_Data_EventTrigger
 #endif // Pandas_ScriptCommands
 
 	/* min and maximum variable value */

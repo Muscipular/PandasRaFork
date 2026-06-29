@@ -1650,6 +1650,18 @@ bool getProcessHalt(map_session_data *sd, enum npce_event event, bool autoreset 
 bool npc_script_filter(map_session_data* sd, enum npce_event type);
 bool npc_script_filter(map_session_data* sd, const char* eventname);
 #endif // Pandas_Struct_Map_Session_Data_EventHalt
+#ifdef Pandas_Struct_Map_Session_Data_EventTrigger
+enum npce_trigger : uint16 {
+	EVENT_TRIGGER_NONE = 0x00,
+	EVENT_TRIGGER_DISABLED = 0x01,
+	EVENT_TRIGGER_ONCE = 0x02,
+	EVENT_TRIGGER_EVER = 0x03,
+	EVENT_TRIGGER_MAX
+};
+bool setEventTrigger(map_session_data *sd, enum npce_event event, enum npce_trigger trigger_flag);
+npce_trigger getEventTrigger(map_session_data *sd, enum npce_event event);
+bool isAllowTriggerEvent(map_session_data* sd, enum npce_event event);
+#endif // Pandas_Struct_Map_Session_Data_EventTrigger
 npc_data* npc_duplicate_npc( npc_data& nd, char name[NPC_NAME_LENGTH + 1], int16 mapid, int16 x, int16 y, int32 class_, uint8 dir, int16 xs, int16 ys, map_session_data* owner = nullptr );
 npc_data* npc_duplicate_npc_for_player( npc_data& nd, map_session_data& sd );
 
