@@ -20,6 +20,7 @@
 	#define Pandas_Version "1.2.5.1"
 
 	// 在启动时显示 Pandas 的 LOGO
+	#define Pandas_Show_Logo
 
 	// 在启动时显示 Pandas 的版本号
 
