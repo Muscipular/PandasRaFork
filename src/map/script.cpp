@@ -15338,6 +15338,21 @@ BUILDIN_FUNC(getiteminfo)
 		case ITEMINFO_ID: script_pushint(st, i_data->nameid); break;
 		case ITEMINFO_AEGISNAME: script_pushstrcopy(st, i_data->name.c_str()); break;
 		case ITEMINFO_SUBTYPE: script_pushint(st, i_data->subtype); break;
+#ifdef Pandas_Persistence_Itemdb_Script
+		case -7:
+			script_pushstrcopy(st, i_data->pandas.script_plaintext.script.c_str());
+			break;
+		case -8:
+			script_pushstrcopy(st, i_data->pandas.script_plaintext.equip_script.c_str());
+			break;
+		case -9:
+			script_pushstrcopy(st, i_data->pandas.script_plaintext.unequip_script.c_str());
+			break;
+#else
+		case -7: script_pushconststr(st, "UnCompiled"); break;
+		case -8: script_pushconststr(st, "UnCompiled"); break;
+		case -9: script_pushconststr(st, "UnCompiled"); break;
+#endif // Pandas_Persistence_Itemdb_Script
 		default:
 			script_pushint(st, -1);
 			break;
