@@ -3641,6 +3641,10 @@ struct script_state* script_alloc_state(struct script_code* rootscript, int32 po
 	st->oid = oid;
 	st->sleep.timer = INVALID_TIMER;
 	st->npc_item_flag = battle_config.item_enabled_npc;
+#ifdef Pandas_ScriptCommand_UnlockCmd
+	// 确保创建 script_state 的时候 unlockcmd 的值为 0
+	st->unlockcmd = 0;
+#endif // Pandas_ScriptCommand_UnlockCmd
 	
 	if( st->script->instances != USHRT_MAX )
 		st->script->instances++;
@@ -28442,6 +28446,31 @@ BUILDIN_FUNC(preg_match) {
 #endif
 }
 
+#ifdef Pandas_ScriptCommand_UnlockCmd
+/* ===========================================================
+ * 指令: unlockcmd
+ * 描述: 解锁实时事件和过滤器事件的指令限制, 只能用于实时或过滤器事件
+ * 用法: unlockcmd;
+ * 返回: 该指令无论成功与否, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(unlockcmd) {
+	map_session_data* sd = nullptr;
+	sd = map_id2sd(st->rid);
+
+	if (!sd) {
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!npc_event_is_realtime(sd->pandas.workinevent)) {
+		ShowError("buildin_unlockcmd: This command can only be used for Filter or Express Event.\n");
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	st->unlockcmd = 1;
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_UnlockCmd
 /// script command definitions
 /// for an explanation on args, see add_buildin_func
 struct script_function buildin_func[] = {
@@ -28766,6 +28795,9 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(deletepset,"i"), // Delete a pattern set [MouseJstr]
 #endif
 	BUILDIN_DEF(preg_match,"ss?"),
+#ifdef Pandas_ScriptCommand_UnlockCmd
+	BUILDIN_DEF(unlockcmd, ""), // 解锁实时事件和过滤器事件的指令限制 [Sola丶小克]
+#endif // Pandas_ScriptCommand_UnlockCmd
 	BUILDIN_DEF(dispbottom,"s??"), //added from jA [Lupus]
 	BUILDIN_DEF(recovery,"i???"),
 	BUILDIN_DEF(getpetinfo,"i?"),

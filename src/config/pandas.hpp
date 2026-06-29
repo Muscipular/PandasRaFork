@@ -294,6 +294,7 @@
 	// 该指令用于获取指定单位当前正在攻击的目标单位编号
 	// 是否启用 unlockcmd 脚本指令 [Sola丶小克]
 	// 该指令用于解锁实时事件和过滤器事件的指令限制, 只能用于实时或过滤器事件
+	#define Pandas_ScriptCommand_UnlockCmd
 	// 是否启用战斗记录相关的脚本指令 [Sola丶小克]
 	// 此选项开关需要依赖 Pandas_BattleRecord 的拓展
 	// 是否启用 login 脚本指令 [Sola丶小克]
