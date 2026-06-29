@@ -55,12 +55,6 @@
 #include "trade.hpp"
 #include "vending.hpp"
 
-#ifdef Pandas_Google_Breakpad
-// 此全局变量定义在 crashdump.cpp 文件中
-// 表示本次崩溃是由 @crashtest 刻意引发的, 上报转储文件时携带相关标记
-extern bool g_crashByTestCommand;
-#endif // Pandas_Google_Breakpad
-
 using namespace rathena;
 
 #define ATCOMMAND_LENGTH 50
