@@ -8949,6 +8949,10 @@ static const struct _battle_data {
 	{ "suspend_afk_headtop_viewid",         &battle_config.suspend_afk_headtop_viewid,      471,    0,      INT_MAX,        },
 #endif // Pandas_BattleConfig_Suspend_AFK_HeadTop_ViewID
 
+#ifdef Pandas_BattleConfig_Suspend_Normal_BodyDirection
+	{ "suspend_normal_bodydirection",       &battle_config.suspend_normal_bodydirection,    -1,     -1,     7,              },
+#endif // Pandas_BattleConfig_Suspend_Normal_BodyDirection
+
 #include <custom/battle_config_init.inc>
 };
 

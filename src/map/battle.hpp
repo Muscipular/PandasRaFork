@@ -818,6 +818,10 @@ struct Battle_Config
 	int32 suspend_afk_headtop_viewid; // 当玩家进入离开模式时, 将头饰上的更换为哪一个指定的头饰外观编号
 #endif // Pandas_BattleConfig_Suspend_AFK_HeadTop_ViewID
 
+#ifdef Pandas_BattleConfig_Suspend_Normal_BodyDirection
+	int32 suspend_normal_bodydirection; // 当玩家进入普通模式时, 被拉上线的角色身体朝向哪里
+#endif // Pandas_BattleConfig_Suspend_Normal_BodyDirection
+
 #include <custom/battle_config_struct.inc>
 };
 
