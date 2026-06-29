@@ -9562,6 +9562,23 @@ const status_change* status_get_sc(const block_list* bl){
 	return status_get_sc(const_cast<block_list*>(bl));
 }
 
+#ifdef Pandas_Struct_Unit_CommonData
+s_unit_common_data* status_get_ucd(block_list* bl)
+{
+	if( bl )
+	switch (bl->type) {
+		case BL_PC: return &reinterpret_cast<map_session_data*>(bl)->ucd;
+		case BL_MOB: return &reinterpret_cast<mob_data*>(bl)->ucd;
+		case BL_NPC: return &reinterpret_cast<npc_data*>(bl)->ucd;
+		case BL_HOM: return &reinterpret_cast<homun_data*>(bl)->ucd;
+		case BL_MER: return &reinterpret_cast<s_mercenary_data*>(bl)->ucd;
+		case BL_PET: return &reinterpret_cast<pet_data*>(bl)->ucd;
+		case BL_ELEM: return &reinterpret_cast<s_elemental_data*>(bl)->ucd;
+	}
+	return nullptr;
+}
+#endif // Pandas_Struct_Unit_CommonData
+
 #ifdef Pandas_Helper_Common_Function
 bool status_ishiding(struct block_list* bl, struct block_list* observer_bl) {
 	if (bl == nullptr)

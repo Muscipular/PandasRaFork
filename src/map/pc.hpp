@@ -381,6 +381,9 @@ struct s_qi_display {
 class map_session_data : public block_list {
 public:
 	struct unit_data ud;
+#ifdef Pandas_Struct_Unit_CommonData
+	struct s_unit_common_data ucd;
+#endif // Pandas_Struct_Unit_CommonData
 	struct view_data vd;
 	struct status_data base_status, battle_status;
 	status_change sc;

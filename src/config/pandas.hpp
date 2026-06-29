@@ -46,6 +46,13 @@
 	// 使 map_session_data, npc_data, mob_data, homun_data,
 	// mercenary_data, elemental_data, pet_data 能够有一个独立的结构体用来
 	// 存放 Pandas 针对多单位通用的拓展 [Sola丶小克]
+	#define Pandas_Struct_Unit_CommonData
+
+	#ifdef Pandas_Struct_Unit_CommonData
+		// 使 s_unit_common_data 可记录单位的光环信息 [Sola丶小克]
+
+		// 使 s_unit_common_data 可记录战斗记录信息 [Sola丶小克]
+	#endif // Pandas_Struct_Unit_CommonData
 
 	// 以下选项开关需要依赖 Pandas_Struct_Unit_CommonData 的拓展
 

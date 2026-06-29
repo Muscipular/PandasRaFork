@@ -183,6 +183,9 @@ extern std::unordered_map<std::string, std::shared_ptr<s_pet_autobonus_wrapper>>
 
 struct pet_data : public block_list {
 	struct unit_data ud;
+#ifdef Pandas_Struct_Unit_CommonData
+	struct s_unit_common_data ucd;
+#endif // Pandas_Struct_Unit_CommonData
 	struct view_data vd;
 	struct s_pet pet;
 	struct status_data status;

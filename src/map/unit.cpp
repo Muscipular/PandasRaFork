@@ -3479,6 +3479,11 @@ void unit_dataset(block_list *bl)
 	nullpo_retv(ud = unit_bl2ud(bl));
 
 	memset( ud, 0, sizeof( struct unit_data) );
+#ifdef Pandas_Struct_Unit_CommonData
+	s_unit_common_data* ucd = status_get_ucd(bl);
+	if (ucd != nullptr)
+		memset(ucd, 0, sizeof(s_unit_common_data));
+#endif // Pandas_Struct_Unit_CommonData
 	ud->bl             = bl;
 	ud->walktimer      = INVALID_TIMER;
 	ud->skilltimer     = INVALID_TIMER;

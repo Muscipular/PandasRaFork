@@ -336,6 +336,9 @@ struct s_dmglog{
 
 struct mob_data : public block_list {
 	struct unit_data  ud;
+#ifdef Pandas_Struct_Unit_CommonData
+	struct s_unit_common_data ucd;
+#endif // Pandas_Struct_Unit_CommonData
 	struct view_data *vd;
 	bool vd_changed;
 	struct status_data status, *base_status; //Second one is in case of leveling up mobs, or tiny/large mobs.

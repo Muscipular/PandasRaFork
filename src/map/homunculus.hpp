@@ -86,6 +86,9 @@ enum e_hom_state2 : uint8 {
 
 struct homun_data : public block_list {
 	struct unit_data  ud;
+#ifdef Pandas_Struct_Unit_CommonData
+	struct s_unit_common_data ucd;
+#endif // Pandas_Struct_Unit_CommonData
 	struct view_data *vd;
 	struct status_data base_status, battle_status;
 	status_change sc;

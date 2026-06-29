@@ -157,6 +157,9 @@ enum e_npcv_status : uint8 {
 
 struct npc_data : public block_list {
 	struct unit_data ud; //Because they need to be able to move....
+#ifdef Pandas_Struct_Unit_CommonData
+	struct s_unit_common_data ucd;
+#endif // Pandas_Struct_Unit_CommonData
 	struct view_data vd;
 	status_change sc; //They can't have status changes, but.. they want the visual opt values.
 	npc_data *master_nd;

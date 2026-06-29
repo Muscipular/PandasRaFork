@@ -40,6 +40,9 @@ struct s_mercenary_db {
 
 struct s_mercenary_data : public block_list {
 	unit_data ud;
+#ifdef Pandas_Struct_Unit_CommonData
+	s_unit_common_data ucd;
+#endif // Pandas_Struct_Unit_CommonData
 	view_data *vd;
 	status_data base_status, battle_status;
 	status_change sc;

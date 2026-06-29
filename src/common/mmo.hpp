@@ -271,6 +271,14 @@ enum e_mode {
 	MD_SKILLIMMUNE			= 0x8000000,
 };
 
+#ifdef Pandas_Struct_Unit_CommonData
+// 多种单位的结构体都会嵌入的一个数据结构
+// 这里定义的内容在 map_session_data, npc_data, mob_data, homun_data,
+// mercenary_data, elemental_data, pet_data 结构体中的 ucd 成员中都会同时拥有
+struct s_unit_common_data {
+};
+#endif // Pandas_Struct_Unit_CommonData
+
 #define MD_MASK 0x000FFFF
 #define ATR_MASK 0x0FF0000
 #define CL_MASK 0xF000000
