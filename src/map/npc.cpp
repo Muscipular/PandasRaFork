@@ -8,6 +8,9 @@
 #ifdef Pandas_ScriptEngine_Express
 #include <algorithm>
 #endif // Pandas_ScriptEngine_Express
+#ifdef Pandas_Struct_Map_Session_Data_EventHalt
+#include <exception>
+#endif // Pandas_Struct_Map_Session_Data_EventHalt
 #include <map>
 #include <vector>
 
@@ -6105,6 +6108,74 @@ size_t npc_script_event( map_session_data& sd, enum npce_event type ){
 	return vector.size();
 }
 
+#ifdef Pandas_Struct_Map_Session_Data_EventHalt
+// Method:      setProcessHalt
+// Description: 设置一个事件的中断状态
+// Parameter:   map_session_data * sd
+// Parameter:   enum npce_event event
+// Parameter:   bool halt 该事件是否需要中断
+// Returns:     bool 设置成功与否
+bool setProcessHalt(map_session_data *sd, enum npce_event event, bool halt) {
+	nullpo_retr(false, sd);
+	try
+	{
+		sd->pandas.eventhalt[event] = halt;
+		return true;
+	}
+	catch (const std::exception&)
+	{
+		return false;
+	}
+}
+
+// Method:      getProcessHalt
+// Description: 获取一个事件的中断状态
+// Parameter:   map_session_data * sd
+// Parameter:   enum npce_event event
+// Parameter:   bool autoreset 获取后是否重置中断状态
+// Returns:     bool 该事件是否需要中断
+bool getProcessHalt(map_session_data *sd, enum npce_event event, bool autoreset) {
+	nullpo_retr(false, sd);
+	try
+	{
+		bool current_val = sd->pandas.eventhalt[event];
+		if (autoreset)
+			sd->pandas.eventhalt[event] = false;
+		return current_val;
+	}
+	catch (const std::exception&)
+	{
+		return false;
+	}
+}
+
+// Method:      npc_script_filter
+// Description: 执行指定类型的所有过滤器事件, 并返回是否需要中断
+// Parameter:   map_session_data * sd
+// Parameter:   enum npce_event type
+// Returns:     bool 需要中断则返回 true, 无需中断返回 false
+bool npc_script_filter(map_session_data* sd, enum npce_event type) {
+	nullpo_retr(false, sd);
+	npc_script_event(*sd, type);
+	return getProcessHalt(sd, type);
+}
+
+// Method:      npc_script_filter
+// Description: 执行一个精确指定的过滤器事件, 并返回是否需要中断
+// Access:      public
+// Parameter:   map_session_data * sd
+// Parameter:   const char * eventname
+// Returns:     bool
+// Author:      Sola丶小克(CairoLee)  2021/02/09 20:45
+bool npc_script_filter(map_session_data* sd, const char* eventname) {
+	nullpo_retr(false, sd);
+	enum npce_event type = npc_get_script_event_type(eventname);
+	struct event_data* ev = (struct event_data*)strdb_get(ev_db, eventname);
+	if (ev && !npc_event_rightnow(sd, ev, eventname))
+		return false;
+	return getProcessHalt(sd, type);
+}
+#endif // Pandas_Struct_Map_Session_Data_EventHalt
 /**
  * Duplicates a NPC.
  * nd: Original NPC data

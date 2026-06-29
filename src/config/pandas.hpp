@@ -71,6 +71,118 @@
 
 		// 使 map_session_data 可记录事件中断请求 [Sola丶小克]
 		// 结构体修改定位 pc.hpp -> map_session_data.pandas.eventhalt
+		#define Pandas_Struct_Map_Session_Data_EventHalt
+
+		#ifdef Pandas_Struct_Map_Session_Data_EventHalt
+			/************************************************************************/
+			/* Filter 类型的过滤事件，这些事件可以被 processhalt 中断                    */
+			/************************************************************************/
+
+			// 当玩家在装备鉴定列表中选择好装备, 并点击“确定”按钮时触发过滤器 [Sola丶小克]
+			// 事件类型: Filter / 事件名称: OnPCIdentifyFilter
+			// 常量名称: NPCF_IDENTIFY / 变量名称: identify_filter_name
+
+			// 当玩家进入 NPC 开启的聊天室时触发过滤器 [Sola丶小克]
+			// 事件类型: Filter / 事件名称: OnPCInChatroomFilter
+			// 常量名称: NPCF_ENTERCHAT / 变量名称: enterchat_filter_name
+
+			// 当玩家准备插入卡片时触发过滤器 [Sola丶小克]
+			// 事件类型: Filter / 事件名称: OnPCInsertCardFilter
+			// 常量名称: NPCF_INSERT_CARD / 变量名称: insert_card_filter_name
+
+			// 当玩家准备使用非装备类道具时触发过滤器 [Sola丶小克]
+			// 事件类型: Filter / 事件名称: OnPCUseItemFilter
+			// 常量名称: NPCF_USE_ITEM / 变量名称: use_item_filter_name
+
+			// 当玩家准备使用技能时触发过滤器 [Sola丶小克]
+			// 事件类型: Filter / 事件名称: OnPCUseSkillFilter
+			// 常量名称: NPCF_USE_SKILL / 变量名称: use_skill_filter_name
+
+			// 当玩家准备打开乐透大转盘的时候触发过滤器 [Sola丶小克]
+			// 事件类型: Filter / 事件名称: OnPCOpenRouletteFilter
+			// 常量名称: NPCF_ROULETTE_OPEN / 变量名称: roulette_open_filter_name
+
+			// 当玩家准备查看某个角色的装备时触发过滤器 [Sola丶小克]
+			// 事件类型: Filter / 事件名称: OnPCViewEquipFilter
+			// 常量名称: NPCF_VIEW_EQUIP / 变量名称: view_equip_filter_name
+
+			// 当玩家准备穿戴装备时触发过滤器 [Sola丶小克]
+			// 事件类型: Filter / 事件名称: OnPCEquipFilter
+			// 常量名称: NPCF_EQUIP / 变量名称: equip_filter_name
+
+			// 当玩家准备脱下装备时触发过滤器 [Sola丶小克]
+			// 事件类型: Filter / 事件名称: OnPCUnequipFilter
+			// 常量名称: NPCF_UNEQUIP / 变量名称: unequip_filter_name
+
+			// 当玩家准备获得一个状态(Buff)时触发过滤器 [Sola丶小克]
+			// 事件类型: Filter / 事件名称: OnPCBuffStartFilter
+			// 常量名称: NPCF_SC_START / 变量名称: sc_start_filter_name
+
+			// 当玩家使用菜单中的原地复活之证时触发过滤器 [Sola丶小克]
+			// 事件类型: Filter / 事件名称: OnPCUseReviveTokenFilter
+			// 常量名称: NPCF_USE_REVIVE_TOKEN / 变量名称: use_revive_token_filter_name
+
+			// 当玩家使用一键鉴定道具时触发过滤器 [Sola丶小克]
+			// 事件类型: Filter / 事件名称: OnPCUseOCIdentifyFilter
+			// 常量名称: NPCF_ONECLICK_IDENTIFY / 变量名称: oneclick_identify_filter_name
+
+			// 当玩家准备创建公会时触发过滤器 [聽風]
+			// 事件类型: Filter / 事件名称: OnPCGuildCreateFilter
+			// 常量名称: NPCF_GUILDCREATE / 变量名称: guildcreate_filter_name
+
+			// 当玩家即将加入公会时触发过滤器 [聽風]
+			// 事件类型: Filter / 事件名称: OnPCGuildJoinFilter
+			// 常量名称: NPCF_GUILDJOIN / 变量名称: guildjoin_filter_name
+
+			// 当玩家准备离开公会时触发过滤器 [聽風]
+			// 事件类型: Filter / 事件名称: OnPCGuildLeaveFilter
+			// 常量名称: NPCF_GUILDLEAVE / 变量名称: guildleave_filter_name
+
+			// 当玩家准备创建队伍时触发过滤器 [聽風]
+			// 事件类型: Filter / 事件名称: OnPCPartyCreateFilter
+			// 常量名称: NPCF_PARTYCREATE / 变量名称: partycreate_filter_name
+
+			// 当玩家即将加入队伍时触发过滤器 [聽風]
+			// 事件类型: Filter / 事件名称: OnPCPartyJoinFilter
+			// 常量名称: NPCF_PARTYJOIN / 变量名称: partyjoin_filter_name
+
+			// 当玩家准备离开队伍时触发过滤器 [聽風]
+			// 事件类型: Filter / 事件名称: OnPCPartyLeaveFilter
+			// 常量名称: NPCF_PARTYLEAVE / 变量名称: partyleave_filter_name
+
+			// 当玩家准备丢弃或掉落道具时触发过滤器 [人鱼姬的思念]
+			// 事件类型: Filter / 事件名称: OnPCDropItemFilter
+			// 常量名称: NPCF_DROPITEM / 变量名称: dropitem_filter_name
+
+			// 当玩家点击魔物墓碑时触发过滤器 [人鱼姬的思念]
+			// 事件类型: Filter / 事件名称: OnPCClickTombFilter
+			// 常量名称: NPCF_CLICKTOMB / 变量名称: clicktomb_filter_name
+
+			// 当玩家准备将道具存入仓库时触发过滤器 [香草]
+			// 事件类型: Filter / 事件名称: OnPCStorageAddFilter
+			// 常量名称: NPCF_STORAGE_ADD / 变量名称: storage_add_filter_name
+
+			// 当玩家准备将道具取出仓库时触发过滤器 [香草]
+			// 事件类型: Filter / 事件名称: OnPCStorageDelFilter
+			// 常量名称: NPCF_STORAGE_DEL / 变量名称: storage_del_filter_name
+
+			// 当玩家准备将道具从背包存入手推车时触发过滤器 [香草]
+			// 事件类型: Filter / 事件名称: OnPCCartAddFilter
+			// 常量名称: NPCF_CART_ADD / 变量名称: cart_add_filter_name
+
+			// 当玩家准备将道具从手推车取回背包时触发过滤器 [香草]
+			// 事件类型: Filter / 事件名称: OnPCCartDelFilter
+			// 常量名称: NPCF_CART_DEL / 变量名称: cart_del_filter_name
+
+			// 当玩家准备将道具移入收藏栏位时触发过滤器 [香草]
+			// 事件类型: Filter / 事件名称: OnPCFavoriteAddFilter
+			// 常量名称: NPCF_FAVORITE_ADD / 变量名称: favorite_add_filter_name
+
+			// 当玩家准备将道具从收藏栏位移出时触发过滤器 [香草]
+			// 事件类型: Filter / 事件名称: OnPCFavoriteDelFilter
+			// 常量名称: NPCF_FAVORITE_DEL / 变量名称: favorite_del_filter_name
+			// PYHELP - NPCEVENT - INSERT POINT - <Section 1>
+		#endif // Pandas_Struct_Map_Session_Data_EventHalt
 
 		// 使 map_session_data 可记录事件触发请求 [Sola丶小克]
 		// 结构体修改定位 pc.hpp -> map_session_data.pandas.eventtrigger

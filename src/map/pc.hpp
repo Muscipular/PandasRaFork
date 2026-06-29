@@ -402,6 +402,9 @@ public:
 #ifdef Pandas_Struct_Map_Session_Data_WorkInEvent
 		enum npce_event workinevent = NPCE_MAX; // 角色当前正在执行的事件
 #endif // Pandas_Struct_Map_Session_Data_WorkInEvent
+#ifdef Pandas_Struct_Map_Session_Data_EventHalt
+		bool eventhalt[NPCE_MAX] = { false }; // 用于记录事件中断请求
+#endif // Pandas_Struct_Map_Session_Data_EventHalt
 	} pandas;
 #endif // Pandas_Struct_Map_Session_Data_Pandas
 	//NOTE: When deciding to add a flag to state or special_state, take into consideration that state is preserved in

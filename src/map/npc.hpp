@@ -1644,6 +1644,12 @@ bool npc_event_is_express(enum npce_event eventtype);
 bool npc_event_is_filter(enum npce_event eventtype);
 bool npc_event_is_realtime(enum npce_event eventtype);
 #endif // Pandas_ScriptEngine_Express
+#ifdef Pandas_Struct_Map_Session_Data_EventHalt
+bool setProcessHalt(map_session_data *sd, enum npce_event event, bool halt = true);
+bool getProcessHalt(map_session_data *sd, enum npce_event event, bool autoreset = true);
+bool npc_script_filter(map_session_data* sd, enum npce_event type);
+bool npc_script_filter(map_session_data* sd, const char* eventname);
+#endif // Pandas_Struct_Map_Session_Data_EventHalt
 npc_data* npc_duplicate_npc( npc_data& nd, char name[NPC_NAME_LENGTH + 1], int16 mapid, int16 x, int16 y, int32 class_, uint8 dir, int16 xs, int16 ys, map_session_data* owner = nullptr );
 npc_data* npc_duplicate_npc_for_player( npc_data& nd, map_session_data& sd );
 
