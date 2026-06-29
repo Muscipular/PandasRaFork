@@ -23,6 +23,7 @@
 #include "clif.hpp"
 #include "intif.hpp"
 #include "log.hpp"
+#include "map_artisan.hpp"
 #include "mob.hpp"
 #include "pc.hpp"
 #include "status.hpp"

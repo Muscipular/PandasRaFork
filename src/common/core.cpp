@@ -28,6 +28,7 @@
 #include "mmo.hpp"
 #include "showmsg.hpp"
 #include "strlib.hpp"
+#include "assistant.hpp"
 
 #ifndef DEPRECATED_COMPILER_SUPPORT
 	#if defined( _MSC_VER ) && _MSC_VER < 1914

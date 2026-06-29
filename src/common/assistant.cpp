@@ -1,6 +1,11 @@
-#include <string>
+#include "assistant.hpp"
 
-#include <fmt/core.h>
+#include <algorithm>
+#include <cctype>
+#include <regex>
+#include <sstream>
+#include <utility>
+#include <string>
 
 #include <config/pandas.hpp>
 
@@ -10,8 +15,78 @@
 #include <Windows.h>
 #endif // _WIN32
 
-std::string formatVersion(std::string ver, bool bPrefix, bool bSuffix, int ver_type);
-bool isCommercialVersion();
+bool isRegexMatched(const std::string& content, const std::string& patterns) {
+	try {
+		std::regex re(patterns, std::regex::icase);
+		std::smatch match_result;
+		return std::regex_search(content, match_result, re);
+	}
+	catch (const std::regex_error& e) {
+		ShowWarning("%s throw regex_error : %s\n", __func__, e.what());
+		return false;
+	}
+}
+
+bool strContain(std::vector<std::string> needle, const std::string& str) {
+	for (const std::string& it : needle) {
+		if (strContain(it, str))
+			return true;
+	}
+
+	return false;
+}
+
+bool strContain(std::string needle, const std::string& str) {
+	auto it = std::search(
+		str.begin(), str.end(),
+		needle.begin(), needle.end(),
+		[](unsigned char ch1, unsigned char ch2) { return std::toupper(ch1) == std::toupper(ch2); }
+	);
+
+	return it != str.end();
+}
+
+std::vector<std::string> strExplode(std::string const& s, char delim) {
+	std::vector<std::string> result;
+	std::istringstream iss(s);
+
+	for (std::string token; std::getline(iss, token, delim); ) {
+		result.push_back(std::move(token));
+	}
+
+	if (!s.empty() && s.back() == delim)
+		result.push_back("");
+
+	return result;
+}
+
+std::string formatVersion(std::string ver, bool bPrefix, bool bSuffix, int ver_type) {
+	std::vector<std::string> split = strExplode(ver, '.');
+
+	if (split.size() < 3)
+		return (bPrefix ? "v" : "") + ver;
+
+	if (split.size() < 4)
+		split.resize(4, "0");
+
+	std::string suffix;
+	if (ver_type == 0) {
+		suffix = split.back() == "1" ? "-dev" : "";
+	}
+	else {
+		suffix = split.back() != "0" ? " Rev." + split.back() : "";
+	}
+
+	return std::string(bPrefix ? "v" : "") + split[0] + "." + split[1] + "." + split[2] + (bSuffix ? suffix : "");
+}
+
+bool isCommercialVersion() {
+#ifdef Pandas_Commercial_Version
+	return true;
+#else
+	return false;
+#endif // Pandas_Commercial_Version
+}
 
 inline const char* getDefinedVersion() {
 #ifdef Pandas_Commercial_Version
@@ -20,6 +95,17 @@ inline const char* getDefinedVersion() {
 	return Pandas_Version;
 #endif // Pandas_Commercial_Version
 }
+
+#ifdef _WIN32
+static std::string versionPartToString(WORD value, size_t width = 0) {
+	std::string part = std::to_string(value);
+
+	if (part.length() < width)
+		part.insert(part.begin(), width - part.length(), '0');
+
+	return part;
+}
+#endif // _WIN32
 
 #ifdef Pandas_Version
 // Method:      getPandasVersion
@@ -53,11 +139,21 @@ std::string getPandasVersion(bool bPrefix, bool bSuffix) {
 		UINT nItemLength = 0;
 		if (VerQueryValue(pVersionInfo, "\\", &lpBuffer, &nItemLength)) {
 			VS_FIXEDFILEINFO *pFileInfo = (VS_FIXEDFILEINFO*)lpBuffer;
-			std::string szVersionFormat = (isCommercialVersion() ? "{:04}.{:02}.{:02}.{}" : "{}.{}.{}.{}");
-			std::string sFileVersion = fmt::format(szVersionFormat,
-				HIWORD(pFileInfo->dwFileVersionMS), LOWORD(pFileInfo->dwProductVersionMS),
-				HIWORD(pFileInfo->dwProductVersionLS), LOWORD(pFileInfo->dwProductVersionLS)
-			);
+			std::string sFileVersion;
+
+			if (isCommercialVersion()) {
+				sFileVersion = versionPartToString(HIWORD(pFileInfo->dwFileVersionMS), 4) + "." +
+					versionPartToString(LOWORD(pFileInfo->dwProductVersionMS), 2) + "." +
+					versionPartToString(HIWORD(pFileInfo->dwProductVersionLS), 2) + "." +
+					versionPartToString(LOWORD(pFileInfo->dwProductVersionLS));
+			}
+			else {
+				sFileVersion = versionPartToString(HIWORD(pFileInfo->dwFileVersionMS)) + "." +
+					versionPartToString(LOWORD(pFileInfo->dwProductVersionMS)) + "." +
+					versionPartToString(HIWORD(pFileInfo->dwProductVersionLS)) + "." +
+					versionPartToString(LOWORD(pFileInfo->dwProductVersionLS));
+			}
+
 			delete[] pVersionInfo;
 			return formatVersion(sFileVersion, bPrefix, bSuffix, isCommercialVersion() ? 1 : 0);
 		}

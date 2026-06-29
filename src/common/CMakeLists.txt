@@ -51,6 +51,7 @@ endif()
 
 set( COMMON_ALL_HEADERS
 	"${CMAKE_CURRENT_BINARY_DIR}/version.hpp"
+	"${COMMON_SOURCE_DIR}/assistant.hpp"
 	"${COMMON_SOURCE_DIR}/cbasetypes.hpp"
 	"${COMMON_SOURCE_DIR}/mmo.hpp"
 	)
@@ -62,6 +63,7 @@ target_sources(minicore PRIVATE
 	"${COMMON_SOURCE_DIR}/malloc.cpp"
 	"${COMMON_SOURCE_DIR}/showmsg.cpp"
 	"${COMMON_SOURCE_DIR}/strlib.cpp"
+	"${COMMON_SOURCE_DIR}/assistant.cpp"
 	${LIBCONFIG_SOURCES} # needed by showmsg.cpp
 	${COMMON_ADDITIONALL_CPP} # needed by Windows
 )
@@ -126,6 +128,7 @@ set( COMMON_BASE_SOURCES
 	"${COMMON_SOURCE_DIR}/msg_conf.cpp"
 	"${COMMON_SOURCE_DIR}/cli.cpp"
 	"${COMMON_SOURCE_DIR}/utilities.cpp"
+	"${COMMON_SOURCE_DIR}/assistant.cpp"
 	${LIBCONFIG_SOURCES} # needed by conf.cpp/showmsg.cpp
 	${COMMON_ADDITIONALL_CPP} # needed by Windows
 	CACHE INTERNAL "common_base sources" )
