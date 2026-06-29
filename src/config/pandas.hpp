@@ -190,6 +190,7 @@
 
 		// 使 map_session_data 可记录当前是否正在进行护身符能力计算 [Sola丶小克]
 		// 结构体修改定位 pc.hpp -> map_session_data.pandas.amulet_calculating
+		#define Pandas_Struct_Map_Session_Data_AmuletCalculating
 
 		// 使 map_session_data 可记录即将支持捕捉的多个魔物编号 [Sola丶小克]
 

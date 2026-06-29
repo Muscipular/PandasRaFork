@@ -408,6 +408,9 @@ public:
 #ifdef Pandas_Struct_Map_Session_Data_EventTrigger
 		uint16 eventtrigger[NPCE_MAX] = { 0 }; // 用于记录事件触发请求
 #endif // Pandas_Struct_Map_Session_Data_EventTrigger
+#ifdef Pandas_Struct_Map_Session_Data_AmuletCalculating
+		bool amulet_calculating = false; // 当前角色是否正在进行护身符能力计算
+#endif // Pandas_Struct_Map_Session_Data_AmuletCalculating
 	} pandas;
 #endif // Pandas_Struct_Map_Session_Data_Pandas
 	//NOTE: When deciding to add a flag to state or special_state, take into consideration that state is preserved in
