@@ -3507,6 +3507,9 @@ public:
 #ifndef RENEWAL
 	unsigned char sg_counter; //Storm gust counter (previous hits from storm gust)
 #endif
+#ifdef Pandas_Struct_Status_Change_Cloak_Reverting
+	unsigned short cloak_reverting;
+#endif // Pandas_Struct_Status_Change_Cloak_Reverting
 private:
 	std::unordered_map<enum sc_type, status_change_entry> data;
 	std::pair<enum sc_type, status_change_entry*> lastStatus; // last-fetched status

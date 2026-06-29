@@ -292,6 +292,7 @@
 	#define Pandas_Struct_S_Item_Combo_With_Plaintext
 
 	// 使 status_change 能保存 cloak 是否正在进行中的状态 [Sola丶小克]
+	#define Pandas_Struct_Status_Change_Cloak_Reverting
 
 	// 使 map_data 能保存全部魔物的刷新点信息 [Sola丶小克]
 #endif // Pandas_StructIncrease
