@@ -252,8 +252,16 @@
 
 	// 使 mob_data 有一个独立的结构体用来存放 Pandas 的拓展 [Sola丶小克]
 	// 结构体修改定位 mob.hpp -> mob_data.pandas
+	#define Pandas_Struct_Mob_Data_Pandas
 
 	// 以下选项开关需要依赖 Pandas_Struct_Mob_Data_Pandas 的拓展
+	#ifdef Pandas_Struct_Mob_Data_Pandas
+		// 使 mob_data 结构体可记录此魔物被 setunitdata 修改过哪些项目 [Sola丶小克]
+		// 结构体修改定位 mob.hpp -> mob_data.pandas.special_setunitdata
+
+		// 使 mob_data 结构体可记录此魔物特殊的基础经验或职业经验 [Sola丶小克]
+		// 结构体修改定位 mob.hpp -> mob_data.pandas.base_exp 和 job_exp
+	#endif // Pandas_Struct_Mob_Data_Pandas
 
 	// 对离线挂店 autotrade 的定义进行拓展处理 [Sola丶小克]
 	// 进行拓展处理之后能够在代码改动较少的情况下, 更好的支持多种不同类型的 "离线挂店" 行为
