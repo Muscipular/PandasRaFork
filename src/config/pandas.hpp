@@ -1,6 +1,7 @@
 #pragma once
 
 	#define Pandas_Basic
+	#define Pandas_StructIncrease
 
 // ============================================================================
 // 基础组 - Pandas_Basic
@@ -36,3 +37,54 @@
 	// 包含的工具有: LGTM, CodeQL, Microsoft Code Analysis 等
 	#define Pandas_CodeAnalysis_Suggestion
 #endif // Pandas_Basic
+
+// ============================================================================
+// 数据结构增强组 - Pandas_StructIncrease
+// ============================================================================
+
+#ifdef Pandas_StructIncrease
+	// 使 map_session_data, npc_data, mob_data, homun_data,
+	// mercenary_data, elemental_data, pet_data 能够有一个独立的结构体用来
+	// 存放 Pandas 针对多单位通用的拓展 [Sola丶小克]
+
+	// 以下选项开关需要依赖 Pandas_Struct_Unit_CommonData 的拓展
+
+	// 使 map_session_data 有一个独立的结构体用来存放 Pandas 的拓展 [Sola丶小克]
+	// 结构体修改定位 pc.hpp -> map_session_data.pandas
+
+	// 以下选项开关需要依赖 Pandas_Struct_Map_Session_Data_Pandas 的拓展
+
+	// 使 item_data 有一个独立的结构体用来存放 Pandas 的拓展 [Sola丶小克]
+	// 结构体修改定位 itemdb.hpp -> item_data.pandas
+
+	// 以下选项开关需要依赖 Pandas_Struct_Item_Data_Pandas 的拓展
+
+	// 使 npc_data 有一个独立的结构体用来存放 Pandas 的拓展 [Sola丶小克]
+	// 结构体修改定位 npc.hpp -> npc_data.pandas
+
+	// 以下选项开关需要依赖 Pandas_Struct_Npc_Data_Pandas 的拓展
+
+	// 使 mob_data 有一个独立的结构体用来存放 Pandas 的拓展 [Sola丶小克]
+	// 结构体修改定位 mob.hpp -> mob_data.pandas
+
+	// 以下选项开关需要依赖 Pandas_Struct_Mob_Data_Pandas 的拓展
+
+	// 对离线挂店 autotrade 的定义进行拓展处理 [Sola丶小克]
+	// 进行拓展处理之后能够在代码改动较少的情况下, 更好的支持多种不同类型的 "离线挂店" 行为
+	// 在默认情况下 sd->state.autotrade 的值若为 0 则表示没有离线挂店
+	// 若非零的话则表示启用了离线挂店, 且 &2 表示开启的是离线摆摊挂店 &3 表示开启的是离线收购挂店
+
+	// 对 bonus_script_data 的定义进行拓展处理 [Sola丶小克]
+	// 默认的 rAthena 中 bonus_script 机制并没有唯一编号的概念, 为了提高对 bonus_script 的控制粒度
+	// 我们需要将唯一编号引入到我们需要拓展的相关数据结构体中
+
+	// 使 s_mail.item 能有一个 details 字段用来记录附件道具更详细的信息 [Sola丶小克]
+
+	// 使 s_random_opt_data 能保存脚本的明文 [Sola丶小克]
+
+	// 使 s_item_combo 能保存脚本的明文 [Sola丶小克]
+
+	// 使 status_change 能保存 cloak 是否正在进行中的状态 [Sola丶小克]
+
+	// 使 map_data 能保存全部魔物的刷新点信息 [Sola丶小克]
+#endif // Pandas_StructIncrease
