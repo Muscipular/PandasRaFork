@@ -13,6 +13,10 @@
 	#include "winapi.hpp" // Console close event handling
 #endif
 
+#ifdef Pandas_Google_Breakpad
+	#include "crashdump.hpp"
+#endif // Pandas_Google_Breakpad
+
 /* so that developers with --enable-debug can raise signals from any section of the code they'd like */
 #ifdef DEBUG
 	#include <csignal>

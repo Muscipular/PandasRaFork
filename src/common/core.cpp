@@ -128,9 +128,15 @@ static void sig_proc(int32 sn) {
 		if( global_core != nullptr ){
 			global_core->signal_crash();
 		}
+#ifndef Pandas_Google_Breakpad
+		// 在 Windows 环境下, 若启用了 Google Breakpad 模块
+		// 那么它将在初始化的时候调用 SetUnhandledExceptionFilter 设置了未处理的错误回调函数.
+		// 这里则不再需要对 SIGSEGV 等信号进行处理, 否则错误回调函数将永远不会被触发,
+		// 最终会导致 Breakpad 无法在程序崩溃的时候进行转储文件的生成工作.
 		// Pass the signal to the system's default handler
 		compat_signal(sn, SIG_DFL);
 		raise(sn);
+#endif // Pandas_Google_Breakpad
 		break;
 #ifndef _WIN32
 	case SIGXFSZ:
@@ -386,6 +392,13 @@ int32 Core::start( int32 argc, char **argv ){
 
 	this->set_status( e_core_status::CORE_INITIALIZING );
 
+#ifdef Pandas_Google_Breakpad
+#ifndef MINICORE
+	signals_init();
+#endif // MINICORE
+	breakpad_initialize();
+#endif // Pandas_Google_Breakpad
+
 	{// initialize program arguments
 		char *p1;
 		if((p1 = strrchr(argv[0], '/')) != nullptr ||  (p1 = strrchr(argv[0], '\\')) != nullptr ){
@@ -409,7 +422,9 @@ int32 Core::start( int32 argc, char **argv ){
 #ifndef MINICORE
 	Sql_Init();
 	db_init();
+#ifndef Pandas_Google_Breakpad
 	signals_init();
+#endif // Pandas_Google_Breakpad
 	do_init_database();
 #ifdef _WIN32
 	cevents_init();
@@ -417,6 +432,10 @@ int32 Core::start( int32 argc, char **argv ){
 	timer_init();
 	socket_init();
 #endif
+
+#ifdef Pandas_Google_Breakpad
+	breakpad_status();
+#endif // Pandas_Google_Breakpad
 
 	this->set_status( e_core_status::CORE_INITIALIZED );
 

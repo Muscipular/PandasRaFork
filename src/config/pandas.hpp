@@ -26,6 +26,7 @@
 	#define Pandas_Show_Version
 
 	// 是否启用 Google Breakpad 用于处理程序崩溃
+	#define Pandas_Google_Breakpad
 
 	// 是否启用一些杂乱的自定义辅助函数
 
