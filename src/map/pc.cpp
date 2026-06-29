@@ -14862,6 +14862,17 @@ TIMER_FUNC(pc_expiration_timer){
 	return 0;
 }
 
+#ifdef Pandas_Struct_Autotrade_Extend
+bool pc_autotrade_suspend(map_session_data* sd) {
+	if (!sd || !sd->state.autotrade)
+		return false;
+
+	return (sd->state.autotrade & AUTOTRADE_OFFLINE) ||
+		(sd->state.autotrade & AUTOTRADE_AFK) ||
+		(sd->state.autotrade & AUTOTRADE_NORMAL);
+}
+#endif // Pandas_Struct_Autotrade_Extend
+
 TIMER_FUNC(pc_autotrade_timer){
 	map_session_data *sd = map_id2sd(id);
 
@@ -14870,13 +14881,24 @@ TIMER_FUNC(pc_autotrade_timer){
 
 	sd->autotrade_tid = INVALID_TIMER;
 
+#ifndef Pandas_Struct_Autotrade_Extend
 	if (sd->state.autotrade&2)
 		vending_reopen(*sd);
 	if (sd->state.autotrade&4)
 		buyingstore_reopen(sd);
+#else
+	if (sd->state.autotrade & AUTOTRADE_VENDING)
+		vending_reopen(*sd);
+	if (sd->state.autotrade & AUTOTRADE_BUYINGSTORE)
+		buyingstore_reopen(sd);
+#endif // Pandas_Struct_Autotrade_Extend
 
 	if (!sd->vender_id && !sd->buyer_id) {
+#ifndef Pandas_Struct_Autotrade_Extend
 		sd->state.autotrade = 0;
+#else
+		sd->state.autotrade = AUTOTRADE_DISABLED;
+#endif // Pandas_Struct_Autotrade_Extend
 		map_quit(sd);
 	}
 

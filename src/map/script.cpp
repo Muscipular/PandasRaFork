@@ -19306,8 +19306,14 @@ BUILDIN_FUNC(checkvending) {
 		else if (sd->state.buyingstore)
 			ret = 4;
 
+		#ifndef Pandas_Struct_Autotrade_Extend
 		if (sd->state.autotrade)
 			ret |= 2;
+		#else
+		if ((sd->state.autotrade & AUTOTRADE_VENDING) ||
+			(sd->state.autotrade & AUTOTRADE_BUYINGSTORE))
+			ret |= 2;
+		#endif // Pandas_Struct_Autotrade_Extend
 		script_pushint(st, ret);
 	}
 	return SCRIPT_CMD_SUCCESS;

@@ -6840,7 +6840,15 @@ ACMD_FUNC(autotrade) {
 		return -1;
 	}
 
+#ifndef Pandas_Struct_Autotrade_Extend
 	sd->state.autotrade = 1;
+#else
+	sd->state.autotrade = AUTOTRADE_ENABLED;
+	if (sd->vender_id)
+		sd->state.autotrade |= AUTOTRADE_VENDING;
+	else if (sd->buyer_id)
+		sd->state.autotrade |= AUTOTRADE_BUYINGSTORE;
+#endif // Pandas_Struct_Autotrade_Extend
 #ifdef Pandas_Struct_Map_Session_Data_Autotrade_Configure
 	// 这里需要立刻填充相关的备份信息, 避免在完成指令下线后,
 	// 服务器没还重启的情况下, 角色就被 recall 导致朝向等数据无法恢复

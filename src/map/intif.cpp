@@ -3510,7 +3510,12 @@ static bool intif_parse_StorageReceived(int32 fd)
 
 		case TABLE_CART:
 			pc_check_available_item(sd, ITMCHK_CART);
+	#ifndef Pandas_Struct_Autotrade_Extend
 			if (sd->state.autotrade) {
+	#else
+			if ((sd->state.autotrade & AUTOTRADE_VENDING) ||
+				(sd->state.autotrade & AUTOTRADE_BUYINGSTORE)) {
+	#endif // Pandas_Struct_Autotrade_Extend
 				clif_parse_LoadEndAck(sd->fd, sd);
 				sd->autotrade_tid = add_timer(gettick() + battle_config.feature_autotrade_open_delay, pc_autotrade_timer, sd->id, 0);
 			}else if( sd->state.prevend ){

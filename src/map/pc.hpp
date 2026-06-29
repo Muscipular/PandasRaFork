@@ -386,6 +386,18 @@ struct s_qi_display {
 	e_questinfo_markcolor color;
 };
 
+#ifdef Pandas_Struct_Autotrade_Extend
+enum e_autotrade_mode : uint32 {
+	AUTOTRADE_DISABLED    = 0x0000,
+	AUTOTRADE_ENABLED     = 0x0001,
+	AUTOTRADE_VENDING     = 0x0002,
+	AUTOTRADE_BUYINGSTORE = 0x0004,
+	AUTOTRADE_OFFLINE     = 0x0008,
+	AUTOTRADE_AFK         = 0x0010,
+	AUTOTRADE_NORMAL      = 0x0020,
+};
+#endif // Pandas_Struct_Autotrade_Extend
+
 class map_session_data : public block_list {
 public:
 	struct unit_data ud;
@@ -446,7 +458,11 @@ public:
 		uint32 snovice_dead_flag : 1; //Explosion spirits on death: 0 off, 1 used.
 		uint32 abra_flag : 2; // Abracadabra bugfix by Aru
 		uint32 autocast : 1; // Autospell flag [Inkfish]
+#ifndef Pandas_Struct_Autotrade_Extend
 		uint32 autotrade : 3;	//By Fantik. &2 Requested by vending autotrade; &4 Requested by buyingstore autotrade
+#else
+		uint32 autotrade;
+#endif // Pandas_Struct_Autotrade_Extend
 		uint32 showdelay :1;
 		uint32 showexp :1;
 		uint32 showzeny :1;
@@ -1805,6 +1821,10 @@ bool pc_is_same_equip_index(enum equip_index eqi, const int16* equip_index, int1
 #define pc_is_trait_job(class_) (pc_is_primary_fourth(class_) || pc_is_upper_expanded_second(class_))
 
 TIMER_FUNC(pc_autotrade_timer);
+
+#ifdef Pandas_Struct_Autotrade_Extend
+bool pc_autotrade_suspend(map_session_data *sd);
+#endif // Pandas_Struct_Autotrade_Extend
 
 void pc_validate_skill(map_session_data *sd);
 

@@ -11957,7 +11957,12 @@ void clif_parse_WisMessage(int32 fd, map_session_data* sd)
 	}
 
 	// if player is autotrading
+	#ifndef Pandas_Struct_Autotrade_Extend
 	if (dstsd->state.autotrade == 1){
+	#else
+	if ((dstsd->state.autotrade & AUTOTRADE_VENDING) ||
+		(dstsd->state.autotrade & AUTOTRADE_BUYINGSTORE)) {
+	#endif // Pandas_Struct_Autotrade_Extend
 		safesnprintf(output,sizeof(output),"%s is in autotrade mode and cannot receive whispered messages.", dstsd->status.name);
 		clif_wis_message(sd, wisp_server_name, output, strlen(output) + 1, 0);
 		return;
@@ -25682,7 +25687,16 @@ static int32 clif_parse(int32 fd)
 				//Disassociate character from the socket connection.
 				session[fd]->session_data = nullptr;
 				sd->fd = 0;
+	#ifndef Pandas_Struct_Autotrade_Extend
 				ShowInfo("Character '" CL_WHITE "%s" CL_RESET "' logged off (using @autotrade).\n", sd->status.name);
+	#else
+				if (sd->state.autotrade & AUTOTRADE_OFFLINE)
+					ShowInfo("Character '" CL_WHITE "%s" CL_RESET "' logged off (using @suspend).\n", sd->status.name);
+				else if (sd->state.autotrade & AUTOTRADE_AFK)
+					ShowInfo("Character '" CL_WHITE "%s" CL_RESET "' logged off (using @afk).\n", sd->status.name);
+				else
+					ShowInfo("Character '" CL_WHITE "%s" CL_RESET "' logged off (using @autotrade).\n", sd->status.name);
+	#endif // Pandas_Struct_Autotrade_Extend
 			} else
 			if (sd->state.active) {
 				// Player logout display [Valaris]
