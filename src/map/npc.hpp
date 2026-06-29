@@ -235,6 +235,11 @@ struct npc_data : public block_list {
 		int32 removal_tid;
 	} dynamicnpc;
 
+#ifdef Pandas_Struct_Npc_Data_Pandas
+	struct {
+	} pandas;
+#endif // Pandas_Struct_Npc_Data_Pandas
+
 #ifdef MAP_GENERATOR
 	struct navi_link navi; // for warps and the src of npcs
 	std::vector<navi_link> links; // for extra links, like warper npc
