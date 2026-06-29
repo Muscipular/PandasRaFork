@@ -3843,6 +3843,11 @@ npc_data *npc_create_npc(int16 m, int16 x, int16 y){
 	nd->dynamicnpc.last_interaction = 0;
 	nd->dynamicnpc.removal_tid = INVALID_TIMER;
 
+#ifdef Pandas_Struct_Npc_Data_DestructionStrategy
+	nd->pandas.destruction_strategy = 0;
+	nd->pandas.destruction_timer = INVALID_TIMER;
+#endif // Pandas_Struct_Npc_Data_DestructionStrategy
+
 #ifdef MAP_GENERATOR
 	nd->navi.pos = {m, x, y};
 	nd->navi.id = 0;

@@ -247,6 +247,7 @@
 	#ifdef Pandas_Struct_Npc_Data_Pandas
 		// 使 npc_data 结构体可记录此 NPC 的自毁策略 [Sola丶小克]
 		// 结构体修改定位 npc.hpp -> npc_data.pandas.destruction_strategy
+		#define Pandas_Struct_Npc_Data_DestructionStrategy
 	#endif // Pandas_Struct_Npc_Data_Pandas
 
 	// 使 mob_data 有一个独立的结构体用来存放 Pandas 的拓展 [Sola丶小克]

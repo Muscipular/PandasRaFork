@@ -237,6 +237,10 @@ struct npc_data : public block_list {
 
 #ifdef Pandas_Struct_Npc_Data_Pandas
 	struct {
+	#ifdef Pandas_Struct_Npc_Data_DestructionStrategy
+		int destruction_strategy;	// 记录当前 NPC 的自毁策略 ( 0 - 不自毁; 1 - 最后一个对话结束时自毁)
+		int destruction_timer = INVALID_TIMER; // 记录当前 NPC 的立刻自毁计时器
+	#endif // Pandas_Struct_Npc_Data_DestructionStrategy
 	} pandas;
 #endif // Pandas_Struct_Npc_Data_Pandas
 
