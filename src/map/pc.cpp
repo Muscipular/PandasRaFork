@@ -6962,6 +6962,21 @@ bool pc_steal_item(map_session_data *sd,block_list *bl, uint16 skill_lv)
 	//Logs items, Stolen from mobs [Lupus]
 	log_pick_mob(md, LOG_TYPE_STEAL, -1, &tmp_item);
 
+#ifdef Pandas_Item_Special_Annouce
+	bool is_special_announced = false;
+	struct item_data* dd = itemdb_search(itemid);
+
+	if (ITEM_PROPERTIES_HASFLAG(dd, annouce_mask, ITEM_ANNOUCE_STEAL_TO_INVENTORY)) {
+		char message[128] = { 0 };
+		sprintf(message, msg_txt(sd, 542), sd->status.name[0] ? sd->status.name : "GM", md->db->jname.c_str(), dd->ename.c_str(), (float)drop->rate / 100);
+		intif_broadcast(message, strlen(message) + 1, BC_DEFAULT);
+		is_special_announced = true;
+	}
+
+	// 若道具已经遵守 item_properties.yml 的配置被执行了公告,
+	// 那么就无需再次执行 battle_config.rare_drop_announce 指定的根据掉率进行的公告策略
+	if (!is_special_announced)
+#endif // Pandas_Item_Special_Annouce
 	//A Rare Steal Global Announce by Lupus
 	if(drop->rate <= battle_config.rare_drop_announce) {
 		struct item_data *i_data;

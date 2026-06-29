@@ -419,6 +419,8 @@
 	#define Pandas_Item_Properties
 	// 启用护身符道具系统 [Sola丶小克]
 	#define Pandas_Item_Amulet_System
+	// 启用道具特殊公告策略 [Sola丶小克]
+	#define Pandas_Item_Special_Annouce
 #endif // Pandas_Struct_Item_Data_Properties
 
 // ============================================================================

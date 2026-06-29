@@ -31,6 +31,9 @@
 #include "homunculus.hpp"
 #include "intif.hpp"
 #include "itemdb.hpp"
+#ifdef Pandas_Item_Special_Annouce
+#include "itemprops.hpp"
+#endif // Pandas_Item_Special_Annouce
 #include "log.hpp"
 #include "map.hpp"
 #include "mercenary.hpp"
@@ -3365,6 +3368,24 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 
 			std::shared_ptr<s_item_drop> ditem = mob_setdropitem(entry, 1, md->mob_id);
 
+#ifdef Pandas_Item_Special_Annouce
+			bool is_special_announced = false;
+
+			if (first_sd != nullptr && ditem != nullptr) {
+				struct item_data* dd = itemdb_search(ditem->item_data.nameid);
+
+				if (ITEM_PROPERTIES_HASFLAG(dd, annouce_mask, ITEM_ANNOUCE_DROP_TO_GROUND)) {
+					char message[128] = { 0 };
+					sprintf(message, msg_txt(nullptr, 541), first_sd->status.name, md->name, it->ename.c_str(), (float)drop_rate / 100);
+					intif_broadcast(message, strlen(message) + 1, BC_DEFAULT);
+					is_special_announced = true;
+				}
+			}
+
+			// 若道具已经遵守 item_properties.yml 的配置被执行了公告,
+			// 那么就无需再次执行 battle_config.rare_drop_announce 指定的根据掉率进行的公告策略
+			if (!is_special_announced)
+#endif // Pandas_Item_Special_Annouce
 			//A Rare Drop Global Announce by Lupus
 			if (first_sd != nullptr && entry->rate <= battle_config.rare_drop_announce) {
 				char message[128];
@@ -3530,6 +3551,20 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 				clif_mvp_item(mvp_sd,item.nameid);
 				log_mvp_nameid = item.nameid;
 
+#ifdef Pandas_Item_Special_Annouce
+				bool is_special_announced = false;
+
+				if (ITEM_PROPERTIES_HASFLAG(i_data, annouce_mask, ITEM_ANNOUCE_DROP_TO_INVENTORY_FOR_MVP)) {
+					char message[128] = { 0 };
+					sprintf(message, msg_txt(nullptr, 541), mvp_sd->status.name, md->name, i_data->ename.c_str(), temp / 100.);
+					intif_broadcast(message, strlen(message) + 1, BC_DEFAULT);
+					is_special_announced = true;
+				}
+
+				// 若道具已经遵守 item_properties.yml 的配置被执行了公告,
+				// 那么就无需再次执行 battle_config.rare_drop_announce 指定的根据掉率进行的公告策略
+				if (!is_special_announced)
+#endif // Pandas_Item_Special_Annouce
 				//A Rare MVP Drop Global Announce by Lupus
 				if(temp<=battle_config.rare_drop_announce) {
 					char message[128];
