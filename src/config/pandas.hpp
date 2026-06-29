@@ -23,6 +23,7 @@
 	#define Pandas_Show_Logo
 
 	// 在启动时显示 Pandas 的版本号
+	#define Pandas_Show_Version
 
 	// 是否启用 Google Breakpad 用于处理程序崩溃
 

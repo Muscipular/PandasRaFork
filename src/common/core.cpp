@@ -293,8 +293,10 @@ const char *get_git_hash (void) {
  *  ASCII By CalciumKid 1/12/2011
  *--------------------------------------*/
 static void display_title(void) {
+#ifndef Pandas_Show_Version
 	const char* svn = get_svn_revision();
 	const char* git = get_git_hash();
+#endif // Pandas_Show_Version
 
 #ifndef Pandas_Show_Logo
 	ShowMessage("\n");
@@ -327,10 +329,37 @@ static void display_title(void) {
 	ShowMessage("\n");
 #endif // Pandas_Show_Logo
 
+#ifndef Pandas_Show_Version
 	if( svn[0] != UNKNOWN_VERSION )
 		ShowInfo("SVN Revision: '" CL_WHITE "%s" CL_RESET "'\n", svn);
 	else if( git[0] != UNKNOWN_VERSION )
 		ShowInfo("Git Hash: '" CL_WHITE "%s" CL_RESET "'\n", git);
+#else
+#ifdef RENEWAL
+	const char* work_mode = "Renewal";
+#else
+	const char* work_mode = "Pre-Renewal";
+#endif // RENEWAL
+#ifdef _DEBUG
+	const char* compile_mode = "Debug";
+#else
+	const char* compile_mode = "Release";
+#endif // _DEBUG
+	// 在程序启动时显示熊猫模拟器的版本号
+	if (isCommercialVersion()) {
+		std::string community_ver = formatVersion(Pandas_Version, true, true, 0);
+		ShowInfo("Welcome to Pandas Pro: " CL_GREEN "%s" CL_RESET " (Build on community version %s)\n", getPandasVersion().c_str(), community_ver.c_str());
+	}
+	else {
+		ShowInfo("Welcome to Pandas Community: " CL_GREEN "%s" CL_RESET "\n", getPandasVersion().c_str());
+	}
+	ShowInfo("Compile for Client PACKETVER: " CL_WHITE "%d" CL_RESET " | Mode: %s | %s\n", PACKETVER, work_mode, compile_mode);
+	// 若宏定义开关指定了源码的版本号和分支, 那么也一起打印出来
+	std::string branch(GIT_BRANCH), hash(GIT_HASH);
+	if (branch.length() > 0 && hash.length() > 0) {
+		ShowInfo("Compiled from Git Hash: " CL_WHITE "'%s'" CL_RESET " at " CL_WHITE "'%s'" CL_RESET " branch.\n", hash.substr(0, 7).c_str(), branch.c_str());
+	}
+#endif // Pandas_Show_Version
 }
 
 // Warning if executed as superuser (root)
