@@ -802,6 +802,10 @@ struct Battle_Config
 	int32 suspend_offline_sitdown; // 当玩家进入离线挂机模式时, 地图服务器重启后处于站立还是坐下状态
 #endif // Pandas_BattleConfig_Suspend_Offline_Sitdown
 
+#ifdef Pandas_BattleConfig_Suspend_AFK_BodyDirection
+	int32 suspend_afk_bodydirection; // 当玩家进入离开模式时, 地图服务器重启后的身体朝向哪里
+#endif // Pandas_BattleConfig_Suspend_AFK_BodyDirection
+
 #include <custom/battle_config_struct.inc>
 };
 
