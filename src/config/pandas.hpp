@@ -258,6 +258,7 @@
 	#ifdef Pandas_Struct_Mob_Data_Pandas
 		// 使 mob_data 结构体可记录此魔物被 setunitdata 修改过哪些项目 [Sola丶小克]
 		// 结构体修改定位 mob.hpp -> mob_data.pandas.special_setunitdata
+		#define Pandas_Struct_Mob_Data_Special_SetUnitData
 
 		// 使 mob_data 结构体可记录此魔物特殊的基础经验或职业经验 [Sola丶小克]
 		// 结构体修改定位 mob.hpp -> mob_data.pandas.base_exp 和 job_exp

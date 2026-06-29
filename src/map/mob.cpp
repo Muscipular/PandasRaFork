@@ -493,6 +493,10 @@ mob_data* mob_spawn_dataset(struct spawn_data *data)
 	status_set_viewdata(md, md->mob_id);
 	unit_dataset(md);
 
+#ifdef Pandas_Struct_Mob_Data_Special_SetUnitData
+	md->pandas.special_setunitdata = new std::map<uint16, int64>;
+#endif // Pandas_Struct_Mob_Data_Special_SetUnitData
+
 	map_addiddb(md);
 	return md;
 }
@@ -1203,6 +1207,12 @@ int32 mob_spawn (mob_data *md)
 #ifdef Pandas_Struct_Unit_CommonData_Aura
 	md->ucd.aura = {};
 #endif // Pandas_Struct_Unit_CommonData_Aura
+
+#ifdef Pandas_Struct_Mob_Data_Special_SetUnitData
+	if (md->pandas.special_setunitdata) {
+		md->pandas.special_setunitdata->clear();
+	}
+#endif // Pandas_Struct_Mob_Data_Special_SetUnitData
 
 	if (md->lootitems)
 		memset(md->lootitems, 0, sizeof(*md->lootitems));

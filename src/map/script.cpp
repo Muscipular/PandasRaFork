@@ -19955,6 +19955,11 @@ BUILDIN_FUNC(setunitdata)
 		if (!md->base_status) {
 			md->base_status = (struct status_data*)aCalloc(1, sizeof(struct status_data));
 			memcpy(md->base_status, &md->db->status, sizeof(struct status_data));
+#ifdef Pandas_Struct_Mob_Data_Special_SetUnitData
+			if (md->pandas.special_setunitdata) {
+				md->pandas.special_setunitdata->clear();
+			}
+#endif // Pandas_Struct_Mob_Data_Special_SetUnitData
 		}
 
 		// Check if the view data will be modified

@@ -4134,6 +4134,13 @@ int32 unit_free(block_list *bl, clr_type clrtype)
 
 			if( md->tomb_nid )
 				mvptomb_destroy(md);
+
+#ifdef Pandas_Struct_Mob_Data_Special_SetUnitData
+			if (md->pandas.special_setunitdata) {
+				delete md->pandas.special_setunitdata;
+				md->pandas.special_setunitdata = nullptr;
+			}
+#endif // Pandas_Struct_Mob_Data_Special_SetUnitData
 			break;
 		}
 		case BL_HOM:
