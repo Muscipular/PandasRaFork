@@ -417,6 +417,8 @@
 	// 启用道具特殊属性的部分生效代码 [Sola丶小克]
 	// 此选项开启后 item_properties.yml 数据库中 AvoidConsumeForUse / AvoidConsumeForSkill 才能发挥作用
 	#define Pandas_Item_Properties
+	// 启用护身符道具系统 [Sola丶小克]
+	#define Pandas_Item_Amulet_System
 #endif // Pandas_Struct_Item_Data_Properties
 
 // ============================================================================

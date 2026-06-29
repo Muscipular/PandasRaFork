@@ -41,6 +41,9 @@
 #include "instance.hpp"
 #include "intif.hpp"
 #include "itemdb.hpp"
+#ifdef Pandas_Item_Amulet_System
+#include "itemamulet.hpp"
+#endif // Pandas_Item_Amulet_System
 #include "log.hpp"
 #include "mail.hpp"
 #include "map.hpp"
@@ -109,6 +112,11 @@ enum e_inventory_type{
 static inline int32 itemtype(t_itemid nameid) {
 	struct item_data* id = itemdb_search(nameid); //Use itemdb_search, so non-existence item will use dummy data and won't crash the server. bugreport:8468
 	int32 type = id->type;
+#ifdef Pandas_Item_Amulet_System
+	// 若是护身符道具, 在这里全部把它当做 IT_ETC 类型返回
+	if (type == IT_AMULET || amulet_is(nameid))
+		return IT_ETC;
+#endif // Pandas_Item_Amulet_System
 	if( type == IT_SHADOWGEAR ) {
 		if( id->equip&EQP_SHADOW_WEAPON )
 			return IT_WEAPON;
@@ -7343,6 +7351,11 @@ void clif_cart_additem( const map_session_data* sd, int32 n, int32 amount ){
 	p.itemId = client_nameid( sd->cart.u.items_cart[n].nameid );
 #if PACKETVER >= 5
 	p.itemType = itemdb_type( sd->cart.u.items_cart[n].nameid );
+#ifdef Pandas_Item_Amulet_System
+	// 若是护身符道具, 那么发送给客户端的道具类型直接从 IT_AMULET 换成 IT_ETC
+	if (amulet_is(sd->cart.u.items_cart[n].nameid))
+		p.itemType = amulet_pandas_type(sd->cart.u.items_cart[n].nameid);
+#endif // Pandas_Item_Amulet_System
 #endif
 	p.identified = sd->cart.u.items_cart[n].identify;
 	p.damaged  = sd->cart.u.items_cart[n].attribute;

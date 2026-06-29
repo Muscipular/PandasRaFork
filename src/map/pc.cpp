@@ -50,6 +50,9 @@
 #ifdef Pandas_Item_Properties
 #include "itemprops.hpp"
 #endif // Pandas_Item_Properties
+#ifdef Pandas_Item_Amulet_System
+#include "itemamulet.hpp"
+#endif // Pandas_Item_Amulet_System
 #include "log.hpp"
 #include "map.hpp"
 #include "mercenary.hpp"
@@ -6020,6 +6023,10 @@ enum e_additem_result pc_additem(map_session_data *sd,struct item *item,int32 am
 
 	id = itemdb_search(item->nameid);
 
+#ifdef Pandas_Item_Amulet_System
+	bool is_first_amulet = amulet_is_firstone(sd, item, amount);
+#endif // Pandas_Item_Amulet_System
+
 	if( id->stack.inventory && amount > id->stack.amount )
 	{// item stack limitation
 		return ADDITEM_STACKLIMIT;
@@ -6083,6 +6090,10 @@ enum e_additem_result pc_additem(map_session_data *sd,struct item *item,int32 am
 
 	log_pick_pc(sd, log_type, amount, &sd->inventory.u.items_inventory[i]);
 
+#ifdef Pandas_Item_Amulet_System
+	amulet_apply_additem(sd, i, is_first_amulet);
+#endif // Pandas_Item_Amulet_System
+
 	sd->weight += w;
 	clif_updatestatus(*sd,SP_WEIGHT);
 	//Auto-equip
@@ -6130,6 +6141,10 @@ char pc_delitem(map_session_data *sd,int32 n,int32 amount,int32 type, int16 reas
 		return 0;
 #endif // Pandas_Item_Properties
 
+#ifdef Pandas_Item_Amulet_System
+	bool is_last_amulet = amulet_is_lastone(sd, n, amount);
+#endif // Pandas_Item_Amulet_System
+
 	log_pick_pc(sd, log_type, -amount, &sd->inventory.u.items_inventory[n]);
 
 	sd->inventory.u.items_inventory[n].amount -= amount;
@@ -6137,9 +6152,19 @@ char pc_delitem(map_session_data *sd,int32 n,int32 amount,int32 type, int16 reas
 	if( sd->inventory.u.items_inventory[n].amount <= 0 ){
 		if(sd->inventory.u.items_inventory[n].equip)
 			pc_unequipitem(sd,n,2|(!(type&4) ? 1 : 0));
+#ifdef Pandas_Item_Amulet_System
+		// 在这里必须触发一下"卸装脚本", 再往下的话物品数据会被清零
+		amulet_apply_delitem(sd, n, is_last_amulet);
+#endif // Pandas_Item_Amulet_System
 		memset(&sd->inventory.u.items_inventory[n],0,sizeof(sd->inventory.u.items_inventory[0]));
 		sd->inventory_data[n] = nullptr;
 	}
+#ifdef Pandas_Item_Amulet_System
+	else {
+		// 在这里同类护身符还没被全部清理干净, 需要触发一下"使用脚本"
+		amulet_apply_delitem(sd, n, is_last_amulet);
+	}
+#endif // Pandas_Item_Amulet_System
 	if(!(type&1))
 		clif_delitem( *sd, n, amount, reason );
 	if(!(type&2))

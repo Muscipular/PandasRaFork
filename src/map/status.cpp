@@ -26,6 +26,9 @@
 #include "guild.hpp"
 #include "homunculus.hpp"
 #include "itemdb.hpp"
+#ifdef Pandas_Item_Amulet_System
+#include "itemamulet.hpp"
+#endif // Pandas_Item_Amulet_System
 #include "map.hpp"
 #include "mercenary.hpp"
 #include "mob.hpp"
@@ -4966,6 +4969,9 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 			sd->bonus.long_attack_atk_rate += i;
 		}
 	}
+#ifdef Pandas_Item_Amulet_System
+	amulet_status_calc(sd, opt);
+#endif // Pandas_Item_Amulet_System
 	status_cpy(&sd->battle_status, base_status);
 
 // ----- CLIENT-SIDE REFRESH -----

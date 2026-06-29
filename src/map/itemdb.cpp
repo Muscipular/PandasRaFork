@@ -3301,6 +3301,9 @@ const char* itemdb_typename(enum item_types type)
 		case IT_DELAYCONSUME:   return "Delay-Consume Usable";
 		case IT_SHADOWGEAR:     return "Shadow Equipment";
 		case IT_CASH:           return "Cash Usable";
+#ifdef Pandas_Item_Amulet_System
+		case IT_AMULET:         return "Amulet";
+#endif // Pandas_Item_Amulet_System
 	}
 	return "Unknown Type";
 }
