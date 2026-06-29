@@ -262,6 +262,7 @@
 
 		// 使 mob_data 结构体可记录此魔物特殊的基础经验或职业经验 [Sola丶小克]
 		// 结构体修改定位 mob.hpp -> mob_data.pandas.base_exp 和 job_exp
+		#define Pandas_Struct_Mob_Data_SpecialExperience
 	#endif // Pandas_Struct_Mob_Data_Pandas
 
 	// 对离线挂店 autotrade 的定义进行拓展处理 [Sola丶小克]
