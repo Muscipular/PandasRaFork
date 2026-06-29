@@ -217,8 +217,23 @@
 
 	// 使 item_data 有一个独立的结构体用来存放 Pandas 的拓展 [Sola丶小克]
 	// 结构体修改定位 itemdb.hpp -> item_data.pandas
+	#define Pandas_Struct_Item_Data_Pandas
 
 	// 以下选项开关需要依赖 Pandas_Struct_Item_Data_Pandas 的拓展
+	#ifdef Pandas_Struct_Item_Data_Pandas
+		// 使 item_data 可记录当前物品的使用、穿戴、卸装脚本的原文 [Sola丶小克]
+		// 结构体修改定位 itemdb.hpp -> item_data.pandas.script_plaintext
+
+		// 使 item_data 可记录当前物品可捕捉的魔物编号 [Sola丶小克]
+		// 结构体修改定位 itemdb.hpp -> item_data.pandas.taming_mobid
+
+		// 使 item_data 可记录此物品的使用脚本是否执行了 callfunc 指令 [Sola丶小克]
+		// 结构体修改定位 itemdb.hpp -> item_data.pandas.has_callfunc
+
+		// 使 item_data 可记录此物品的特殊属性 [Sola丶小克]
+		// 效果与 item_data.flag 类似, 只是数据源为 item_properties.yml
+		// 结构体修改定位 itemdb.hpp -> item_data.pandas.properties
+	#endif // Pandas_Struct_Item_Data_Pandas
 
 	// 使 npc_data 有一个独立的结构体用来存放 Pandas 的拓展 [Sola丶小克]
 	// 结构体修改定位 npc.hpp -> npc_data.pandas

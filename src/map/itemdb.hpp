@@ -3528,6 +3528,11 @@ struct item_data
 		sc_type sc; ///< Use delay group if any instead using player's item_delay data [Cydh]
 	} delay;
 
+#ifdef Pandas_Struct_Item_Data_Pandas
+	struct s_pandas {
+	} pandas;
+#endif // Pandas_Struct_Item_Data_Pandas
+
 	~item_data() {
 		if (this->script){
 			script_free_code(this->script);

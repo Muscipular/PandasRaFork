@@ -37,6 +37,92 @@ struct s_roulette_db rd;
 
 static void itemdb_jobid2mapid(uint64 bclass[3], e_mapid jobmask, bool active);
 
+#ifdef Pandas_Struct_Item_Data_Pandas
+enum e_script_type {
+	SCRIPT_TYPE_USED,
+	SCRIPT_TYPE_EQUIP,
+	SCRIPT_TYPE_UNEQUIP
+};
+
+//************************************
+// Method:      item_script_process
+// Description: 当物品的脚本信息更新时, 执行自定义处理操作
+// Access:      public static
+// Parameter:   std::shared_ptr<item_data> item
+// Parameter:   e_script_type script_type
+// Parameter:   std::string script
+// Returns:     void
+// Author:      Sola丶小克(CairoLee)  2021/01/02 14:46
+//************************************
+inline static void item_script_process(std::shared_ptr<item_data> item, e_script_type script_type, std::string script) {
+	if (!item) return;
+
+#ifdef Pandas_Struct_Item_Data_Script_Plaintext
+	switch (script_type)
+	{
+	case SCRIPT_TYPE_USED:
+		item->pandas.script_plaintext.script = util::trim_copy(script);
+		break;
+	case SCRIPT_TYPE_EQUIP:
+		item->pandas.script_plaintext.equip_script = util::trim_copy(script);
+		break;
+	case SCRIPT_TYPE_UNEQUIP:
+		item->pandas.script_plaintext.unequip_script = util::trim_copy(script);
+		break;
+	default:
+		break;
+	}
+#endif // Pandas_Struct_Item_Data_Script_Plaintext
+
+#ifdef Pandas_Struct_Item_Data_Taming_Mobid
+	// 判断该道具的脚本是否调用了 pet 或 mpet 指令 [Sola丶小克]
+	// 若确实有相关的调用, 则记录下此道具支持捕捉的魔物编号
+	if (script_type == SCRIPT_TYPE_USED && !script.empty()) {
+		if (!hasCatchPet(script, item->pandas.taming_mobid)) {
+			item->pandas.taming_mobid.clear();
+		}
+	}
+#endif // Pandas_Struct_Item_Data_Taming_Mobid
+
+#ifdef Pandas_Struct_Item_Data_Has_CallFunc
+	// 判断该道具的脚本是不是有 callfunc "xxxx"; 若有则记录一下 [Sola丶小克]
+	if (script_type == SCRIPT_TYPE_USED && !script.empty()) {
+		item->pandas.has_callfunc = hasCallfunc(script);
+	}
+#endif // Pandas_Struct_Item_Data_Has_CallFunc
+};
+
+//************************************
+// Method:      item_script_reset
+// Description: 当物品的脚本信息被重置时, 执行自定义处理操作
+// Access:      public static
+// Parameter:   std::shared_ptr<item_data> item
+// Parameter:   e_script_type script_type
+// Returns:     void
+// Author:      Sola丶小克(CairoLee)  2021/01/02 14:46
+//************************************
+inline static void item_script_reset(std::shared_ptr<item_data> item, e_script_type script_type) {
+	if (!item) return;
+
+#ifdef Pandas_Struct_Item_Data_Script_Plaintext
+	switch (script_type)
+	{
+	case SCRIPT_TYPE_USED:
+		item->pandas.script_plaintext.script.clear();
+		break;
+	case SCRIPT_TYPE_EQUIP:
+		item->pandas.script_plaintext.equip_script.clear();
+		break;
+	case SCRIPT_TYPE_UNEQUIP:
+		item->pandas.script_plaintext.unequip_script.clear();
+		break;
+	default:
+		break;
+	}
+#endif // Pandas_Struct_Item_Data_Script_Plaintext
+};
+#endif // Pandas_Struct_Item_Data_Pandas
+
 const std::string ItemDatabase::getDefaultLocation() {
 	return std::string(db_path) + "/item_db.yml";
 }
@@ -1069,9 +1155,17 @@ uint64 ItemDatabase::parseBodyNode(const ryml::NodeRef& node) {
 		}
 
 		item->script = parse_script(script.c_str(), this->getCurrentFile().c_str(), this->getLineNumber(node["Script"]), SCRIPT_IGNORE_EXTERNAL_BRACKETS);
+
+#ifdef Pandas_Struct_Item_Data_Pandas
+		item_script_process(item, SCRIPT_TYPE_USED, script);
+#endif // Pandas_Struct_Item_Data_Pandas
 	} else {
 		if (!exists) 
 			item->script = nullptr;
+#ifdef Pandas_Struct_Item_Data_Pandas
+		if (!exists)
+			item_script_reset(item, SCRIPT_TYPE_USED);
+#endif // Pandas_Struct_Item_Data_Pandas
 	}
 
 	if (this->nodeExists(node, "EquipScript")) {
@@ -1086,9 +1180,17 @@ uint64 ItemDatabase::parseBodyNode(const ryml::NodeRef& node) {
 		}
 
 		item->equip_script = parse_script(script.c_str(), this->getCurrentFile().c_str(), this->getLineNumber(node["EquipScript"]), SCRIPT_IGNORE_EXTERNAL_BRACKETS);
+
+#ifdef Pandas_Struct_Item_Data_Pandas
+		item_script_process(item, SCRIPT_TYPE_EQUIP, script);
+#endif // Pandas_Struct_Item_Data_Pandas
 	} else {
 		if (!exists)
 			item->equip_script = nullptr;
+#ifdef Pandas_Struct_Item_Data_Pandas
+		if (!exists)
+			item_script_reset(item, SCRIPT_TYPE_EQUIP);
+#endif // Pandas_Struct_Item_Data_Pandas
 	}
 
 	if (this->nodeExists(node, "UnEquipScript")) {
@@ -1103,9 +1205,17 @@ uint64 ItemDatabase::parseBodyNode(const ryml::NodeRef& node) {
 		}
 
 		item->unequip_script = parse_script(script.c_str(), this->getCurrentFile().c_str(), this->getLineNumber(node["UnEquipScript"]), SCRIPT_IGNORE_EXTERNAL_BRACKETS);
+
+#ifdef Pandas_Struct_Item_Data_Pandas
+		item_script_process(item, SCRIPT_TYPE_UNEQUIP, script);
+#endif // Pandas_Struct_Item_Data_Pandas
 	} else {
 		if (!exists)
 			item->unequip_script = nullptr;
+#ifdef Pandas_Struct_Item_Data_Pandas
+		if (!exists)
+			item_script_reset(item, SCRIPT_TYPE_UNEQUIP);
+#endif // Pandas_Struct_Item_Data_Pandas
 	}
 
 	if (!exists)
