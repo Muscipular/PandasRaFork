@@ -3,6 +3,7 @@
 	#define Pandas_Basic
 	#define Pandas_StructIncrease
 	#define Pandas_ScriptEngine
+	#define Pandas_ScriptCommands
 
 // ============================================================================
 // 基础组 - Pandas_Basic
@@ -167,3 +168,202 @@
 	// 修正 add_str 触发 str_buf 的扩容分配后 st->funcname 的所指向的指令名称无效的问题,
 	// 因为 st->funcname 指针指向的内存已在扩容分配时被释放 [Sola丶小克]
 #endif // Pandas_ScriptEngine
+
+// ============================================================================
+// 脚本指令组 - Pandas_ScriptCommands
+// ============================================================================
+
+#ifdef Pandas_ScriptCommands
+	// 是否拓展 announce 脚本指令 [Sense 提交] [Sola丶小克 改进]
+	// 使 announce 指令能够支持 bc_name 标记位
+	// 携带此标记位的公告能够在双击公告时将发布者角色名称填写到聊天窗口
+	// 备注: 自己发送的公告自己双击则无效
+	// 提示: 使用 20130807 客户端测试通过, 更早之前的客户端没有测试过
+	// 是否拓展 unitexists 脚本指令 [Sola丶小克]
+	// 添加一个可选参数, 用于强调单位必须存在且活着才返回 true
+	// 是否启用 setheaddir 脚本指令 [Sola丶小克]
+	// 用于调整角色纸娃娃脑袋的朝向 (0 - 正前方; 1 - 向右看; 2 - 向左看)
+	// 是否启用 setbodydir 脚本指令 [Sola丶小克]
+	// 用于调整角色纸娃娃身体的朝向 (与 NPC 一致, 从 0 到 7 共 8 个方位可选择)
+	// 是否启用 openbank 脚本指令 [Sola丶小克]
+	// 2022-4-20 修订备注:
+	// 由于 rAthena 官方已经实现了 openbank 指令且重名,
+	// 因此这里的开关只控制 openbank 指令是否如以前版本一样给予返回值
+	// 是否启用 instance_users 脚本指令 [Sola丶小克]
+	// 获取指定的副本实例中已经进入副本地图的人数
+	// 是否启用 cap 脚本指令 [Sola丶小克]
+	// 由于 rAthena 已经实现 cap_value 指令, 这里兼容老版本 cap 指令
+	// 是否启用 mobremove 脚本指令 [Sola丶小克]
+	// 根据 GID 移除一个魔物单位 (只是移除, 不会让魔物死亡)
+	// 是否启用 mesclear 脚本指令 [Sola丶小克]
+	// 由于 rAthena 已经实现 clear 指令, 这里兼容老版本 mesclear 指令
+	// 是否启用 battleignore 脚本指令 [Sola丶小克]
+	// 将角色设置为魔物免战状态, 避免被魔物攻击 (与 GM 指令的 monsterignore 效果一致)
+	// 是否启用 gethotkey 脚本指令 [Sola丶小克]
+	// 获取指定快捷键位置当前的信息 (该指令有一个用于兼容的别名: get_hotkey)
+	// 是否启用 sethotkey 脚本指令 [Sola丶小克]
+	// 设置指定快捷键位置的信息 (该指令有一个用于兼容的别名: set_hotkey)
+	// 是否启用 showvend 脚本指令 [Jian916]
+	// 使指定的 NPC 头上可以显示露天商店的招牌, 点击招牌可触发与 NPC 的对话
+	// 是否启用 viewequip 脚本指令 [Sola丶小克]
+	// 使用该指令可以查看指定在线角色的装备面板信息 (注意: v2.0.0 以前是通过账号编号)
+	// 是否启用 countitemidx 脚本指令 [Sola丶小克]
+	// 获取指定背包序号的道具在背包中的数量 (该指令有一个用于兼容的别名: countinventory)
+	// 是否启用 delitemidx 脚本指令的别名 delinventory [Sola丶小克]
+	// https://github.com/rathena/rathena/commit/c18707bb6dd2bd6068bc0d3708401871a2d7270c
+	// 由于 rAthena 官方实现了 delitemidx, 因此使用它来接替原先熊猫模拟器的自定义实现
+	// 是否启用 identifyidx 脚本指令 [Sola丶小克]
+	// 鉴定指定背包序号的道具 (该指令有一个用于兼容的别名: identifybyidx)
+	// 是否启用 unequipidx 脚本指令 [Sola丶小克]
+	// 脱下指定背包序号的道具 (该指令有一个用于兼容的别名: unequipinventory)
+	// 是否启用 equipidx 脚本指令 [Sola丶小克]
+	// 穿戴指定背包序号的道具 (该指令有一个用于兼容的别名: equipinventory)
+	// 是否启用 itemexists 脚本指令 [Sola丶小克]
+	// 确认物品数据库中是否存在指定物品 (该指令有一个用于兼容的别名: existitem)
+	// 是否启用 renttime 脚本指令 [Sola丶小克]
+	// 增加/减少指定位置装备的租赁时间 (该指令有一个用于兼容的别名: resume)
+	// 是否启用 getequipidx 脚本指令 [Sola丶小克]
+	// 获取指定位置装备的背包序号
+	// 是否启用 statuscalc 脚本指令 [Sola丶小克]
+	// 由于 rAthena 已经实现 recalculatestat 指令, 这里兼容老版本 statuscalc 指令
+	// 是否启用 getequipexpiretick 脚本指令 [Sola丶小克]
+	// 获取指定位置装备的租赁到期剩余秒数 (该指令有一个用于兼容的别名: isrental)
+	// 是否启用 getinventoryinfo 系列脚本指令 [Sola丶小克]
+	// 查询指定背包、公会仓库、手推车、个人仓库/扩充仓库序号的道具详细信息
+	// 包含以下几个指令变体:
+	// getinventoryinfo <道具的背包序号>,<要查看的信息类型>{,<角色编号>};
+	// getcartinfo <道具的手推车序号>,<要查看的信息类型>{,<角色编号>};
+	// getguildstorageinfo <道具的公会仓库序号>,<要查看的信息类型>{,<角色编号>};
+	// getstorageinfo <道具的个人仓库/扩充仓库序号>,<要查看的信息类型>{{,<仓库编号>},<角色编号>};
+	// 是否启用 statuscheck 脚本指令 [Sola丶小克]
+	// 判断状态是否存在, 并取得相关的状态参数 (该指令有一个用于兼容的别名: sc_check)
+	// 是否启用 renttimeidx 脚本指令 [Sola丶小克]
+	// 增加/减少指定背包序号道具的租赁时间
+	// 是否启用 party_leave 脚本指令 [Sola丶小克]
+	// 使当前角色或指定角色退出队伍 (主要出于兼容目的而实现该指令)
+	// 是否启用 script4each / script4eachmob / script4eachnpc 脚本指令 [Sola丶小克]
+	// 对指定范围的玩家 / 魔物 / NPC 执行相同的一段脚本
+	// 是否启用 searcharray 脚本指令 [Sola丶小克]
+	// 由于 rAthena 已经实现 inarray 指令, 这里兼容老版本 searcharray 指令
+	// 是否启用 getsameipinfo 脚本指令 [Sola丶小克]
+	// 获得某个指定 IP 在线的玩家信息
+	// 是否启用 logout 脚本指令 [Sola丶小克]
+	// 使指定的角色立刻登出游戏
+	// 是否启用 warppartyrevive 脚本指令 [Sola丶小克]
+	// 与 warpparty 类似, 但可以复活死亡的队友并传送 (该指令有一个用于兼容的别名: warpparty2)
+	// 是否启用 getareagid 脚本指令 [Sola丶小克]
+	// 获取指定范围内特定类型单位的全部 GID (注意: 该指令不再兼容以前 rAthenaCN 的同名指令)
+	// 是否启用 processhalt 脚本指令 [Sola丶小克]
+	// 在事件处理代码中使用该指令, 可以中断源代码的后续处理逻辑
+	// 此选项开关需要依赖 Pandas_Struct_Map_Session_Data_EventHalt 的拓展
+	// 是否启用 settrigger 脚本指令 [Sola丶小克]
+	// 使用该指令可以设置某个事件或过滤器的触发行为 (是否触发、下次触发、永久触发)
+	// 此选项开关需要依赖 Pandas_Struct_Map_Session_Data_EventTrigger 的拓展
+	// 是否启用 messagecolor 脚本指令 [Sola丶小克]
+	// 使用该指令可以发送指定颜色的消息文本到聊天窗口中
+	// 是否启用 copynpc 脚本指令 [Sola丶小克]
+	// 使用该指令可以复制指定的 NPC 到一个新的位置 (坐标等相对可以灵活设置)
+	// 是否启用 gettimefmt 脚本指令 [Sola丶小克]
+	// 将当前时间格式化输出成字符串, 是 gettimestr 的改进版
+	// 是否启用 multicatchpet 脚本指令 [Sola丶小克]
+	// 与 catchpet 指令类似, 但可以指定更多支持捕捉的魔物编号
+	// 此选项开关需要依赖 Pandas_Struct_Map_Session_Data_MultiCatchTargetClass 的拓展
+	// 是否启用 selfdeletion 脚本指令 [Sola丶小克]
+	// 设置 NPC 的自毁策略, 用于配合 copynpc 实现在开宝箱/挖矿时进行自毁等场景
+	// 是否启用 npcexists 脚本指令 [Sola丶小克]
+	// 该指令用于判断指定名称的 NPC 是否存在, 就算不存在控制台也不会报错
+	// 是否启用 setinventoryinfo 脚本指令 [Sola丶小克]
+	// 该指令用于设置指定背包序号道具的部分详细信息, 与 getinventoryinfo 对应
+	// 是否启用 updateinventory 脚本指令 [Sola丶小克]
+	// 该指令用于重新下发关联玩家的背包数据给客户端 (刷新客户端背包数据)
+	// 是否启用 getcharmac 脚本指令 [Sola丶小克]
+	// 该指令用于获取指定角色登录时使用的 MAC 地址
+	// 此选项开关需要依赖 Pandas_Extract_SSOPacket_MacAddress 的拓展
+	// 是否启用 getconstant 脚本指令 [Sola丶小克]
+	// 该指令用于查询一个常量字符串对应的数值
+	// 是否启用 preg_search 脚本指令 [Sola丶小克]
+	// 该指令用于执行一个正则表达式搜索并返回首个匹配的分组内容
+	// 是否启用 aura 脚本指令 [Sola丶小克]
+	// 该指令用于为角色激活特定组合的光环效果, 光环效果会一直跟随角色
+	// 此选项开关需要依赖 Pandas_Aura_Mechanism 的拓展
+	// 是否启用 unitaura 脚本指令 [Sola丶小克]
+	// 该指令用于调整七种单位的光环组合 (但仅 BL_PC 会被持久化)
+	// 七种单位分别是: 玩家/魔物/佣兵/宠物/NPC/精灵/人工生命体
+	// 此选项开关需要依赖 Pandas_Aura_Mechanism 的拓展
+	// 是否启用 getunittarget 脚本指令 [Sola丶小克]
+	// 该指令用于获取指定单位当前正在攻击的目标单位编号
+	// 是否启用 unlockcmd 脚本指令 [Sola丶小克]
+	// 该指令用于解锁实时事件和过滤器事件的指令限制, 只能用于实时或过滤器事件
+	// 是否启用战斗记录相关的脚本指令 [Sola丶小克]
+	// 此选项开关需要依赖 Pandas_BattleRecord 的拓展
+	// 是否启用 login 脚本指令 [Sola丶小克]
+	// 该指令用于将指定的角色以特定的登录模式拉上线
+	// 此选项开关需要依赖 Pandas_Player_Suspend_System 的拓展
+	// 是否启用 checksuspend 脚本指令 [Sola丶小克]
+	// 该指令用于获取指定角色或指定账号当前在线角色的挂机模式
+	// 此选项开关需要依赖 Pandas_Struct_Autotrade_Extend 的拓展
+	// 是否启用 bonus_script_remove 脚本指令 [Sola丶小克]
+	// 该指令用于移除指定的 bonus_script 效果脚本
+	// 是否启用 bonus_script_list 脚本指令 [Sola丶小克]
+	// 该指令用于获取指定角色当前激活的全部 bonus_script 效果脚本编号
+	// 是否启用 bonus_script_exists 脚本指令 [Sola丶小克]
+	// 该指令用于查询指定角色是否已经激活了特定的 bonus_script 效果脚本
+	// 是否启用 bonus_script_getid 脚本指令 [Sola丶小克]
+	// 该指令用于查询效果脚本代码对应的效果脚本编号
+	// 是否启用 bonus_script_info 脚本指令 [Sola丶小克]
+	// 该指令用于查询指定效果脚本的相关信息
+	// 是否启用 expandinventory_adjust 脚本指令 [Sola丶小克]
+	// 该指令用于增加角色的背包容量上限
+	// 是否启用 getinventorysize 脚本指令 [Sola丶小克]
+	// 该指令用于查询并获取当前角色的背包容量上限
+	// 是否启用 getmapspawns 脚本指令 [Sola丶小克]
+	// 该指令用于获取指定地图的魔物刷新点信息
+	// 此选项开关需要依赖 Pandas_Struct_Map_Data_Mob_Spawns 的拓展
+	// 是否启用 getmobspawns 脚本指令 [Sola丶小克]
+	// 该指令用于查询指定魔物在不同地图的刷新点信息
+	// 此选项开关需要依赖 Pandas_Struct_Map_Data_Mob_Spawns 的拓展
+	// 是否启用 getcalendartime 脚本指令 [Haru]
+	// 该指令用于获取下次出现指定时间的 UNIX 时间戳
+	// 是否启用 getskillinfo 脚本指令 [聽風]
+	// 该指令用于获取指定技能在技能数据库中所配置的各项信息
+	// 是否启用 boss_monster 脚本指令 [人鱼姬的思念]
+	// 该指令用于召唤魔物并使之能被 BOSS 雷达探测 (哪怕被召唤魔物本身不是 BOSS)
+	// 此选项依赖 Pandas_FuncDefine_Mob_Once_Spawn 的拓展
+	// 是否启用 sleep3 脚本指令 [人鱼姬的思念]
+	// 该指令用于休眠一段时间再执行后续脚本, 与 sleep2 类似但忽略报错
+	// 是否启用 getquesttime 脚本指令 [Sola丶小克]
+	// 该指令用于查询角色指定任务的时间信息 (感谢 "SSBoyz" 建议)
+	// 是否启用 unitspecialeffect 脚本指令 [人鱼姬的思念]
+	// 该指令用于使指定游戏单位可以显示某个特效, 并支持控制特效可见范围
+	// 是否启用 next_dropitem_special 脚本指令 [Sola丶小克]
+	// 该指令用于对下一个掉落到地面上的物品进行特殊设置, 支持魔物掉落道具和 makeitem 系列指令
+	// 是否启用 getgradeitem 脚本指令 [Sola丶小克]
+	// 该指令用于创造带有指定附魔评级的道具, 由于 rAthena 已经正式实现了 getitem4,
+	// getgradeitem 仅用于兼容旧版本的脚本, 请尽量使用 getitem4
+	// 是否启用 getrateidx 脚本指令 [Sola丶小克]
+	// 随机获取一个数值型数组的索引序号, 数组中每个元素的值为权重值
+	// 是否启用 getbossinfo 脚本指令 [Sola丶小克]
+	// 该指令用于查询 BOSS 魔物重生时间及其坟墓等信息
+	// 是否启用 whodropitem 脚本指令 [Sola丶小克]
+	// 该指令用于查询指定道具会从哪些魔物身上掉落以及掉落的机率信息
+	// 是否扩充 getinventorylist 脚本指令 [Sola丶小克]
+	// 主要包括了查询返回值的信息扩充, 衍生查询仓库和手推车的变体指令, 可控制每次需要被赋值的具体数组
+	// - 查询返回值的信息扩充相比 rAthena 多返回以下内容
+	//	 - @inventorylist_uid$[]
+	//   - @inventorylist_equipswitch[]
+	// - 衍生查询仓库和手推车的变体指令
+	//   - getstoragelist;
+	//   - getguildstoragelist;
+	//   - getcartlist;
+	// - 可控制每次想查询的数据类型
+	//   - 用于解决仓库和背包容量超大时候填充大量不使用的数据带来的性能问题
+	// 更多详细用法请移步 doc/pandas_script_commands.txt 文件
+	// 是否支持异步查询数据库的脚本指令 [Sola丶小克]
+	// 此选项开关需要依赖 Pandas_Support_Future_Execution 的拓展
+	// 当前涉及到的脚本指令有以下几个:
+	// - query_sql_async
+	// - query_logsql_async
+	// 此功能由 inhyositsu <inhyositsu@gmail.com> 实现,
+	// 后续由 Sola丶小克 进行微调并汇入熊猫模拟器
+	// PYHELP - SCRIPTCMD - INSERT POINT - <Section 1>
+#endif // Pandas_ScriptCommands

@@ -12,6 +12,214 @@
 	#define export_deprecated_constant2(a,b) script_set_constant(a,b,false,true)
 	#define export_deprecated_constant3(a,b,c) script_set_constant_(a,b,c,false,true)
 
+#ifdef Pandas_ScriptCommands
+	/* npce_event values */
+	export_constant(NPCE_LOGIN);
+	export_constant(NPCE_LOGOUT);
+	export_constant(NPCE_LOADMAP);
+	export_constant(NPCE_BASELVUP);
+	export_constant(NPCE_JOBLVUP);
+	export_constant(NPCE_DIE);
+	export_constant(NPCE_KILLPC);
+	export_constant(NPCE_KILLNPC);
+	export_constant(NPCE_MAX);
+
+	/************************************************************************/
+	/* Filter 类型的过滤事件，这些事件可以被 processhalt 中断                    */
+	/************************************************************************/
+
+#ifdef Pandas_NpcFilter_IDENTIFY
+	export_constant(NPCF_IDENTIFY);	// identify_filter_name	// OnPCIdentifyFilter		// 当玩家在装备鉴定列表中选择好装备, 并点击“确定”按钮时触发过滤器
+#endif // Pandas_NpcFilter_IDENTIFY
+
+#ifdef Pandas_NpcFilter_ENTERCHAT
+	export_constant(NPCF_ENTERCHAT);	// enterchat_filter_name	// OnPCInChatroomFilter		// 当玩家进入 NPC 开启的聊天室时触发过滤器
+#endif // Pandas_NpcFilter_ENTERCHAT
+
+#ifdef Pandas_NpcFilter_INSERT_CARD
+	export_constant(NPCF_INSERT_CARD);	// insert_card_filter_name	// OnPCInsertCardFilter		// 当玩家准备插入卡片时触发过滤器
+#endif // Pandas_NpcFilter_INSERT_CARD
+
+#ifdef Pandas_NpcFilter_USE_ITEM
+	export_constant(NPCF_USE_ITEM);	// use_item_filter_name	// OnPCUseItemFilter		// 当玩家准备使用非装备类道具时触发过滤器
+#endif // Pandas_NpcFilter_USE_ITEM
+
+#ifdef Pandas_NpcFilter_USE_SKILL
+	export_constant(NPCF_USE_SKILL);	// use_skill_filter_name	// OnPCUseSkillFilter		// 当玩家准备使用技能时触发过滤器
+#endif // Pandas_NpcFilter_USE_SKILL
+
+#ifdef Pandas_NpcFilter_ROULETTE_OPEN
+	export_constant(NPCF_ROULETTE_OPEN);	// roulette_open_filter_name	// OnPCOpenRouletteFilter		// 当玩家准备打开乐透大转盘的时候触发过滤器
+#endif // Pandas_NpcFilter_ROULETTE_OPEN
+
+#ifdef Pandas_NpcFilter_VIEW_EQUIP
+	export_constant(NPCF_VIEW_EQUIP);	// view_equip_filter_name	// OnPCViewEquipFilter		// 当玩家准备查看某个角色的装备时触发过滤器
+#endif // Pandas_NpcFilter_VIEW_EQUIP
+
+#ifdef Pandas_NpcFilter_EQUIP
+	export_constant(NPCF_EQUIP);	// equip_filter_name	// OnPCEquipFilter		// 当玩家准备穿戴装备时触发过滤器
+#endif // Pandas_NpcFilter_EQUIP
+
+#ifdef Pandas_NpcFilter_UNEQUIP
+	export_constant(NPCF_UNEQUIP);	// unequip_filter_name	// OnPCUnequipFilter		// 当玩家准备脱下装备时触发过滤器
+#endif // Pandas_NpcFilter_UNEQUIP
+
+#ifdef Pandas_NpcFilter_CHANGETITLE
+	export_constant(NPCF_CHANGETITLE);	// changetitle_filter_name	// OnPCChangeTitleFilter		// 当玩家试图变更称号时将触发过滤器
+#endif // Pandas_NpcFilter_CHANGETITLE
+
+#ifdef Pandas_NpcFilter_SC_START
+	export_constant(NPCF_SC_START);	// sc_start_filter_name	// OnPCBuffStartFilter		// 当玩家准备获得一个状态(Buff)时触发过滤器
+#endif // Pandas_NpcFilter_SC_START
+
+#ifdef Pandas_NpcFilter_USE_REVIVE_TOKEN
+	export_constant(NPCF_USE_REVIVE_TOKEN);	// use_revive_token_filter_name	// OnPCUseReviveTokenFilter		// 当玩家使用菜单中的原地复活之证时触发过滤器
+#endif // Pandas_NpcFilter_USE_REVIVE_TOKEN
+
+#ifdef Pandas_NpcFilter_ONECLICK_IDENTIFY
+	export_constant(NPCF_ONECLICK_IDENTIFY);	// oneclick_identify_filter_name	// OnPCUseOCIdentifyFilter		// 当玩家使用一键鉴定道具时触发过滤器
+#endif // Pandas_NpcFilter_ONECLICK_IDENTIFY
+
+#ifdef Pandas_NpcFilter_GUILDCREATE
+	export_constant(NPCF_GUILDCREATE);	// guildcreate_filter_name	// OnPCGuildCreateFilter		// 当玩家准备创建公会时触发过滤器
+#endif // Pandas_NpcFilter_GUILDCREATE
+
+#ifdef Pandas_NpcFilter_GUILDJOIN
+	export_constant(NPCF_GUILDJOIN);	// guildjoin_filter_name	// OnPCGuildJoinFilter		// 当玩家即将加入公会时触发过滤器
+#endif // Pandas_NpcFilter_GUILDJOIN
+
+#ifdef Pandas_NpcFilter_GUILDLEAVE
+	export_constant(NPCF_GUILDLEAVE);	// guildleave_filter_name	// OnPCGuildLeaveFilter		// 当玩家准备离开公会时触发过滤器
+#endif // Pandas_NpcFilter_GUILDLEAVE
+
+#ifdef Pandas_NpcFilter_PARTYCREATE
+	export_constant(NPCF_PARTYCREATE);	// partycreate_filter_name	// OnPCPartyCreateFilter		// 当玩家准备创建队伍时触发过滤器
+#endif // Pandas_NpcFilter_PARTYCREATE
+
+#ifdef Pandas_NpcFilter_PARTYJOIN
+	export_constant(NPCF_PARTYJOIN);	// partyjoin_filter_name	// OnPCPartyJoinFilter		// 当玩家即将加入队伍时触发过滤器
+#endif // Pandas_NpcFilter_PARTYJOIN
+
+#ifdef Pandas_NpcFilter_PARTYLEAVE
+	export_constant(NPCF_PARTYLEAVE);	// partyleave_filter_name	// OnPCPartyLeaveFilter		// 当玩家准备离开队伍时触发过滤器
+#endif // Pandas_NpcFilter_PARTYLEAVE
+
+#ifdef Pandas_NpcFilter_DROPITEM
+	export_constant(NPCF_DROPITEM);	// dropitem_filter_name	// OnPCDropItemFilter		// 当玩家准备丢弃或掉落道具时触发过滤器
+#endif // Pandas_NpcFilter_DROPITEM
+
+#ifdef Pandas_NpcFilter_CLICKTOMB
+	export_constant(NPCF_CLICKTOMB);	// clicktomb_filter_name	// OnPCClickTombFilter		// 当玩家点击魔物墓碑时触发过滤器
+#endif // Pandas_NpcFilter_CLICKTOMB
+
+#ifdef Pandas_NpcFilter_STORAGE_ADD
+	export_constant(NPCF_STORAGE_ADD);	// storage_add_filter_name	// OnPCStorageAddFilter		// 当玩家准备将道具存入仓库时触发过滤器
+#endif // Pandas_NpcFilter_STORAGE_ADD
+
+#ifdef Pandas_NpcFilter_STORAGE_DEL
+	export_constant(NPCF_STORAGE_DEL);	// storage_del_filter_name	// OnPCStorageDelFilter		// 当玩家准备将道具取出仓库时触发过滤器
+#endif // Pandas_NpcFilter_STORAGE_DEL
+
+#ifdef Pandas_NpcFilter_CART_ADD
+	export_constant(NPCF_CART_ADD);	// cart_add_filter_name	// OnPCCartAddFilter		// 当玩家准备将道具从背包存入手推车时触发过滤器
+#endif // Pandas_NpcFilter_CART_ADD
+
+#ifdef Pandas_NpcFilter_CART_DEL
+	export_constant(NPCF_CART_DEL);	// cart_del_filter_name	// OnPCCartDelFilter		// 当玩家准备将道具从手推车取回背包时触发过滤器
+#endif // Pandas_NpcFilter_CART_DEL
+
+#ifdef Pandas_NpcFilter_FAVORITE_ADD
+	export_constant(NPCF_FAVORITE_ADD);	// favorite_add_filter_name	// OnPCFavoriteAddFilter		// 当玩家准备将道具移入收藏栏位时触发过滤器 [香草]
+#endif // Pandas_NpcFilter_FAVORITE_ADD
+
+#ifdef Pandas_NpcFilter_FAVORITE_DEL
+	export_constant(NPCF_FAVORITE_DEL);	// favorite_del_filter_name	// OnPCFavoriteDelFilter		// 当玩家准备将道具从收藏栏位移出时触发过滤器 [香草]
+#endif // Pandas_NpcFilter_FAVORITE_DEL
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 6>
+
+	/************************************************************************/
+	/* Event  类型的标准事件，这些事件不能被 processhalt 打断                    */
+	/************************************************************************/
+
+#ifdef Pandas_NpcEvent_KILLMVP
+	export_constant(NPCE_KILLMVP);	// killmvp_event_name	// OnPCKillMvpEvent		// 当玩家杀死 MVP 魔物后触发事件
+#endif // Pandas_NpcEvent_KILLMVP
+
+#ifdef Pandas_NpcEvent_INSERT_CARD
+	export_constant(NPCE_INSERT_CARD);	// insert_card_event_name	// OnPCInsertCardEvent		// 当玩家成功插入卡片后触发事件
+#endif // Pandas_NpcEvent_INSERT_CARD
+
+#ifdef Pandas_NpcEvent_USE_ITEM
+	export_constant(NPCE_USE_ITEM);	// use_item_event_name	// OnPCUseItemEvent		// 当玩家成功使用非装备类道具后触发事件
+#endif // Pandas_NpcEvent_USE_ITEM
+
+#ifdef Pandas_NpcEvent_USE_SKILL
+	export_constant(NPCE_USE_SKILL);	// use_skill_event_name	// OnPCUseSkillEvent		// 当玩家成功使用技能后触发事件
+#endif // Pandas_NpcEvent_USE_SKILL
+
+#ifdef Pandas_NpcEvent_EQUIP
+	export_constant(NPCE_EQUIP);	// equip_event_name	// OnPCEquipEvent		// 当玩家成功穿戴一件装备时触发事件
+#endif // Pandas_NpcEvent_EQUIP
+
+#ifdef Pandas_NpcEvent_UNEQUIP
+	export_constant(NPCE_UNEQUIP);	// unequip_event_name	// OnPCUnequipEvent		// 当玩家成功脱下一件装备时触发事件
+#endif // Pandas_NpcEvent_UNEQUIP
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 12>
+
+	/************************************************************************/
+	/* Express 类型的快速事件，这些事件将会被立刻执行, 不进事件队列                */
+	/************************************************************************/
+
+#ifdef Pandas_NpcExpress_STATCALC
+	export_constant(NPCE_STATCALC);	// statcalc_express_name	// OnPCStatCalcEvent		// 当角色能力被重新计算时触发事件
+#endif // Pandas_NpcExpress_STATCALC
+
+#ifdef Pandas_NpcExpress_SC_END
+	export_constant(NPCX_SC_END);	// sc_end_express_name	// OnPCBuffEndExpress		// 当玩家成功解除一个状态(Buff)后触发实时事件
+#endif // Pandas_NpcExpress_SC_END
+
+#ifdef Pandas_NpcExpress_SC_START
+	export_constant(NPCX_SC_START);	// sc_start_express_name	// OnPCBuffStartExpress		// 当玩家成功获得一个状态(Buff)后触发实时事件
+#endif // Pandas_NpcExpress_SC_START
+
+#ifdef Pandas_NpcExpress_ENTERMAP
+	export_constant(NPCX_ENTERMAP);	// entermap_express_name	// OnPCEnterMapExpress		// 当玩家进入或者改变地图时触发实时事件
+#endif // Pandas_NpcExpress_ENTERMAP
+
+#ifdef Pandas_NpcExpress_PROGRESSABORT
+	export_constant(NPCX_PROGRESSABORT);	// progressabort_express_name	// OnPCProgressAbortExpress		// 当 progressbar 进度条被打断时触发实时事件
+#endif // Pandas_NpcExpress_PROGRESSABORT
+
+#ifdef Pandas_NpcExpress_UNIT_KILL
+	export_constant(NPCX_UNIT_KILL);	// unit_kill_express_name	// OnUnitKillExpress		// 当某个单位被击杀时触发实时事件
+#endif // Pandas_NpcExpress_UNIT_KILL
+
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+	export_constant(NPCX_MOBDROPITEM);	// mobdropitem_express_name	// OnMobDropItemExpress		// 当魔物即将掉落道具时触发实时事件
+#endif // Pandas_NpcExpress_MOBDROPITEM
+
+#ifdef Pandas_NpcExpress_PCATTACK
+	export_constant(NPCX_PCATTACK);	// pcattack_express_name	// OnPCAttackExpress		// 当玩家发起攻击并即将进行结算时触发实时事件 [聽風]
+#endif // Pandas_NpcExpress_PCATTACK
+
+#ifdef Pandas_NpcExpress_MER_CALL
+	export_constant(NPCX_MER_CALL);	// mer_call_express_name	// OnPCMerCallExpress		// 当玩家成功召唤出佣兵时触发实时事件
+#endif // Pandas_NpcExpress_MER_CALL
+
+#ifdef Pandas_NpcExpress_MER_LEAVE
+	export_constant(NPCX_MER_LEAVE);	// mer_leave_express_name	// OnPCMerLeaveExpress		// 当佣兵离开玩家时触发实时事件
+#endif // Pandas_NpcExpress_MER_LEAVE
+
+#ifdef Pandas_NpcExpress_PC_TALK
+	export_constant(NPCX_PC_TALK);	// pc_talk_express_name	// OnPCTalkExpress		// 当玩家往聊天框发送信息时触发实时事件 [人鱼姬的思念]
+#endif // Pandas_NpcExpress_PC_TALK
+
+#ifdef Pandas_NpcExpress_PCHARMED
+	export_constant(NPCX_PCHARMED);	// pcharmed_express_name	// OnPCHarmedExpress		// 当玩家受到伤害并即将进行结算时触发实时事件 [人鱼姬的思念]
+#endif // Pandas_NpcExpress_PCHARMED
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 18>
+#endif // Pandas_ScriptCommands
+
 	/* min and maximum variable value */
 	export_constant(INT_MIN);
 	export_constant(INT_MAX);
