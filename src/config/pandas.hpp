@@ -216,6 +216,11 @@
 		#define Pandas_Struct_Map_Session_Data_BonusScript_Counter
 	#endif // Pandas_Struct_Map_Session_Data_Pandas
 
+	// 对 bonus_script_data 的定义进行拓展处理 [Sola丶小克]
+	// 默认的 rAthena 中 bonus_script 机制并没有唯一编号的概念, 为了提高对 bonus_script 的控制粒度
+	// 我们需要将唯一编号引入到需要拓展的相关数据结构体中
+	#define Pandas_Struct_BonusScriptData_Extend
+
 	// 以下选项开关需要依赖 Pandas_Struct_Map_Session_Data_Pandas 的拓展
 
 	// 使 item_data 有一个独立的结构体用来存放 Pandas 的拓展 [Sola丶小克]

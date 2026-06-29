@@ -364,6 +364,9 @@ struct s_bonus_script_entry {
 	enum efst_type icon;
 	uint8 type; //0 - Ignore; 1 - Buff; 2 - Debuff
 	int32 tid;
+#ifdef Pandas_Struct_BonusScriptData_Extend
+	uint64 bonus_id; // 此 bonus_script 的唯一编号
+#endif // Pandas_Struct_BonusScriptData_Extend
 };
 
 /// HP/SP bonus struct
