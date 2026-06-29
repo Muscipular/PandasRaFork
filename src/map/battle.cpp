@@ -8925,6 +8925,10 @@ static const struct _battle_data {
 	{ "suspend_offline_bodydirection",      &battle_config.suspend_offline_bodydirection,   -1,     -1,     7,              },
 #endif // Pandas_BattleConfig_Suspend_Offline_BodyDirection
 
+#ifdef Pandas_BattleConfig_Suspend_Offline_HeadDirection
+	{ "suspend_offline_headdirection",      &battle_config.suspend_offline_headdirection,   -1,     -1,     2,              },
+#endif // Pandas_BattleConfig_Suspend_Offline_HeadDirection
+
 #include <custom/battle_config_init.inc>
 };
 
