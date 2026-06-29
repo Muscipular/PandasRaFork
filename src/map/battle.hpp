@@ -822,6 +822,10 @@ struct Battle_Config
 	int32 suspend_normal_bodydirection; // 当玩家进入普通模式时, 被拉上线的角色身体朝向哪里
 #endif // Pandas_BattleConfig_Suspend_Normal_BodyDirection
 
+#ifdef Pandas_BattleConfig_Suspend_Normal_HeadDirection
+	int32 suspend_normal_headdirection; // 当玩家进入普通模式时, 被拉上线的角色头部朝向哪里
+#endif // Pandas_BattleConfig_Suspend_Normal_HeadDirection
+
 #include <custom/battle_config_struct.inc>
 };
 

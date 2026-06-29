@@ -8953,6 +8953,10 @@ static const struct _battle_data {
 	{ "suspend_normal_bodydirection",       &battle_config.suspend_normal_bodydirection,    -1,     -1,     7,              },
 #endif // Pandas_BattleConfig_Suspend_Normal_BodyDirection
 
+#ifdef Pandas_BattleConfig_Suspend_Normal_HeadDirection
+	{ "suspend_normal_headdirection",       &battle_config.suspend_normal_headdirection,    -1,     -1,     2,              },
+#endif // Pandas_BattleConfig_Suspend_Normal_HeadDirection
+
 #include <custom/battle_config_init.inc>
 };
 
