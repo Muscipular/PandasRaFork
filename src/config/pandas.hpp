@@ -210,6 +210,7 @@
 
 		// 使 map_session_data 可记录玩家已经生成的 bonus_script 记录数 [Sola丶小克]
 		// 结构体修改定位 pc.hpp -> map_session_data.pandas.bonus_script_counter
+		#define Pandas_Struct_Map_Session_Data_BonusScript_Counter
 	#endif // Pandas_Struct_Map_Session_Data_Pandas
 
 	// 以下选项开关需要依赖 Pandas_Struct_Map_Session_Data_Pandas 的拓展

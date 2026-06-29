@@ -426,6 +426,9 @@ public:
 		unsigned char at_head_dir; // 纸娃娃头部朝向
 		unsigned char at_sit; // 是否坐下
 #endif // Pandas_Struct_Map_Session_Data_Autotrade_Configure
+#ifdef Pandas_Struct_Map_Session_Data_BonusScript_Counter
+		uint32 bonus_script_counter; // 玩家已经生成的 bonus_script 记录数
+#endif // Pandas_Struct_Map_Session_Data_BonusScript_Counter
 	} pandas;
 #endif // Pandas_Struct_Map_Session_Data_Pandas
 	//NOTE: When deciding to add a flag to state or special_state, take into consideration that state is preserved in
