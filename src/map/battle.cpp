@@ -8917,6 +8917,10 @@ static const struct _battle_data {
 	{ "suspend_monsterignore",              &battle_config.suspend_monsterignore,           3,      0,      7,              },
 #endif // Pandas_BattleConfig_Suspend_MonsterIgnore
 
+#ifdef Pandas_BattleConfig_Suspend_Whisper_Response
+	{ "suspend_whisper_response",           &battle_config.suspend_whisper_response,        2,      0,      7,              },
+#endif // Pandas_BattleConfig_Suspend_Whisper_Response
+
 #ifdef Pandas_BattleConfig_Suspend_Offline_BodyDirection
 	{ "suspend_offline_bodydirection",      &battle_config.suspend_offline_bodydirection,   -1,     -1,     7,              },
 #endif // Pandas_BattleConfig_Suspend_Offline_BodyDirection
