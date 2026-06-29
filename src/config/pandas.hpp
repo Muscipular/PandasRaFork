@@ -360,6 +360,10 @@
 // 此选项用于指定玩家进入普通模式时, 被拉上线的角色头部朝向哪里
 #define Pandas_BattleConfig_Suspend_Normal_HeadDirection
 
+// 是否启用 suspend_normal_sitdown 配置选项及其功能 [Sola丶小克]
+// 此选项用于指定玩家进入普通模式时, 被拉上线的角色处于站立还是坐下状态
+#define Pandas_BattleConfig_Suspend_Normal_Sitdown
+
 // ============================================================================
 // 脚本引擎修改组 - Pandas_ScriptEngine
 // ============================================================================

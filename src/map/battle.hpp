@@ -826,6 +826,10 @@ struct Battle_Config
 	int32 suspend_normal_headdirection; // 当玩家进入普通模式时, 被拉上线的角色头部朝向哪里
 #endif // Pandas_BattleConfig_Suspend_Normal_HeadDirection
 
+#ifdef Pandas_BattleConfig_Suspend_Normal_Sitdown
+	int32 suspend_normal_sitdown; // 当玩家进入普通模式时, 被拉上线的角色处于站立还是坐下状态
+#endif // Pandas_BattleConfig_Suspend_Normal_Sitdown
+
 #include <custom/battle_config_struct.inc>
 };
 
