@@ -22,6 +22,9 @@
 #include "cashshop.hpp"
 #include "clif.hpp"
 #include "intif.hpp"
+#ifdef Pandas_Database_ItemProperties
+#include "itemprops.hpp"
+#endif // Pandas_Database_ItemProperties
 #include "log.hpp"
 #include "map_artisan.hpp"
 #include "mob.hpp"
@@ -5040,6 +5043,13 @@ static void itemdb_read(void) {
 
 	if (battle_config.feature_roulette)
 		itemdb_parse_roulette_db();
+
+#ifdef Pandas_Database_ItemProperties
+	// 加载 item_properties.yml 必须在 item_db.load(); 之后进行
+	// 因此加载过程中需要判断物品编号是否有效, 这需要依赖 itemdb_read 的执行结果
+	item_properties_db.load();
+	item_properties_db.parsePropertiesToItemDB(item_db);
+#endif // Pandas_Database_ItemProperties
 }
 
 /*==========================================
@@ -5112,6 +5122,11 @@ void itemdb_reload(void) {
 		pc_setinventorydata( *sd );
 		pc_check_available_item(sd, ITMCHK_ALL); // Check for invalid(ated) items.
 		pc_load_combo(sd); // Check to see if new combos are available
+#ifdef Pandas_Database_ItemProperties
+		// 当启用了道具特殊属性数据库的话, 重载物品信息后
+		// 重新给每个玩家发放背包信息, 以便一些相关的设置能够直接生效
+		clif_inventorylist(sd);
+#endif // Pandas_Database_ItemProperties
 		status_calc_pc(sd, SCO_FORCE); // 
 	}
 	mapit_free(iter);
@@ -5131,6 +5146,9 @@ void do_final_itemdb(void) {
 	item_reform_db.clear();
 	item_enchant_db.clear();
 	item_package_db.clear();
+#ifdef Pandas_Database_ItemProperties
+	item_properties_db.clear();
+#endif // Pandas_Database_ItemProperties
 	if (battle_config.feature_roulette)
 		itemdb_roulette_free();
 }

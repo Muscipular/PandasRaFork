@@ -1,6 +1,7 @@
 #pragma once
 
 	#define Pandas_Basic
+	#define Pandas_DatabaseIncrease
 	#define Pandas_StructIncrease
 	#define Pandas_ScriptEngine
 	#define Pandas_ScriptCommands
@@ -297,6 +298,19 @@
 	// 使 map_data 能保存全部魔物的刷新点信息 [Sola丶小克]
 	#define Pandas_Struct_Map_Data_Mob_Spawns
 #endif // Pandas_StructIncrease
+
+// ============================================================================
+// 数据库增强组 - Pandas_DatabaseIncrease
+// ============================================================================
+
+#ifdef Pandas_DatabaseIncrease
+	// 是否启用道具特殊属性数据库 [Sola丶小克]
+	// 为了避免未来可能存在的冲突, 直接创建一个新的数据库来存放对物品属性的自定义扩充
+	// 此选项依赖 Pandas_Struct_Item_Data_Properties 的拓展
+	#ifdef Pandas_Struct_Item_Data_Properties
+		#define Pandas_Database_ItemProperties
+	#endif // Pandas_Struct_Item_Data_Properties
+#endif // Pandas_DatabaseIncrease
 
 // ============================================================================
 // 脚本引擎修改组 - Pandas_ScriptEngine
