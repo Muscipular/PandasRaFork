@@ -227,6 +227,7 @@
 
 		// 使 item_data 可记录当前物品可捕捉的魔物编号 [Sola丶小克]
 		// 结构体修改定位 itemdb.hpp -> item_data.pandas.taming_mobid
+		#define Pandas_Struct_Item_Data_Taming_Mobid
 
 		// 使 item_data 可记录此物品的使用脚本是否执行了 callfunc 指令 [Sola丶小克]
 		// 结构体修改定位 itemdb.hpp -> item_data.pandas.has_callfunc

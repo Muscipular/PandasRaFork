@@ -3537,6 +3537,11 @@ struct item_data
 			std::string unequip_script;
 		} script_plaintext;
 #endif // Pandas_Struct_Item_Data_Script_Plaintext
+#ifdef Pandas_Struct_Item_Data_Taming_Mobid
+		// 使 item_data 可记录当前物品可捕捉的魔物编号 [Sola丶小克]
+		// 若 vector 为空则表示这不是宠物捕捉道具, 若非空则记录此道具支持捕捉的魔物编号
+		std::vector<uint32> taming_mobid;
+#endif // Pandas_Struct_Item_Data_Taming_Mobid
 	} pandas;
 #endif // Pandas_Struct_Item_Data_Pandas
 
@@ -3555,6 +3560,10 @@ struct item_data
 			script_free_code(this->unequip_script);
 			this->unequip_script = nullptr;
 		}
+
+#ifdef Pandas_Struct_Item_Data_Taming_Mobid
+		this->pandas.taming_mobid.clear();
+#endif // Pandas_Struct_Item_Data_Taming_Mobid
 
 		this->combos.clear();
 	}
