@@ -129,7 +129,11 @@ void chlogif_send_usercount(int32 users){
 
 
 TIMER_FUNC(chlogif_broadcast_user_count){
+	#ifndef Pandas_Crashfix_Variable_Init
 	uint8 buf[6];
+	#else
+	uint8 buf[6] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	int32 users = char_count_users();
 
 	// only send an update when needed
@@ -290,7 +294,11 @@ int32 chlogif_parse_ackconnect(int32 fd){
 }
 
 int32 chlogif_parse_ackaccreq(int32 fd){
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	if (RFIFOREST(fd) < 21)
+#else
+	if (RFIFOREST(fd) < 21 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH)
+#endif // Pandas_Extract_SSOPacket_MacAddress
 		return 0;
 	{
 		struct char_session_data* sd;
@@ -301,13 +309,25 @@ int32 chlogif_parse_ackaccreq(int32 fd){
 		uint8 result = RFIFOB(fd,15);
 		int32 request_id = RFIFOL(fd,16);
 		uint8 clienttype = RFIFOB(fd,20);
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 		RFIFOSKIP(fd,21);
+#else
+		char macaddress[MACADDRESS_LENGTH] = { 0 };
+		char lanaddress[IP4ADDRESS_LENGTH] = { 0 };
+		safestrncpy(macaddress, RFIFOCP(fd, 21), MACADDRESS_LENGTH);
+		safestrncpy(lanaddress, RFIFOCP(fd, 21 + MACADDRESS_LENGTH), IP4ADDRESS_LENGTH);
+		RFIFOSKIP(fd,21 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 		if( session_isActive(request_id) && (sd=(struct char_session_data*)session[request_id]->session_data) &&
 			!sd->auth && sd->account_id == account_id && sd->login_id1 == login_id1 && sd->login_id2 == login_id2 && sd->sex == sex )
 		{
 			int32 client_fd = request_id;
 			sd->clienttype = clienttype;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+			safestrncpy(session[client_fd]->mac_address, macaddress, MACADDRESS_LENGTH);
+			safestrncpy(session[client_fd]->lan_address, lanaddress, IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 			switch( result )
 			{
@@ -470,7 +490,11 @@ int32 chlogif_parse_ackchangesex(int32 fd)
 	if (RFIFOREST(fd) < 7)
 		return 0;
 	else {
+	#ifndef Pandas_Crashfix_Variable_Init
 		unsigned char buf[7];
+	#else
+		unsigned char buf[7] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 		uint32 acc = RFIFOL(fd,2);
 		int32 sex = RFIFOB(fd,6);
 		RFIFOSKIP(fd,7);
@@ -520,7 +544,11 @@ int32 chlogif_parse_ackchangesex(int32 fd)
 int32 chlogif_parse_ackchangecharsex(int32 char_id, int32 sex)
 {
 	int32 class_ = 0, guild_id = 0, account_id = 0;
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[7];
+	#else
+	unsigned char buf[7] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	char *data;
 
 	// get character data
@@ -566,7 +594,11 @@ int32 chlogif_parse_accbannotification(int32 fd){
 	if (RFIFOREST(fd) < 11)
 		return 0;
 	else { // send to all map-servers to disconnect the player
+	#ifndef Pandas_Crashfix_Variable_Init
 		unsigned char buf[11];
+	#else
+		unsigned char buf[11] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 		WBUFW(buf,0) = 0x2b14;
 		WBUFL(buf,2) = RFIFOL(fd,2);
 		WBUFB(buf,6) = RFIFOB(fd,6); // 0: change of statut, 1: ban
@@ -618,7 +650,11 @@ int32 chlogif_parse_askkick(int32 fd){
 }
 
 int32 chlogif_parse_updip(int32 fd){
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[2];
+	#else
+	unsigned char buf[2] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	uint32 new_ip = 0;
 
 	/**

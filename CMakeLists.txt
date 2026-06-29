@@ -23,12 +23,12 @@
 
 
 set( CMAKE_LEGACY_CYGWIN_WIN32 0 )
-cmake_minimum_required( VERSION 3.13 )
-project( rAthena )
+cmake_minimum_required( VERSION 3.14 FATAL_ERROR )
+project( Pandas )
 if( CYGWIN )
 	unset( WIN32 )
 endif()
-set(CMAKE_CXX_STANDARD 17) # C++17...
+set(CMAKE_CXX_STANDARD 20) # C++20...
 set(CMAKE_CXX_STANDARD_REQUIRED ON) #...is required...
 #set(CMAKE_CXX_EXTENSIONS OFF) #...without compiler extensions like gnu++11
 
@@ -44,10 +44,39 @@ endif()
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib/${suffixInstallStr})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib/${suffixInstallStr})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-set(CMAKE_C_CREATE_SHARED_LIBRARY)
-set(CMAKE_CXX_CREATE_SHARED_LIBRARY)
+# 引入的一些第三方组件库需要这两个变量的内容, 不能清空他.
+# 之前 rAthena 之所以写了这两个，是因为在 src/common/CMakeLists.txt 中
+# 执行 add_library 的时候没有指定 STATIC 关键字, 只要指定了 STATIC 关键字那么这里的两个变量不清空也没事
+# set(CMAKE_C_CREATE_SHARED_LIBRARY)
+# set(CMAKE_CXX_CREATE_SHARED_LIBRARY)
 set(CMAKE_DEBUG_POSTFIX "d")
 set(CMAKE_RELEASE_POSTFIX "r")
+
+if(WIN32)
+	set( PANDAS_RUNTIME_DLLS )
+	foreach( _DLL IN ITEMS
+		"${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/mysql/lib/${architecture}/libmysql.dll"
+		"${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/zlib/lib/${architecture}/zlib.dll" )
+		if( EXISTS "${_DLL}" )
+			list( APPEND PANDAS_RUNTIME_DLLS "${_DLL}" )
+		endif()
+	endforeach()
+endif()
+
+function( PANDAS_COPY_RUNTIME_DLLS _TARGET )
+	if( WIN32 AND PANDAS_RUNTIME_DLLS )
+		add_custom_command( TARGET ${_TARGET} POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PANDAS_RUNTIME_DLLS} "$<TARGET_FILE_DIR:${_TARGET}>"
+			COMMAND_EXPAND_LISTS
+			COMMENT "Copying runtime DLLs for ${_TARGET}" )
+	endif()
+endfunction()
+
+# 在 CMake 的较新版本中, 明确指定一下 CMP0075 策略的处理方式
+# CMP0075 Include file check macros honor CMAKE_REQUIRED_LIBRARIES
+if(POLICY CMP0075)
+    cmake_policy(SET CMP0075 NEW)
+endif()
 
 # Set a default build type if none was specified
 set(default_build_type "Release")
@@ -81,6 +110,35 @@ endif()
 
 
 #
+# 若有可能则启用 ccache 以便加速编译
+#
+find_program(CCACHE_EXECUTABLE ccache)
+mark_as_advanced(CCACHE_EXECUTABLE)
+if(CCACHE_EXECUTABLE)
+  foreach(LANG C CXX)
+    if(NOT DEFINED CMAKE_${LANG}_COMPILER_LAUNCHER AND NOT CMAKE_${LANG}_COMPILER MATCHES ".*/ccache")
+      message(STATUS "Enabling ccache for ${LANG} : ${CCACHE_EXECUTABLE}")
+      set(CMAKE_${LANG}_COMPILER_LAUNCHER ${CCACHE_EXECUTABLE} CACHE STRING "")
+    endif()
+  endforeach()
+endif()
+
+#
+# 对编译器的版本进行必要的检查
+#
+if( NOT WIN32 )
+	if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+		if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0)
+			message(FATAL_ERROR "GCC version must be at least 8.0 !")
+		endif()
+	elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+		if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
+			message(FATAL_ERROR "Clang version must be at least 7.0 !")
+		endif()
+	endif()
+endif()
+
+#
 # Global stuff
 #
 set( GLOBAL_LIBRARIES ${LINK_LIBRARIES}  CACHE INTERNAL "" )# list (comma separated values)
@@ -89,14 +147,29 @@ set( GLOBAL_DEFINITIONS ${COMPILE_DEFINITIONS}  CACHE INTERNAL "" )# string (spa
 mark_as_advanced( GLOBAL_LIBRARIES  GLOBAL_INCLUDE_DIRS  GLOBAL_DEFINITIONS )
 if( WIN32 )
 	set_property( CACHE GLOBAL_DEFINITIONS  PROPERTY VALUE "${GLOBAL_DEFINITIONS} -DFD_SETSIZE=4096" )
+else()
+	# 若处于 Linux 平台上, 那么添加 -g 参数用于携带调试信息
+	# 以便可以在 Release 模式下使用 gdb 快速的进行程序崩溃错误调试
+	# 特别针对那些 Release 模式下才能触发, 但 Debug 模式下无法触发的崩溃场景
+	set_property( CACHE GLOBAL_DEFINITIONS  PROPERTY VALUE "${GLOBAL_DEFINITIONS} -g" )
 endif()
 if( MSVC )
-	set_property( CACHE GLOBAL_LIBRARIES    PROPERTY VALUE ${GLOBAL_LIBRARIES} "oldnames.lib" "ws2_32.lib" )
-	set_property( CACHE GLOBAL_DEFINITIONS  PROPERTY VALUE "${GLOBAL_DEFINITIONS} -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE" )
+	set_property( CACHE GLOBAL_LIBRARIES    PROPERTY VALUE ${GLOBAL_LIBRARIES} "oldnames.lib" "ws2_32.lib" "Version.lib" )
+	set_property( CACHE GLOBAL_DEFINITIONS  PROPERTY VALUE "${GLOBAL_DEFINITIONS} -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE -DLIBCONFIG_STATIC /utf-8 /bigobj" )
+elseif( WIN32 )
+	set_property( CACHE GLOBAL_LIBRARIES    PROPERTY VALUE ${GLOBAL_LIBRARIES} "version" )
 endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
   set_property( CACHE GLOBAL_DEFINITIONS  PROPERTY VALUE "${GLOBAL_DEFINITIONS} -fno-strict-aliasing" )
   #set_property( CACHE GLOBAL_DEFINITIONS  PROPERTY VALUE "${GLOBAL_DEFINITIONS} -O2" ); #need more test to enable this
+endif()
+
+
+#
+# Disable some warnings for Clang compiler
+#
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	set_property( CACHE GLOBAL_DEFINITIONS  PROPERTY VALUE "${GLOBAL_DEFINITIONS} -Wno-register" )
 endif()
 
 
@@ -115,9 +188,20 @@ include( TestBigEndian )
 #
 # PACKETVER
 #
-set( PACKETVER CACHE STRING "Sets the PACKETVER define of the servers. (see src/common/mmo.h)" )
+set( PACKETVER CACHE STRING "Sets the PACKETVER define of the servers. (see src/config/packets.hpp)" )
 if( PACKETVER )
-	set_property( CACHE GLOBAL_DEFINITIONS PROPERTY VALUE "${GLOBAL_DEFINITIONS} -DPACKETVER=${PACKETVER}" )
+	set_property( CACHE GLOBAL_DEFINITIONS  PROPERTY VALUE "${GLOBAL_DEFINITIONS} -DPACKETVER=${PACKETVER}" )
+	message( STATUS	"Detecting PACKETVER define is actived with value : ${PACKETVER}")
+endif()
+
+
+#
+# PACKETVER_RE
+#
+set( PACKETVER_RE CACHE STRING "Sets the PACKETVER_RE define of the servers. (see src/config/packets.hpp)" )
+if( PACKETVER_RE )
+	set_property( CACHE GLOBAL_DEFINITIONS  PROPERTY VALUE "${GLOBAL_DEFINITIONS} -DPACKETVER_RE" )
+	message( STATUS	"Detecting PACKETVER_RE define is actived.")
 endif()
 
 
@@ -405,6 +489,16 @@ endif()
 
 
 #
+# Enable filesystem library for GCC < 9
+#
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+        set_property( CACHE GLOBAL_LIBRARIES PROPERTY VALUE ${GLOBAL_LIBRARIES} stdc++fs )
+    endif()
+endif()
+
+
+#
 # Enable profiler (default=none)
 #
 set( PROFILER_OPTIONS "none;gprof" )
@@ -433,12 +527,29 @@ endif()
 #
 # Enable extra buildbot code (default=OFF)
 #
-option( ENABLE_EXTRA_BUILDBOT_CODE "enable extra buildbot code (default=OFF)" OFF )
+option( ENABLE_EXTRA_BUILDBOT_CODE "Enable extra buildbot code (default=OFF)" OFF )
 if( ENABLE_EXTRA_BUILDBOT_CODE )
 	set_property( CACHE GLOBAL_DEFINITIONS  PROPERTY VALUE "${GLOBAL_DEFINITIONS} -DBUILDBOT" )
 	message( STATUS "Enabled extra BUILDBOT code" )
 endif()
 
+#
+# Enable Pre-Renweal mode (default=OFF)
+#
+option( ENABLE_PRERE_MODE "Enable Pre-Renweal mode (default=OFF)" OFF )
+if( ENABLE_PRERE_MODE )
+	set_property( CACHE GLOBAL_DEFINITIONS  PROPERTY VALUE "${GLOBAL_DEFINITIONS} -DPRERE" )
+	message( STATUS	"Enable Pre-Renweal mode (with PRERE define)")
+endif()
+
+#
+# Enable VIP feature (default=OFF)
+#
+option( ENABLE_VIP_FEATURE "Enable VIP feature (default=OFF)" OFF)
+if( ENABLE_VIP_FEATURE )
+	set_property( CACHE GLOBAL_DEFINITIONS  PROPERTY VALUE "${GLOBAL_DEFINITIONS} -DVIP_ENABLE" )
+	message( STATUS	"Enable VIP feature (with VIP_ENABLE define)")
+endif()
 
 #####################################################################
 # package stuff
@@ -507,9 +618,6 @@ set( SVN_FOLDER_PATTERN "[\\.]svn"  CACHE STRING "pattern of svn folder that we 
 mark_as_advanced( SVN_FOLDER_PATTERN )
 set( DEVELOPMENT_FILES
 	"${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt"
-	"${CMAKE_CURRENT_SOURCE_DIR}/configure"
-	"${CMAKE_CURRENT_SOURCE_DIR}/configure.in"
-	"${CMAKE_CURRENT_SOURCE_DIR}/rAthena.sln"
 	)
 set( DEVELOPMENT_DIRECTORIES
 	"3rdparty"
@@ -526,10 +634,7 @@ set( RUNTIME_FILES
 if (WIN32)
 	set (RUNTIME_FILES 
 		${RUNTIME_FILES}
-		"${CMAKE_CURRENT_SOURCE_DIR}/dbghelp.dll"
-		"${CMAKE_CURRENT_SOURCE_DIR}/libmysql.dll"
-		"${CMAKE_CURRENT_SOURCE_DIR}/pcre3.dll"
-		"${CMAKE_CURRENT_SOURCE_DIR}/zlib1.dll"
+		${PANDAS_RUNTIME_DLLS}
 		"${CMAKE_CURRENT_SOURCE_DIR}/tools/charserv.bat"
 		"${CMAKE_CURRENT_SOURCE_DIR}/tools/logserv.bat"
 		"${CMAKE_CURRENT_SOURCE_DIR}/tools/mapserv.bat"
@@ -625,6 +730,24 @@ endif( INSTALL_COMPONENT_RUNTIME )
 #
 set( TARGET_LIST  CACHE INTERNAL "" )
 add_subdirectory( 3rdparty )
+
+# Pandas local third-party dependencies used by the console translate runtime.
+set( utfcpp_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/utfcpp/source"
+	CACHE PATH "utfcpp include directories" )
+set( uchardet_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/uchardet/src"
+	CACHE PATH "uchardet include directories" )
+mark_as_advanced( utfcpp_INCLUDE_DIRS uchardet_INCLUDE_DIRS )
+
+file( GLOB PANDAS_UCHARDET_SOURCES
+	"${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/uchardet/src/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/uchardet/src/LangModels/*.cpp" )
+add_library( libuchardet STATIC ${PANDAS_UCHARDET_SOURCES} )
+target_include_directories( libuchardet PUBLIC ${uchardet_INCLUDE_DIRS} )
+target_compile_definitions( libuchardet PRIVATE BUILDING_UCHARDET "VERSION=\"0.0.7\"" )
+set_target_properties( libuchardet PROPERTIES LINKER_LANGUAGE CXX )
+set( uchardet_LIBRARIES libuchardet CACHE INTERNAL "uchardet libraries" )
+set( TARGET_LIST ${TARGET_LIST} libuchardet CACHE INTERNAL "" )
+
 add_subdirectory( src )
 
 

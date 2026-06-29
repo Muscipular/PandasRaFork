@@ -3,18 +3,21 @@
 
 #include "map.hpp"
 
-#include <cstdlib>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
 #include <config/core.hpp>
 
 #include <common/cbasetypes.hpp>
+#include <common/assistant.hpp>
 #include <common/cli.hpp>
 #include <common/core.hpp>
 #include <common/ers.hpp>
 #include <common/grfio.hpp>
 #include <common/malloc.hpp>
 #include <common/nullpo.hpp>
+#include <common/performance.hpp>
 #include <common/random.hpp>
 #include <common/showmsg.hpp>
 #include <common/socket.hpp> // WFIFO*()
@@ -26,6 +29,9 @@
 #include "achievement.hpp"
 #include "atcommand.hpp"
 #include "battle.hpp"
+#ifdef Pandas_Aura_Mechanism
+#include "aura.hpp"
+#endif // Pandas_Aura_Mechanism
 #include "battleground.hpp"
 #include "cashshop.hpp"
 #include "channel.hpp"
@@ -51,12 +57,32 @@
 #include "pet.hpp"
 #include "quest.hpp"
 #include "storage.hpp"
+#if defined(Pandas_BattleRecord) || defined(Pandas_BattleConfig_MaxAspdForPVP) || defined(Pandas_BattleConfig_MaxAspdForGVG)
+#include "status.hpp"
+#endif
+#ifdef Pandas_BattleRecord
+#include "unit.hpp"
+#endif // Pandas_BattleRecord
 #include "trade.hpp"
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+#include "asyncquery.hpp"
+#endif // Pandas_ScriptCommand_QuerySql_Async
 
 using namespace rathena;
 using namespace rathena::server_map;
 
+#ifdef Pandas_Mapflags
+std::unordered_map<e_mapflag, s_mapflag_item> mapflag_config;
+#endif // Pandas_Mapflags
+
 std::string default_codepage = "";
+#ifdef Pandas_SQL_Configure_Optimization
+char map_codepage[32] = "";
+#endif // Pandas_SQL_Configure_Optimization
+#ifdef Pandas_InterConfig_HideServerIpAddress
+// 是否不主动返回服务器的 IP 地址给到客户端
+int32 pandas_inter_hide_server_ipaddress = 0;
+#endif // Pandas_InterConfig_HideServerIpAddress
 
 int32 map_server_port = 3306;
 std::string map_server_ip = "127.0.0.1";
@@ -92,6 +118,9 @@ char market_table[32] = "market";
 char partybookings_table[32] = "party_bookings";
 char roulette_table[32] = "db_roulette";
 char guild_storage_log_table[32] = "guild_storage_log";
+#ifdef Pandas_Player_Suspend_System
+char suspend_table[32] = "suspend";
+#endif // Pandas_Player_Suspend_System
 
 // log database
 std::string log_db_ip = "127.0.0.1";
@@ -99,6 +128,9 @@ uint16 log_db_port = 3306;
 std::string log_db_id = "ragnarok";
 std::string log_db_pw = "";
 std::string log_db_db = "log";
+#ifdef Pandas_SQL_Configure_Optimization
+char log_codepage[32] = "";
+#endif // Pandas_SQL_Configure_Optimization
 Sql* logmysql_handle;
 
 // inter config
@@ -127,7 +159,12 @@ static block_list *bl_list[BL_LIST_MAX];
 static int32 bl_list_count = 0;
 
 #ifndef MAP_MAX_MSG
+#ifndef Pandas_Message_Conf
 	#define MAP_MAX_MSG 1550
+#else
+	// 此处根据 ALL_EXTEND_MSG 的定义重新修改 MAP_MAX_MSG
+	#define MAP_MAX_MSG ALL_EXTEND_MSG
+#endif // Pandas_Message_Conf
 #endif
 
 struct map_data map[MAX_MAP_PER_SERVER];
@@ -170,6 +207,7 @@ char motd_txt[256] = "conf/motd.txt";
 char charhelp_txt[256] = "conf/charhelp.txt";
 char channel_conf[256] = "conf/channels.conf";
 
+#ifndef Pandas_Message_Reorganize
 const char *MSG_CONF_NAME_RUS;
 const char *MSG_CONF_NAME_SPN;
 const char *MSG_CONF_NAME_GRM;
@@ -179,6 +217,10 @@ const char *MSG_CONF_NAME_IDN;
 const char *MSG_CONF_NAME_FRN;
 const char *MSG_CONF_NAME_POR;
 const char *MSG_CONF_NAME_THA;
+#else
+const char* MSG_CONF_NAME_CHS;	// 简体中文
+const char* MSG_CONF_NAME_CHT;	// 繁体中文
+#endif // Pandas_Message_Reorganize
 
 char wisp_server_name[NAME_LENGTH] = "Server"; // can be modified in char-server configuration file
 
@@ -186,11 +228,25 @@ int32 console = 0;
 int32 enable_spy = 0; //To enable/disable @spy commands, which consume too much cpu time when sending packets. [Skotlex]
 int32 enable_grf = 0;	//To enable/disable reading maps from GRF files, bypassing mapcache [blackhole89]
 
+#ifdef Pandas_Speedup_Map_Read_From_Cache
+// 此处将 map_getcell 中存在的几种模式作为模板先行分配 [Sola丶小克]
+// 当前 map_getcell 内部只支持 0~6 共计 7 种类型, 因此预创建模板的长度为 7
+struct mapcell cell_template[7] = { 0 };
+#endif // Pandas_Speedup_Map_Read_From_Cache
+
+#ifdef Pandas_Support_Specify_PacketKeys
+// 用来保存 map_athena.conf 中设定封包混淆密钥 [Sola丶小克]
+uint32 clif_cryptKey_custom[3] = { 0 };
+#endif // Pandas_Support_Specify_PacketKeys
+
 #ifdef MAP_GENERATOR
 struct s_generator_options {
 	bool navi;
 	bool itemmoveinfo;
 	bool reputation;
+#ifdef Pandas_UserExperience_Rewrite_MapServerGenerator_Args_Process
+	bool showhelp;
+#endif // Pandas_UserExperience_Rewrite_MapServerGenerator_Args_Process
 } gen_options;
 #endif
 
@@ -321,6 +377,20 @@ int32 map_freeblock_unlock (void)
 		int32 i;
 		for (i = 0; i < block_free_count; i++)
 		{
+#ifdef Pandas_Fix_DuplicateBlock_When_Freeblock_Unlock
+			// 我们这里进行查重操作而不是在 map_freeblock 函数中进行
+			// 因为 map_freeblock 被调用的次数频度更高, 在这里查重调整有助于提高效率
+			// 当即将释放的 block_free[i] 不是空指针时,
+			// 我们先找出全部和他指针一样的后续对象并将它们的指针直接置空, 避免重复对同一个指针调用 aFree
+			if (block_free[i]) {
+				for (int j = 0; j < block_free_count; j++) {
+					if (j == i) continue;
+					if (block_free[j] == block_free[i]) {
+						block_free[j] = nullptr;
+					}
+				}
+			}
+#endif // Pandas_Fix_DuplicateBlock_When_Freeblock_Unlock
 			map_destroyblock( block_free[i] );
 			block_free[i] = nullptr;
 		}
@@ -437,6 +507,25 @@ int32 map_addblock(block_list* bl)
 		return 1;
 	}
 
+#ifdef Pandas_Crashfix_MapBlock_Operation
+	if (mapdata == nullptr) {
+		ShowError("map_addblock: trying to add a block into non-existent map (map id: %d,%d,%d).\n", m, x, y);
+		return 1;
+	}
+	if (mapdata->block == nullptr || (bl->type == BL_MOB && mapdata->block_mob == nullptr)) {
+		ShowError("map_addblock: mapdata block is invalid (map name: \"%s\").\n", mapdata->name);
+		return 1;
+	}
+	if (mapdata->instance_src_map && mapdata->name[0] == '\0') {
+		if (map_getmapdata(mapdata->instance_src_map)) {
+			ShowError("map_addblock: trying to add a block into freed instance map (src map: \"%s\").\n", map_getmapdata(mapdata->instance_src_map)->name);
+		} else {
+			ShowError("map_addblock: trying to add a block into freed instance map.\n");
+		}
+		return 1;
+	}
+#endif // Pandas_Crashfix_MapBlock_Operation
+
 	pos = x/BLOCK_SIZE+(y/BLOCK_SIZE)*mapdata->bxs;
 
 	if (bl->type == BL_MOB) {
@@ -482,6 +571,25 @@ int32 map_delblock(block_list* bl)
 	struct map_data *mapdata = map_getmapdata(bl->m);
 
 	nullpo_ret(mapdata);
+
+#ifdef Pandas_Crashfix_MapBlock_Operation
+	if (mapdata == nullptr) {
+		ShowError("map_delblock: trying to remove a block from non-existent map (map id: %d).\n", bl->m);
+		return 0;
+	}
+	if (mapdata->block == nullptr || (bl->type == BL_MOB && mapdata->block_mob == nullptr)) {
+		ShowError("map_delblock: mapdata block is invalid (map name: \"%s\").\n", mapdata->name);
+		return 0;
+	}
+	if (mapdata->instance_src_map && mapdata->name[0] == '\0') {
+		if (map_getmapdata(mapdata->instance_src_map)) {
+			ShowError("map_delblock: trying to remove a block from freed instance map (src map: \"%s\").\n", map_getmapdata(mapdata->instance_src_map)->name);
+		} else {
+			ShowError("map_delblock: trying to remove a block from freed instance map.\n");
+		}
+		return 0;
+	}
+#endif // Pandas_Crashfix_MapBlock_Operation
 
 	pos = bl->x/BLOCK_SIZE+(bl->y/BLOCK_SIZE)*mapdata->bxs;
 
@@ -2190,6 +2298,56 @@ void map_addiddb(block_list *bl)
 	idb_put(id_db,bl->id,bl);
 }
 
+#ifdef Pandas_BattleRecord
+void map_mobiddb(block_list* bl, int32 new_blockid)
+{
+	nullpo_retv(bl);
+
+	if (bl->type != BL_MOB)
+		return;
+
+	int32 origin_blockid = bl->id;
+	bl->id = new_blockid;
+
+	if (idb_exists(id_db, origin_blockid)) {
+		idb_remove(id_db, origin_blockid);
+		idb_put(id_db, bl->id, bl);
+	}
+	if (idb_exists(mobid_db, origin_blockid)) {
+		idb_remove(mobid_db, origin_blockid);
+		idb_put(mobid_db, bl->id, bl);
+	}
+	if (idb_exists(bossid_db, origin_blockid)) {
+		idb_remove(bossid_db, origin_blockid);
+		idb_put(bossid_db, bl->id, bl);
+
+		s_mapiterator* iter = mapit_getallusers();
+		for (map_session_data* pl_sd = reinterpret_cast<TBL_PC*>(mapit_first(iter)); mapit_exists(iter); pl_sd = reinterpret_cast<TBL_PC*>(mapit_next(iter))) {
+			status_change* sc = status_get_sc(pl_sd);
+			if (sc == nullptr)
+				continue;
+
+			status_change_entry* sce = sc->getSCE(SC_BOSSMAPINFO);
+			if (sce != nullptr && sce->val1 == origin_blockid)
+				sce->val1 = bl->id;
+		}
+		mapit_free(iter);
+	}
+
+	exchange_timer_id(origin_blockid, new_blockid);
+
+	unit_data* ud = unit_bl2ud(bl);
+	if (ud != nullptr) {
+		for (const auto& su : ud->skillunits) {
+			if (su != nullptr && su->src_id == origin_blockid)
+				su->src_id = bl->id;
+		}
+	}
+
+	detect_invalid_timer(origin_blockid);
+}
+#endif // Pandas_BattleRecord
+
 /*==========================================
  * remove bl from id_db
  *------------------------------------------*/
@@ -2227,6 +2385,10 @@ int32 map_quit(map_session_data *sd) {
 		else if (sd->state.buyingstore)
 			buyingstore_close(sd);
 	}
+
+#ifdef Pandas_Player_Suspend_System
+	suspend_deactive(sd, sd->state.keepsuspend);
+#endif // Pandas_Player_Suspend_System
 
 	if(!sd->state.active) { //Removing a player that is not active.
 		struct auth_node *node = chrif_search(sd->status.account_id);
@@ -2467,15 +2629,30 @@ bool map_blid_exists( int32 id ) {
 /*==========================================
  * Convex Mirror
  *------------------------------------------*/
+#ifndef Pandas_FuncDefine_Mob_Getmob_Boss
 mob_data * map_getmob_boss(int16 m)
+#else
+mob_data * map_getmob_boss(int16 m, bool alive_first)
+#endif // Pandas_FuncDefine_Mob_Getmob_Boss
 {
 	DBIterator* iter;
 	mob_data *md = nullptr;
 	bool found = false;
+#ifdef Pandas_FuncDefine_Mob_Getmob_Boss
+	mob_data* default_md = nullptr;
+#endif // Pandas_FuncDefine_Mob_Getmob_Boss
 
 	iter = db_iterator(bossid_db);
 	for( md = (mob_data*)dbi_first(iter); dbi_exists(iter); md = (mob_data*)dbi_next(iter) )
 	{
+#ifdef Pandas_FuncDefine_Mob_Getmob_Boss
+		if( alive_first ){
+			if( !default_md && md->m == m )
+				default_md = md;
+			if( md->spawn_timer != INVALID_TIMER )
+				continue;
+		}
+#endif // Pandas_FuncDefine_Mob_Getmob_Boss
 		if( md->m == m )
 		{
 			found = true;
@@ -2483,6 +2660,11 @@ mob_data * map_getmob_boss(int16 m)
 		}
 	}
 	dbi_destroy(iter);
+
+#ifdef Pandas_FuncDefine_Mob_Getmob_Boss
+	if( alive_first && !found && default_md )
+		return default_md;
+#endif // Pandas_FuncDefine_Mob_Getmob_Boss
 
 	return (found)? md : nullptr;
 }
@@ -2492,6 +2674,13 @@ mob_data * map_id2boss(int32 id)
 	if (id <= 0) return nullptr;
 	return (mob_data*)idb_get(bossid_db,id);
 }
+
+#ifdef Pandas_ScriptCommand_GetBossInfo
+DBMap* get_bossid_db()
+{
+	return bossid_db;
+}
+#endif // Pandas_ScriptCommand_GetBossInfo
 
 /// Applies func to all the players in the db.
 /// Stops iterating if func returns -1.
@@ -2868,12 +3057,22 @@ int32 map_addinstancemap(int32 src_m, int32 instance_id, bool no_mapflag)
 	dst_map->npc_num_warp = 0;
 
 	// Reallocate cells
+#ifndef Pandas_CodeAnalysis_Suggestion
 	size_t num_cell = dst_map->xs * dst_map->ys;
+#else
+	// 乘法计算时使用较大的数值类型来避免计算结果溢出: https://lgtm.com/rules/2157860313/
+	size_t num_cell = (size_t)dst_map->xs * dst_map->ys;
+#endif // Pandas_CodeAnalysis_Suggestion
 
 	CREATE( dst_map->cell, struct mapcell, num_cell );
 	memcpy( dst_map->cell, src_map->cell, num_cell * sizeof(struct mapcell) );
 
+#ifndef Pandas_CodeAnalysis_Suggestion
 	size_t size = dst_map->bxs * dst_map->bys * sizeof(block_list*);
+#else
+	// 乘法计算时使用较大的数值类型来避免计算结果溢出: https://lgtm.com/rules/2157860313/
+	size_t size = (size_t)dst_map->bxs * dst_map->bys * sizeof(block_list*);
+#endif // Pandas_CodeAnalysis_Suggestion
 
 	dst_map->block = (block_list **)aCalloc(1,size);
 	dst_map->block_mob = (block_list **)aCalloc(1,size);
@@ -3707,8 +3906,16 @@ int32 map_readfromcache(struct map_data *m, char *buffer, char *decode_buffer)
 		CREATE(m->cell, struct mapcell, size);
 
 
+#ifndef Pandas_Speedup_Map_Read_From_Cache
 		for( xy = 0; xy < size; ++xy )
 			m->cell[xy] = map_gat2cell(decode_buffer[xy]);
+#else
+		for (xy = 0; xy < size; ++xy) {
+			if (decode_buffer[xy] < 0 || decode_buffer[xy] > 6)
+				continue;
+			memcpy(&m->cell[xy], &cell_template[decode_buffer[xy]], sizeof(struct mapcell));
+		}
+#endif // Pandas_Speedup_Map_Read_From_Cache
 
 		return 1;
 	}
@@ -3764,9 +3971,228 @@ int32 map_delmap(char* mapname){
 
 /// Initializes map flags and adjusts them depending on configuration.
 void map_flags_init(void){
+#ifdef Pandas_MapFlag_MobInfo
+	mapflag_config.insert(std::make_pair(MF_MOBINFO, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "MobInfo",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ true,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */
+		{
+			{0, 0, 1|2|4|8|16|32|64}
+		}
+	}));
+#endif // Pandas_MapFlag_MobInfo
+
+#ifdef Pandas_MapFlag_NoAutoLoot
+	mapflag_config.insert(std::make_pair(MF_NOAUTOLOOT, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "NoAutoLoot",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ false,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {}
+	}));
+#endif // Pandas_MapFlag_NoAutoLoot
+
+#ifdef Pandas_MapFlag_NoToken
+	mapflag_config.insert(std::make_pair(MF_NOTOKEN, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "NoToken",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ false,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {}
+	}));
+#endif // Pandas_MapFlag_NoToken
+
+#ifdef Pandas_MapFlag_HideGuildInfo
+	mapflag_config.insert(std::make_pair(MF_HIDEGUILDINFO, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "HideGuildInfo",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ false,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {}
+	}));
+#endif // Pandas_MapFlag_HideGuildInfo
+
+#ifdef Pandas_MapFlag_HidePartyInfo
+	mapflag_config.insert(std::make_pair(MF_HIDEPARTYINFO, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "HidePartyInfo",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ false,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {}
+	}));
+#endif // Pandas_MapFlag_HidePartyInfo
+
+#ifdef Pandas_MapFlag_NoMail
+	mapflag_config.insert(std::make_pair(MF_NOMAIL, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "NoMail",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ false,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {}
+	}));
+#endif // Pandas_MapFlag_NoMail
+
+#ifdef Pandas_MapFlag_NoPet
+	mapflag_config.insert(std::make_pair(MF_NOPET, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "NoPet",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ false,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {}
+	}));
+#endif // Pandas_MapFlag_NoPet
+
+#ifdef Pandas_MapFlag_NoHomun
+	mapflag_config.insert(std::make_pair(MF_NOHOMUN, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "NoHomun",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ false,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {}
+	}));
+#endif // Pandas_MapFlag_NoHomun
+
+#ifdef Pandas_MapFlag_NoMerc
+	mapflag_config.insert(std::make_pair(MF_NOMERC, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "NoMerc",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ false,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {}
+	}));
+#endif // Pandas_MapFlag_NoMerc
+
+#ifdef Pandas_MapFlag_MobDroprate
+	mapflag_config.insert(std::make_pair(MF_MOBDROPRATE, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "MobDroprate",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ true,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ true,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {
+			{100, 0, INT_MAX, "%"}
+		}
+	}));
+#endif // Pandas_MapFlag_MobDroprate
+
+#ifdef Pandas_MapFlag_MvpDroprate
+	mapflag_config.insert(std::make_pair(MF_MVPDROPRATE, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "MvpDroprate",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ true,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ true,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {
+			{100, 0, INT_MAX, "%"}
+		}
+	}));
+#endif // Pandas_MapFlag_MvpDroprate
+
+#ifdef Pandas_MapFlag_MaxHeal
+	mapflag_config.insert(std::make_pair(MF_MAXHEAL, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "MaxHeal",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ true,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ true,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {
+			{0, 0, INT_MAX}
+		}
+	}));
+#endif // Pandas_MapFlag_MaxHeal
+
+#ifdef Pandas_MapFlag_MaxDmg_Skill
+	mapflag_config.insert(std::make_pair(MF_MAXDMG_SKILL, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "MaxDmg_Skill",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ true,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ true,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {
+			{0, 0, INT_MAX}
+		}
+	}));
+#endif // Pandas_MapFlag_MaxDmg_Skill
+
+#ifdef Pandas_MapFlag_MaxDmg_Normal
+	mapflag_config.insert(std::make_pair(MF_MAXDMG_NORMAL, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "MaxDmg_Normal",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ true,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ true,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {
+			{0, 0, INT_MAX}
+		}
+	}));
+#endif // Pandas_MapFlag_MaxDmg_Normal
+
+#ifdef Pandas_MapFlag_NoSkill2
+	mapflag_config.insert(std::make_pair(MF_NOSKILL2, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "NoSkill2",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ true,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ true,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {
+			{0, 0, BL_ALL}
+		}
+	}));
+#endif // Pandas_MapFlag_NoSkill2
+
+#ifdef Pandas_MapFlag_NoAura
+	mapflag_config.insert(std::make_pair(MF_NOAURA, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "NoAura",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ false,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {}
+	}));
+#endif // Pandas_MapFlag_NoAura
+
+#ifdef Pandas_MapFlag_MaxASPD
+	mapflag_config.insert(std::make_pair(MF_MAXASPD, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "MaxASPD",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ true,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ true,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {
+			{0, 0, 199}
+		}
+	}));
+#endif // Pandas_MapFlag_MaxASPD
+
+#ifdef Pandas_MapFlag_NoSlave
+	mapflag_config.insert(std::make_pair(MF_NOSLAVE, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "NoSlave",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ false,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {}
+	}));
+#endif // Pandas_MapFlag_NoSlave
+
+#ifdef Pandas_MapFlag_NoUseItem
+	mapflag_config.insert(std::make_pair(MF_NOUSEITEM, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "NoUseItem",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ false,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {}
+	}));
+#endif // Pandas_MapFlag_NoUseItem
+
+#ifdef Pandas_MapFlag_HideDamage
+	mapflag_config.insert(std::make_pair(MF_HIDEDAMAGE, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "HideDamage",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ false,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {}
+	}));
+#endif // Pandas_MapFlag_HideDamage
+
+#ifdef Pandas_MapFlag_NoAttack
+	mapflag_config.insert(std::make_pair(MF_NOATTACK, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "NoAttack",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ false,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {}
+	}));
+#endif // Pandas_MapFlag_NoAttack
+
+#ifdef Pandas_MapFlag_NoAttack2
+	mapflag_config.insert(std::make_pair(MF_NOATTACK2, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "NoAttack2",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ false,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {
+			{0, 0, BL_ALL}
+		}
+	}));
+#endif // Pandas_MapFlag_NoAttack2
+
+	// PYHELP - MAPFLAG - INSERT POINT - <Section 4>
+
 	for (int32 i = 0; i < map_num; i++) {
 		struct map_data *mapdata = &map[i];
-		union u_mapflag_args args = {};
+		pds_mapflag_args args = {};
 
 		mapdata->initMapFlags(); // Resize and define default values
 		mapdata->drop_list.clear();
@@ -3867,7 +4293,12 @@ int32 map_readgat (struct map_data* m)
 
 	m->xs = *(int32*)(gat+6);
 	m->ys = *(int32*)(gat+10);
+#ifndef Pandas_CodeAnalysis_Suggestion
 	num_cells = m->xs * m->ys;
+#else
+	// 乘法计算时使用较大的数值类型来避免计算结果溢出: https://lgtm.com/rules/2157860313/
+	num_cells = (size_t)m->xs * m->ys;
+#endif // Pandas_CodeAnalysis_Suggestion
 	CREATE(m->cell, struct mapcell, num_cells);
 
 	water_height = map_waterheight(m->name);
@@ -3914,6 +4345,10 @@ int32 map_readallmaps (void)
 	// Has the uncompressed gat data of all maps, so just one allocation has to be made
 	std::vector<char *> map_cache_buffer = {};
 
+#ifdef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
+	performance_create_and_start("map_readallmaps");
+#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
+
 	if( enable_grf )
 		ShowStatus("Loading maps (using GRF files)...\n");
 	else {
@@ -3957,6 +4392,9 @@ int32 map_readallmaps (void)
 
 #ifdef DETAILED_LOADING_OUTPUT
 		// show progress
+#ifdef Pandas_Speedup_Loading_Map_Status_Restrictor
+		if (i % 10 == 0 || i == map_num)
+#endif // Pandas_Speedup_Loading_Map_Status_Restrictor
 		ShowStatus("Loading maps [%i/%i]: %s" CL_CLL "\r", i, map_num, mapdata->name);
 #endif
 
@@ -3997,12 +4435,20 @@ int32 map_readallmaps (void)
 
 		mapdata->m = i;
 		memset(mapdata->moblist, 0, sizeof(mapdata->moblist));	//Initialize moblist [Skotlex]
+#ifdef Pandas_Struct_Map_Data_Mob_Spawns
+		mapdata->mobspawns.clear();
+#endif // Pandas_Struct_Map_Data_Mob_Spawns
 		mapdata->mob_delete_timer = INVALID_TIMER;	//Initialize timer [Skotlex]
 
 		mapdata->bxs = (mapdata->xs + BLOCK_SIZE - 1) / BLOCK_SIZE;
 		mapdata->bys = (mapdata->ys + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
+#ifndef Pandas_CodeAnalysis_Suggestion
 		size = mapdata->bxs * mapdata->bys * sizeof(block_list*);
+#else
+		// 乘法计算时使用较大的数值类型来避免计算结果溢出: https://lgtm.com/rules/2157860313/
+		size = (size_t)mapdata->bxs * mapdata->bys * sizeof(block_list*);
+#endif // Pandas_CodeAnalysis_Suggestion
 		mapdata->block = (block_list**)aCalloc(size, 1);
 		mapdata->block_mob = (block_list**)aCalloc(size, 1);
 
@@ -4028,7 +4474,12 @@ int32 map_readallmaps (void)
 		ShowNotice("Maps removed: '" CL_WHITE "%d" CL_RESET "'" CL_CLL ".\n", maps_removed);
 
 	// finished map loading
+#ifndef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 	ShowInfo("Successfully loaded '" CL_WHITE "%d" CL_RESET "' maps." CL_CLL "\n",map_num);
+#else
+	performance_stop("map_readallmaps");
+	ShowInfo("Successfully loaded '" CL_WHITE "%d" CL_RESET "' maps (took %" PRIu64 " milliseconds)." CL_CLL "\n", map_num, static_cast<uint64>(performance_get_milliseconds("map_readallmaps")));
+#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 
 	return 0;
 }
@@ -4203,10 +4654,43 @@ int32 map_config_read(const char *cfgName)
 			console_msg_log = atoi(w2);//[Ind]
 		else if (strcmpi(w1, "console_log_filepath") == 0)
 			safestrncpy(console_log_filepath, w2, sizeof(console_log_filepath));
+#ifdef Pandas_Support_Specify_PacketKeys
+		else if (strcmpi(w1, "packet_keys") == 0) {
+			char key1[12] = { 0 }, key2[12] = { 0 }, key3[12] = { 0 };
+			trim(w2);
+			memset(clif_cryptKey_custom, 0, sizeof(clif_cryptKey_custom));
+			if (strcmpi(w2, "default") == 0) {
+				continue;
+			}
+			else if (sscanf(w2, "%11[^,],%11[^,],%11[^ \r\n/]", key1, key2, key3) == 3) {
+				clif_cryptKey_custom[0] = strtol(key1, nullptr, 0);
+				clif_cryptKey_custom[1] = strtol(key2, nullptr, 0);
+				clif_cryptKey_custom[2] = strtol(key3, nullptr, 0);
+				continue;
+			}
+			else
+				ShowWarning("Invalid 'packet_keys' in configure file %s, use default packet_keys...\n", cfgName);
+		}
+#endif // Pandas_Support_Specify_PacketKeys
 		else if (strcmpi(w1, "import") == 0)
 			map_config_read(w2);
 		else
+#ifndef Pandas
 			ShowWarning("Unknown setting '%s' in file %s\n", w1, cfgName);
+#else
+		{
+			// 部分选项可能由于宏定义被关闭等原因而被错过处理
+			// 不代表配置文件中的选项是无效的位置选项, 为此这里进行一次白名单过滤 [Sola丶小克]
+			size_t i = 0;
+			const char* know_settings[] = {
+				"create_fulldump", "packet_keys"
+			};
+			ARR_FIND(0, ARRAYLENGTH(know_settings), i, strcmpi(w1, know_settings[i]) == 0);
+			if (i == ARRAYLENGTH(know_settings)) {
+				ShowWarning("Unknown setting '%s' in file %s\n", w1, cfgName);
+			}
+		}
+#endif // Pandas
 	}
 
 	fclose(fp);
@@ -4328,6 +4812,10 @@ int32 inter_config_read(const char *cfgName)
 			safestrncpy(sales_table, w2, sizeof(sales_table));
 		else if (strcmpi(w1, "guild_storage_log") == 0)
 			safestrncpy(guild_storage_log_table, w2, sizeof(guild_storage_log_table));
+#ifdef Pandas_Player_Suspend_System
+		else if (strcmpi(w1, "suspend_table") == 0)
+			safestrncpy(suspend_table, w2, sizeof(suspend_table));
+#endif // Pandas_Player_Suspend_System
 		else
 		//Map Server SQL DB
 		if(strcmpi(w1,"map_server_ip")==0)
@@ -4347,6 +4835,16 @@ int32 inter_config_read(const char *cfgName)
 		else
 		if(strcmpi(w1,"default_codepage")==0)
 			default_codepage = w2;
+#ifdef Pandas_SQL_Configure_Optimization
+		else
+		if(strcmpi(w1,"map_codepage")==0)
+			safestrncpy(map_codepage, w2, sizeof(map_codepage));
+#endif // Pandas_SQL_Configure_Optimization
+#ifdef Pandas_InterConfig_HideServerIpAddress
+		else
+		if(strcmpi(w1, "hide_server_ipaddress") == 0)
+			pandas_inter_hide_server_ipaddress = config_switch(w2);
+#endif // Pandas_InterConfig_HideServerIpAddress
 		else
 		if(strcmpi(w1,"use_sql_db")==0) {
 			db_use_sqldbs = config_switch(w2);
@@ -4366,6 +4864,11 @@ int32 inter_config_read(const char *cfgName)
 		else
 		if(strcmpi(w1,"log_db_db")==0)
 			log_db_db = w2;
+#ifdef Pandas_SQL_Configure_Optimization
+		else
+		if(strcmpi(w1,"log_codepage")==0)
+			safestrncpy(log_codepage, w2, sizeof(log_codepage));
+#endif // Pandas_SQL_Configure_Optimization
 		else
 		if(strcmpi(w1,"start_status_points")==0)
 			inter_config.start_status_points=atoi(w2);
@@ -4413,12 +4916,19 @@ int32 map_sql_init(void)
 	}
 	ShowStatus("Connect success! (Map Server Connection)\n");
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if( !default_codepage.empty() ) {
 		if ( SQL_ERROR == Sql_SetEncoding(mmysql_handle, default_codepage.c_str()) )
 			Sql_ShowDebug(mmysql_handle);
 		if ( SQL_ERROR == Sql_SetEncoding(qsmysql_handle, default_codepage.c_str()) )
 			Sql_ShowDebug(qsmysql_handle);
 	}
+#else
+	if ( SQL_ERROR == Sql_SetEncoding(mmysql_handle, map_codepage, default_codepage.c_str(), "Map-Server") )
+		Sql_ShowDebug(mmysql_handle);
+	if ( SQL_ERROR == Sql_SetEncoding(qsmysql_handle, map_codepage, default_codepage.c_str(), nullptr) )
+		Sql_ShowDebug(qsmysql_handle);
+#endif // Pandas_SQL_Configure_Optimization
 	return 0;
 }
 
@@ -4455,9 +4965,14 @@ int32 log_sql_init(void)
 	}
 	ShowStatus("" CL_WHITE "[SQL]" CL_RESET ": Successfully '" CL_GREEN "connected" CL_RESET "' to Database '" CL_WHITE "%s" CL_RESET "'.\n", log_db_db.c_str());
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if( !default_codepage.empty() )
 		if ( SQL_ERROR == Sql_SetEncoding(logmysql_handle, default_codepage.c_str()) )
 			Sql_ShowDebug(logmysql_handle);
+#else
+	if ( SQL_ERROR == Sql_SetEncoding(logmysql_handle, log_codepage, default_codepage.c_str(), "Log") )
+		Sql_ShowDebug(logmysql_handle);
+#endif // Pandas_SQL_Configure_Optimization
 
 	return 0;
 }
@@ -4552,7 +5067,7 @@ int32 cleanup_sub(block_list *bl, va_list ap)
  * @param skill_id: Skill ID
  * @param args: Mapflag arguments
  */
-void map_skill_damage_add(struct map_data *m, uint16 skill_id, union u_mapflag_args *args) {
+void map_skill_damage_add(struct map_data *m, uint16 skill_id, pds_mapflag_args *args) {
 	nullpo_retv(m);
 	nullpo_retv(args);
 
@@ -4580,6 +5095,26 @@ void map_skill_duration_add(struct map_data *mapd, uint16 skill_id, uint16 per) 
 		mapd->skill_duration.insert({ skill_id, per });
 }
 
+#ifdef Pandas_BattleConfig_MaxAspdForGVG
+static int32 map_mapflag_gvg_start_sub(block_list* bl, va_list ap)
+{
+	map_session_data* sd = map_id2sd(bl->id);
+
+	nullpo_retr(0, sd);
+	status_calc_pc(sd, SCO_NONE);
+	return 0;
+}
+
+static int32 map_mapflag_gvg_stop_sub(block_list* bl, va_list ap)
+{
+	map_session_data* sd = map_id2sd(bl->id);
+
+	nullpo_retr(0, sd);
+	status_calc_pc(sd, SCO_NONE);
+	return 0;
+}
+#endif // Pandas_BattleConfig_MaxAspdForGVG
+
 /**
  * PvP timer handling (starting)
  * @param bl: Player block object
@@ -4601,6 +5136,10 @@ static int32 map_mapflag_pvp_start_sub(block_list *bl, va_list ap)
 		sd->pvp_lost = 0;
 	}
 
+#ifdef Pandas_BattleConfig_MaxAspdForPVP
+	status_calc_pc(sd, SCO_NONE);
+#endif // Pandas_BattleConfig_MaxAspdForPVP
+
 	clif_map_property(sd, MAPPROPERTY_FREEPVPZONE, SELF);
 	return 0;
 }
@@ -4621,6 +5160,10 @@ static int32 map_mapflag_pvp_stop_sub(block_list *bl, va_list ap)
 		delete_timer(sd->pvp_timer, pc_calc_pvprank_timer);
 		sd->pvp_timer = INVALID_TIMER;
 	}
+
+#ifdef Pandas_BattleConfig_MaxAspdForPVP
+	status_calc_pc(sd, SCO_NONE);
+#endif // Pandas_BattleConfig_MaxAspdForPVP
 
 	return 0;
 }
@@ -4670,6 +5213,170 @@ bool map_getmapflag_name( enum e_mapflag mapflag, char* output ){
 	return true;
 }
 
+#ifdef Pandas_Mapflags
+bool map_mapflag_valid_index(e_mapflag mapflag, size_t index) {
+	#define MAX_ARGS_COUNT 4
+	auto conf = util::umap_find(mapflag_config, mapflag);
+	if (conf == nullptr) {
+		return false;
+	}
+	return (index >= 0 && index < conf->args.size() && index < MAX_ARGS_COUNT);
+}
+
+int map_getmapflag_param(int16 m, enum e_mapflag mapflag, size_t index, int default_val) {
+	if (m < 0 || m >= MAX_MAP_PER_SERVER) {
+		ShowWarning("map_getmapflag_param: Invalid map ID %d.\n", m);
+		return default_val;
+	}
+
+	struct map_data *mapdata = &map[m];
+
+	if (mapflag < MF_MIN || mapflag >= MF_MAX) {
+		ShowWarning("map_getmapflag_param: Invalid mapflag %d on map %s.\n", mapflag, mapdata->name);
+		return default_val;
+	}
+
+	if (index == 0) {
+		return mapdata->getMapFlag(mapflag);
+	}
+
+	index = index - 1;
+
+	auto conf = util::umap_find(mapflag_config, mapflag);
+	if (conf == nullptr) {
+		ShowWarning("map_getmapflag_param: No config data for mapflag %d on map %s.\n", mapflag, mapdata->name);
+		return default_val;
+	}
+
+	if (!map_mapflag_valid_index(mapflag, index)) {
+		ShowWarning("map_getmapflag_param: Invalid param index %d of mapflag '%s' on map %s.\n", index, conf->name, mapdata->name);
+		return default_val;
+	}
+
+	std::vector<int>* params = util::umap_find(mapdata->mapflag_values, mapflag);
+	if (params == nullptr) {
+		return default_val;
+	}
+
+	if (params->size() < index || index >= params->size()) {
+		return default_val;
+	}
+
+	return params->at(index);
+}
+
+int map_getmapflag_param(int16 m, enum e_mapflag mapflag, size_t index) {
+	int default_val = 0;
+	auto conf = util::umap_find(mapflag_config, mapflag);
+	if (conf && map_mapflag_valid_index(mapflag, index - 1)) {
+		default_val = conf->args[index - 1].def_val;
+	}
+	return map_getmapflag_param(m, mapflag, index, default_val);
+}
+
+void map_setmapflag_param(int16 m, enum e_mapflag mapflag, size_t index, int value) {
+	if (m < 0 || m >= MAX_MAP_PER_SERVER) {
+		ShowWarning("map_setmapflag_param: Invalid map ID %d.\n", m);
+		return;
+	}
+
+	struct map_data *mapdata = &map[m];
+
+	if (mapflag < MF_MIN || mapflag >= MF_MAX) {
+		ShowWarning("map_setmapflag_param: Invalid mapflag %d on map %s.\n", mapflag, mapdata->name);
+		return;
+	}
+
+	if (index == 0) {
+		mapdata->setMapFlag(mapflag, static_cast<bool>(value));
+		return;
+	}
+
+	index = index - 1;
+
+	auto conf = util::umap_find(mapflag_config, mapflag);
+	if (conf == nullptr) {
+		ShowWarning("map_setmapflag_param: No config data for mapflag %d on map %s.\n", mapflag, mapdata->name);
+		return;
+	}
+
+	if (!map_mapflag_valid_index(mapflag, index)) {
+		ShowWarning("map_setmapflag_param: Invalid param index %d of mapflag '%s' on map %s.\n", index, conf->name, mapdata->name);
+		return;
+	}
+
+	std::vector<int> *current_values = util::umap_find(mapdata->mapflag_values, mapflag);
+	bool exists = (current_values != nullptr);
+	std::vector<int> new_values = {};
+	if (!exists) {
+		current_values = &new_values;
+	}
+
+	size_t args_count = conf->args.size();
+	if (current_values->size() != args_count) {
+		current_values->resize(args_count);
+	}
+
+	if (value < conf->args[index].min || value > conf->args[index].max) {
+		ShowWarning("map_setmapflag_param: Attempt to assign %d to the %d parameter, but exceeds %d~%d range (Mapflag: %s | Mapname: %s), defaulting to %d\n",
+			value, index + 1, conf->args[index].min, conf->args[index].max, conf->name, mapdata->name, conf->args[index].def_val);
+		value = conf->args[index].def_val;
+	}
+
+	(*current_values)[index] = value;
+
+	if (!exists) {
+		mapdata->mapflag_values.insert({mapflag, *current_values});
+	}
+}
+
+void map_setmapflag_param(int16 m, enum e_mapflag mapflag, const std::vector<int>& values) {
+	for (int i = 0; i < values.size(); i++) {
+		map_setmapflag_param(m, mapflag, i + 1, values[i]);
+	}
+}
+
+void map_setmapflag_param_reset(int16 m, enum e_mapflag mapflag) {
+	if (m < 0 || m >= MAX_MAP_PER_SERVER) {
+		ShowWarning("map_setmapflag_param_reset: Invalid map ID %d.\n", m);
+		return;
+	}
+
+	struct map_data* mapdata = &map[m];
+
+	if (mapflag < MF_MIN || mapflag >= MF_MAX) {
+		ShowWarning("map_setmapflag_param_reset: Invalid mapflag %d on map %s.\n", mapflag, mapdata->name);
+		return;
+	}
+
+	auto conf = util::umap_find(mapflag_config, mapflag);
+	if (conf == nullptr) {
+		ShowWarning("map_setmapflag_param_reset: No config data for mapflag %d on map %s.\n", mapflag, mapdata->name);
+		return;
+	}
+
+	std::vector<int>* current_values = util::umap_find(mapdata->mapflag_values, mapflag);
+	bool exists = (current_values != nullptr);
+	std::vector<int> new_values = {};
+	if (!exists) {
+		current_values = &new_values;
+	}
+
+	size_t args_count = conf->args.size();
+	if (current_values->size() != args_count) {
+		current_values->resize(args_count);
+	}
+
+	for (size_t i = 0; i < args_count; ++i) {
+		(*current_values)[i] = conf->args[i].def_val;
+	}
+
+	if (!exists) {
+		mapdata->mapflag_values.insert({ mapflag, *current_values });
+	}
+}
+#endif // Pandas_Mapflags
+
 /**
  * Get a mapflag value
  * @param m: Map ID
@@ -4677,7 +5384,7 @@ bool map_getmapflag_name( enum e_mapflag mapflag, char* output ){
  * @param args: Arguments for special flags
  * @return Mapflag value on success or -1 on failure
  */
-int32 map_getmapflag_sub(int16 m, enum e_mapflag mapflag, union u_mapflag_args *args)
+int32 map_getmapflag_sub(int16 m, enum e_mapflag mapflag, pds_mapflag_args *args)
 {
 	if (m < 0 || m >= MAX_MAP_PER_SERVER) {
 		ShowWarning("map_getmapflag: Invalid map ID %d.\n", m);
@@ -4691,6 +5398,12 @@ int32 map_getmapflag_sub(int16 m, enum e_mapflag mapflag, union u_mapflag_args *
 		return -1;
 	}
 
+#ifdef Pandas_Mapflags
+	if (args && util::umap_find(mapflag_config, mapflag) != nullptr) {
+		return map_getmapflag_param(m, mapflag, args->flag_val);
+	}
+#endif // Pandas_Mapflags
+
 	switch(mapflag) {
 		case MF_RESTRICTED:
 			return mapdata->zone;
@@ -4700,6 +5413,10 @@ int32 map_getmapflag_sub(int16 m, enum e_mapflag mapflag, union u_mapflag_args *
 			return mapdata->getMapFlag(MF_NOEXPPENALTY) && mapdata->getMapFlag(MF_NOZENYPENALTY);
 		case MF_NOEXP:
 			return mapdata->getMapFlag(MF_NOBASEEXP) && mapdata->getMapFlag(MF_NOJOBEXP);
+#ifdef Pandas_MapFlag_NoCapture
+		case MF_NOCAPTURE:
+			return mapdata->getMapFlag(MF_NOPETCAPTURE);
+#endif // Pandas_MapFlag_NoCapture
 		case MF_SKILL_DAMAGE:
 			nullpo_retr(-1, args);
 
@@ -4727,7 +5444,7 @@ int32 map_getmapflag_sub(int16 m, enum e_mapflag mapflag, union u_mapflag_args *
  * @param args: Arguments for special flags
  * @return True on success or false on failure
  */
-bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, union u_mapflag_args *args)
+bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, pds_mapflag_args *args)
 {
 	if (m < 0 || m >= MAX_MAP_PER_SERVER) {
 		ShowWarning("map_setmapflag: Invalid map ID %d.\n", m);
@@ -4794,9 +5511,15 @@ bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, union u_ma
 			mapdata->setMapFlag(mapflag, status); // Must come first to properly set map property
 			if (!status) {
 				clif_map_property_mapall(m, MAPPROPERTY_NOTHING);
+#ifdef Pandas_BattleConfig_MaxAspdForGVG
+				map_foreachinmap(map_mapflag_gvg_stop_sub, m, BL_PC);
+#endif // Pandas_BattleConfig_MaxAspdForGVG
 				map_foreachinmap(unit_stopattack, m, BL_CHAR, 0);
 			} else {
 				clif_map_property_mapall(m, MAPPROPERTY_AGITZONE);
+#ifdef Pandas_BattleConfig_MaxAspdForGVG
+				map_foreachinmap(map_mapflag_gvg_start_sub, m, BL_PC);
+#endif // Pandas_BattleConfig_MaxAspdForGVG
 				if (mapdata->getMapFlag(MF_PVP)) {
 					mapdata->setMapFlag(MF_PVP, false);
 					if (!battle_config.pk_mode)
@@ -4957,6 +5680,11 @@ bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, union u_ma
 			mapdata->setMapFlag(MF_NOBASEEXP, status);
 			mapdata->setMapFlag(MF_NOJOBEXP, status);
 			break;
+#ifdef Pandas_MapFlag_NoCapture
+		case MF_NOCAPTURE:
+			mapdata->setMapFlag(MF_NOPETCAPTURE, status);
+			break;
+#endif // Pandas_MapFlag_NoCapture
 		case MF_SKILL_DAMAGE:
 			if (!status) {
 				mapdata->damage_adjust = {};
@@ -4991,6 +5719,170 @@ bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, union u_ma
 			mapdata->setMapFlag(mapflag, status);
 			break;
 	}
+
+#ifdef Pandas_Mapflags
+	auto conf = util::umap_find(mapflag_config, mapflag);
+	if (conf != nullptr) {
+		if (!status) {
+			map_setmapflag_param_reset(m, mapflag);
+		} else if (args) {
+			map_setmapflag_param(m, mapflag, args->input);
+
+			if (conf->turn_off_default) {
+				std::vector<int>* current_values = util::umap_find(mapdata->mapflag_values, mapflag);
+
+				if (current_values) {
+					bool all_equal = true;
+					for (size_t i = 0; i < conf->args.size(); i++) {
+						if ((*current_values)[i] != conf->args[i].def_val) {
+							all_equal = false;
+							break;
+						}
+					}
+
+					if (all_equal) {
+						map_setmapflag_param_reset(m, mapflag);
+						status = false;
+					}
+				}
+			}
+		}
+		mapdata->setMapFlag(mapflag, status);
+	}
+
+	switch (mapflag) {
+#ifdef Pandas_MapFlag_HideGuildInfo
+		case MF_HIDEGUILDINFO:
+		{
+			struct s_mapiterator* iter = mapit_getallusers();
+			map_session_data* pl_sd = nullptr;
+
+			for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter)) {
+				if (!pl_sd || pl_sd->m != m)
+					continue;
+
+				clif_refresh(pl_sd);
+			}
+
+			mapit_free(iter);
+			break;
+		}
+#endif // Pandas_MapFlag_HideGuildInfo
+#ifdef Pandas_MapFlag_HidePartyInfo
+		case MF_HIDEPARTYINFO:
+		{
+			struct s_mapiterator* iter = mapit_getallusers();
+			map_session_data* pl_sd = nullptr;
+
+			for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter)) {
+				if (!pl_sd || pl_sd->m != m)
+					continue;
+
+				clif_refresh(pl_sd);
+			}
+
+			mapit_free(iter);
+			break;
+		}
+#endif // Pandas_MapFlag_HidePartyInfo
+#ifdef Pandas_MapFlag_NoPet
+		case MF_NOPET:
+		{
+			struct s_mapiterator* iter = mapit_getallusers();
+			map_session_data* pl_sd = nullptr;
+
+			for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter)) {
+				if (!pl_sd || pl_sd->m != m)
+					continue;
+				if (pl_sd->pd && status) {
+					clif_displaymessage(pl_sd->fd, msg_txt_cn(pl_sd, 4));
+					pet_return_egg(pl_sd, pl_sd->pd);
+#if PACKETVER >= 20180620 && PACKETVER < 20180704
+					clif_inventorylist(pl_sd);
+#endif // PACKETVER >= 20180620 && PACKETVER < 20180704
+				}
+			}
+
+			mapit_free(iter);
+			break;
+		}
+#endif // Pandas_MapFlag_NoPet
+#ifdef Pandas_MapFlag_NoHomun
+		case MF_NOHOMUN:
+		{
+			struct s_mapiterator* iter = mapit_getallusers();
+			map_session_data* pl_sd = nullptr;
+
+			for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter)) {
+				if (!pl_sd || pl_sd->m != m)
+					continue;
+				if (hom_is_active(pl_sd->hd) && status) {
+					// 当前地图禁止使用人工生命体, 已自动将其安息
+					clif_displaymessage(pl_sd->fd, msg_txt_cn(pl_sd, 6));
+					hom_vaporize(pl_sd, HOM_ST_REST);
+				}
+			}
+
+			mapit_free(iter);
+			break;
+		}
+#endif // Pandas_MapFlag_NoHomun
+#ifdef Pandas_MapFlag_NoMerc
+		case MF_NOMERC:
+		{
+			struct s_mapiterator* iter = mapit_getallusers();
+			map_session_data* pl_sd = nullptr;
+
+			for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter)) {
+				if (!pl_sd || pl_sd->m != m)
+					continue;
+				if (pl_sd->md && status) {
+					// 当前地图禁止使用佣兵, 已自动将其隐藏
+					clif_displaymessage(pl_sd->fd, msg_txt_cn(pl_sd, 8));
+					unit_remove_map(pl_sd->md, CLR_OUTSIGHT);
+				}
+			}
+
+			mapit_free(iter);
+			break;
+		}
+#endif // Pandas_MapFlag_NoMerc
+#ifdef Pandas_MapFlag_NoAura
+		case MF_NOAURA:
+		{
+			struct s_mapiterator* iter = mapit_getallusers();
+			map_session_data* pl_sd = nullptr;
+
+			for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter)) {
+				if (!pl_sd || pl_sd->m != m)
+					continue;
+
+				clif_refresh(pl_sd);
+			}
+
+			mapit_free(iter);
+			break;
+		}
+#endif // Pandas_MapFlag_NoAura
+#ifdef Pandas_MapFlag_MaxASPD
+		case MF_MAXASPD:
+		{
+			struct s_mapiterator* iter = mapit_geteachiddb();
+			block_list* bl = nullptr;
+
+			for (bl = (block_list*)mapit_first(iter); mapit_exists(iter); bl = (block_list*)mapit_next(iter)) {
+				if (!bl || bl->m != m)
+					continue;
+
+				status_calc_bl_(bl, status_db.getSCB_ALL(), SCO_FORCE);
+			}
+
+			mapit_free(iter);
+			break;
+		}
+#endif // Pandas_MapFlag_MaxASPD
+	}
+#endif // Pandas_Mapflags
 
 	return true;
 }
@@ -5072,6 +5964,12 @@ void MapServer::finalize(){
 	do_final_vending();
 	do_final_buyingstore();
 	do_final_path();
+#ifdef Pandas_Aura_Mechanism
+	do_final_aura();
+#endif // Pandas_Aura_Mechanism
+#ifdef Pandas_Player_Suspend_System
+	do_final_suspend();
+#endif // Pandas_Player_Suspend_System
 
 	map_db->destroy(map_db, map_db_final);
 
@@ -5087,6 +5985,9 @@ void MapServer::finalize(){
 			for (int32 j=0; j<MAX_MOB_LIST_PER_MAP; j++)
 				if (mapdata->moblist[j]) aFree(mapdata->moblist[j]);
 		}
+#ifdef Pandas_Struct_Map_Data_Mob_Spawns
+		mapdata->mobspawns.clear();
+#endif // Pandas_Struct_Map_Data_Mob_Spawns
 		mapdata->damage_adjust = {};
 	}
 
@@ -5103,6 +6004,9 @@ void MapServer::finalize(){
 	iwall_db->destroy(iwall_db, nullptr);
 	regen_db->destroy(regen_db, nullptr);
 
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+	asyncquery_final();
+#endif // Pandas_ScriptCommand_QuerySql_Async
 	map_sql_close();
 
 	ShowStatus("Finished.\n");
@@ -5129,7 +6033,11 @@ void MapServer::handle_crash(){
 	run = 1;
 	if (!chrif_isconnected())
 	{
+#ifndef Pandas_Crashfix_Prevent_NullPointer
 		if (pc_db->size(pc_db))
+#else
+		if (pc_db && pc_db->size(pc_db))
+#endif // Pandas_Crashfix_Prevent_NullPointer
 			ShowFatalError("Server has crashed without a connection to the char-server, %u characters can't be saved!\n", pc_db->size(pc_db));
 		return;
 	}
@@ -5173,6 +6081,7 @@ struct msg_data *map_lang2msgdb(uint8 lang){
 
 void map_do_init_msg(void){
 	int32 test=0, i=0, size;
+#ifndef Pandas_Message_Reorganize
 	const char * listelang[] = {
 		MSG_CONF_NAME_EN,	//default
 		MSG_CONF_NAME_RUS,
@@ -5185,6 +6094,13 @@ void map_do_init_msg(void){
 		MSG_CONF_NAME_POR,
 		MSG_CONF_NAME_THA
 	};
+#else
+	const char * listelang[] = {
+		MSG_CONF_NAME_EN,	// 英文
+		MSG_CONF_NAME_CHS,	// 简体中文
+		MSG_CONF_NAME_CHT	// 繁体中文
+	};
+#endif // Pandas_Message_Reorganize
 
 	map_msg_db = idb_alloc(DB_OPT_BASE);
 	size = ARRAYLENGTH(listelang); //avoid recalc
@@ -5229,6 +6145,7 @@ const char* map_msg_txt(const map_session_data* sd, int32 msg_number){
 	uint8 lang = 0; //default
 	if(sd && sd->langtype) lang = sd->langtype;
 
+#ifndef Pandas_Message_Reorganize
 	if( (mdb = map_lang2msgdb(lang)) != nullptr){
 		const char *tmp = _msg_txt(msg_number,MAP_MAX_MSG,mdb->msg);
 		if(strcmp(tmp,"??")) //to verify result
@@ -5236,10 +6153,33 @@ const char* map_msg_txt(const map_session_data* sd, int32 msg_number){
 		ShowDebug("Message #%d not found for langtype %d.\n",msg_number,lang);
 	}
 	ShowDebug("Selected langtype %d not loaded, trying fallback...\n",lang);
+#else
+	if( (mdb = map_lang2msgdb(lang)) != nullptr){
+		const char *tmp = _msg_txt(msg_number,MAP_MAX_MSG,mdb->msg);
+		if(strcmp(tmp,"??")) //to verify result
+			return tmp;
+		ShowDebug("Message #%d not found for langtype %d [%s], trying fallback...\n", msg_number, lang, msg_langtype2langstr(lang));
+	}
+	else
+		ShowDebug("Selected langtype %d not loaded, trying fallback...\n", lang);
+#endif // Pandas_Message_Reorganize
 	if(lang != 0 && (mdb = map_lang2msgdb(0)) != nullptr) //fallback
 		return _msg_txt(msg_number,MAP_MAX_MSG,mdb->msg);
 	return "??";
 }
+
+#if defined(Pandas_UserExperience_Rewrite_MapServerGenerator_Args_Process) && defined(MAP_GENERATOR)
+void mapgenerator_show_help() {
+	ShowInfo("Usage: %s [options]\n", "map-server-generator");
+	ShowInfo("Options:\n");
+	ShowInfo("  -?, -h [--help]\tShow this help message\n");
+	ShowInfo("  -n, -navi [--generate-navi]\tCreate navigation files\n");
+	ShowInfo("  -r, -repu [--generate-reputation]\tCreate reputation bson files\n");
+	ShowInfo("  -i, -imi [--generate-itemmoveinfo]\tCreate itemmoveinfov5.txt\n");
+	printf("\n");
+	systemPause();
+}
+#endif // defined(Pandas_UserExperience_Rewrite_MapServerGenerator_Args_Process) && defined(MAP_GENERATOR)
 
 /**
  * Read the option specified in command line
@@ -5250,6 +6190,7 @@ const char* map_msg_txt(const map_session_data* sd, int32 msg_number){
  */
 int32 mapgenerator_get_options(int32 argc, char** argv) {
 #ifdef MAP_GENERATOR
+#ifndef Pandas_UserExperience_Rewrite_MapServerGenerator_Args_Process
 	bool optionSet = false;
 	for (int32 i = 1; i < argc; i++) {
 		const char *arg = argv[i];
@@ -5277,6 +6218,68 @@ int32 mapgenerator_get_options(int32 argc, char** argv) {
 		ShowError("No options passed to the map generator, you must set at least one.\n");
 		exit(1);
 	}
+#else
+	bool optionSet = false;
+	for (int32 i = 1; i < argc; i++) {
+		const char* arg = argv[i];
+		if (arg[0] != '-' && (arg[0] != '/' || arg[1] == '-')) {// -, -- and /
+			ShowError("Unknown option '%s'.\n", argv[i]);
+			exit(EXIT_FAILURE);
+		} else if (arg[0] == '/' || (++arg)[0] == '-') {// long option
+			arg++;
+			if (strcmp(arg, "help") == 0) {
+				gen_options.showhelp = optionSet = true;
+				argv[i] = nullptr;
+			} else if (strcmp(arg, "generate-navi") == 0 || strcmp(arg, "navi") == 0) {
+				gen_options.navi = optionSet = true;
+				argv[i] = nullptr;
+			} else if (strcmp(arg, "generate-itemmoveinfo") == 0 || strcmp(arg, "itemmoveinfo") == 0 || strcmp(arg, "imi") == 0) {
+				gen_options.itemmoveinfo = optionSet = true;
+				argv[i] = nullptr;
+			} else if (strcmp(arg, "generate-reputation") == 0 || strcmp(arg, "repu") == 0) {
+				gen_options.reputation = optionSet = true;
+				argv[i] = nullptr;
+			}
+			else {
+				ShowError("Unknown option '%s'.\n", argv[i]);
+				exit(EXIT_FAILURE);
+			}
+		}
+		else {
+			switch (arg[0]) {// short option
+			case '?':
+			case 'h':
+				gen_options.showhelp = optionSet = true;
+				argv[i] = nullptr;
+				break;
+			case 'n':
+				gen_options.navi = optionSet = true;
+				argv[i] = nullptr;
+				break;
+			case 'i':
+				gen_options.itemmoveinfo = optionSet = true;
+				argv[i] = nullptr;
+				break;
+			case 'r':
+				gen_options.reputation = optionSet = true;
+				argv[i] = nullptr;
+				break;
+			default:
+				ShowError("Unknown option '%s'.\n", argv[i]);
+				exit(EXIT_FAILURE);
+			}
+		}
+	}
+	if (!optionSet) {
+		ShowWarning("No options passed to the map generator, you must set at least one.\n");
+		mapgenerator_show_help();
+		exit(EXIT_FAILURE);
+	}
+	if (gen_options.showhelp) {
+		mapgenerator_show_help();
+		exit(EXIT_SUCCESS);
+	}
+#endif // Pandas_UserExperience_Rewrite_MapServerGenerator_Args_Process
 #endif
 	return 1;
 }
@@ -5310,12 +6313,25 @@ void map_data::initMapFlags() {
 
 void map_data::copyFlags(const map_data& other) {
 	flags = other.flags;
+
+#ifdef Pandas_Mapflags
+	mapflag_values.insert(other.mapflag_values.begin(), other.mapflag_values.end());
+#endif // Pandas_Mapflags
 }
 
 /// Called when a terminate signal is received.
 void MapServer::handle_shutdown(){
+#ifdef Pandas_UserExperience_Linux_Ctrl_C_WarpLine
+	printf("\n");
+#endif // Pandas_UserExperience_Linux_Ctrl_C_WarpLine
 	ShowStatus("Shutting down...\n");
 
+#ifdef Pandas_Crashfix_Prevent_NullPointer
+	if (!pc_db) {
+		flush_fifos();
+		return;
+	}
+#endif // Pandas_Crashfix_Prevent_NullPointer
 	map_session_data* sd;
 	struct s_mapiterator* iter = mapit_getallusers();
 	for( sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); sd = (TBL_PC*)mapit_next(iter) )
@@ -5332,6 +6348,7 @@ bool MapServer::initialize( int32 argc, char *argv[] ){
 	safestrncpy(console_log_filepath, "./log/map-msg_log.log", sizeof(console_log_filepath));
 
 	/* Multilanguage */
+#ifndef Pandas_Message_Reorganize
 	MSG_CONF_NAME_EN = "conf/msg_conf/map_msg.conf"; // English (default)
 	MSG_CONF_NAME_RUS = "conf/msg_conf/map_msg_rus.conf";	// Russian
 	MSG_CONF_NAME_SPN = "conf/msg_conf/map_msg_spn.conf";	// Spanish
@@ -5342,6 +6359,11 @@ bool MapServer::initialize( int32 argc, char *argv[] ){
 	MSG_CONF_NAME_FRN = "conf/msg_conf/map_msg_frn.conf";	// French
 	MSG_CONF_NAME_POR = "conf/msg_conf/map_msg_por.conf";	// Brazilian Portuguese
 	MSG_CONF_NAME_THA = "conf/msg_conf/map_msg_tha.conf";	// Thai
+#else
+	MSG_CONF_NAME_EN = "conf/msg_conf/map_msg.conf";		// English (default)
+	MSG_CONF_NAME_CHS = "conf/msg_conf/map_msg_chs.conf";	// Chinese Simplified
+	MSG_CONF_NAME_CHT = "conf/msg_conf/map_msg_cht.conf";	// Chinese Traditional
+#endif // Pandas_Message_Reorganize
 	/* Multilanguage */
 
 	// default inter_config
@@ -5403,10 +6425,20 @@ bool MapServer::initialize( int32 argc, char *argv[] ){
 	map_sql_init();
 	if (log_config.sql_logs)
 		log_sql_init();
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+	asyncquery_init();
+#endif // Pandas_ScriptCommand_QuerySql_Async
 
 	mapindex_init();
 	if(enable_grf)
 		grfio_init(GRF_PATH_FILENAME);
+
+#ifdef Pandas_Speedup_Map_Read_From_Cache
+	// 填充预置的 cell 模板, 大量降低 map_gat2cell 被调用的机会
+	for (int x = 0; x < (sizeof(cell_template) / sizeof(struct mapcell)); x++) {
+		cell_template[x] = map_gat2cell(x);
+	}
+#endif // Pandas_Speedup_Map_Read_From_Cache
 
 	map_readallmaps();
 
@@ -5446,6 +6478,12 @@ bool MapServer::initialize( int32 argc, char *argv[] ){
 	do_init_duel();
 	do_init_vending();
 	do_init_buyingstore();
+#ifdef Pandas_Aura_Mechanism
+	do_init_aura();
+#endif // Pandas_Aura_Mechanism
+#ifdef Pandas_Player_Suspend_System
+	do_init_suspend();
+#endif // Pandas_Player_Suspend_System
 
 	npc_event_do_oninit();	// Init npcs (OnInit)
 
@@ -5453,8 +6491,18 @@ bool MapServer::initialize( int32 argc, char *argv[] ){
 		ShowNotice("Server is running on '" CL_WHITE "PK Mode" CL_RESET "'.\n");
 
 #ifndef MAP_GENERATOR
+	#ifndef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 	ShowStatus("Server is '" CL_GREEN "ready" CL_RESET "' and listening on port '" CL_WHITE "%d" CL_RESET "'.\n\n", map_port);
+	#else
+	performance_stop("core_init");
+	ShowStatus("The Map-server is " CL_GREEN "ready" CL_RESET " (Server is listening on the port %d, took %" PRIu64 " milliseconds).\n\n", map_port, static_cast<uint64>(performance_get_milliseconds("core_init")));
+	#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 #else
+#ifdef Pandas_UserExperience_MapServerGenerator_Output
+	ShowInfo("----------------------------------------------------------------------\n");
+	ShowInfo("- MAP GENERATOR START WORKING\n");
+	ShowInfo("----------------------------------------------------------------------\n");
+#endif // Pandas_UserExperience_MapServerGenerator_Output
 	// depending on gen_options, generate the correct things
 	if (gen_options.navi)
 		navi_create_lists();
@@ -5463,6 +6511,11 @@ bool MapServer::initialize( int32 argc, char *argv[] ){
 	if (gen_options.reputation)
 		pc_reputation_generate();
 	this->signal_shutdown();
+#ifdef Pandas_UserExperience_MapServerGenerator_Output
+	ShowInfo("----------------------------------------------------------------------\n");
+	ShowInfo("- MAP GENERATOR WORK FINISHED\n");
+	ShowInfo("----------------------------------------------------------------------\n");
+#endif // Pandas_UserExperience_MapServerGenerator_Output
 #endif
 
 	if( console ){ //start listening

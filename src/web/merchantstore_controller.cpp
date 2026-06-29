@@ -3,6 +3,7 @@
 
 #include "merchantstore_controller.hpp"
 
+#include <cstring>
 #include <string>
 #include <nlohmann/json.hpp>
 
@@ -15,6 +16,9 @@
 #include "webutils.hpp"
 #include "web.hpp"
 
+using namespace nlohmann;
+
+#ifndef Pandas_WebServer_Rewrite_Controller_HandlerFunc
 HANDLER_FUNC(merchantstore_save) {
 	if (!isAuthorized(req, false)) {
 		res.status = HTTP_BAD_REQUEST;
@@ -160,3 +164,158 @@ HANDLER_FUNC(merchantstore_load) {
 	response["Type"] = 1;
 	res.set_content(response.dump(), "application/json");
 }
+#else
+
+#define SUCCESS_RET 1
+#define FAILURE_RET 3
+#define REQUIRE_FIELD_EXISTS(x) REQUIRE_FIELD_EXISTS_T(x)
+
+HANDLER_FUNC(merchantstore_save) {
+	if (!isAuthorized(req, false)) {
+		make_response(res, FAILURE_RET, "Authorization verification failure.");
+		return;
+	}
+
+	REQUIRE_FIELD_EXISTS("AID");
+	REQUIRE_FIELD_EXISTS("GID");
+	REQUIRE_FIELD_EXISTS("WorldName");
+	REQUIRE_FIELD_EXISTS("Type");
+	REQUIRE_FIELD_EXISTS("data");
+
+	auto account_id = GET_NUMBER_FIELD("AID", 0);
+	auto char_id = GET_NUMBER_FIELD("GID", 0);
+	auto world_name = GET_STRING_FIELD("WorldName", "");
+	auto store_type = GET_NUMBER_FIELD("Type", 0);
+	auto data = GET_STRING_FIELD("data", "");
+
+	if (world_name.length() > WORLD_NAME_LENGTH) {
+		make_response(res, FAILURE_RET, "The world name length exceeds limit.");
+		return;
+	}
+
+	if (!isVaildCharacter(account_id, char_id)) {
+		make_response(res, 3, "The character specified by the \"GID\" does not exist.");
+		return;
+	}
+
+	SQLLock weblock(WEB_SQL_LOCK);
+	weblock.lock();
+	auto handle = weblock.getHandle();
+	SqlStmt stmt{ *handle };
+
+	if (SQL_SUCCESS != stmt.Prepare(
+		"SELECT `account_id` FROM `%s` WHERE (`account_id` = ? AND `char_id` = ? AND `world_name` = ? AND `store_type` = ?) LIMIT 1",
+		merchant_configs_table)
+		|| SQL_SUCCESS != stmt.BindParam(0, SQLDT_INT32, &account_id, sizeof(account_id))
+		|| SQL_SUCCESS != stmt.BindParam(1, SQLDT_INT32, &char_id, sizeof(char_id))
+		|| SQL_SUCCESS != stmt.BindParam(2, SQLDT_STRING, (void*)world_name.c_str(), strlen(world_name.c_str()))
+		|| SQL_SUCCESS != stmt.BindParam(3, SQLDT_INT32, &store_type, sizeof(store_type))
+		|| SQL_SUCCESS != stmt.Execute()
+		) {
+		make_response(res, FAILURE_RET, "An error occurred while executing query.");
+		RETURN_STMT_FAILURE(stmt, weblock);
+	}
+
+	if (stmt.NumRows() <= 0) {
+		if (SQL_SUCCESS != stmt.Prepare(
+			"INSERT INTO `%s` (`account_id`, `char_id`, `world_name`, `store_type`, `data`) VALUES (?, ?, ?, ?, ?)",
+			merchant_configs_table)
+			|| SQL_SUCCESS != stmt.BindParam(0, SQLDT_INT32, &account_id, sizeof(account_id))
+			|| SQL_SUCCESS != stmt.BindParam(1, SQLDT_INT32, &char_id, sizeof(char_id))
+			|| SQL_SUCCESS != stmt.BindParam(2, SQLDT_STRING, (void*)world_name.c_str(), strlen(world_name.c_str()))
+			|| SQL_SUCCESS != stmt.BindParam(3, SQLDT_INT32, &store_type, sizeof(store_type))
+			|| SQL_SUCCESS != stmt.BindParam(4, SQLDT_STRING, (void*)data.c_str(), strlen(data.c_str()))
+			|| SQL_SUCCESS != stmt.Execute()
+			) {
+			make_response(res, FAILURE_RET, "An error occurred while inserting data.");
+			RETURN_STMT_FAILURE(stmt, weblock);
+		}
+	}
+	else {
+		if (SQL_SUCCESS != stmt.Prepare(
+			"UPDATE `%s` SET `data` = ? WHERE (`account_id` = ? AND `char_id` = ? AND `world_name` = ? AND `store_type` = ?)",
+			merchant_configs_table)
+			|| SQL_SUCCESS != stmt.BindParam(0, SQLDT_STRING, (void*)data.c_str(), strlen(data.c_str()))
+			|| SQL_SUCCESS != stmt.BindParam(1, SQLDT_INT32, &account_id, sizeof(account_id))
+			|| SQL_SUCCESS != stmt.BindParam(2, SQLDT_INT32, &char_id, sizeof(char_id))
+			|| SQL_SUCCESS != stmt.BindParam(3, SQLDT_STRING, (void*)world_name.c_str(), strlen(world_name.c_str()))
+			|| SQL_SUCCESS != stmt.BindParam(4, SQLDT_INT32, &store_type, sizeof(store_type))
+			|| SQL_SUCCESS != stmt.Execute()
+			) {
+			make_response(res, FAILURE_RET, "An error occurred while updating data.");
+			RETURN_STMT_FAILURE(stmt, weblock);
+		}
+	}
+
+	make_response(res, SUCCESS_RET);
+	RETURN_STMT_SUCCESS(stmt, weblock);
+}
+
+HANDLER_FUNC(merchantstore_load) {
+	if (!isAuthorized(req, false)) {
+		make_response(res, FAILURE_RET, "Authorization verification failure.");
+		return;
+	}
+
+	REQUIRE_FIELD_EXISTS("AID");
+	REQUIRE_FIELD_EXISTS("GID");
+	REQUIRE_FIELD_EXISTS("WorldName");
+	REQUIRE_FIELD_EXISTS("Type");
+
+	auto account_id = GET_NUMBER_FIELD("AID", 0);
+	auto char_id = GET_NUMBER_FIELD("GID", 0);
+	auto world_name = GET_STRING_FIELD("WorldName", "");
+	auto store_type = GET_NUMBER_FIELD("Type", 0);
+
+	if (world_name.length() > WORLD_NAME_LENGTH) {
+		make_response(res, FAILURE_RET, "The world name length exceeds limit.");
+		return;
+	}
+
+	if (!isVaildCharacter(account_id, char_id)) {
+		make_response(res, FAILURE_RET, "The character specified by the \"GID\" does not exist.");
+		return;
+	}
+
+	SQLLock weblock(WEB_SQL_LOCK);
+	weblock.lock();
+	auto handle = weblock.getHandle();
+	SqlStmt stmt{ *handle };
+
+	if (SQL_SUCCESS != stmt.Prepare(
+		"SELECT `data` FROM `%s` WHERE (`account_id` = ? AND `char_id` = ? AND `world_name` = ? AND `store_type` = ?) LIMIT 1",
+		merchant_configs_table)
+		|| SQL_SUCCESS != stmt.BindParam(0, SQLDT_INT32, &account_id, sizeof(account_id))
+		|| SQL_SUCCESS != stmt.BindParam(1, SQLDT_INT32, &char_id, sizeof(char_id))
+		|| SQL_SUCCESS != stmt.BindParam(2, SQLDT_STRING, (void*)world_name.c_str(), strlen(world_name.c_str()))
+		|| SQL_SUCCESS != stmt.BindParam(3, SQLDT_INT32, &store_type, sizeof(store_type))
+		|| SQL_SUCCESS != stmt.Execute()
+		) {
+		make_response(res, FAILURE_RET, "An error occurred while executing query.");
+		RETURN_STMT_FAILURE(stmt, weblock);
+	}
+
+	if (stmt.NumRows() <= 0) {
+		make_response(res, SUCCESS_RET);
+		RETURN_STMT_SUCCESS(stmt, weblock);
+	}
+
+	char databuf[SQL_BUFFER_SIZE] = { 0 };
+
+	if (SQL_SUCCESS != stmt.BindColumn(0, SQLDT_STRING, &databuf, sizeof(databuf), NULL, NULL)
+		|| SQL_SUCCESS != stmt.NextRow()
+		) {
+		make_response(res, FAILURE_RET, "An error occurred while binding column.");
+		RETURN_STMT_FAILURE(stmt, weblock);
+	}
+
+	databuf[sizeof(databuf) - 1] = 0;
+
+	json response = {};
+	response = json::parse(A2UWE(databuf));
+	response["Type"] = SUCCESS_RET;
+	make_response(res, response);
+	RETURN_STMT_SUCCESS(stmt, weblock);
+}
+
+#endif // Pandas_WebServer_Rewrite_Controller_HandlerFunc

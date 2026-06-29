@@ -843,6 +843,7 @@ int16 instance_mapid(int16 m, int32 instance_id)
 	return m;
 }
 
+#if !defined(Pandas_FuncLogic_Instance_Destroy_Command) || !defined(Pandas_FuncDefine_Instance_Destory)
 /**
  * Removes an instance, all its maps, and NPCs invoked by the client button.
  * @param sd: Player data
@@ -925,13 +926,99 @@ void instance_destroy_command(map_session_data *sd) {
 		instance_reqinfo(sd, gd->instance_id);
 	}
 }
+#else
+void instance_destroy_command(map_session_data *sd) {
+	nullpo_retv(sd);
+
+	for (auto it = instances.begin(); it != instances.end(); ++it) {
+		std::shared_ptr<s_instance_data> idata = it->second;
+
+		if (idata->owner_id == 0)
+			continue;
+
+		switch (idata->mode) {
+			case IM_CHAR:
+				if (idata->owner_id != sd->status.char_id)
+					continue;
+				break;
+			case IM_PARTY: {
+				party_data *pd = party_search(idata->owner_id);
+				if (!pd || pd->party.party_id != sd->status.party_id)
+					continue;
+
+				int32 i;
+				ARR_FIND(0, MAX_PARTY, i, pd->party.member[i].leader);
+				if (i == MAX_PARTY || pd->party.member[i].char_id != sd->status.char_id)
+					continue;
+				break;
+			}
+			case IM_GUILD: {
+				auto gd = guild_search(idata->owner_id);
+				if (!gd || gd->guild.guild_id != sd->status.guild_id || !sd->state.gmaster_flag)
+					continue;
+				break;
+			}
+			default:
+				continue;
+		}
+
+		if (!instance_db.find(idata->id)->destroyable)
+			return;
+
+		if (instance_destroy(it->first, true)) {
+			it = instances.erase(it);
+			return;
+		}
+	}
+}
+#endif // !defined(Pandas_FuncLogic_Instance_Destroy_Command) || !defined(Pandas_FuncDefine_Instance_Destory)
+
+#ifdef Pandas_Fix_Dungeon_Command_Status_Refresh
+void instance_refresh_status(int32 instance_id)
+{
+	if (instance_id <= 0)
+		return;
+
+	std::shared_ptr<s_instance_data> idata = util::umap_find(instances, instance_id);
+
+	if (idata == nullptr)
+		return;
+
+	switch (idata->mode) {
+		case IM_NONE:
+			break;
+		case IM_CHAR:
+			if (map_charid2sd(idata->owner_id))
+				clif_instance_status(instance_id, static_cast<uint32>(idata->keep_limit), static_cast<uint32>(idata->idle_limit));
+			break;
+		case IM_PARTY:
+			if (party_search(idata->owner_id))
+				clif_instance_status(instance_id, static_cast<uint32>(idata->keep_limit), static_cast<uint32>(idata->idle_limit));
+			break;
+		case IM_GUILD:
+			if (guild_search(idata->owner_id))
+				clif_instance_status(instance_id, static_cast<uint32>(idata->keep_limit), static_cast<uint32>(idata->idle_limit));
+			break;
+		case IM_CLAN:
+			if (clan_search(idata->owner_id))
+				clif_instance_status(instance_id, static_cast<uint32>(idata->keep_limit), static_cast<uint32>(idata->idle_limit));
+			break;
+		default:
+			return;
+	}
+}
+#endif // Pandas_Fix_Dungeon_Command_Status_Refresh
 
 /**
  * Removes an instance, all its maps, and NPCs.
  * @param instance_id: Instance to remove
  * @return True on success or false on failure
  */
+#ifndef Pandas_FuncDefine_Instance_Destory
 bool instance_destroy(int32 instance_id)
+#else
+bool instance_destroy(int32 instance_id, bool skip_erase)
+#endif // Pandas_FuncDefine_Instance_Destory
 {
 	std::shared_ptr<s_instance_data> idata = util::umap_find(instances, instance_id);
 
@@ -1034,6 +1121,9 @@ bool instance_destroy(int32 instance_id)
 
 	ShowInfo("[Instance] Destroyed: %s (%d)\n", instance_db.find(idata->id)->name.c_str(), instance_id);
 
+#ifdef Pandas_FuncDefine_Instance_Destory
+	if (!skip_erase)
+#endif // Pandas_FuncDefine_Instance_Destory
 	instances.erase(instance_id);
 
 	return true;
@@ -1315,7 +1405,17 @@ void do_init_instance(void) {
  * Finalizes the instances and instance database
  */
 void do_final_instance(void) {
+#ifndef Pandas_Crashfix_UnorderedMap_Erase
 	// Since instance_destroy() modifies the unordered_map, make sure iteration always restarts.
 	for (auto it = instances.begin(); it != instances.end(); it = instances.begin())
 		instance_destroy(it->first);
+#else
+	for (auto it = instances.begin(); it != instances.end(); ) {
+		if (instance_destroy(it->first, true)) {
+			it = instances.erase(it);
+			continue;
+		}
+		++it;
+	}
+#endif // Pandas_Crashfix_UnorderedMap_Erase
 }

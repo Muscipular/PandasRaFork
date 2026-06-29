@@ -866,6 +866,10 @@ int32 chclif_parse_reqtoconnect(int32 fd, struct char_session_data* sd,uint32 ip
 			node->login_id2  == login_id2 /*&&
 			node->ip         == ipl*/ )
 		{// authentication found (coming from map server)
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+			safestrncpy(session[fd]->mac_address, node->mac_address, MACADDRESS_LENGTH);
+			safestrncpy(session[fd]->lan_address, node->lan_address, IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 			char_get_authdb().erase(account_id);
 			char_auth_ok(fd, sd);
 			sd->pincode_correct = true; // already entered pincode correctly yet
@@ -908,13 +912,21 @@ void chclif_send_map_data( int32 fd, std::shared_ptr<struct mmo_charstatus> cd, 
 	uint32 subnet_map_ip = char_lan_subnetcheck( session[fd]->client_addr ); // Advanced subnet check [LuzZza]
 	p.ip = htonl( ( subnet_map_ip ) ? subnet_map_ip : map_server[map_server_index].ip );
 	p.port = ntows( htons( map_server[map_server_index].port ) ); // [!] LE byte order here [!]
+#ifdef Pandas_InterConfig_HideServerIpAddress
+	if (pandas_inter_hide_server_ipaddress) {
+		// 若希望不主动返回服务器的 IP 地址, 那么将此处的地图服务器 IP 重设为 0
+		p.ip = 0;
+	}
+#endif // Pandas_InterConfig_HideServerIpAddress
 #if PACKETVER >= 20170315
 	safestrncpy( p.domain, "", sizeof( p.domain ) );
 #endif
 #ifdef DEBUG
+#ifndef Pandas_UserExperience_Debug_Hide_SubnetInfo
 	ShowDebug("Sending the client (%d %d.%d.%d.%d) to map-server with ip %d.%d.%d.%d and port %hu\n",
 			  cd->account_id, CONVIP( session[fd]->client_addr ), CONVIP((subnet_map_ip) ? subnet_map_ip : map_server[map_server_index].ip),
 			  map_server[map_server_index].port);
+#endif // Pandas_UserExperience_Debug_Hide_SubnetInfo
 #endif
 
 	socket_send( fd, p );
@@ -1033,6 +1045,10 @@ bool chclif_parse_select_accessible_map( int32 fd, struct char_session_data& sd 
 	node->expiration_time = sd.expiration_time;
 	node->group_id = sd.group_id;
 	node->ip = session[fd]->client_addr;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	safestrncpy(node->mac_address, session[fd]->mac_address, MACADDRESS_LENGTH);
+	safestrncpy(node->lan_address, session[fd]->lan_address, IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	char_get_authdb()[node->account_id] = node;
 
@@ -1199,6 +1215,11 @@ bool chclif_parse_charselect( int32 fd, struct char_session_data& sd ){
 	node->expiration_time = sd.expiration_time;
 	node->group_id = sd.group_id;
 	node->ip = session[fd]->client_addr;
+
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	safestrncpy(node->mac_address, session[fd]->mac_address, MACADDRESS_LENGTH);
+	safestrncpy(node->lan_address, session[fd]->lan_address, IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	char_get_authdb()[node->account_id] = node;
 

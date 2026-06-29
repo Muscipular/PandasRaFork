@@ -151,6 +151,13 @@ enum e_skill_require : uint16 {
 	SKILL_REQ_APRATECOST = 0x4000,
 };
 
+#ifdef Pandas_Bonus2_bSkillNoRequire
+enum e_skill_require_ex : uint32 {
+	SKILL_REQ_AMMO_COUNT = 0x10000,
+	SKILL_REQ_PRODUCTMAT_COUNT = 0x20000,
+};
+#endif // Pandas_Bonus2_bSkillNoRequire
+
 /// Constants for skill cast near NPC.
 enum e_skill_nonear_npc : uint8 {
 	SKILL_NONEAR_WARPPORTAL = 0x1,
@@ -536,6 +543,7 @@ int32 skill_get_walkdelay( uint16 skill_id ,uint16 skill_lv );
 int32 skill_get_time( uint16 skill_id ,uint16 skill_lv );
 int32 skill_get_time2( uint16 skill_id ,uint16 skill_lv );
 int32 skill_get_castnodex( uint16 skill_id );
+int32 skill_get_delaynodex( uint16 skill_id );
 int32 skill_get_castdef( uint16 skill_id );
 int32 skill_get_nocast( uint16 skill_id );
 int32 skill_get_unit_id( uint16 skill_id );
@@ -547,6 +555,7 @@ int32 skill_get_blewcount( uint16 skill_id ,uint16 skill_lv );
 int32 skill_get_cooldown( uint16 skill_id, uint16 skill_lv );
 int32 skill_get_giveap( uint16 skill_id, uint16 skill_lv );
 int32 skill_get_unit_target( uint16 skill_id );
+int32 skill_get_unit_layout_type( uint16 skill_id, uint16 skill_lv );
 #define skill_get_nk(skill_id, nk) skill_get_nk_(skill_id, { nk })
 bool skill_get_nk_(uint16 skill_id, std::vector<e_skill_nk> nk);
 #define skill_get_inf2(skill_id, inf2) skill_get_inf2_(skill_id, { inf2 })
@@ -554,6 +563,9 @@ bool skill_get_inf2_(uint16 skill_id, std::vector<e_skill_inf2> inf2);
 #define skill_get_unit_flag(skill_id, unit) skill_get_unit_flag_(skill_id, { unit })
 bool skill_get_unit_flag_(uint16 skill_id, std::vector<e_skill_unit_flag> unit);
 int32 skill_get_unit_range(uint16 skill_id, uint16 skill_lv);
+#ifdef RENEWAL_CAST
+int32 skill_get_fixed_cast( uint16 skill_id, uint16 skill_lv );
+#endif // RENEWAL_CAST
 // Accessor for skill requirements
 int32 skill_get_hp( uint16 skill_id ,uint16 skill_lv );
 int32 skill_get_mhp( uint16 skill_id ,uint16 skill_lv );

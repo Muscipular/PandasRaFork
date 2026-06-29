@@ -5,6 +5,7 @@
 #define MOB_HPP
 
 #include <deque>
+#include <map>
 #include <vector>
 
 #include <common/database.hpp>
@@ -336,6 +337,9 @@ struct s_dmglog{
 
 struct mob_data : public block_list {
 	struct unit_data  ud;
+#ifdef Pandas_Struct_Unit_CommonData
+	struct s_unit_common_data ucd;
+#endif // Pandas_Struct_Unit_CommonData
 	struct view_data *vd;
 	bool vd_changed;
 	struct status_data status, *base_status; //Second one is in case of leveling up mobs, or tiny/large mobs.
@@ -396,7 +400,23 @@ struct mob_data : public block_list {
 	 * MvP Tombstone NPC ID
 	 **/
 	int32 tomb_nid;
+#ifndef Pandas_ScriptParams_DamageTaken_Extend
 	uint16 damagetaken;
+#else
+	int damagetaken = -1;	// 魔物实例的承伤倍率, 若为 -1 则表示使用 db 中设置的承伤倍率 [Sola丶小克]
+#endif // Pandas_ScriptParams_DamageTaken_Extend
+
+#ifdef Pandas_Struct_Mob_Data_Pandas
+	struct {
+	#ifdef Pandas_Struct_Mob_Data_Special_SetUnitData
+		std::map<uint16, int64>* special_setunitdata;	// 记录魔物被 setunitdata 修改过哪些项目 [Sola丶小克]
+	#endif // Pandas_Struct_Mob_Data_Special_SetUnitData
+	#ifdef Pandas_Struct_Mob_Data_SpecialExperience
+		int64 base_exp = -1;	// 魔物实例被特殊设置的基础经验值, 若为 -1 则表示使用 db 中设置的基础经验
+		int64 job_exp = -1;		// 魔物实例被特殊设置的职业经验值, 若为 -1 则表示使用 db 中设置的职业经验
+	#endif // Pandas_Struct_Mob_Data_SpecialExperience
+	} pandas;
+#endif // Pandas_Struct_Mob_Data_Pandas
 
 	e_mob_bosstype get_bosstype() const;
 	map_session_data* get_mvp_player(map_session_data* first_sd);
@@ -504,10 +524,19 @@ struct view_data* mob_get_viewdata(int32 mob_id);
 void mob_set_dynamic_viewdata( mob_data* md );
 void mob_free_dynamic_viewdata( mob_data* md );
 
+#ifndef Pandas_FuncDefine_Mob_Once_Spawn_Sub
 mob_data *mob_once_spawn_sub(block_list *bl, int16 m, int16 x, int16 y, const char *mobname, int32 mob_id, const char *event, uint32 size, enum mob_ai ai);
+#else
+mob_data *mob_once_spawn_sub(block_list *bl, int16 m, int16 x, int16 y, const char *mobname, int32 mob_id, const char *event, uint32 size, enum mob_ai ai, uint16 spawn_flag = 0);
+#endif // Pandas_FuncDefine_Mob_Once_Spawn_Sub
 
+#ifndef Pandas_FuncDefine_Mob_Once_Spawn
 int32 mob_once_spawn(map_session_data* sd, int16 m, int16 x, int16 y,
 	const char* mobname, int32 mob_id, int32 amount, const char* event, uint32 size, enum mob_ai ai);
+#else
+int32 mob_once_spawn(map_session_data* sd, int16 m, int16 x, int16 y,
+	const char* mobname, int32 mob_id, int32 amount, const char* event, uint32 size, enum mob_ai ai, uint16 spawn_flag = 0);
+#endif // Pandas_FuncDefine_Mob_Once_Spawn
 
 int32 mob_once_spawn_area(map_session_data* sd, int16 m,
 	int16 x0, int16 y0, int16 x1, int16 y1, const char* mobname, int32 mob_id, int32 amount, const char* event, uint32 size, enum mob_ai ai);
@@ -534,7 +563,11 @@ int32 mob_setdelayspawn(mob_data *md);
 int32 mob_parse_dataset(struct spawn_data *data);
 void mob_log_damage(mob_data* md, block_list* src, int64 damage, int64 damage_tanked = 0);
 void mob_damage(mob_data *md, block_list *src, int32 damage);
+#ifndef Pandas_FuncDefine_UnitDead_With_ExtendInfo
 int32 mob_dead(mob_data *md, block_list *src, int32 type);
+#else
+int32 mob_dead(mob_data *md, block_list *src, int32 type, uint16 skill_id);
+#endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
 void mob_revive(mob_data *md, uint32 hp);
 void mob_heal(mob_data *md,uint32 heal);
 
@@ -577,7 +610,11 @@ int32 mob_getdroprate(block_list *src, std::shared_ptr<s_mob_db> mob, int32 base
 // MvP Tomb System
 int32 mvptomb_setdelayspawn(npc_data *nd);
 TIMER_FUNC(mvptomb_delayspawn);
+#ifndef Pandas_FuncParams_Mob_MvpTomb_Create
 void mvptomb_create(mob_data *md, char *killer, time_t time);
+#else
+void mvptomb_create(mob_data *md, char *killer, time_t time, int32 killer_gid);
+#endif // Pandas_FuncParams_Mob_MvpTomb_Create
 void mvptomb_destroy(mob_data *md);
 
 void mob_setdropitem_option( item& itm, const std::shared_ptr<s_mob_drop>& mobdrop );

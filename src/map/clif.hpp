@@ -12,6 +12,9 @@
 #include <common/mmo.hpp>
 #include <common/timer.hpp> // t_tick
 
+#ifdef Pandas_Aura_Mechanism
+#include "aura.hpp"
+#endif // Pandas_Aura_Mechanism
 #include "packets.hpp"
 #include "script.hpp"
 #include "skill.hpp"
@@ -208,6 +211,9 @@ enum send_target : uint8_t {
 	ALL_CLIENT = 0,
 	ALL_SAMEMAP,
 	AREA,				// area
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+	AREA_DEAD,			// area, for clear unit (monster death)
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 	AREA_WOS,			// area, without self
 	AREA_WOC,			// area, without chatrooms
 	AREA_WOSC,			// area, without own chatroom
@@ -256,6 +262,7 @@ enum broadcast_flags : uint8_t {
 	BC_BLUE			= 0x10,
 	BC_WOE			= 0x20,
 	BC_COLOR_MASK	= 0x30, // BC_YELLOW|BC_BLUE|BC_WOE
+	BC_NAME			= 0x40,
 
 	BC_DEFAULT		= BC_ALL|BC_PC|BC_YELLOW
 };
@@ -852,6 +859,15 @@ enum e_ack_additem_to_cart : uint8 {
 	ADDITEM_TO_CART_FAIL_COUNT = 1
 };
 
+#ifdef Pandas_ScriptCommand_Next_Dropitem_Special
+struct s_next_dropitem_special {
+	uint32 rent_duration = 0; // 租赁时长, 单位: 秒 (租赁时间大于 0 的道具将会在时间到之后过期)
+	int8 bound = -1; // 道具绑定类型 (设为 -1 表示不进行特殊控制)
+	int8 drop_effect = -1; // 道具掉落到地面的光柱 (设为 -1 表示尊重 DB 中的配置)
+};
+extern s_next_dropitem_special next_dropitem_special;
+#endif // Pandas_ScriptCommand_Next_Dropitem_Special
+
 enum e_changestate_pet : uint8 {
 	CHANGESTATEPET_INIT = 0,
 	CHANGESTATEPET_INTIMACY = 1,
@@ -926,6 +942,9 @@ void clif_misceffect( const block_list& bl, e_notify_effect type );
 void clif_changeoption_target( const block_list* bl, const block_list* target);
 #define clif_changeoption(bl) clif_changeoption_target(bl, nullptr)	// area
 void clif_changeoption2( const block_list& bl );
+#ifdef Pandas_Aura_Mechanism
+void clif_send_auras(struct block_list* bl, enum send_target target, bool ignore_when_hidden, enum e_aura_special flag);
+#endif // Pandas_Aura_Mechanism
 void clif_useitemack( const map_session_data* sd, int32 index, int32 amount, bool ok );	// self
 void clif_GlobalMessage( const block_list& bl, const char* message, enum send_target target );
 void clif_createchat( const map_session_data& sd, e_create_chatroom flag );
@@ -1056,6 +1075,9 @@ void clif_changed_dir( const block_list& bl, enum send_target target);
 // vending
 void clif_openvendingreq( map_session_data& sd, uint16 num );
 void clif_showvendingboard( map_session_data& sd, enum send_target target = AREA_WOS, block_list* tbl = nullptr );
+#ifdef Pandas_ScriptCommand_ShowVend
+void clif_showvendingboard( block_list* bl, const char* name, enum send_target target = AREA_WOS, block_list* tbl = nullptr );
+#endif // Pandas_ScriptCommand_ShowVend
 void clif_closevendingboard( block_list& bl, send_target target, block_list* tbl );
 void clif_vendinglist( map_session_data& sd, map_session_data& vsd );
 void clif_buyvending( map_session_data& sd, uint16 index, uint16 amount, e_pc_purchase_result_frommc result );
@@ -1254,6 +1276,9 @@ void clif_Auction_close(int32 fd, unsigned char flag);
 void clif_parse_Auction_cancelreg(int32 fd, map_session_data *sd);
 
 void clif_bossmapinfo( const map_session_data& sd, mob_data* md, e_bossmap_info flag );
+#ifdef Pandas_ScriptCommand_BossMonster
+void clif_bossmapinfo_clear(map_session_data* sd);
+#endif // Pandas_ScriptCommand_BossMonster
 void clif_cashshop_show( map_session_data& sd, const npc_data& nd );
 
 // ADOPTION
@@ -1277,7 +1302,7 @@ void clif_party_show_picker( const map_session_data* sd, const item* item_data )
 
 // Progress Bar [Inkfish]
 void clif_progressbar( const map_session_data* sd, unsigned long color, uint32 second );
-void clif_progressbar_abort( const map_session_data* sd );
+void clif_progressbar_abort( map_session_data* sd );
 void clif_progressbar_npc( const npc_data* nd, const map_session_data* sd );
 #define clif_progressbar_npc_area(nd) clif_progressbar_npc((nd),nullptr)
 
@@ -1500,6 +1525,11 @@ enum e_macro_checker_result : int16{
 void clif_macro_checker( const map_session_data& sd, e_macro_checker_result result );
 
 void clif_dynamicnpc_result( const map_session_data& sd, e_dynamicnpc_result result );
+
+#ifdef Pandas_Character_Title_Controller
+// 将 rAthena 官方编写的 clif_change_title_ack 暴露出来, 以便 npc.cpp 中的函数调用
+void clif_change_title_ack(map_session_data* sd, unsigned char result, unsigned long title_id);
+#endif // Pandas_Character_Title_Controller
 
 void clif_set_dialog_align( const map_session_data& sd, int32 npcid, e_say_dialog_align align );
 void clif_set_npc_window_size( const map_session_data& sd, int32 width, int32 height );

@@ -14,7 +14,6 @@
 #include "achievement.hpp"
 #include "atcommand.hpp"
 #include "battle.hpp"
-#include "buyingstore.hpp"
 #include "buyingstore.hpp" // struct s_autotrade_entry, struct s_autotrader
 #include "chrif.hpp"
 #include "clif.hpp"
@@ -81,6 +80,14 @@ void vending_vendinglistreq(map_session_data* sd, int32 id)
 {
 	map_session_data* vsd;
 	nullpo_retv(sd);
+
+#ifdef Pandas_ScriptCommand_ShowVend
+	npc_data* nd = map_id2nd(id);
+	if (nd != nullptr && nd->vendingboard.show) {
+		npc_click(sd, nd);
+		return;
+	}
+#endif // Pandas_ScriptCommand_ShowVend
 
 	if( (vsd = map_id2sd(id)) == nullptr )
 		return;
@@ -393,9 +400,15 @@ int8 vending_openvending( map_session_data& sd, const char* message, const uint8
 	
 	Sql_EscapeString( mmysql_handle, message_sql, sd.message );
 
+#ifndef Pandas_Struct_Autotrade_Extend
 	if( Sql_Query( mmysql_handle, "INSERT INTO `%s`(`id`, `account_id`, `char_id`, `sex`, `map`, `x`, `y`, `title`, `autotrade`, `body_direction`, `head_direction`, `sit`) "
 		"VALUES( %d, %d, %d, '%c', '%s', %d, %d, '%s', %d, '%d', '%d', '%d' );",
 		vendings_table, sd.vender_id, sd.status.account_id, sd.status.char_id, sd.status.sex == SEX_FEMALE ? 'F' : 'M', map_getmapdata(sd.m)->name, sd.x, sd.y, message_sql, sd.state.autotrade, at ? at->dir : sd.ud.dir, at ? at->head_dir : sd.head_dir, at ? at->sit : pc_issit(&sd) ) != SQL_SUCCESS ) {
+#else
+	if( Sql_Query( mmysql_handle, "INSERT INTO `%s`(`id`, `account_id`, `char_id`, `sex`, `map`, `x`, `y`, `title`, `autotrade`, `body_direction`, `head_direction`, `sit`) "
+		"VALUES( %d, %d, %d, '%c', '%s', %d, %d, '%s', %d, '%d', '%d', '%d' );",
+		vendings_table, sd.vender_id, sd.status.account_id, sd.status.char_id, sd.status.sex == SEX_FEMALE ? 'F' : 'M', map_getmapdata(sd.m)->name, sd.x, sd.y, message_sql, sd.state.autotrade & ~AUTOTRADE_VENDING, at ? at->dir : sd.ud.dir, at ? at->head_dir : sd.head_dir, at ? at->sit : pc_issit(&sd) ) != SQL_SUCCESS ) {
+#endif // Pandas_Struct_Autotrade_Extend
 		Sql_ShowDebug(mmysql_handle);
 	}
 
@@ -552,6 +565,9 @@ void vending_reopen( map_session_data& sd )
 
 		sd.state.prevend = 1; // Set him into a hacked prevend state
 		sd.state.autotrade = 1;
+#ifdef Pandas_Struct_Autotrade_Extend
+		sd.state.autotrade |= AUTOTRADE_VENDING;
+#endif // Pandas_Struct_Autotrade_Extend
 
 		// Make sure abort all NPCs
 		npc_event_dequeue(&sd);
@@ -598,7 +614,12 @@ void do_init_vending_autotrade(void)
 		if (Sql_Query(mmysql_handle,
 			"SELECT `id`, `account_id`, `char_id`, `sex`, `title`, `body_direction`, `head_direction`, `sit` "
 			"FROM `%s` "
+		#ifndef Pandas_Struct_Autotrade_Extend
 			"WHERE `autotrade` = 1 AND (SELECT COUNT(`vending_id`) FROM `%s` WHERE `vending_id` = `id`) > 0 "
+		#else
+			// 兼容旧版本曾写入 3 的离线露店数据；新建记录会剥离 AUTOTRADE_VENDING 位。
+			"WHERE `autotrade` in (1,3) AND (SELECT COUNT(`vending_id`) FROM `%s` WHERE `vending_id` = `id`) > 0 "
+		#endif // Pandas_Struct_Autotrade_Extend
 			"ORDER BY `id`;",
 			vendings_table, vending_items_table ) != SQL_SUCCESS )
 		{
@@ -628,6 +649,19 @@ void do_init_vending_autotrade(void)
 				Sql_GetData(mmysql_handle, 7, &data, nullptr); at->sit = atoi(data);
 				at->count = 0;
 
+#ifdef Pandas_Player_Suspend_System
+				// 账号已在线则跳过，避免角色已经被挂起系统拉上线导致冲突。
+				if (map_id2sd(at->account_id) != nullptr) {
+					aFree(at);
+					continue;
+				}
+
+				if (chrif_search(at->account_id) != nullptr) {
+					aFree(at);
+					continue;
+				}
+#endif // Pandas_Player_Suspend_System
+
 				if (battle_config.feature_autotrade_direction >= 0)
 					at->dir = battle_config.feature_autotrade_direction;
 				if (battle_config.feature_autotrade_head_direction >= 0)
@@ -639,13 +673,23 @@ void do_init_vending_autotrade(void)
 				CREATE(at->sd, map_session_data, 1); // TODO: Dont use Memory Manager allocation anymore and rely on the C++ container
 				new (at->sd) map_session_data();
 				pc_setnewpc(at->sd, at->account_id, at->char_id, 0, gettick(), at->sex, 0);
+				#ifndef Pandas_Struct_Autotrade_Extend
 				at->sd->state.autotrade = 1|2;
+				#else
+				at->sd->state.autotrade = AUTOTRADE_ENABLED | AUTOTRADE_VENDING;
+				#endif // Pandas_Struct_Autotrade_Extend
 				if (battle_config.autotrade_monsterignore)
 					at->sd->state.block_action |= PCBLOCK_IMMUNE;
 				else
 					at->sd->state.block_action &= ~PCBLOCK_IMMUNE;
 				chrif_authreq(at->sd, true);
 				uidb_put(vending_autotrader_db, at->char_id, at);
+
+#ifdef Pandas_Struct_Map_Session_Data_Autotrade_Configure
+				at->sd->pandas.at_dir = at->dir;
+				at->sd->pandas.at_head_dir = at->head_dir;
+				at->sd->pandas.at_sit = at->sit;
+#endif // Pandas_Struct_Map_Session_Data_Autotrade_Configure
 			}
 			Sql_FreeResult(mmysql_handle);
 
@@ -699,6 +743,19 @@ void do_init_vending_autotrade(void)
 		Sql_ShowDebug(mmysql_handle);
 	}
 }
+
+#ifdef Pandas_Fix_When_Relogin_Then_Clear_Autotrade_Store
+void vending_autotrader_cleardb(map_session_data* sd)
+{
+	nullpo_retv(sd);
+
+	if (Sql_Query(mmysql_handle,
+		"DELETE FROM `%s` WHERE `account_id` = %d;",
+		vendings_table, sd->status.account_id) != SQL_SUCCESS) {
+		Sql_ShowDebug(mmysql_handle);
+	}
+}
+#endif // Pandas_Fix_When_Relogin_Then_Clear_Autotrade_Store
 
 /**
  * Remove an autotrader's data

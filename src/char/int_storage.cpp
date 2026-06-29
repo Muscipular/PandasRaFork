@@ -154,6 +154,7 @@ bool mapif_load_guild_storage(int32 fd,uint32 account_id,int32 guild_id, char fl
 		Sql_ShowDebug(sql_handle);
 	else if( Sql_NumRows(sql_handle) > 0 )
 	{// guild exists
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 		WFIFOHEAD(fd, sizeof(struct s_storage)+13);
 		WFIFOW(fd,0) = 0x3818;
 		WFIFOW(fd,2) = sizeof(struct s_storage)+13;
@@ -162,16 +163,35 @@ bool mapif_load_guild_storage(int32 fd,uint32 account_id,int32 guild_id, char fl
 		WFIFOB(fd,12) = flag; //1 open storage, 0 don't open
 		guild_storage_fromsql(guild_id, (struct s_storage*)WFIFOP(fd,13));
 		WFIFOSET(fd, WFIFOW(fd,2));
+#else
+		WFIFOHEAD(fd, sizeof(struct s_storage)+13+2);
+		WFIFOW(fd,0) = 0x3818;
+		WFIFOL(fd,2) = sizeof(struct s_storage)+13+2;
+		WFIFOL(fd,4 + 2) = account_id;
+		WFIFOL(fd,8 + 2) = guild_id;
+		WFIFOB(fd,12 + 2) = flag; //1 open storage, 0 don't open
+		guild_storage_fromsql(guild_id, (struct s_storage*)WFIFOP(fd,13 + 2));
+		WFIFOSET(fd, WFIFOL(fd,2));
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 		return true;
 	}
 	// guild does not exist
 	Sql_FreeResult(sql_handle);
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 	WFIFOHEAD(fd, 12);
 	WFIFOW(fd,0) = 0x3818;
 	WFIFOW(fd,2) = 12;
 	WFIFOL(fd,4) = account_id;
 	WFIFOL(fd,8) = 0;
 	WFIFOSET(fd, 12);
+#else
+	WFIFOHEAD(fd, 12 + 2);
+	WFIFOW(fd,0) = 0x3818;
+	WFIFOL(fd,2) = 12 + 2;
+	WFIFOL(fd,4 + 2) = account_id;
+	WFIFOL(fd,8 + 2) = 0;
+	WFIFOSET(fd, 12 + 2);
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 	return false;
 }
 
@@ -203,6 +223,7 @@ bool mapif_parse_SaveGuildStorage(int32 fd)
 	int32 guild_id;
 	int32 len;
 
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 	guild_id = RFIFOL(fd,8);
 	len = RFIFOW(fd,2);
 
@@ -224,6 +245,29 @@ bool mapif_parse_SaveGuildStorage(int32 fd)
 		Sql_FreeResult(sql_handle);
 	}
 	mapif_save_guild_storage_ack(fd, RFIFOL(fd,4), guild_id, 1);
+#else
+	guild_id = RFIFOL(fd, 8 + 2);
+	len = RFIFOL(fd, 2);
+
+	if( sizeof(struct s_storage) != len - 12 - 2 )
+	{
+		ShowError("inter storage: data size error %" PRIuPTR " != %d\n", sizeof(struct s_storage), len - 12 - 2);
+	}
+	else
+	{
+		if( SQL_ERROR == Sql_Query(sql_handle, "SELECT `guild_id` FROM `%s` WHERE `guild_id`='%d'", schema_config.guild_db, guild_id) )
+			Sql_ShowDebug(sql_handle);
+		else if( Sql_NumRows(sql_handle) > 0 )
+		{// guild exists
+			Sql_FreeResult(sql_handle);
+			guild_storage_tosql(guild_id, (struct s_storage*)RFIFOP(fd,12 + 2));
+			mapif_save_guild_storage_ack(fd, RFIFOL(fd,4 + 2), guild_id, 0);
+			return false;
+		}
+		Sql_FreeResult(sql_handle);
+	}
+	mapif_save_guild_storage_ack(fd, RFIFOL(fd,4 + 2), guild_id, 1);
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 	return true;
 }
 
@@ -410,8 +454,9 @@ bool mapif_parse_itembound_retrieve(int32 fd)
  * @param result
  */
 void mapif_storage_data_loaded(int32 fd, uint32 account_id, char type, struct s_storage* entries, bool result) {
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 	uint16 size = sizeof(struct s_storage) + 10;
-	
+
 	WFIFOHEAD(fd, size);
 	WFIFOW(fd, 0) = 0x388a;
 	WFIFOW(fd, 2) = size;
@@ -420,6 +465,18 @@ void mapif_storage_data_loaded(int32 fd, uint32 account_id, char type, struct s_
 	WFIFOB(fd, 9) = result;
 	memcpy(WFIFOP(fd, 10), entries, sizeof(struct s_storage));
 	WFIFOSET(fd, size);
+#else
+	uint32 size = sizeof(struct s_storage) + 10 + 2;
+
+	WFIFOHEAD(fd, size);
+	WFIFOW(fd, 0) = 0x388a;
+	WFIFOL(fd, 2) = size;
+	WFIFOB(fd, 4 + 2) = type;
+	WFIFOL(fd, 5 + 2) = account_id;
+	WFIFOB(fd, 9 + 2) = result;
+	memcpy(WFIFOP(fd, 10 + 2), entries, sizeof(struct s_storage));
+	WFIFOSET(fd, size);
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 }
 
 /**
@@ -448,6 +505,7 @@ void mapif_storage_saved(int32 fd, uint32 account_id, uint32 char_id, bool succe
  * @param fd
  */
 bool mapif_parse_StorageLoad(int32 fd) {
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 	uint32 aid, cid;
 	int32 type;
 	uint8 stor_id, mode;
@@ -480,6 +538,46 @@ bool mapif_parse_StorageLoad(int32 fd) {
 
 	mapif_storage_data_loaded(fd, aid, type, &stor, res);
 	return true;
+#else
+	uint32 aid, cid;
+	int32 type;
+	uint8 stor_id, mode;
+	struct s_storage* stor = (struct s_storage*)aMalloc(sizeof(struct s_storage));
+	bool res = true;
+
+	type = RFIFOB(fd, 2);
+	aid = RFIFOL(fd, 3);
+	cid = RFIFOL(fd, 7);
+	stor_id = RFIFOB(fd, 11);
+
+	memset(stor, 0, sizeof(struct s_storage));
+	stor->stor_id = stor_id;
+
+	//ShowInfo("Loading storage for AID=%d.\n", aid);
+	switch (type) {
+		case TABLE_INVENTORY: res = inventory_fromsql(cid, stor); break;
+		case TABLE_STORAGE:
+			if (!interServerDb.exists(stor_id)) {
+				ShowError("Invalid storage with id %d\n", stor_id);
+				if (stor) aFree(stor);
+				return false;
+			}
+			res = storage_fromsql(aid, stor);
+			break;
+		case TABLE_CART:      res = cart_fromsql(cid, stor);      break;
+		default:
+			if (stor) aFree(stor);
+			return false;
+	}
+
+	mode = RFIFOB(fd, 12);
+	stor->state.put = (mode&STOR_MODE_PUT) ? 1 : 0;
+	stor->state.get = (mode&STOR_MODE_GET) ? 1 : 0;
+
+	mapif_storage_data_loaded(fd, aid, type, stor, res);
+	if (stor) aFree(stor);
+	return true;
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 }
 
 /**
@@ -488,6 +586,7 @@ bool mapif_parse_StorageLoad(int32 fd) {
  * @param fd
  */
 bool mapif_parse_StorageSave(int32 fd) {
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 	int32 aid, cid, type;
 	struct s_storage stor;
 	bool res = false;
@@ -516,6 +615,42 @@ bool mapif_parse_StorageSave(int32 fd) {
 	}
 	mapif_storage_saved(fd, aid, cid, res, type, stor.stor_id);
 	return true;
+#else
+	int32 aid, cid, type;
+	struct s_storage* stor = (struct s_storage*)aMalloc(sizeof(struct s_storage));
+	bool res = false;
+
+	type = RFIFOB(fd, 4 + 2);
+	aid = RFIFOL(fd, 5 + 2);
+	cid = RFIFOL(fd, 9 + 2);
+
+	memset(stor, 0, sizeof(struct s_storage));
+	memcpy(stor, RFIFOP(fd, 13 + 2), sizeof(struct s_storage));
+
+	//ShowInfo("Saving storage data for AID=%d.\n", aid);
+	switch(type){
+		case TABLE_INVENTORY:
+			res = inventory_tosql(cid, stor) == 0;
+			break;
+		case TABLE_STORAGE:
+			if( !interServerDb.exists( stor->stor_id ) ){
+				ShowError( "Invalid storage with id %d\n", stor->stor_id );
+				if (stor) aFree(stor);
+				return false;
+			}
+			res = storage_tosql(aid, stor) == 0;
+			break;
+		case TABLE_CART:
+			res = cart_tosql(cid, stor) == 0;
+			break;
+		default:
+			if (stor) aFree(stor);
+			return false;
+	}
+	mapif_storage_saved(fd, aid, cid, res, type, stor->stor_id);
+	if (stor) aFree(stor);
+	return true;
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 }
 
 

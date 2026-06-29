@@ -568,6 +568,13 @@ bool intif_send_guild_storage(uint32 account_id, struct s_storage *gstor)
 {
 	if (CheckForCharServer())
 		return false;
+
+#ifdef Pandas_Fix_Storage_DirtyFlag_Override
+	// 保存请求发出后, 若期间又有增删改操作, 对应路径会重新将该标记置为 true.
+	gstor->dirty_when_saving = false;
+#endif // Pandas_Fix_Storage_DirtyFlag_Override
+
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 	WFIFOHEAD(inter_fd,sizeof(struct s_storage)+12);
 	WFIFOW(inter_fd,0) = 0x3019;
 	WFIFOW(inter_fd,2) = (uint16)sizeof(struct s_storage)+12;
@@ -575,6 +582,15 @@ bool intif_send_guild_storage(uint32 account_id, struct s_storage *gstor)
 	WFIFOL(inter_fd,8) = gstor->id;
 	memcpy( WFIFOP(inter_fd,12),gstor, sizeof(struct s_storage) );
 	WFIFOSET(inter_fd,WFIFOW(inter_fd,2));
+#else
+	WFIFOHEAD(inter_fd,sizeof(struct s_storage)+12+2);
+	WFIFOW(inter_fd,0) = 0x3019;
+	WFIFOL(inter_fd,2) = (uint32)sizeof(struct s_storage)+12+2;
+	WFIFOL(inter_fd,4 + 2) = account_id;
+	WFIFOL(inter_fd,8 + 2) = gstor->id;
+	memcpy( WFIFOP(inter_fd,12 + 2),gstor, sizeof(struct s_storage) );
+	WFIFOSET(inter_fd,WFIFOL(inter_fd,2));
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 	return true;
 }
 
@@ -1492,16 +1508,23 @@ int32 intif_parse_LoadGuildStorage(int32 fd)
 	struct s_storage *gstor;
 	map_session_data *sd;
 	int32 guild_id, flag;
+#ifdef Pandas_Unlock_Storage_Capacity_Limit
+	const int32 packet_offset = 2;
+	int32 packet_len = RFIFOL(fd,2);
+#else
+	const int32 packet_offset = 0;
+	int32 packet_len = RFIFOW(fd,2);
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 
-	guild_id = RFIFOL(fd,8);
-	flag = RFIFOL(fd,12);
+	guild_id = RFIFOL(fd,8 + packet_offset);
+	flag = RFIFOL(fd,12 + packet_offset);
 	if (guild_id <= 0)
 		return 0;
 
-	sd = map_id2sd( RFIFOL(fd,4) );
+	sd = map_id2sd( RFIFOL(fd,4 + packet_offset) );
 	if (flag){ //If flag != 0, we attach a player and open the storage
 		if(sd == nullptr){
-			ShowError("intif_parse_LoadGuildStorage: user not found (AID: %d)\n",RFIFOL(fd,4));
+			ShowError("intif_parse_LoadGuildStorage: user not found (AID: %d)\n",RFIFOL(fd,4 + packet_offset));
 			return 0;
 		}
 	}
@@ -1518,13 +1541,22 @@ int32 intif_parse_LoadGuildStorage(int32 fd)
 		ShowWarning("intif_parse_LoadGuildStorage: received storage for an already modified non-saved storage! (User %d:%d)\n", flag?sd->status.account_id:1, flag?sd->status.char_id:1);
 		return 0;
 	}
-	if (RFIFOW(fd,2)-13 != sizeof(struct s_storage)) {
-		ShowError("intif_parse_LoadGuildStorage: data size error %d %" PRIuPTR "\n",RFIFOW(fd,2)-13 , sizeof(struct s_storage));
+	if (packet_len - 13 - packet_offset != sizeof(struct s_storage)) {
+		ShowError("intif_parse_LoadGuildStorage: data size error %d %" PRIuPTR "\n", packet_len - 13 - packet_offset, sizeof(struct s_storage));
 		gstor->status = false;
 		return 0;
 	}
 
-	memcpy(gstor,RFIFOP(fd,13),sizeof(struct s_storage));
+	memcpy(gstor,RFIFOP(fd,13 + packet_offset),sizeof(struct s_storage));
+
+#ifdef Pandas_ScriptCommand_GetInventoryList
+	if (sd && sd->st && sd->npc_id) {
+		if (sd->st->waiting_guild_storage && sd->st->state == RERUNLINE) {
+			npc_scriptcont(sd, sd->npc_id, false);
+			return 1;
+		}
+	}
+#endif // Pandas_ScriptCommand_GetInventoryList
 	if( flag )
 		storage_guild_storageopen(sd);
 
@@ -3424,8 +3456,15 @@ void intif_parse_itembound_store2gstorage(int32 fd) {
  */
 static bool intif_parse_StorageReceived(int32 fd)
 {
-	char type =  RFIFOB(fd,4);
-	uint32 account_id = RFIFOL(fd, 5);
+#ifdef Pandas_Unlock_Storage_Capacity_Limit
+	const int32 packet_offset = 2;
+	int32 packet_len = RFIFOL(fd,2);
+#else
+	const int32 packet_offset = 0;
+	int32 packet_len = RFIFOW(fd,2);
+#endif // Pandas_Unlock_Storage_Capacity_Limit
+	char type =  RFIFOB(fd,4 + packet_offset);
+	uint32 account_id = RFIFOL(fd, 5 + packet_offset);
 	map_session_data *sd = map_id2sd(account_id);
 	struct s_storage *stor, *p; //storage
 	size_t sz_stor = sizeof(struct s_storage);
@@ -3435,12 +3474,12 @@ static bool intif_parse_StorageReceived(int32 fd)
 		return false;
 	}
 
-	if (!RFIFOB(fd, 9)) {
+	if (!RFIFOB(fd, 9 + packet_offset)) {
 		ShowError("intif_parse_StorageReceived: Failed to load! (AID: %d, type: %d)\n", account_id, type);
 		return false;
 	}
 
-	p = (struct s_storage *)RFIFOP(fd,10);
+	p = (struct s_storage *)RFIFOP(fd,10 + packet_offset);
 
 	switch (type) { 
 		case TABLE_INVENTORY:
@@ -3469,8 +3508,8 @@ static bool intif_parse_StorageReceived(int32 fd)
 			return false;
 		}
 	}
-	if (RFIFOW(fd,2)-10 != sz_stor) {
-		ShowError("intif_parse_StorageReceived: data size error %d %" PRIuPTR "\n",RFIFOW(fd,2)-10 , sz_stor);
+	if (packet_len - 10 - packet_offset != sz_stor) {
+		ShowError("intif_parse_StorageReceived: data size error %d %" PRIuPTR "\n", packet_len - 10 - packet_offset, sz_stor);
 		stor->status = false;
 		return false;
 	}
@@ -3510,7 +3549,13 @@ static bool intif_parse_StorageReceived(int32 fd)
 
 		case TABLE_CART:
 			pc_check_available_item(sd, ITMCHK_CART);
+#ifndef Pandas_Fix_Autotrade_HeadView_Missing
+	#ifndef Pandas_Struct_Autotrade_Extend
 			if (sd->state.autotrade) {
+	#else
+			if ((sd->state.autotrade & AUTOTRADE_VENDING) ||
+				(sd->state.autotrade & AUTOTRADE_BUYINGSTORE)) {
+	#endif // Pandas_Struct_Autotrade_Extend
 				clif_parse_LoadEndAck(sd->fd, sd);
 				sd->autotrade_tid = add_timer(gettick() + battle_config.feature_autotrade_open_delay, pc_autotrade_timer, sd->id, 0);
 			}else if( sd->state.prevend ){
@@ -3522,6 +3567,17 @@ static bool intif_parse_StorageReceived(int32 fd)
 					sd->state.pending_vending_ui = false;
 				}
 			}
+#else
+			if( sd->state.prevend ){
+				clif_clearcart(sd->fd);
+				clif_cartlist(sd);
+				// Only open the vending UI, if it has not been opened already
+				if (sd->state.pending_vending_ui) {
+					clif_openvendingreq( *sd, sd->vend_skill_lv + 2 );
+					sd->state.pending_vending_ui = false;
+				}
+			}
+#endif // Pandas_Fix_Autotrade_HeadView_Missing
 			break;
 
 		case TABLE_STORAGE:
@@ -3538,6 +3594,30 @@ static bool intif_parse_StorageReceived(int32 fd)
 	}
 	return true;
 }
+
+#ifdef Pandas_ScriptCommand_GetInventoryList
+// 在 intif_parse_StorageReceived 之后继续等待扩充仓库数据的脚本.
+static bool intif_parse_StorageReceived_hook(int32 fd) {
+	bool result = intif_parse_StorageReceived(fd);
+#ifdef Pandas_Unlock_Storage_Capacity_Limit
+	const int32 packet_offset = 2;
+#else
+	const int32 packet_offset = 0;
+#endif // Pandas_Unlock_Storage_Capacity_Limit
+	uint32 account_id = RFIFOL(fd, 5 + packet_offset);
+	map_session_data* sd = map_id2sd(account_id);
+
+	if (!sd || !sd->st || !sd->npc_id) {
+		return result;
+	}
+
+	if (sd->st->waiting_premium_storage && sd->st->state == RERUNLINE) {
+		npc_scriptcont(sd, sd->npc_id, false);
+	}
+
+	return result;
+}
+#endif // Pandas_ScriptCommand_GetInventoryList
 
 /**
  * Save inventory/cart/storage data for a player
@@ -3570,9 +3650,16 @@ static void intif_parse_StorageSaved(int32 fd)
 						}
 					}
 
+					#ifndef Pandas_Fix_Storage_DirtyFlag_Override
 					if( stor ){
 						stor->dirty = false;
 					}
+					#else
+					// 只有在保存期间没有任何增删改操作, 才能将 dirty 标记设置为 false.
+					if (stor && !stor->dirty_when_saving) {
+						stor->dirty = false;
+					}
+					#endif // Pandas_Fix_Storage_DirtyFlag_Override
 				}
 				break;
 			case TABLE_CART: // cart
@@ -3597,12 +3684,19 @@ static void intif_parse_StorageSaved(int32 fd)
  * Receive storage information
  **/
 void intif_parse_StorageInfo_recv(int32 fd) {
-	int32 size = sizeof(struct s_storage_table), count = (RFIFOW(fd, 2) - 4) / size;
+#ifdef Pandas_Unlock_Storage_Capacity_Limit
+	const int32 packet_offset = 2;
+	int32 packet_len = RFIFOL(fd, 2);
+#else
+	const int32 packet_offset = 0;
+	int32 packet_len = RFIFOW(fd, 2);
+#endif // Pandas_Unlock_Storage_Capacity_Limit
+	int32 size = sizeof(struct s_storage_table), count = (packet_len - 4 - packet_offset) / size;
 
 	storage_db.clear();
 
 	for( int32 i = 0; i < count; i++ ){
-		struct s_storage_table* ptr = (struct s_storage_table*)RFIFOP( fd, 4 + size * i );
+		struct s_storage_table* ptr = (struct s_storage_table*)RFIFOP( fd, 4 + packet_offset + size * i );
 		std::shared_ptr<struct s_storage_table> storage = std::make_shared<struct s_storage_table>();
 
 		safestrncpy( storage->name, ptr->name, sizeof( storage->name ) );
@@ -3649,7 +3743,7 @@ bool intif_storage_request( const map_session_data* sd, enum storage_type type, 
  * @param stor: Storage data
  * @ return false - error, true - message sent
  */
-bool intif_storage_save( const map_session_data* sd, const s_storage* stor )
+bool intif_storage_save( const map_session_data* sd, s_storage* stor )
 {
 	int32 stor_size = sizeof(struct s_storage);
 
@@ -3659,6 +3753,12 @@ bool intif_storage_save( const map_session_data* sd, const s_storage* stor )
 	if (CheckForCharServer())
 		return false;
 
+#ifdef Pandas_Fix_Storage_DirtyFlag_Override
+	// 保存请求发出后, 若期间又有增删改操作, 对应路径会重新将该标记置为 true.
+	stor->dirty_when_saving = false;
+#endif // Pandas_Fix_Storage_DirtyFlag_Override
+
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 	WFIFOHEAD(inter_fd, stor_size+13);
 	WFIFOW(inter_fd, 0) = 0x308b;
 	WFIFOW(inter_fd, 2) = stor_size+13;
@@ -3667,6 +3767,16 @@ bool intif_storage_save( const map_session_data* sd, const s_storage* stor )
 	WFIFOL(inter_fd, 9) = sd->status.char_id;
 	memcpy(WFIFOP(inter_fd, 13), stor, stor_size);
 	WFIFOSET(inter_fd, stor_size+13);
+#else
+	WFIFOHEAD(inter_fd, stor_size+13+2);
+	WFIFOW(inter_fd, 0) = 0x308b;
+	WFIFOL(inter_fd, 2) = stor_size+13+2;
+	WFIFOB(inter_fd, 4 + 2) = stor->type;
+	WFIFOL(inter_fd, 5 + 2) = sd->status.account_id;
+	WFIFOL(inter_fd, 9 + 2) = sd->status.char_id;
+	memcpy(WFIFOP(inter_fd, 13 + 2), stor, stor_size);
+	WFIFOSET(inter_fd, stor_size+13+2);
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 	return true;
 }
 
@@ -3775,7 +3885,17 @@ int32 intif_parse(int32 fd)
 	if(packet_len==-1){
 		if(RFIFOREST(fd)<4)
 			return 2;
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 		packet_len = RFIFOW(fd,2);
+#else
+		if( cmd == 0x3818 || cmd == 0x388a || cmd == 0x388c ){
+			if( RFIFOREST(fd) < 6 )
+				return 2;
+			packet_len = RFIFOL(fd,2);
+		}
+		else
+			packet_len = RFIFOW(fd,2);
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 	}
 	if((int32)RFIFOREST(fd)<packet_len){
 		return 2;
@@ -3873,7 +3993,11 @@ int32 intif_parse(int32 fd)
 	case 0x3883:	intif_parse_DeletePetOk(fd); break;
 
 	// Storage
+#ifndef Pandas_ScriptCommand_GetInventoryList
 	case 0x388a:	intif_parse_StorageReceived(fd); break;
+#else
+	case 0x388a:	intif_parse_StorageReceived_hook(fd); break;
+#endif // Pandas_ScriptCommand_GetInventoryList
 	case 0x388b:	intif_parse_StorageSaved(fd); break;
 	case 0x388c:	intif_parse_StorageInfo_recv(fd); break;
 

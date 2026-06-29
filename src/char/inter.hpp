@@ -37,6 +37,10 @@ int32 inter_log(const char *fmt,...);
 
 extern uint32 party_share_level;
 
+#ifdef Pandas_InterConfig_HideServerIpAddress
+extern int pandas_inter_hide_server_ipaddress;
+#endif // Pandas_InterConfig_HideServerIpAddress
+
 extern Sql* sql_handle;
 extern Sql* lsql_handle;
 

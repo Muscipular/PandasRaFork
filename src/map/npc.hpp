@@ -18,7 +18,9 @@
 #include "navi.hpp" // navi stuff
 
 struct block_list;
+struct mob_data;
 struct npc_data;
+struct s_item_drop_list;
 struct view_data;
 
 struct npc_timerevent_list {
@@ -155,8 +157,18 @@ enum e_npcv_status : uint8 {
 	NPCVIEW_CLOAK     = NPCVIEW_CLOAKOFF | NPCVIEW_CLOAKON,
 };
 
+#ifdef Pandas_Redeclaration_Struct_Event_Data
+struct event_data {
+	struct npc_data* nd;
+	int32 pos;
+};
+#endif // Pandas_Redeclaration_Struct_Event_Data
+
 struct npc_data : public block_list {
 	struct unit_data ud; //Because they need to be able to move....
+#ifdef Pandas_Struct_Unit_CommonData
+	struct s_unit_common_data ucd;
+#endif // Pandas_Struct_Unit_CommonData
 	struct view_data vd;
 	status_change sc; //They can't have status changes, but.. they want the visual opt values.
 	npc_data *master_nd;
@@ -173,7 +185,7 @@ struct npc_data : public block_list {
 	struct status_data status;
 	uint32 level,stat_point;
 	struct s_npc_params {
-		uint16 str, agi, vit, int_, dex, luk;
+		pec_uint16 str, agi, vit, int_, dex, luk;
 	} params;
 
 	void* chatdb; // pointer to a npc_parse struct (see npc_chat.cpp)
@@ -198,6 +210,11 @@ struct npc_data : public block_list {
 			uint16 count;
 			t_itemid itemshop_nameid; // Item Shop cost item ID
 			char pointshop_str[32]; // Point Shop cost variable name
+#ifdef Pandas_Support_Pointshop_Variable_DisplayName
+			// 提醒: 针对 npc_data.u.shop 中添加的内容, 需要在复制 npc 的时候也同时进行复制
+			// 涉及到的函数有 npc.cpp 的 npc_parse_duplicate 和 copynpc 脚本指令 [Sola丶小克]
+			char pointshop_str_nick[64]; // 用于保存变量的昵称, 以便呈现给玩家
+#endif // Pandas_Support_Pointshop_Variable_DisplayName
 			bool discount;
 		} shop;
 		struct {
@@ -209,6 +226,9 @@ struct npc_data : public block_list {
 			mob_data *md;
 			time_t kill_time;
 			char killer_name[NAME_LENGTH];
+#ifdef Pandas_FuncParams_Mob_MvpTomb_Create
+			int32 killer_gid;
+#endif // Pandas_FuncParams_Mob_MvpTomb_Create
 			int32 spawn_timer;
 		} tomb;
 		struct {
@@ -231,6 +251,22 @@ struct npc_data : public block_list {
 		t_tick last_interaction;
 		int32 removal_tid;
 	} dynamicnpc;
+
+#ifdef Pandas_ScriptCommand_ShowVend
+	struct {
+		char message[NAME_LENGTH + 1];
+		bool show;
+	} vendingboard;
+#endif // Pandas_ScriptCommand_ShowVend
+
+#ifdef Pandas_Struct_Npc_Data_Pandas
+	struct {
+	#ifdef Pandas_Struct_Npc_Data_DestructionStrategy
+		int destruction_strategy;	// 记录当前 NPC 的自毁策略 ( 0 - 不自毁; 1 - 最后一个对话结束时自毁)
+		int destruction_timer = INVALID_TIMER; // 记录当前 NPC 的立刻自毁计时器
+	#endif // Pandas_Struct_Npc_Data_DestructionStrategy
+	} pandas;
+#endif // Pandas_Struct_Npc_Data_Pandas
 
 #ifdef MAP_GENERATOR
 	struct navi_link navi; // for warps and the src of npcs
@@ -1576,8 +1612,801 @@ enum e_job_types
 	JT_ROZ_MQ_MOCLORD,
 	JT_ROZ_MQ_SKULD,
 
+#ifndef Pandas_Update_NPC_Identity_Information
 	JT_NEW_NPC_3RD_END = 19999,
 	NPC_RANGE3_END, // Official: JT_NEW_NPC_3RD_END=19999
+#else
+	JT_EVT_BAPHOMET = 20061,
+	JT_EVT_BAPHO_JR = 20062,
+	JT_EVT_V_WOLF = 20063,
+	JT_EVT_ECLIPSE = 20064,
+	JT_EVT_VOCAL = 20065,
+	JT_EVT_UNGOLIANT = 20066,
+	JT_EVT_GEOGRAPHER = 20067,
+	JT_EVT_MANTIS = 20068,
+	JT_EVT_GRIZZLY = 20069,
+	JT_EVT_KINDOFBEETLE = 20070,
+	JT_EVT_BIGFOOT = 20071,
+	JT_EVT_COCO = 20072,
+	JT_E_SIROMA = 20073,
+	JT_E_MYSTCASE = 20074,
+	JT_E_X_PORING = 20075,
+	JT_MD_MANHOLE = 20112,
+	JT_GOBLIN_KING = 20118,
+	JT_BAD_CATCUMBER = 20119,
+	JT_JP_E_MONSTER_143 = 20157,
+	JT_JP_E_MONSTER_144 = 20158,
+	JT_JP_E_MONSTER_145 = 20159,
+	JT_JP_E_MONSTER_146 = 20160,
+	JT_JP_E_MONSTER_149 = 20163,
+	JT_JP_E_MONSTER_150 = 20164,
+	JT_EXTRA_JOKER = 20175,
+	JT_ERZSEBET = 20176,
+	JT_JENIFFER = 20177,
+	JT_GENERAL_ORC = 20178,
+	JT_SIEGLOUSE = 20179,
+	JT_VH_AMON_RA = 20181,
+	JT_VH_BAPHOMET = 20182,
+	JT_VH_DARK_LORD = 20183,
+	JT_VH_DOPPELGANGER = 20184,
+	JT_VH_DRACULA = 20185,
+	JT_VH_DRAKE = 20186,
+	JT_VH_EDDGA = 20187,
+	JT_VH_GARM = 20188,
+	JT_VH_GOLDEN_BUG = 20189,
+	JT_VH_KNIGHT_OF_WS = 20190,
+	JT_VH_MAYA = 20191,
+	JT_VH_MISTRESS = 20192,
+	JT_VH_MOONLIGHT = 20193,
+	JT_VH_ORC_LORD = 20194,
+	JT_VH_ORK_HERO = 20195,
+	JT_VH_OSIRIS = 20196,
+	JT_VH_PHARAOH = 20197,
+	JT_VH_PHREEONI = 20198,
+	JT_VH_TAO_GUNKA = 20199,
+	JT_VH_TURTLE_GENERAL = 20200,
+	JT_VH_B_SEYREN = 20201,
+	JT_VH_B_HARWORD = 20202,
+	JT_VH_B_EREMES = 20203,
+	JT_VH_B_KATRINN = 20204,
+	JT_VH_B_MAGALETA = 20205,
+	JT_VH_LORD_OF_DEATH = 20206,
+	JT_VH_ENTWEIHEN = 20207,
+	JT_VH_NAGHT_SIEGER = 20208,
+	JT_VH_DETALE = 20209,
+	JT_VH_THANATOS = 20210,
+	JT_VH_APOCALIPS_H = 20211,
+	JT_VH_KIEL_ = 20212,
+	JT_VH_RANDGRIS = 20213,
+	JT_VH_RSX_0806 = 20214,
+	JT_VH_B_YGNIZEM = 20215,
+	JT_VH_ATROCE = 20216,
+	JT_VH_BEELZEBUB_ = 20217,
+	JT_VH_FALLINGBISHOP = 20218,
+	JT_VH_GLOOM_U_N = 20219,
+	JT_VH_IFRIT = 20220,
+	JT_VH_KTULLANUX = 20221,
+	JT_VH_H_HUNTER_EV = 20222,
+	JT_VH_MM_CUTIE = 20223,
+	JT_VH_VENOM_KIMERA = 20224,
+	JT_VH_B_SHECIL = 20225,
+	JT_VH_B_RANDEL = 20226,
+	JT_VH_B_FLAMEL = 20227,
+	JT_VH_B_TRENTINI = 20228,
+	JT_VH_CHARLESTON3 = 20229,
+	JT_VH_GRAND_PERE = 20230,
+	JT_VH_S_NYDHOG = 20231,
+	JT_VH_QUEEN_SCARABA = 20232,
+	JT_VH_KRAKEN = 20233,
+	JT_VH_TIMEHOLDER = 20234,
+	JT_VH_INCAN_SAMURAI = 20235,
+	JT_VH_BACSOJIN = 20236,
+	JT_VH_DARK_S_LORD = 20237,
+	JT_VH_LADY_TANEE = 20238,
+	JT_VH_GOPINICH = 20239,
+	JT_VH_LEAK = 20240,
+	JT_VH_MECHASPIDER = 20241,
+	JT_VH_PYURIEL = 20242,
+	JT_VH_KADES = 20243,
+	JT_VH_GIOIA = 20244,
+	JT_VH_DAEHYON = 20245,
+	JT_VH_B_CELIA = 20246,
+	JT_VH_B_CHEN = 20247,
+	JT_VH_B_ALPHOCCIO = 20248,
+	JT_VH_B_GERTIE = 20249,
+	JT_VH_ENTWEIHEN_R = 20250,
+	JT_VH_ENTWEIHEN_H = 20251,
+	JT_VH_ENTWEIHEN_M = 20252,
+	JT_VH_ENTWEIHEN_S = 20253,
+	JT_VH_MIMIC = 20254,
+	JT_ILL_TEDDY_BEAR_R = 20255,
+	JT_ILL_TEDDY_BEAR_Y = 20256,
+	JT_ILL_TEDDY_BEAR_G = 20257,
+	JT_ILL_TEDDY_BEAR_W = 20258,
+	JT_ILL_TEDDY_BEAR_B = 20259,
+	JT_ILL_TEDDY_BEAR_S = 20260,
+	JT_ILL_PITMAN = 20261,
+	JT_ILL_MINERAL = 20262,
+	JT_ILL_OBSIDIAN = 20263,
+	JT_G_ILL_TEDDY_BEAR_R = 20264,
+	JT_G_ILL_TEDDY_BEAR_Y = 20265,
+	JT_G_ILL_TEDDY_BEAR_G = 20266,
+	JT_G_ILL_TEDDY_BEAR_W = 20267,
+	JT_G_ILL_TEDDY_BEAR_B = 20268,
+	JT_GUILD_SKILL_FLAG = 20269,
+	JT_ILL_TRI_JOINT = 20270,
+	JT_ILL_STALACTIC_GOLEM = 20271,
+	JT_ILL_MEGALITH = 20272,
+	JT_ILL_TAO_GUNKA = 20273,
+	JT_ILL_STONE_SHOOTER = 20274,
+	JT_ILL_WOOTAN_SHOOTER = 20275,
+	JT_ILL_WOOTAN_FIGHTER = 20276,
+	JT_ILL_WOOTAN_DEFENDER = 20277,
+	JT_G_ILL_MEGALITH = 20278,
+	JT_G_ILL_WOOTAN_SHOOTER = 20279,
+	JT_G_ILL_WOOTAN_FIGHTER = 20280,
+	JT_E_DANDY_STAR = 20281,
+	JT_E_PECOPECO = 20332,
+	JT_MD_EL_A17T = 20340,
+	JT_MD_E_EA1L = 20341,
+	JT_MD_E_EA2S = 20342,
+	JT_MD_E_13EN0 = 20343,
+	JT_MD_VENOM_BUG = 20344,
+	JT_MD_CONSTANT = 20345,
+	JT_MD_MIGUEL = 20346,
+	JT_MD_MIGUEL_G = 20347,
+	JT_MD_A013_CAPUT = 20348,
+	JT_MD_A013_DOLOR = 20349,
+	JT_MD_A013_BELLARE = 20350,
+	JT_MD_MANHOLE2 = 20351,
+	JT_MD_POMPOM = 20352,
+	JT_MD_CROB = 20353,
+	JT_E_FINE_DUST = 20354,
+	JT_EP17_1_BELLARE1 = 20355,
+	JT_EP17_1_BELLARE2 = 20356,
+	JT_EP17_1_SANARE1 = 20357,
+	JT_EP17_1_SANARE2 = 20358,
+	JT_EP17_1_PLAGA1 = 20359,
+	JT_EP17_1_PLAGA2 = 20360,
+	JT_EP17_1_DOLOR1 = 20361,
+	JT_EP17_1_DOLOR2 = 20362,
+	JT_EP17_1_VENENUM1 = 20363,
+	JT_EP17_1_VENENUM2 = 20364,
+	JT_EP17_1_TWIN_CAPUT1 = 20365,
+	JT_EP17_1_TWIN_CAPUT2 = 20366,
+	JT_RAYDRIC_H = 20367,
+	JT_RAYDRIC_ARCHER_H = 20368,
+	JT_GARGOYLE_H = 20369,
+	JT_STING_H = 20370,
+	JT_RAGGED_ZOMBIE_H = 20371,
+	JT_BLAZZER_H = 20372,
+	JT_NIGHTMARE_TERROR_H = 20373,
+	JT_DELETER1_H = 20374,
+	JT_DELETER2_H = 20375,
+	JT_EXPLOSION_H = 20376,
+	JT_KAHO_H = 20377,
+	JT_LAVA_GOLEM_H = 20378,
+	JT_ICE_GHOST_H = 20379,
+	JT_FLAME_GHOST_H = 20380,
+	JT_EP17_1_R4885_BESTIA = 20381,
+	JT_G_TWIN_CAPUT2 = 20382,
+	JT_MD_GH_KING_SCHMIDT = 20385,
+	JT_MD_GH_KING_SCHMIDT_N = 20386,
+	JT_MD_GH_KING_SCHMIDT_H = 20387,
+	JT_MD_GH_KHALITZBURG = 20388,
+	JT_MD_GH_KHALITZBURG_H = 20389,
+	JT_MD_GH_WHITEKNIGHT = 20390,
+	JT_MD_GH_WHITEKNIGHT_H = 20391,
+	JT_MD_GH_ALICE_G = 20392,
+	JT_MD_GH_ROOT_G = 20393,
+	JT_MD_GH_BLOODY_KNIGHT = 20394,
+	JT_MUSPELLSKOLL_H = 20419,
+	JT_WANDER_MAN_H = 20420,
+	JT_BRINARANEA_H = 20421,
+	JT_DARK_LORD_H = 20422,
+	JT_BACSOJIN2 = 20423,
+	JT_MOONLIGHT2 = 20424,
+	JT_PHREEONI2 = 20425,
+	JT_MD_MANHOLE3 = 20426,
+	JT_G_BONE_FERUS = 20516,
+	JT_G_BONE_ACIDUS = 20517,
+	JT_E_MD_LUDE = 20518,
+	JT_E_MD_JACK_GAINT = 20519,
+	JT_ILL_BAPHOMET = 20520,
+	JT_ILL_ANDREA = 20521,
+	JT_ILL_ANES = 20522,
+	JT_ILL_SILVANO = 20523,
+	JT_ILL_CECILIA = 20524,
+	JT_ILL_BAPHOMET_J = 20525,
+	JT_ILL_SIDE_WINDER = 20526,
+	JT_ILL_HUNTER_FLY = 20527,
+	JT_ILL_MANTIS = 20528,
+	JT_ILL_GHOSTRING = 20529,
+	JT_ILL_KILLER_MANTIS = 20530,
+	JT_ILL_POPORING = 20531,
+	JT_ILL_STEM_WORM = 20532,
+	JT_G_ILL_BAPHOMET_J = 20533,
+	JT_G_REGINLEIF = 20534,
+	JT_G_INGRID = 20535,
+	JT_MD_ED_B_YGNIZEM = 20536,
+	JT_MD_ED_YGNIZEM = 20537,
+	JT_MD_ED_EREND = 20538,
+	JT_MD_ED_ARMAIA = 20539,
+	JT_MD_ED_EREMES = 20540,
+	JT_MD_ED_LGTHIGHGUARD = 20541,
+	JT_MD_ED_LGTGUARD = 20542,
+	JT_MD_ED_M_SCIENCE = 20543,
+	JT_G_MINERAL_R = 20558,
+	JT_G_MINERAL_P = 20559,
+	JT_G_MINERAL_G = 20560,
+	JT_G_MINERAL_W = 20561,
+	JT_HIDDEN_MOB8 = 20562,
+	JT_MISSING_OCTOPIG = 20569,
+	JT_SAECOM = 20570,
+	JT_ORK_HERO2 = 20571,
+	JT_MD_C_HEMEL = 20572,
+	JT_MD_C_AMDARAIS = 20573,
+	JT_MD_C_WHITEKNIGHT = 20574,
+	JT_MD_C_CORRUPTION_ROOT = 20575,
+	JT_MD_C_KHALITZBURG = 20576,
+	JT_MD_C_RAYDRIC = 20577,
+	JT_MD_C_RAYDRIC_ARCHER = 20578,
+	JT_MD_C_ZOMBIE = 20579,
+	JT_MD_C_GHOUL = 20580,
+	JT_MD_C_THORN = 20581,
+	JT_MD_MANHOLE4 = 20582,
+	JT_MD_C_WHITEKNIGHT_G = 20583,
+	JT_MD_C_KHALITZBURG_G = 20584,
+	JT_MD_C_RAY_ARCHER_G = 20585,
+	JT_SWING_TALE = 20589,
+	JT_PAPARE = 20591,
+	JT_POISONOUS = 20592,
+	JT_TOXIOUS = 20593,
+	JT_MINERAL_G = 20594,
+	JT_MINERAL_R = 20595,
+	JT_MINERAL_W = 20596,
+	JT_MINERAL_P = 20597,
+	JT_JEWELIANT = 20598,
+	JT_G_JEWELIANT = 20599,
+	JT_JEWEL = 20600,
+	JT_JUNGOLIANT = 20601,
+	JT_PORCELLIO_W = 20602,
+	JT_ABYSSMAN = 20603,
+	JT_ANGELGOLT = 20604,
+	JT_ANGELGOLT2 = 20605,
+	JT_HOLY_FRUS = 20606,
+	JT_HOLY_SKOGUL = 20607,
+	JT_PLASMA_ARCH = 20608,
+	JT_PLASMA_SPT = 20609,
+	JT_REGINLEIF = 20610,
+	JT_INGRID = 20611,
+	JT_FERUS_P = 20612,
+	JT_TREASURE_MIMIC = 20613,
+	JT_ACIDUS_B = 20614,
+	JT_ACIDUS_S = 20615,
+	JT_BONE_FERUS = 20616,
+	JT_BONE_ACIDUS = 20617,
+	JT_BONE_DETALE = 20618,
+	JT_GLOOMUNDERNIGHT2 = 20619,
+	JT_MD_REDPEPPER = 20620,
+	JT_MD_REDPEPPER_H = 20621,
+	JT_MD_ASSISTANT = 20622,
+	JT_MD_ASSISTANT_H = 20623,
+	JT_MD_DRY_RAFFLESIA = 20624,
+	JT_MD_DRY_RAFFLESIA_H = 20625,
+	JT_MD_ALNOLDI_EX = 20626,
+	JT_MD_ALNOLDI_EX_H = 20627,
+	JT_EP17_2_ALPHA_MASTER = 20628,
+	JT_EP17_2_BETA_BASIC = 20629,
+	JT_EP17_2_BETA_BASIC_NG = 20630,
+	JT_MD_BETA_SCISSORE_NG = 20631,
+	JT_MD_BETA_SCISSORE_NG_H = 20632,
+	JT_EP17_2_BETA_CLEANER_A = 20633,
+	JT_EP17_2_BETA_CLEANER_B = 20634,
+	JT_EP17_2_BETA_BATHS_A = 20635,
+	JT_EP17_2_BETA_BATHS_B = 20636,
+	JT_EP17_2_BETA_ITEMKEEPER = 20637,
+	JT_EP17_2_BETA_GUARDS = 20638,
+	JT_EP17_2_BETA_GUARDS_NG = 20639,
+	JT_EP17_2_OMEGA_CLEANER = 20640,
+	JT_EP17_2_OMEGA_CLEANER_NG = 20641,
+	JT_MD_SWEETY = 20642,
+	JT_EP17_2_PHEN = 20643,
+	JT_EP17_2_MARC = 20644,
+	JT_EP17_2_SWORD_FISH = 20645,
+	JT_EP17_2_PIRANHA = 20646,
+	JT_EP17_2_BATH_MERMAID = 20647,
+	JT_EP17_2_PITAYA_BOSS = 20648,
+	JT_EP17_2_PITAYA_R = 20649,
+	JT_EP17_2_PITAYA_Y = 20650,
+	JT_EP17_2_PITAYA_B = 20651,
+	JT_EP17_2_PITAYA_V = 20652,
+	JT_EP17_2_PITAYA_G = 20653,
+	JT_G_PITAYA_R = 20654,
+	JT_G_PITAYA_Y = 20655,
+	JT_G_PITAYA_B = 20656,
+	JT_G_PITAYA_V = 20657,
+	JT_G_PITAYA_G = 20658,
+	JT_MD_PITAYA_BOSS = 20659,
+	JT_MD_PITAYA_R = 20660,
+	JT_MD_PITAYA_Y = 20661,
+	JT_MD_PITAYA_B = 20662,
+	JT_MD_PITAYA_V = 20663,
+	JT_MD_PITAYA_G = 20664,
+	JT_MD_VERPORTA = 20665,
+	JT_MD_VERPORTE_H = 20666,
+	JT_MD_SILVA_PAPILIA = 20667,
+	JT_MD_GRAN_PAPILIA = 20668,
+	JT_MD_PAPILA = 20669,
+	JT_MD_PAPILA_H = 20670,
+	JT_MD_PAPILA_RUBA = 20671,
+	JT_MD_PAPILA_RUBA_H = 20672,
+	JT_MD_PAPILA_RUBA2 = 20673,
+	JT_MD_PAPILA_CAE = 20674,
+	JT_MD_PAPILA_CAE_H = 20675,
+	JT_MD_PAPILA_CAE2 = 20676,
+	JT_MD_ARIES = 20677,
+	JT_MD_ARIES_H = 20678,
+	JT_EP17_2_GUARDIAN_PARTS = 20679,
+	JT_EP17_2_HEART_HUNTER = 20680,
+	JT_G_EP17_2_HEART_HUNTER = 20681,
+	JT_EP17_2_HEART_HUNTER_H = 20682,
+	JT_EP17_2_BOOKWORM = 20683,
+	JT_EP17_2_ROAMING_SPLBOOK = 20684,
+	JT_EP17_2_VENENUM3 = 20685,
+	JT_EP17_2_CRAMP = 20686,
+	JT_EP17_2_WATERFALL = 20687,
+	JT_EP17_2_BELLARE3 = 20688,
+	JT_EP17_2_DOLOR3 = 20689,
+	JT_EP17_2_PLASMA_Y = 20690,
+	JT_EP17_2_PLAGA3 = 20691,
+	JT_EP17_2_SANARE3 = 20692,
+	JT_EP17_2_PLASMA_R = 20693,
+	JT_EP17_2_PLASMA_R2 = 20694,
+	JT_E_GARLING = 20695,
+	JT_EP17_2_CHILD_ADMIN1 = 20696,
+	JT_EP17_2_CHILD_ADMIN2 = 20697,
+	JT_G_ASSISTANT = 20698,
+	JT_G_BELLARE3 = 20699,
+	JT_G_BETA_SCISSORE_NG = 20700,
+	JT_EMPATHIZER = 20773,
+	JT_HAPPY_GIVER = 20774,
+	JT_THA_ANGER = 20775,
+	JT_THA_HORROR = 20776,
+	JT_THA_RESENT = 20777,
+	JT_THA_REGRET = 20778,
+	JT_VOID_MIMIC = 20779,
+	JT_BOOK_OF_DEATH = 20780,
+	JT_ELDEST = 20781,
+	JT_CROW_DUKE = 20782,
+	JT_CROW_BARON = 20783,
+	JT_MD_THANATOS = 20784,
+	JT_MD_BROKEN_THANATOS = 20785,
+	JT_MD_THA_BUFF = 20786,
+	JT_MD_EMPATHIZER = 20787,
+	JT_MD_HAPPY_GIVER = 20788,
+	JT_MD_RETRIBUTION = 20789,
+	JT_MD_SHELTER = 20790,
+	JT_MD_SOLACE = 20791,
+	JT_MD_THA_ANGER = 20792,
+	JT_MD_THA_HORROR = 20793,
+	JT_MD_THA_RESENT = 20794,
+	JT_MD_THA_REGRET = 20795,
+	JT_MD_THA_ODIUM = 20796,
+	JT_MD_THA_DESPERO = 20797,
+	JT_MD_THA_MAERO = 20798,
+	JT_MD_THA_DOLOR = 20799,
+	JT_MD_OBSERVATION = 20800,
+	JT_ILL_SROPHO = 20801,
+	JT_ILL_OBEAUNE = 20802,
+	JT_ILL_DEVIACE = 20803,
+	JT_ILL_MARSE = 20804,
+	JT_ILL_MERMAN = 20805,
+	JT_ILL_SEDORA = 20806,
+	JT_ILL_SWORD_FISH = 20807,
+	JT_ILL_STROUF = 20808,
+	JT_ILL_PHEN = 20809,
+	JT_ILL_KING_DRAMOH = 20810,
+	JT_ILL_KRAKEN = 20811,
+	JT_MD_EVENT_HEMEL = 20812,
+	JT_MD_EVENT_AMDARAIS = 20813,
+	JT_EM_DILUVIO = 20816,
+	JT_EM_ARDOR = 20817,
+	JT_EM_PROCELLA = 20818,
+	JT_EM_TERREMOTUS = 20819,
+	JT_EM_SERPENS = 20820,
+	JT_4JOB_VOID = 20821,
+	JT_4JOB_WRAITH = 20822,
+	JT_4JOB_KINGS_NIGHT = 20823,
+	JT_4JOB_AGONY_NIGHT = 20824,
+	JT_4JOB_DEVOTION_NIGHT = 20825,
+	JT_4JOB_ARMED_NIGHT = 20826,
+	JT_4JOB_DOOMK = 20827,
+	JT_4JOB_VERKHASEL = 20828,
+	JT_4JOB_BAPHOMET = 20829,
+	JT_4JOB_H_FALCON = 20830,
+	JT_4JOB_S_FALCON = 20831,
+	JT_4JOB_R_FALCON = 20832,
+	JT_4JOB_WORG = 20833,
+	JT_ABR_BATTLE_WARIOR = 20834,
+	JT_ABR_DUAL_CANNON = 20835,
+	JT_ABR_MOTHER_NET = 20836,
+	JT_ABR_INFINITY = 20837,
+	JT_ILL_ABYSMAL_WITCH = 20843,
+	JT_PRAY_GIVER = 20844,
+	JT_SMILE_GIVER = 20845,
+	JT_MD_HIDDEN_GROUND01 = 20846,
+	JT_MD_HIDDEN_GROUND02 = 20847,
+	JT_SUMMON_WOODENWARRIOR = 20848,
+	JT_SUMMON_WOODEN_FAIRY = 20849,
+	JT_SUMMON_CREEPER = 20850,
+	JT_SUMMON_HELLTREE = 20851,
+	JT_MD_N_ARENA_1 = 20856,
+	JT_MD_N_ARENA_2 = 20857,
+	JT_MD_N_ARENA_3_1 = 20858,
+	JT_MD_N_ARENA_3_2 = 20859,
+	JT_MD_N_ARENA_3_3 = 20860,
+	JT_MD_N_ARENA_4 = 20861,
+	JT_MD_N_ARENA_5 = 20862,
+	JT_MD_N_ARENA_6 = 20863,
+	JT_MD_N_ARENA_7 = 20864,
+	JT_MD_N_ARENA_8 = 20865,
+	JT_MD_N_ARENA_9 = 20866,
+	JT_MD_N_ARENA_10 = 20867,
+	JT_MD_N_ARENA_11 = 20868,
+	JT_MD_N_ARENA_12 = 20869,
+	JT_MD_KANABIAN_N = 20870,
+	JT_MD_ALPHONSE_N = 20871,
+	JT_MD_GEFFEN_FENRIR_N = 20872,
+	JT_WAR_NUT = 20873,
+	JT_4JOB_LETICIA = 20875,
+	JT_4JOB_ACIDUS = 20876,
+	JT_G_ILL_SROPHO = 20877,
+	JT_G_ILL_OBEAUNE = 20878,
+	JT_G_ILL_DEVIACE = 20879,
+	JT_G_ILL_MARSE = 20880,
+	JT_G_ILL_MERMAN = 20881,
+	JT_G_ILL_SEDORA = 20882,
+	JT_G_ILL_SWORD_FISH = 20883,
+	JT_G_ILL_STROUF = 20884,
+	JT_G_ILL_PHEN = 20885,
+	JT_MD_Airboat_Tree = 20886,
+	JT_MD_Airboat_Poring = 20887,
+	JT_MD_Airboat_Worm = 20888,
+	JT_MD_Airboat_LEECH = 20889,
+	JT_MD_Airboat_Mos = 20890,
+	JT_MD_Airboat_Boss = 20891,
+	JT_MD_SAKRAY = 20892,
+	JT_MD_TIARA = 20893,
+	JT_MD_UNDEAD_KNIGHT = 20894,
+	JT_MD_UNDEAD_SOLDIER = 20895,
+	JT_MD_UNDEAD_ARCHER = 20896,
+	JT_MD_UNDEAD_WIZARD = 20897,
+	JT_MD_UNDEAD_MAGICIAN = 20898,
+	JT_MD_UNDEAD_NOBLE = 20899,
+	JT_MD_UNDEAD_SERVANT = 20900,
+	JT_CHIMERA_LAVA = 20920,
+	JT_CHIMERA_FULGOR = 20921,
+	JT_CHIMERA_NAPEO = 20922,
+	JT_CHIMERA_GALENSIS = 20923,
+	JT_CHIMERA_AMITERA = 20924,
+	JT_CHIMERA_LITUS = 20925,
+	JT_CHIMERA_FILLIA = 20926,
+	JT_CHIMERA_VANILAQUS = 20927,
+	JT_CHIMERA_THEONE = 20928,
+	JT_GIANT_CAPUT = 20929,
+	JT_DOLORIAN = 20930,
+	JT_PLAGARION = 20931,
+	JT_DEADRE = 20932,
+	JT_VENEDI = 20933,
+	JT_R001_BESTIA = 20934,
+	JT_GAN_CEANN = 20935,
+	JT_DISGUISER = 20936,
+	JT_BRUTAL_MURDERER = 20937,
+	JT_GHOST_CUBE = 20938,
+	JT_LUDE_GAL = 20939,
+	JT_BLUEMOON_LOLI_RURI = 20940,
+	JT_GROTE = 20941,
+	JT_PIERROTZOIST = 20942,
+	JT_DEATH_WITCH = 20943,
+	JT_MD_BETELGEUSE = 20994,
+	JT_MD_G_DEADSOUL = 20995,
+	JT_MD_NAGHT_SIEGER = 20996,
+	JT_MD_G_ENTWEIHEN_M = 20997,
+	JT_MD_T_JAKK = 20998,
+	JT_MD_T_STONE_SHOOTER = 20999,
+	JT_MD_T_GRIZZLY = 21000,
+	JT_MD_T_STALACTIC_GOLEM = 21001,
+	JT_MD_T_CHIMERA = 21002,
+	JT_MD_T_KARAKASA = 21003,
+	JT_MD_T_RIDEWORD = 21004,
+	JT_MD_T_PARASITE = 21005,
+	JT_MD_T_WRAITH = 21006,
+	JT_MD_T_PETIT_ = 21007,
+	JT_MD_T_WIND_GHOST = 21008,
+	JT_MD_T_CLOCK = 21009,
+	JT_MD_T_RAYDRIC_ARCHER = 21010,
+	JT_MD_T_INCREASE_SOIL = 21011,
+	JT_MD_T_PENOMENA = 21012,
+	JT_MD_T_PETIT = 21013,
+	JT_MD_T_ALARM = 21014,
+	JT_MD_T_ZOMBIE_PRISONER = 21015,
+	JT_MD_T_MARIONETTE = 21016,
+	JT_MD_T_PERMETER = 21017,
+	JT_MD_T_SKEL_PRISONER = 21018,
+	JT_MD_T_OWL_DUKE = 21019,
+	JT_MD_T_DEVIRUCHI = 21020,
+	JT_MD_T_BLOOD_BUTTERFLY = 21021,
+	JT_MD_T_STAPO = 21022,
+	JT_MD_T_EVIL_CLOUD_HERMIT = 21023,
+	JT_MD_T_THE_PAPER = 21024,
+	JT_MD_T_TENGU = 21025,
+	JT_MD_T_ALICE = 21026,
+	JT_MD_T_ANACONDAQ = 21027,
+	JT_MD_T_GARGOYLE = 21028,
+	JT_MD_T_CARAT = 21029,
+	JT_MD_T_STING = 21030,
+	JT_MD_T_GRYPHON = 21031,
+	JT_MD_T_GIBBET = 21032,
+	JT_MD_T_NIGHTMARE_TERROR = 21033,
+	JT_MD_T_ANOLIAN = 21034,
+	JT_MD_T_BLOODY_MURDERER = 21035,
+	JT_MD_T_ALIOT = 21036,
+	JT_MD_T_VENATU = 21037,
+	JT_MD_T_DEATHWORD = 21038,
+	JT_MD_T_PLASMA_B = 21039,
+	JT_MD_T_DIMIK = 21040,
+	JT_MD_T_MINI_DEMON = 21041,
+	JT_MD_T_LEIB_OLMAI = 21042,
+	JT_MD_T_WANDER_MAN = 21043,
+	JT_MD_T_RETRIBUTION = 21044,
+	JT_MD_T_FLAME_SKULL = 21045,
+	JT_MD_T_KNIGHT_OF_ABYSS = 21046,
+	JT_MD_T_BANSHEE = 21047,
+	JT_G_CHIMERA_LAVA = 21048,
+	JT_G_CHIMERA_FULGOR = 21049,
+	JT_G_CHIMERA_NAPEO = 21050,
+	JT_G_CHIMERA_GALENSIS = 21051,
+	JT_G_DISGUISER = 21052,
+	JT_G_BLUEMOON_LOLI_RURI = 21053,
+	JT_G_GROTE = 21054,
+	JT_G_PIERROTZOIST = 21055,
+	JT_G_GIANT_CAPUT = 21056,
+	JT_G_DOLORIAN = 21057,
+	JT_G_PLAGARION = 21058,
+	JT_G_DEADRE = 21059,
+	JT_G_VENEDI = 21060,
+	JT_MD_Airboat_Boss2 = 21061,
+	JT_MD_Airboat_Boss3 = 21062,
+	JT_MD_Airboat_Boss4 = 21063,
+	JT_S_DUMMY_100_SMALL = 21064,
+	JT_S_DUMMY_100_MEDIUM = 21065,
+	JT_S_DUMMY_100_LARGE = 21066,
+	JT_S_DUMMY_100_NOTHING = 21067,
+	JT_S_DUMMY_100_DRAGON = 21068,
+	JT_S_DUMMY_100_ANIMAL = 21069,
+	JT_S_DUMMY_100_HUMAN = 21070,
+	JT_S_DUMMY_100_INSECT = 21071,
+	JT_S_DUMMY_100_FISH = 21072,
+	JT_S_DUMMY_100_DEMON = 21073,
+	JT_S_DUMMY_100_PLANT = 21074,
+	JT_S_DUMMY_100_ANGEL = 21075,
+	JT_S_DUMMY_100_UNDEAD = 21076,
+	JT_S_DUMMY_100_NOTHING2 = 21077,
+	JT_S_DUMMY_100_WATER = 21078,
+	JT_S_DUMMY_100_GROUND = 21079,
+	JT_S_DUMMY_100_FIRE = 21080,
+	JT_S_DUMMY_100_WIND = 21081,
+	JT_S_DUMMY_100_POISON = 21082,
+	JT_S_DUMMY_100_SAINT = 21083,
+	JT_S_DUMMY_100_DARKNESS = 21084,
+	JT_S_DUMMY_100_TELEKINESIS = 21085,
+	JT_S_DUMMY_100_UNDEAD2 = 21086,
+	JT_WANDERING_DUCK = 21089,
+	JT_KIEL_D_01_2 = 21290,
+	JT_EP18_ARMED_VILLAGER01 = 21292,
+	JT_EP18_ARMED_VILLAGER02 = 21293,
+	JT_EP18_ARMED_VILLAGER03 = 21294,
+	JT_EP18_ASH_TOAD = 21295,
+	JT_EP18_RAKEHAND = 21296,
+	JT_EP18_SPARK = 21297,
+	JT_EP18_HOT_MOLAR = 21298,
+	JT_EP18_VOLCARING = 21299,
+	JT_EP18_LAVA_TOAD = 21300,
+	JT_EP18_BURNING_FANG = 21301,
+	JT_EP18_ASHHOPPER = 21302,
+	JT_EP18_ASHRING = 21303,
+	JT_EP18_GREY_WOLF = 21304,
+	JT_EP18_TUMBLE_RING = 21305,
+	JT_EP18_FIREWIND_KITE = 21306,
+	JT_EP18_PHANTOM_WOLF = 21307,
+	JT_EP18_MD_HEARTHUNTER_A = 21308,
+	JT_EP18_MD_THOR_GUARD = 21309,
+	JT_EP18_MD_GUARD_A = 21310,
+	JT_EP18_MD_GUARD_B = 21311,
+	JT_EP18_MD_HEARTHUNTER_R = 21312,
+	JT_EP18_MD_HEARTHUNTER_F = 21313,
+	JT_EP18_MD_SCHULANG = 21314,
+	JT_EP18_MD_DEMI_FREYJA = 21315,
+	JT_EP18_MD_SCHULANG_R = 21316,
+	JT_EP18_MD_DEMI_FREYJA_R = 21317,
+	JT_EP18_MD_SANARE_R = 21318,
+	JT_EP18_MD_HEARTHUNTER_R2 = 21319,
+	JT_EP18_NPC_MARAM = 21320,
+	JT_EP18_NPC_MIRIAM = 21321,
+	JT_EP18_NPC_SUAD = 21322,
+	JT_EP18_GREY_GOAT = 21323,
+	JT_EP18_GREY_WOLF_BABY = 21324,
+	JT_MD_T_MASTERING = 21325,
+	JT_MD_T_VAGABOND_WOLF = 21326,
+	JT_MD_T_VOCAL = 21327,
+	JT_MD_T_GOLDEN_BUG = 21328,
+	JT_MD_T_MISTRESS = 21329,
+	JT_MD_T_MAYA = 21330,
+	JT_MD_T_PHREEONI = 21331,
+	JT_MD_T_DRAKE = 21332,
+	JT_MD_T_MOONLIGHT = 21333,
+	JT_MD_T_BACSOJIN = 21334,
+	JT_MD_T_GOBLIN_LEADER = 21335,
+	JT_MD_T_KOBOLD_LEADER = 21336,
+	JT_MD_T_TURTLE_GENERAL = 21337,
+	JT_MD_T_SAMURAI = 21338,
+	JT_MD_T_TOAD = 21339,
+	JT_MD_T_OSIRIS = 21340,
+	JT_MD_T_PHARAOH = 21341,
+	JT_MD_T_AMON_RA = 21342,
+	JT_MD_T_DARK_SNAKE_LORD = 21343,
+	JT_MD_T_ARCHANGELING = 21344,
+	JT_MD_T_DEVILING = 21345,
+	JT_MD_T_ANGELING = 21346,
+	JT_MD_T_GHOSTRING = 21347,
+	JT_MD_T_B_YGNIZEM = 21348,
+	JT_MD_T_DOPPELGANGER = 21349,
+	JT_MD_T_ATROCE = 21350,
+	JT_MD_T_ORK_HERO = 21351,
+	JT_MD_T_ORC_LORD = 21352,
+	JT_MD_T_BAPHOMET = 21353,
+	JT_MD_T_DARK_LORD = 21354,
+	JT_MD_T_FALLINGBISHOP = 21355,
+	JT_MD_T_IFRIT = 21356,
+	JT_MD_T_RANDGRIS = 21357,
+	JT_MD_T_BEELZEBUB = 21358,
+	JT_MD_T_BEELZEBUB_ = 21359,
+	JT_EP18_MD_SCHULANG_L = 21360,
+	JT_EP18_MD_DEMI_FREYJA_L = 21361,
+	JT_EP18_MD_SANARE_L = 21377,
+	JT_EP18_MD_HEARTHUNTER_L = 21378,
+	JT_G_EP18_LAVA_TOAD = 21379,
+	JT_G_EP18_HOT_MOLAR = 21380,
+	JT_G_EP18_VOLCARING = 21381,
+	JT_E_CHEAP_RAT = 21382,
+	JT_E_SWEETS_DROPS = 21384,
+	JT_ILL_ANDRE = 21386,
+	JT_ILL_SOLDIER_ANDR = 21387,
+	JT_ILL_ANDRE_LARVA = 21388,
+	JT_ILL_DENIRO = 21389,
+	JT_ILL_PIERE = 21390,
+	JT_ILL_ANT_EGG = 21391,
+	JT_ILL_GIEARTH = 21392,
+	JT_ILL_FARMILIAR = 21393,
+	JT_ILL_VITATA = 21394,
+	JT_ILL_MAYA = 21395,
+	JT_G_ILL_ANDRE = 21431,
+	JT_G_ILL_DENIRO = 21432,
+	JT_G_ILL_PIERE = 21433,
+	JT_G_ILL_VITATA = 21435,
+	JT_MD_OTARGET = 21439,
+	JT_MD_XTARGET = 21440,
+	JT_MD_HLGR_HEARTHUNTER = 21441,
+	JT_MD_HLGR_BELLARE = 21442,
+	JT_MD_HLGR_SANARE = 21443,
+	JT_MD_NINJA_GHOST = 21444,
+	JT_MD_HAPPY_CLOUD = 21445,
+	JT_MD_MR_SEO = 21446,
+	JT_MD_SOL = 21447,
+	JT_MD_HO = 21448,
+	JT_MD_SANGOON = 21449,
+	JT_BAPHOMET2 = 21502,
+	JT_EP19_NPC_IWIN = 21513,
+	JT_EP19_NPC_IWIN_SN = 21514,
+	JT_EP19_NPC_IWIN_SY = 21515,
+	JT_EP19_NPC_IWIN_SB = 21516,
+	JT_EP19_NPC_IWIN_SG = 21517,
+	JT_EP19_NPC_IWIN_SR = 21518,
+	JT_EP19_NPC_LEHAR = 21519,
+	JT_EP19_LIMACINA = 21520,
+	JT_EP19_UNFROST_FLOWER = 21521,
+	JT_EP19_CALMARING = 21522,
+	JT_EP19_ICE_STRAW = 21523,
+	JT_EP19_SHINING_SEAWEED = 21524,
+	JT_EP19_ICE_GANGU = 21525,
+	JT_EP19_RGAN_A = 21526,
+	JT_EP19_RGAN_B = 21527,
+	JT_EP19_RGAN_C = 21528,
+	JT_EP19_RGAN_D = 21529,
+	JT_EP19_RGAN_E = 21530,
+	JT_EP19_MD_AQUILA = 21531,
+	JT_EP19_MD_JUNCEA = 21532,
+	JT_EP19_MD_JUNCEA_S = 21533,
+	JT_EP19_MD_RGAN_E = 21534,
+	JT_EP19_MD_RGAN_D = 21535,
+	JT_EP19_MD_HEARTHUNTER_AT = 21536,
+	JT_EP19_LIMACINA_BOSS = 21537,
+	JT_EP19_WASTED_RGAN_A = 21538,
+	JT_EP19_WASTED_RGAN_C = 21539,
+	JT_EP19_CAVE_CALMARING = 21540,
+	JT_EP19_CAVE_FLOWER = 21541,
+	JT_EP19_HALLUCIGENIA = 21542,
+	JT_EP19_HALLUCIGENIA_BABY = 21543,
+	JT_EP19_ONE_EYE_DOLLOCARIS = 21544,
+	JT_EP19_DOLLOCARIS = 21545,
+	JT_MD_COMMON = 21546,
+	JT_M_INCREASE_SOIL = 21547,
+	JT_ECO_CORNUS = 21548,
+	JT_ECO_PINGUICULA = 21549,
+	JT_ECO_HUNTER_FLY = 21550,
+	JT_ECO_ROCKER = 21551,
+	JT_ECO_SAVAGE = 21552,
+	JT_ECO_FLORA = 21553,
+	JT_ECO_HILL_WIND = 21554,
+	JT_ECO_MISTRESS = 21555,
+	JT_ECO_EXPLOSION = 21556,
+	JT_ECO_DELETER = 21557,
+	JT_ECO_JAKK = 21558,
+	JT_ECO_LAVA_GOLEM = 21559,
+	JT_ECO_MAJORUROS = 21560,
+	JT_ECO_HYDRO = 21561,
+	JT_ECO_ACIDUS = 21562,
+	JT_ECO_DETALE = 21563,
+	JT_ECO_ICE_TITAN = 21564,
+	JT_ECO_SIROMA = 21565,
+	JT_ECO_SNOWIER = 21566,
+	JT_ECO_CENTIPEDE = 21567,
+	JT_ECO_AQUA_ELEMENTAL = 21568,
+	JT_ECO_ANGELGOLT = 21569,
+	JT_ECO_RHYNCHO = 21570,
+	JT_ECO_KTULLANUX = 21571,
+	JT_ECO_ANCIENT_MUMMY = 21572,
+	JT_ECO_LUDE = 21573,
+	JT_ECO_RAGGED_ZOMBIE = 21574,
+	JT_ECO_WRAITH = 21575,
+	JT_ECO_FLAME_SKULL = 21576,
+	JT_ECO_BANSHEE = 21577,
+	JT_ECO_KNIGHT_OF_ABYSS = 21578,
+	JT_ECO_LORD_OF_DEATH = 21579,
+	JT_G_BIJOU = 21580,
+	JT_NPC_EDDGA = 21587,
+	JT_EP19_MD_AQUILA_B = 21588,
+	JT_G_EP19_LIMACINA = 21589,
+	JT_EP19_MD_RGAN_ES = 21590,
+	JT_CHEWY_TTEOK = 21598,
+	JT_EP19_HEARTHUNTER_AT = 21599,
+	JT_EP19_RE_RGAN_E = 21600,
+	JT_EP19_ET_RGAN_D = 21601,
+	JT_VR_BOOK_FAIRY = 21616,
+	JT_VR_UNKOWN_MAN = 21617,
+	JT_VR_LADY = 21618,
+	JT_VR_KNIGHT_SILVER = 21619,
+	JT_VR_ELYUMINA = 21620,
+	JT_VR_MD_HHA_RKNT = 21621,
+	JT_VR_MD_HHA_RYGD = 21622,
+	JT_VR_MD_HHA_ACBS = 21623,
+	JT_VR_MD_HHA_RNGR = 21624,
+	JT_VR_MD_HHA_GX = 21625,
+	JT_VR_MD_HHA_SC = 21626,
+	JT_VR_MD_HHA_WR = 21627,
+	JT_VR_MD_LEVI = 21628,
+	JT_VR_MD_LEVI_2 = 21629,
+	JT_WILD_ROSE3 = 21630,
+	JT_BLUEMOON_LOLI_RURI2 = 21631,
+	JT_FARMILIAR2 = 21632,
+	JT_VR_AGNES = 21633,
+	JT_DARK_ILLUSION2 = 23000,
+
+	// 截止 2022-06-13
+	// KRO 最后新的 NPC 定义为: JT_DARK_ILLUSION2 = 23000
+	NPC_RANGE3_END,
+#endif // Pandas_Update_NPC_Identity_Information
 
 	// Unofficial
 	JT_INVISIBLE = 32767,
@@ -1594,9 +2423,7 @@ enum e_job_types
 //Since new npcs are added all the time, the max valid value is the one before the first mob (Scorpion = 1001)
 #define npcdb_checkid(id) ( ( (id) > NPC_RANGE1_START && (id) < NPC_RANGE1_END ) || (id) == JT_HIDDEN_WARP_NPC || ( (id) > NPC_RANGE2_START && (id) < NPC_RANGE2_END ) || (id) == JT_INVISIBLE || ( (id) > NPC_RANGE3_START && (id) < NPC_RANGE3_END ) )
 
-#ifdef PCRE_SUPPORT
 void npc_chat_finalize(npc_data* nd);
-#endif
 
 //Script NPC events.
 enum npce_event : uint8 {
@@ -1609,14 +2436,171 @@ enum npce_event : uint8 {
 	NPCE_KILLPC,
 	NPCE_KILLNPC,
 	NPCE_IDENTIFY,
+	/* Filter 类型的过滤事件，这些事件可以被 processhalt 中断                    */
+#ifdef Pandas_NpcFilter_IDENTIFY
+	NPCF_IDENTIFY,
+#endif // Pandas_NpcFilter_IDENTIFY
+#ifdef Pandas_NpcFilter_ENTERCHAT
+	NPCF_ENTERCHAT,
+#endif // Pandas_NpcFilter_ENTERCHAT
+#ifdef Pandas_NpcFilter_INSERT_CARD
+	NPCF_INSERT_CARD,
+#endif // Pandas_NpcFilter_INSERT_CARD
+#ifdef Pandas_NpcFilter_USE_ITEM
+	NPCF_USE_ITEM,
+#endif // Pandas_NpcFilter_USE_ITEM
+#ifdef Pandas_NpcFilter_USE_SKILL
+	NPCF_USE_SKILL,
+#endif // Pandas_NpcFilter_USE_SKILL
+#ifdef Pandas_NpcFilter_ROULETTE_OPEN
+	NPCF_ROULETTE_OPEN,
+#endif // Pandas_NpcFilter_ROULETTE_OPEN
+#ifdef Pandas_NpcFilter_VIEW_EQUIP
+	NPCF_VIEW_EQUIP,
+#endif // Pandas_NpcFilter_VIEW_EQUIP
+#ifdef Pandas_NpcFilter_EQUIP
+	NPCF_EQUIP,
+#endif // Pandas_NpcFilter_EQUIP
+#ifdef Pandas_NpcFilter_UNEQUIP
+	NPCF_UNEQUIP,
+#endif // Pandas_NpcFilter_UNEQUIP
+#ifdef Pandas_NpcFilter_CHANGETITLE
+	NPCF_CHANGETITLE,
+#endif // Pandas_NpcFilter_CHANGETITLE
+#ifdef Pandas_NpcFilter_SC_START
+	NPCF_SC_START,
+#endif // Pandas_NpcFilter_SC_START
+#ifdef Pandas_NpcFilter_USE_REVIVE_TOKEN
+	NPCF_USE_REVIVE_TOKEN,
+#endif // Pandas_NpcFilter_USE_REVIVE_TOKEN
+#ifdef Pandas_NpcFilter_ONECLICK_IDENTIFY
+	NPCF_ONECLICK_IDENTIFY,
+#endif // Pandas_NpcFilter_ONECLICK_IDENTIFY
+#ifdef Pandas_NpcFilter_GUILDCREATE
+	NPCF_GUILDCREATE,
+#endif // Pandas_NpcFilter_GUILDCREATE
+#ifdef Pandas_NpcFilter_GUILDJOIN
+	NPCF_GUILDJOIN,
+#endif // Pandas_NpcFilter_GUILDJOIN
+#ifdef Pandas_NpcFilter_GUILDLEAVE
+	NPCF_GUILDLEAVE,
+#endif // Pandas_NpcFilter_GUILDLEAVE
+#ifdef Pandas_NpcFilter_PARTYCREATE
+	NPCF_PARTYCREATE,
+#endif // Pandas_NpcFilter_PARTYCREATE
+#ifdef Pandas_NpcFilter_PARTYJOIN
+	NPCF_PARTYJOIN,
+#endif // Pandas_NpcFilter_PARTYJOIN
+#ifdef Pandas_NpcFilter_PARTYLEAVE
+	NPCF_PARTYLEAVE,
+#endif // Pandas_NpcFilter_PARTYLEAVE
+#ifdef Pandas_NpcFilter_DROPITEM
+	NPCF_DROPITEM,
+#endif // Pandas_NpcFilter_DROPITEM
+#ifdef Pandas_NpcFilter_CLICKTOMB
+	NPCF_CLICKTOMB,
+#endif // Pandas_NpcFilter_CLICKTOMB
+#ifdef Pandas_NpcFilter_STORAGE_ADD
+	NPCF_STORAGE_ADD,
+#endif // Pandas_NpcFilter_STORAGE_ADD
+#ifdef Pandas_NpcFilter_STORAGE_DEL
+	NPCF_STORAGE_DEL,
+#endif // Pandas_NpcFilter_STORAGE_DEL
+#ifdef Pandas_NpcFilter_CART_ADD
+	NPCF_CART_ADD,
+#endif // Pandas_NpcFilter_CART_ADD
+#ifdef Pandas_NpcFilter_CART_DEL
+	NPCF_CART_DEL,
+#endif // Pandas_NpcFilter_CART_DEL
+#ifdef Pandas_NpcFilter_FAVORITE_ADD
+	NPCF_FAVORITE_ADD,
+#endif // Pandas_NpcFilter_FAVORITE_ADD
+#ifdef Pandas_NpcFilter_FAVORITE_DEL
+	NPCF_FAVORITE_DEL,
+#endif // Pandas_NpcFilter_FAVORITE_DEL
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 2>
+	/* Event  类型的标准事件，这些事件不能被 processhalt 打断                    */
+#ifdef Pandas_NpcEvent_KILLMVP
+	NPCE_KILLMVP,	// killmvp_event_name	// OnPCKillMvpEvent		// 当玩家杀死 MVP 魔物后触发事件
+#endif // Pandas_NpcEvent_KILLMVP
+#ifdef Pandas_NpcEvent_INSERT_CARD
+	NPCE_INSERT_CARD,	// insert_card_event_name	// OnPCInsertCardEvent		// 当玩家成功插入卡片后触发事件
+#endif // Pandas_NpcEvent_INSERT_CARD
+#ifdef Pandas_NpcEvent_USE_ITEM
+	NPCE_USE_ITEM,	// use_item_event_name	// OnPCUseItemEvent		// 当玩家成功使用非装备类道具后触发事件
+#endif // Pandas_NpcEvent_USE_ITEM
+#ifdef Pandas_NpcEvent_USE_SKILL
+	NPCE_USE_SKILL,	// use_skill_event_name	// OnPCUseSkillEvent		// 当玩家成功使用技能后触发事件
+#endif // Pandas_NpcEvent_USE_SKILL
+#ifdef Pandas_NpcEvent_EQUIP
+	NPCE_EQUIP,	// equip_event_name	// OnPCEquipEvent		// 当玩家成功穿戴一件装备时触发事件
+#endif // Pandas_NpcEvent_EQUIP
+#ifdef Pandas_NpcEvent_UNEQUIP
+	NPCE_UNEQUIP,	// unequip_event_name	// OnPCUnequipEvent		// 当玩家成功脱下一件装备时触发事件
+#endif // Pandas_NpcEvent_UNEQUIP
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 8>
+	/* Express 类型的快速事件，这些事件将会被立刻执行, 不进事件队列                */
+#ifdef Pandas_NpcExpress_STATCALC
+	NPCE_STATCALC,	// statcalc_express_name	// OnPCStatCalcEvent		// 当角色能力被重新计算时触发事件
+#endif // Pandas_NpcExpress_STATCALC
+#ifdef Pandas_NpcExpress_SC_END
+	NPCX_SC_END,	// sc_end_express_name	// OnPCBuffEndExpress		// 当玩家成功解除一个状态(Buff)后触发实时事件
+#endif // Pandas_NpcExpress_SC_END
+#ifdef Pandas_NpcExpress_SC_START
+	NPCX_SC_START,	// sc_start_express_name	// OnPCBuffStartExpress		// 当玩家成功获得一个状态(Buff)后触发实时事件
+#endif // Pandas_NpcExpress_SC_START
+#ifdef Pandas_NpcExpress_ENTERMAP
+	NPCX_ENTERMAP,	// entermap_express_name	// OnPCEnterMapExpress		// 当玩家进入或者改变地图时触发实时事件
+#endif // Pandas_NpcExpress_ENTERMAP
+#ifdef Pandas_NpcExpress_PROGRESSABORT
+	NPCX_PROGRESSABORT,	// progressabort_express_name	// OnPCProgressAbortExpress		// 当 progressbar 进度条被打断时触发实时事件
+#endif // Pandas_NpcExpress_PROGRESSABORT
+#ifdef Pandas_NpcExpress_UNIT_KILL
+	NPCX_UNIT_KILL,	// unit_kill_express_name	// OnUnitKillExpress		// 当某个单位被击杀时触发实时事件
+#endif // Pandas_NpcExpress_UNIT_KILL
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+	NPCX_MOBDROPITEM,	// mobdropitem_express_name	// OnMobDropItemExpress		// 当魔物即将掉落道具时触发实时事件
+#endif // Pandas_NpcExpress_MOBDROPITEM
+#ifdef Pandas_NpcExpress_PCATTACK
+	NPCX_PCATTACK,	// pcattack_express_name	// OnPCAttackExpress		// 当玩家发起攻击并即将进行结算时触发实时事件 [聽風]
+#endif // Pandas_NpcExpress_PCATTACK
+#ifdef Pandas_NpcExpress_MER_CALL
+	NPCX_MER_CALL,	// mer_call_express_name	// OnPCMerCallExpress		// 当玩家成功召唤出佣兵时触发实时事件
+#endif // Pandas_NpcExpress_MER_CALL
+#ifdef Pandas_NpcExpress_MER_LEAVE
+	NPCX_MER_LEAVE,	// mer_leave_express_name	// OnPCMerLeaveExpress		// 当佣兵离开玩家时触发实时事件
+#endif // Pandas_NpcExpress_MER_LEAVE
+#ifdef Pandas_NpcExpress_PC_TALK
+	NPCX_PC_TALK,	// pc_talk_express_name	// OnPCTalkExpress		// 当玩家往聊天框发送信息时触发实时事件 [人鱼姬的思念]
+#endif // Pandas_NpcExpress_PC_TALK
+#ifdef Pandas_NpcExpress_PCHARMED
+	NPCX_PCHARMED,	// pcharmed_express_name	// OnPCHarmedExpress		// 当玩家受到伤害并即将进行结算时触发实时事件 [人鱼姬的思念]
+#endif // Pandas_NpcExpress_PCHARMED
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 14>
 	NPCE_MAX
 };
 
+#ifdef Pandas_NpcEvent_KILLMVP
+void npc_event_aide_killmvp(map_session_data* sd, map_session_data* mvp_sd, mob_data* md);
+#endif // Pandas_NpcEvent_KILLMVP
+#ifdef Pandas_NpcExpress_UNIT_KILL
+void npc_event_aide_unitkill(block_list* src, block_list* target, uint16 skill_id);
+#endif // Pandas_NpcExpress_UNIT_KILL
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+bool npc_express_aide_mobdropitem(mob_data* md, block_list* src, int32 belong_rid, t_itemid nameid, int32 drop_rate, int32 drop_type);
+bool npc_express_aide_mobdropitem(mob_data* md, block_list* src, std::shared_ptr<s_item_drop_list> dlist, t_itemid nameid, int32 drop_rate, int32 drop_type);
+#endif // Pandas_NpcExpress_MOBDROPITEM
 struct view_data* npc_get_viewdata(int32 class_);
 int32 npc_chat_sub(block_list* bl, va_list ap);
 int32 npc_event_dequeue(map_session_data* sd,bool free_script_stack=true);
 int32 npc_event(map_session_data* sd, const char* eventname, int32 ontouch);
 int32 npc_touch_areanpc(map_session_data* sd, int16 m, int16 x, int16 y, npc_data* nd);
+#ifdef Pandas_NpcFilter_STORAGE_ADD
+bool npc_event_aide_storage_add(map_session_data* sd, struct s_storage* store, int32 idx, int32 amount, int32 item_from);
+#endif // Pandas_NpcFilter_STORAGE_ADD
+#ifdef Pandas_NpcFilter_STORAGE_DEL
+bool npc_event_aide_storage_del(map_session_data* sd, struct s_storage* store, int32 idx, int32 amount, int32 item_to);
+#endif // Pandas_NpcFilter_STORAGE_DEL
 int32 npc_touch_area_allnpc(map_session_data* sd, int16 m, int16 x, int16 y);
 int32 npc_touch_areanpc2(mob_data *md); // [Skotlex]
 int32 npc_check_areanpc(int32 flag, int16 m, int16 x, int16 y, int16 range);
@@ -1633,8 +2617,47 @@ void npc_parse_mob2(struct spawn_data* mob);
 npc_data* npc_add_warp(char* name, int16 from_mapid, int16 from_x, int16 from_y, int16 xs, int16 ys, uint16 to_mapindex, int16 to_x, int16 to_y);
 int32 npc_globalmessage(const char* name,const char* mes);
 const char *npc_get_script_event_name(int32 npce_index);
+#ifdef Pandas_Struct_Map_Session_Data_WorkInEvent
+enum npce_event npc_get_script_event_type(const char* eventname);
+#endif // Pandas_Struct_Map_Session_Data_WorkInEvent
+#ifdef Pandas_ScriptEngine_Express
+bool npc_event_is_express(enum npce_event eventtype);
+bool npc_event_is_filter(enum npce_event eventtype);
+bool npc_event_is_realtime(enum npce_event eventtype);
+#endif // Pandas_ScriptEngine_Express
+#ifdef Pandas_Struct_Map_Session_Data_EventHalt
+bool setProcessHalt(map_session_data *sd, enum npce_event event, bool halt = true);
+bool getProcessHalt(map_session_data *sd, enum npce_event event, bool autoreset = true);
+bool npc_script_filter(map_session_data* sd, enum npce_event type);
+bool npc_script_filter(map_session_data* sd, const char* eventname);
+#endif // Pandas_Struct_Map_Session_Data_EventHalt
+#ifdef Pandas_Struct_Map_Session_Data_EventTrigger
+enum npce_trigger : uint16 {
+	EVENT_TRIGGER_NONE = 0x00,
+	EVENT_TRIGGER_DISABLED = 0x01,
+	EVENT_TRIGGER_ONCE = 0x02,
+	EVENT_TRIGGER_EVER = 0x03,
+	EVENT_TRIGGER_MAX
+};
+bool setEventTrigger(map_session_data *sd, enum npce_event event, enum npce_trigger trigger_flag);
+npce_trigger getEventTrigger(map_session_data *sd, enum npce_event event);
+bool isAllowTriggerEvent(map_session_data* sd, enum npce_event event);
+#endif // Pandas_Struct_Map_Session_Data_EventTrigger
 npc_data* npc_duplicate_npc( npc_data& nd, char name[NPC_NAME_LENGTH + 1], int16 mapid, int16 x, int16 y, int32 class_, uint8 dir, int16 xs, int16 ys, map_session_data* owner = nullptr );
 npc_data* npc_duplicate_npc_for_player( npc_data& nd, map_session_data& sd );
+
+#ifdef Pandas_ScriptCommand_Copynpc
+struct DBMap* get_npcname_db_ptr();
+int32* get_npc_script_ptr();
+int32* get_npc_shop_ptr();
+int32* get_npc_warp_ptr();
+
+npc_data* npc_create_npc(int16 m, int16 x, int16 y);
+int32 npc_event_export(npc_data* nd, int32 i);
+int32 npc_timerevent_export(npc_data* nd, int32 i);
+void npc_parsename(npc_data* nd, const char* name, const char* start, const char* buffer, const char* filepath);
+int32 npc_parseview(const char* w4, const char* start, const char* buffer, const char* filepath);
+#endif // Pandas_ScriptCommand_Copynpc
 
 void npc_setcells(npc_data* nd);
 void npc_unsetcells(npc_data* nd);
@@ -1661,6 +2684,11 @@ void npc_event_do_oninit(void);
 
 int32 npc_event_do(const char* name);
 int32 npc_event_do_id(const char* name, int32 rid);
+#ifdef Pandas_Helper_Common_Function
+struct event_data* npc_event_data(const char* eventname);
+bool npc_event_exists(const char* eventname);
+bool npc_event_exists(struct npc_data* nd, const char* eventname);
+#endif // Pandas_Helper_Common_Function
 int32 npc_event_doall(const char* name);
 void npc_event_runall( const char* eventname );
 int32 npc_event_doall_id(const char* name, int32 rid);
@@ -1704,5 +2732,9 @@ int32 npc_do_atcmd_event(map_session_data* sd, const char* command, const char* 
 
 bool npc_unloadfile( const char* path );
 bool npc_remove_mob_spawns(const char* path);
+
+#ifdef Pandas_Character_Title_Controller
+bool npc_change_title_event(map_session_data* sd, uint32 title_id, int mode);
+#endif // Pandas_Character_Title_Controller
 
 #endif /* NPC_HPP */

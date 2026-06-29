@@ -75,6 +75,9 @@ struct s_elemental_db {
 
 struct s_elemental_data : public block_list {
 	unit_data ud;
+#ifdef Pandas_Struct_Unit_CommonData
+	s_unit_common_data ucd;
+#endif // Pandas_Struct_Unit_CommonData
 	view_data *vd;
 	status_data base_status, battle_status;
 	status_change sc;
@@ -115,7 +118,11 @@ int32 elemental_change_mode_ack(s_elemental_data *ed, e_elemental_skillmode skil
 int32 elemental_change_mode(s_elemental_data *ed, int32 mode);
 
 void elemental_heal(s_elemental_data *ed, int32 hp, int32 sp);
+#ifndef Pandas_FuncDefine_UnitDead_With_ExtendInfo
 int32 elemental_dead(s_elemental_data *ed);
+#else
+int32 elemental_dead(s_elemental_data *ed, block_list *src, uint16 skill_id);
+#endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
 
 int32 elemental_delete(s_elemental_data *ed);
 void elemental_summon_stop(s_elemental_data *ed);

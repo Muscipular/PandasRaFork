@@ -67,6 +67,9 @@ void do_final_buyingstore(void);
 void do_init_buyingstore(void);
 
 void do_init_buyingstore_autotrade( void );
+#ifdef Pandas_Fix_When_Relogin_Then_Clear_Autotrade_Store
+void buyingstore_autotrader_cleardb(map_session_data* sd);
+#endif // Pandas_Fix_When_Relogin_Then_Clear_Autotrade_Store
 void buyingstore_reopen( map_session_data* sd );
 void buyingstore_update(map_session_data &sd);
 

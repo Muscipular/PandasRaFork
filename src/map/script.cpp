@@ -13,13 +13,29 @@
 #include <cmath>
 #include <csetjmp>
 #include <cstdlib> // atoi, strtol, strtoll, exit
+#include <regex> // preg_match, preg_search
 
-#ifdef PCRE_SUPPORT
-#include <pcre.h> // preg_match
-#endif
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+#include <atomic>
+#endif // Pandas_ScriptCommand_QuerySql_Async
+#if defined(Pandas_ScriptCommand_QuerySql_Async) || defined(Pandas_ScriptCommand_WhoDropItem)
+#include <map>
+#endif // defined(Pandas_ScriptCommand_QuerySql_Async) || defined(Pandas_ScriptCommand_WhoDropItem)
+#if defined(Pandas_ScriptCommand_WhoDropItem) || defined(Pandas_ScriptEngine_Express)
+#include <algorithm>
+#endif // defined(Pandas_ScriptCommand_WhoDropItem) || defined(Pandas_ScriptEngine_Express)
+#ifdef Pandas_ScriptCommand_WhoDropItem
+#include <vector>
+#endif // Pandas_ScriptCommand_WhoDropItem
+#ifdef Pandas_ScriptEngine_Express
+#include <cctype>
+#endif // Pandas_ScriptEngine_Express
 
 #include <common/cbasetypes.hpp>
 #include <common/ers.hpp>  // ers_destroy
+#ifdef Pandas_ScriptEngine_DoubleByte_UnEscape_Detection
+#include <common/assistant.hpp>
+#endif // Pandas_ScriptEngine_DoubleByte_UnEscape_Detection
 #include <common/malloc.hpp>
 #include <common/md5calc.hpp>
 #include <common/nullpo.hpp>
@@ -34,6 +50,12 @@
 #include "achievement.hpp"
 #include "atcommand.hpp"
 #include "battle.hpp"
+#ifdef Pandas_Aura_Mechanism
+#include "aura.hpp"
+#endif // Pandas_Aura_Mechanism
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "battleground.hpp"
 #include "cashshop.hpp"
 #include "channel.hpp"
@@ -54,10 +76,16 @@
 #include "mapreg.hpp"
 #include "mercenary.hpp"
 #include "mob.hpp"
+#ifdef Pandas_Database_MobItem_FixedRatio
+#include "mobdrop.hpp"
+#endif // Pandas_Database_MobItem_FixedRatio
 #include "npc.hpp"
 #include "party.hpp"
 #include "path.hpp"
 #include "pc.hpp"
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+#include "asyncquery.hpp"
+#endif // Pandas_ScriptCommand_QuerySql_Async
 #include "pc_groups.hpp"
 #include "pet.hpp"
 #include "quest.hpp"
@@ -68,6 +96,9 @@ using namespace rathena;
 const int64 SCRIPT_INT_MIN = INT64_MIN;
 const int64 SCRIPT_INT_MAX = INT64_MAX;
 
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+std::atomic<int> script_batch{ 0 }; // For async SQL futures
+#endif // Pandas_ScriptCommand_QuerySql_Async
 struct eri *array_ers;
 DBMap *st_db;
 uint32 active_scripts;
@@ -229,6 +260,12 @@ static char *str_buf;
 static int32 str_size = 0; // size of the buffer
 static int32 str_pos = 0; // next position to be assigned
 
+#ifdef Pandas_ScriptEngine_AddStr_Realloc_Memory
+// str_data 每次被重新分配时, 增加多少个字节的容量
+#define STR_DATA_INCREASING_SIZE 128 * 4
+// str_buf  每次被重新分配时, 增加多少个字节的容量
+#define STR_BUF_INCREASING_SIZE 256 * 32
+#endif // Pandas_ScriptEngine_AddStr_Realloc_Memory
 
 // Using a prime number for SCRIPT_HASH_SIZE should give better distributions
 #define SCRIPT_HASH_SIZE 1021
@@ -269,6 +306,147 @@ struct Script_Config script_config = {
 	"OnPCBaseLvUpEvent", //baselvup_event_name
 	"OnPCJobLvUpEvent", //joblvup_event_name
 	"OnPCIdentifyEvent", //identify_event_name
+	/* Filter 类型的过滤事件，这些事件可以被 processhalt 中断                    */
+#ifdef Pandas_NpcFilter_IDENTIFY
+	"OnPCIdentifyFilter", //identify_filter_name
+#endif // Pandas_NpcFilter_IDENTIFY
+#ifdef Pandas_NpcFilter_ENTERCHAT
+	"OnPCInChatroomFilter", //enterchat_filter_name
+#endif // Pandas_NpcFilter_ENTERCHAT
+#ifdef Pandas_NpcFilter_INSERT_CARD
+	"OnPCInsertCardFilter", //insert_card_filter_name
+#endif // Pandas_NpcFilter_INSERT_CARD
+#ifdef Pandas_NpcFilter_USE_ITEM
+	"OnPCUseItemFilter", //use_item_filter_name
+#endif // Pandas_NpcFilter_USE_ITEM
+#ifdef Pandas_NpcFilter_USE_SKILL
+	"OnPCUseSkillFilter", //use_skill_filter_name
+#endif // Pandas_NpcFilter_USE_SKILL
+#ifdef Pandas_NpcFilter_ROULETTE_OPEN
+	"OnPCOpenRouletteFilter", //roulette_open_filter_name
+#endif // Pandas_NpcFilter_ROULETTE_OPEN
+#ifdef Pandas_NpcFilter_VIEW_EQUIP
+	"OnPCViewEquipFilter", //view_equip_filter_name
+#endif // Pandas_NpcFilter_VIEW_EQUIP
+#ifdef Pandas_NpcFilter_EQUIP
+	"OnPCEquipFilter", //equip_filter_name
+#endif // Pandas_NpcFilter_EQUIP
+#ifdef Pandas_NpcFilter_UNEQUIP
+	"OnPCUnequipFilter", //unequip_filter_name
+#endif // Pandas_NpcFilter_UNEQUIP
+#ifdef Pandas_NpcFilter_CHANGETITLE
+	"OnPCChangeTitleFilter", //changetitle_filter_name
+#endif // Pandas_NpcFilter_CHANGETITLE
+#ifdef Pandas_NpcFilter_SC_START
+	"OnPCBuffStartFilter", //sc_start_filter_name
+#endif // Pandas_NpcFilter_SC_START
+#ifdef Pandas_NpcFilter_USE_REVIVE_TOKEN
+	"OnPCUseReviveTokenFilter", //use_revive_token_filter_name
+#endif // Pandas_NpcFilter_USE_REVIVE_TOKEN
+#ifdef Pandas_NpcFilter_ONECLICK_IDENTIFY
+	"OnPCUseOCIdentifyFilter", //oneclick_identify_filter_name
+#endif // Pandas_NpcFilter_ONECLICK_IDENTIFY
+#ifdef Pandas_NpcFilter_GUILDCREATE
+	"OnPCGuildCreateFilter", //guildcreate_filter_name
+#endif // Pandas_NpcFilter_GUILDCREATE
+#ifdef Pandas_NpcFilter_GUILDJOIN
+	"OnPCGuildJoinFilter", //guildjoin_filter_name
+#endif // Pandas_NpcFilter_GUILDJOIN
+#ifdef Pandas_NpcFilter_GUILDLEAVE
+	"OnPCGuildLeaveFilter", //guildleave_filter_name
+#endif // Pandas_NpcFilter_GUILDLEAVE
+#ifdef Pandas_NpcFilter_PARTYCREATE
+	"OnPCPartyCreateFilter", //partycreate_filter_name
+#endif // Pandas_NpcFilter_PARTYCREATE
+#ifdef Pandas_NpcFilter_PARTYJOIN
+	"OnPCPartyJoinFilter", //partyjoin_filter_name
+#endif // Pandas_NpcFilter_PARTYJOIN
+#ifdef Pandas_NpcFilter_PARTYLEAVE
+	"OnPCPartyLeaveFilter", //partyleave_filter_name
+#endif // Pandas_NpcFilter_PARTYLEAVE
+#ifdef Pandas_NpcFilter_DROPITEM
+	"OnPCDropItemFilter", //dropitem_filter_name
+#endif // Pandas_NpcFilter_DROPITEM
+#ifdef Pandas_NpcFilter_CLICKTOMB
+	"OnPCClickTombFilter", //clicktomb_filter_name
+#endif // Pandas_NpcFilter_CLICKTOMB
+#ifdef Pandas_NpcFilter_STORAGE_ADD
+	"OnPCStorageAddFilter", //storage_add_filter_name
+#endif // Pandas_NpcFilter_STORAGE_ADD
+#ifdef Pandas_NpcFilter_STORAGE_DEL
+	"OnPCStorageDelFilter", //storage_del_filter_name
+#endif // Pandas_NpcFilter_STORAGE_DEL
+#ifdef Pandas_NpcFilter_CART_ADD
+	"OnPCCartAddFilter", //cart_add_filter_name
+#endif // Pandas_NpcFilter_CART_ADD
+#ifdef Pandas_NpcFilter_CART_DEL
+	"OnPCCartDelFilter", //cart_del_filter_name
+#endif // Pandas_NpcFilter_CART_DEL
+#ifdef Pandas_NpcFilter_FAVORITE_ADD
+	"OnPCFavoriteAddFilter", //favorite_add_filter_name
+#endif // Pandas_NpcFilter_FAVORITE_ADD
+#ifdef Pandas_NpcFilter_FAVORITE_DEL
+	"OnPCFavoriteDelFilter", //favorite_del_filter_name
+#endif // Pandas_NpcFilter_FAVORITE_DEL
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 5>
+	/* Event  类型的标准事件，这些事件不能被 processhalt 打断                    */
+#ifdef Pandas_NpcEvent_KILLMVP
+	"OnPCKillMvpEvent",	// NPCE_KILLMVP		// killmvp_event_name	// 当玩家杀死 MVP 魔物后触发事件
+#endif // Pandas_NpcEvent_KILLMVP
+#ifdef Pandas_NpcEvent_INSERT_CARD
+	"OnPCInsertCardEvent",	// NPCE_INSERT_CARD		// insert_card_event_name	// 当玩家成功插入卡片后触发事件
+#endif // Pandas_NpcEvent_INSERT_CARD
+#ifdef Pandas_NpcEvent_USE_ITEM
+	"OnPCUseItemEvent",	// NPCE_USE_ITEM		// use_item_event_name	// 当玩家成功使用非装备类道具后触发事件
+#endif // Pandas_NpcEvent_USE_ITEM
+#ifdef Pandas_NpcEvent_USE_SKILL
+	"OnPCUseSkillEvent",	// NPCE_USE_SKILL		// use_skill_event_name	// 当玩家成功使用技能后触发事件
+#endif // Pandas_NpcEvent_USE_SKILL
+#ifdef Pandas_NpcEvent_EQUIP
+	"OnPCEquipEvent",	// NPCE_EQUIP		// equip_event_name	// 当玩家成功穿戴一件装备时触发事件
+#endif // Pandas_NpcEvent_EQUIP
+#ifdef Pandas_NpcEvent_UNEQUIP
+	"OnPCUnequipEvent",	// NPCE_UNEQUIP		// unequip_event_name	// 当玩家成功脱下一件装备时触发事件
+#endif // Pandas_NpcEvent_UNEQUIP
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 11>
+	/* Express 类型的快速事件，这些事件将会被立刻执行, 不进事件队列                */
+#ifdef Pandas_NpcExpress_STATCALC
+	"OnPCStatCalcEvent",	// NPCE_STATCALC		// statcalc_express_name	// 当角色能力被重新计算时触发事件
+#endif // Pandas_NpcExpress_STATCALC
+#ifdef Pandas_NpcExpress_SC_END
+	"OnPCBuffEndExpress",	// NPCX_SC_END		// sc_end_express_name	// 当玩家成功解除一个状态(Buff)后触发实时事件
+#endif // Pandas_NpcExpress_SC_END
+#ifdef Pandas_NpcExpress_SC_START
+	"OnPCBuffStartExpress",	// NPCX_SC_START		// sc_start_express_name	// 当玩家成功获得一个状态(Buff)后触发实时事件
+#endif // Pandas_NpcExpress_SC_START
+#ifdef Pandas_NpcExpress_ENTERMAP
+	"OnPCEnterMapExpress",	// NPCX_ENTERMAP		// entermap_express_name	// 当玩家进入或者改变地图时触发实时事件
+#endif // Pandas_NpcExpress_ENTERMAP
+#ifdef Pandas_NpcExpress_PROGRESSABORT
+	"OnPCProgressAbortExpress",	// NPCX_PROGRESSABORT		// progressabort_express_name	// 当 progressbar 进度条被打断时触发实时事件
+#endif // Pandas_NpcExpress_PROGRESSABORT
+#ifdef Pandas_NpcExpress_UNIT_KILL
+	"OnUnitKillExpress",	// NPCX_UNIT_KILL		// unit_kill_express_name	// 当某个单位被击杀时触发实时事件
+#endif // Pandas_NpcExpress_UNIT_KILL
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+	"OnMobDropItemExpress",	// NPCX_MOBDROPITEM		// mobdropitem_express_name	// 当魔物即将掉落道具时触发实时事件
+#endif // Pandas_NpcExpress_MOBDROPITEM
+#ifdef Pandas_NpcExpress_PCATTACK
+	"OnPCAttackExpress",	// NPCX_PCATTACK		// pcattack_express_name	// 当玩家发起攻击并即将进行结算时触发实时事件 [聽風]
+#endif // Pandas_NpcExpress_PCATTACK
+#ifdef Pandas_NpcExpress_MER_CALL
+	"OnPCMerCallExpress",	// NPCX_MER_CALL		// mer_call_express_name	// 当玩家成功召唤出佣兵时触发实时事件
+#endif // Pandas_NpcExpress_MER_CALL
+#ifdef Pandas_NpcExpress_MER_LEAVE
+	"OnPCMerLeaveExpress",	// NPCX_MER_LEAVE		// mer_leave_express_name	// 当佣兵离开玩家时触发实时事件
+#endif // Pandas_NpcExpress_MER_LEAVE
+#ifdef Pandas_NpcExpress_PC_TALK
+	"OnPCTalkExpress",	// NPCX_PC_TALK		// pc_talk_express_name	// 当玩家往聊天框发送信息时触发实时事件 [人鱼姬的思念]
+#endif // Pandas_NpcExpress_PC_TALK
+#ifdef Pandas_NpcExpress_PCHARMED
+	"OnPCHarmedExpress",	// NPCX_PCHARMED		// pcharmed_express_name	// 当玩家受到伤害并即将进行结算时触发实时事件 [人鱼姬的思念]
+#endif // Pandas_NpcExpress_PCHARMED
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 17>
 	// NPC related
 	"OnTouch_",	//ontouch_event_name (runs on first visible char to enter area, picks another char if the first char leaves)
 	"OnTouch",	//ontouch2_event_name (run whenever a char walks into the OnTouch area)
@@ -729,9 +907,15 @@ int32 add_str(const char* p)
 	// grow list if necessary
 	if( str_num >= str_data_size )
 	{
+#ifndef Pandas_ScriptEngine_AddStr_Realloc_Memory
 		str_data_size += 128;
 		RECREATE(str_data,struct str_data_struct,str_data_size);
 		memset(str_data + (str_data_size - 128), '\0', 128);
+#else
+		str_data_size += STR_DATA_INCREASING_SIZE;
+		RECREATE(str_data,struct str_data_struct,str_data_size);
+		memset(str_data + (str_data_size - STR_DATA_INCREASING_SIZE), '\0', STR_DATA_INCREASING_SIZE);
+#endif // Pandas_ScriptEngine_AddStr_Realloc_Memory
 	}
 
 	len=(int32)strlen(p);
@@ -739,9 +923,27 @@ int32 add_str(const char* p)
 	// grow string buffer if necessary
 	while( str_pos+len+1 >= str_size )
 	{
+#ifndef Pandas_ScriptEngine_AddStr_Realloc_Memory
 		str_size += 256;
 		RECREATE(str_buf,char,str_size);
 		memset(str_buf + (str_size - 256), '\0', 256);
+#else
+		str_size += STR_BUF_INCREASING_SIZE;
+		RECREATE(str_buf,char,str_size);
+		memset(str_buf + (str_size - STR_BUF_INCREASING_SIZE), '\0', STR_BUF_INCREASING_SIZE);
+#endif // Pandas_ScriptEngine_AddStr_Realloc_Memory
+
+#ifdef Pandas_ScriptEngine_Relocation_Funcname_After_StrBuf_Realloc
+		DBIterator* iter = db_iterator(st_db);
+		struct script_state* st = nullptr;
+
+		for (st = static_cast<script_state*>(dbi_first(iter)); dbi_exists(iter); st = static_cast<script_state*>(dbi_next(iter))) {
+			struct script_data* data = script_getdata(st, 0);
+			st->funcname = reference_getname(data);
+		}
+
+		dbi_destroy(iter);
+#endif // Pandas_ScriptEngine_Relocation_Funcname_After_StrBuf_Realloc
 	}
 
 	safestrncpy(str_buf+str_pos, p, len+1);
@@ -1339,7 +1541,16 @@ const char* parse_simpleexpr(const char *p)
 		add_scriptc(C_STR);
 		p++;
 		while( *p && *p != '"' ){
+#ifndef Pandas_ScriptEngine_DoubleByte_UnEscape_Detection
 			if( (unsigned char)p[-1] <= 0x7e && *p == '\\' )
+#else
+			if (isDoubleByteCharacter((unsigned char)p[0], (unsigned char)p[1])) {
+				add_scriptb(*p++);
+				add_scriptb(*p++);
+				continue;
+			}
+			else if (*p == '\\' && isEscapeSequence(p))
+#endif // Pandas_ScriptEngine_DoubleByte_UnEscape_Detection
 			{
 				char buf[8];
 				size_t len = skip_escaped_c(p) - p;
@@ -3522,6 +3733,10 @@ struct script_data* push_copy(struct script_stack* stack, int32 pos)
 /// Adjusts all stack pointers.
 void pop_stack(struct script_state* st, int32 start, int32 end)
 {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!st || !st->stack) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	struct script_stack* stack = st->stack;
 	struct script_data* data;
 	int32 i;
@@ -3612,6 +3827,13 @@ void script_free_code(struct script_code* code)
 	if (code->local.arrays)
 		code->local.arrays->destroy(code->local.arrays, script_free_array_db);
 	aFree(code->script_buf);
+
+#ifdef Pandas_Crashfix_ScriptFreeCode_SetPointerNull
+	code->local.vars = nullptr;
+	code->local.arrays = nullptr;
+	code->script_buf = nullptr;
+#endif // Pandas_Crashfix_ScriptFreeCode_SetPointerNull
+
 	aFree(code);
 }
 
@@ -3641,6 +3863,17 @@ struct script_state* script_alloc_state(struct script_code* rootscript, int32 po
 	st->oid = oid;
 	st->sleep.timer = INVALID_TIMER;
 	st->npc_item_flag = battle_config.item_enabled_npc;
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+	st->asyncSleep = false;
+#endif // Pandas_ScriptCommand_QuerySql_Async
+#ifdef Pandas_ScriptCommand_UnlockCmd
+	// 确保创建 script_state 的时候 unlockcmd 的值为 0
+	st->unlockcmd = 0;
+#endif // Pandas_ScriptCommand_UnlockCmd
+#ifdef Pandas_ScriptCommand_GetInventoryList
+	st->waiting_premium_storage = 0;
+	st->waiting_guild_storage = 0;
+#endif // Pandas_ScriptCommand_GetInventoryList
 	
 	if( st->script->instances != USHRT_MAX )
 		st->script->instances++;
@@ -3669,17 +3902,45 @@ void script_free_state(struct script_state* st)
 	if (idb_exists(st_db, st->id)) {
 		map_session_data *sd = st->rid ? map_id2sd(st->rid) : nullptr;
 
+#ifndef Pandas_ScriptEngine_MutliStackBackup
 		if (st->bk_st) // backup was not restored
 			ShowDebug("script_free_state: Previous script state lost (rid=%d, oid=%d, state=%d, bk_npcid=%d).\n", st->bk_st->rid, st->bk_st->oid, st->bk_st->state, st->bk_npcid);
+#endif // Pandas_ScriptEngine_MutliStackBackup
 
 		if (sd && sd->st == st) { // Current script is aborted.
 			if(sd->state.using_fake_npc) {
 				clif_clearunit_single( sd->npc_id, CLR_OUTSIGHT, *sd );
 				sd->state.using_fake_npc = 0;
 			}
+
+#ifdef Pandas_Fix_Progressbar_Abort_Stuck
+			// 若当前角色的 progressbar 信息里记录的来源 NPC 编号等于即将销毁的 st 的 NPC 编号,
+			// 那么进行对应的清理操作避免后续角色出现卡住无法移动的情况
+			if (sd->progressbar.npc_id == sd->st->oid && sd->status.account_id == sd->st->rid) {
+				clif_progressbar_abort(sd);
+				sd->progressbar.npc_id = 0;
+				sd->progressbar.timeout = 0;
+				if (battle_config.idletime_option & IDLE_NPC_PROGRESS) {
+					sd->idletime = last_tick;
+				}
+			}
+#endif // Pandas_Fix_Progressbar_Abort_Stuck
+
 			sd->st = nullptr;
 			sd->npc_id = 0;
 		}
+
+#ifdef Pandas_ScriptEngine_MutliStackBackup
+		if (sd && !sd->previous_st.empty()) {
+			for (auto iter = sd->previous_st.begin(); iter != sd->previous_st.end();) {
+				if (iter->bk_st == st) {
+					iter = sd->previous_st.erase(iter);
+					continue;
+				}
+				iter++;
+			}
+		}
+#endif // Pandas_ScriptEngine_MutliStackBackup
 
 		if (st->sleep.timer != INVALID_TIMER)
 			delete_timer(st->sleep.timer, run_script_timer);
@@ -4131,6 +4392,35 @@ int32 run_func(struct script_state *st)
 		}
 #endif
 
+#ifdef Pandas_ScriptEngine_Express
+		if (st && st->rid && !st->unlockcmd) {
+			map_session_data *sd = map_id2sd(st->rid);
+			if (sd && npc_event_is_realtime(sd->pandas.workinevent)) {
+				// 以下为实时事件和过滤器事件中禁止使用的脚本指令, 需要定期更新 [Sola丶小克]
+				static std::vector<std::string> blockcmd = {
+					"mes", "next", "close", "close2", "menu", "select", "prompt", "input",
+					"openstorage", "guildopenstorage", "produce", "cooking", "birthpet",
+					"callshop", "sleep", "sleep2", "openmail", "openauction", "progressbar",
+					"buyingstore", "makerune", "opendressroom", "openstorage2"
+				};
+				std::vector<std::string>::iterator iter;
+				std::string funcname = std::string(get_str(func));
+				std::transform(
+					funcname.begin(), funcname.end(), funcname.begin(),
+					static_cast<int(*)(int)>(std::tolower)
+				);
+				iter = std::find(blockcmd.begin(), blockcmd.end(), funcname);
+				if (iter != blockcmd.end()) {
+					ShowWarning("Please don't use '%s' command in '%s' event.\n", funcname.c_str(), npc_get_script_event_name(sd->pandas.workinevent));
+					ShowWarning("If you insist and know what you are doing, you can use the 'unlockcmd' command to lift the restriction.\n");
+					script_reportsrc(st);
+					st->state = END;
+					return 1;
+				}
+			}
+		}
+#endif // Pandas_ScriptEngine_Express
+
 		if (str_data[func].func(st) == SCRIPT_CMD_FAILURE) {
 			//Report error
 			ShowWarning("Script command '%s' returned failure.\n", get_str(func));
@@ -4252,6 +4542,16 @@ TIMER_FUNC(run_script_timer){
 	}
 	if(st->state != RERUNLINE)
 		st->sleep.tick = 0;
+
+#ifdef Pandas_Crashfix_Invaild_Script_Code
+	if (st && (st->script == nullptr || st->script->script_buf == nullptr)) {
+		ShowError("%s: The script that was resumed has been released, please report this to the developer (Trigger Point: %d).\n", __func__, 1);
+		script_reportsrc(st);
+		st->state = END;
+		return 0;
+	}
+#endif // Pandas_Crashfix_Invaild_Script_Code
+
 	run_script_main(st);
 	return 0;
 }
@@ -4296,6 +4596,7 @@ struct linkdb_node *script_erase_sleepdb(struct linkdb_node *n) {
 	return retnode;
 }
 
+#ifndef Pandas_ScriptEngine_MutliStackBackup
 /// Detaches script state from possibly attached character and restores it's previous script if any.
 ///
 /// @param st Script state to detach.
@@ -4340,6 +4641,47 @@ static void script_detach_state(struct script_state* st, bool dequeue_event)
 		st->bk_st = nullptr;
 	}
 }
+#else
+/// Detaches script state from possibly attached character and restores it's previous script if any.
+///
+/// @param st Script state to detach.
+/// @param dequeue_event Whether to schedule any queued events, when there was no previous script.
+void script_detach_state(struct script_state* st, bool dequeue_event)
+{
+	map_session_data* sd;
+
+	if(st->rid && (sd = map_id2sd(st->rid))!=nullptr) {
+		if( sd->state.using_fake_npc ){
+			clif_clearunit_single( sd->npc_id, CLR_OUTSIGHT, *sd );
+			sd->state.using_fake_npc = 0;
+		}
+
+		sd->st = nullptr;
+		sd->npc_id = 0;
+		sd->state.disable_atcommand_on_npc = 0;
+
+		if( !sd->previous_st.empty() ){
+			struct mutli_state val = sd->previous_st.back();
+			sd->st = val.bk_st;
+			sd->npc_id = val.bk_npcid;
+			sd->previous_st.pop_back();
+		}
+
+		if( !sd->st && dequeue_event ){
+#ifdef SECURE_NPCTIMEOUT
+			/**
+			 * We're done with this NPC session, so we cancel the timer (if existent) and move on
+			 **/
+			if( sd->npc_idle_timer != INVALID_TIMER ) {
+				delete_timer(sd->npc_idle_timer,npc_secure_timeout_timer);
+				sd->npc_idle_timer = INVALID_TIMER;
+			}
+#endif
+			npc_event_dequeue(sd);
+		}
+	}
+}
+#endif // Pandas_ScriptEngine_MutliStackBackup
 
 /// Attaches script state to possibly attached character and backups it's previous script, if any.
 ///
@@ -4351,12 +4693,19 @@ void script_attach_state(struct script_state* st){
 	{
 		if(st!=sd->st)
 		{
+#ifndef Pandas_ScriptEngine_MutliStackBackup
 			if(st->bk_st)
 			{// there is already a backup
 				ShowDebug("script_attach_state: Previous script state lost (rid=%d, oid=%d, state=%d, bk_npcid=%d).\n", st->bk_st->rid, st->bk_st->oid, st->bk_st->state, st->bk_npcid);
 			}
 			st->bk_st = sd->st;
 			st->bk_npcid = sd->npc_id;
+#else
+			struct mutli_state val = { 0 };
+			val.bk_st = sd->st;
+			val.bk_npcid = sd->npc_id;
+			sd->previous_st.push_back(val);
+#endif // Pandas_ScriptEngine_MutliStackBackup
 		}
 		sd->st = st;
 		sd->npc_id = st->oid;
@@ -4375,12 +4724,24 @@ void script_attach_state(struct script_state* st){
  *------------------------------------------*/
 void run_script_main(struct script_state *st)
 {
+#ifdef Pandas_Crashfix_Prevent_NullPointer
+	nullpo_retv(st);
+#endif // Pandas_Crashfix_Prevent_NullPointer
 	int32 cmdcount = script_config.check_cmdcount;
 	int32 gotocount = script_config.check_gotocount;
 	TBL_PC *sd;
 	struct script_stack *stack = st->stack;
 
 	script_attach_state(st);
+
+#ifdef Pandas_Crashfix_Invaild_Script_Code
+	if (st && (st->script == nullptr || st->script->script_buf == nullptr)) {
+		ShowError("%s: The script that was resumed has been released, please report this to the developer (Trigger Point: %d).\n", __func__, 2);
+		script_reportsrc(st);
+		st->state = END;
+		return;
+	}
+#endif // Pandas_Crashfix_Invaild_Script_Code
 
 	if(st->state == RERUNLINE) {
 		run_func(st);
@@ -4390,6 +4751,15 @@ void run_script_main(struct script_state *st)
 		st->state = RUN;
 
 	while(st->state == RUN) {
+#ifdef Pandas_Crashfix_Invaild_Script_Code
+		if (st && (st->script == nullptr || st->script->script_buf == nullptr)) {
+			ShowError("%s: The script that was resumed has been released, please report this to the developer (Trigger Point: %d).\n", __func__, 3);
+			script_reportsrc(st);
+			st->state = END;
+			return;
+		}
+#endif // Pandas_Crashfix_Invaild_Script_Code
+
 		enum c_op c = get_com(st->script->script_buf,&st->pos);
 		switch(c){
 		case C_EOL:
@@ -4484,6 +4854,11 @@ void run_script_main(struct script_state *st)
 		st->sleep.charid = sd?sd->status.char_id:0;
 		st->sleep.timer = add_timer(gettick() + st->sleep.tick, run_script_timer, st->sleep.charid, (intptr_t)st);
 		linkdb_insert(&sleep_db, (void *)__64BPRTSIZE(st->oid), st);
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+	} else if (st->asyncSleep) {
+		script_detach_state(st, false);
+#endif // Pandas_ScriptCommand_QuerySql_Async
+#ifndef Pandas_ScriptEngine_MutliStackBackup
 	} else if(st->state != END && st->rid) {
 		//Resume later (st is already attached to player).
 		if(st->bk_st) {
@@ -4497,6 +4872,10 @@ void run_script_main(struct script_state *st)
 			script_free_state(st->bk_st);
 			st->bk_st = nullptr;
 		}
+#else
+	} else if(st->state != END && st->rid) {
+		return;
+#endif // Pandas_ScriptEngine_MutliStackBackup
 	} else {
 		if (st->stack && st->stack->defsp >= 1 && st->stack->stack_data[st->stack->defsp - 1].type == C_RETINFO) {
 			for (int32 i = 0; i < st->stack->sp; i++) {
@@ -4519,6 +4898,9 @@ void run_script_main(struct script_state *st)
 			if (sd->vars_dirty)
 				intif_saveregistry(sd);
 		}
+#ifdef Pandas_ScriptCommand_SelfDeletion
+		selfdeletion_exec_endtalk(st);
+#endif // Pandas_ScriptCommand_SelfDeletion
 		script_free_state(st);
 	}
 }
@@ -4650,6 +5032,9 @@ void script_cleararray_pc( map_session_data* sd, const char* varname ){
 	if( !(src = script_array_src(nullptr,sd,varname,nullptr) ) )
 		return;
 
+#ifdef Pandas_Fix_ClearArray_The_First_Element_Is_Ignored
+	script_array_ensure_zero(nullptr, sd, reference_uid(key, 0), src);
+#endif // Pandas_Fix_ClearArray_The_First_Element_Is_Ignored
 	if( !(sa = static_cast<script_array *>(idb_get(src->arrays, key))) ) /* non-existent array, nothing to empty */
 		return;
 
@@ -4741,6 +5126,477 @@ void script_generic_ui_array_expand (uint32 plus)
 	generic_ui_array_size += plus + 100;
 	RECREATE(generic_ui_array, uint32, generic_ui_array_size);
 }
+
+#ifdef Pandas_ScriptCommands
+//************************************
+// Method:      script_abort
+// Description: 中断脚本的执行并打印相关的错误信息
+// Access:      public
+// Parameter:   struct script_state * st
+// Returns:     void
+// Author:      Sola丶小克(CairoLee)  2022/3/29 9:36
+//************************************
+void script_abort(struct script_state* st) {
+	struct script_data* data = nullptr;
+
+	if (script_hasdata(st, 2)) {
+		data = script_getdata(st, 2);
+	}
+
+	script_reportsrc(st);
+	script_reportfunc(st);
+
+	if (data) {
+		script_reportdata(data);
+	}
+	st->state = END;
+}
+
+//************************************
+// Method:      script_get_optnum
+// Description: 获取 st 中指定 loc 位置的可选数值参数
+// Access:      public
+// Parameter:   struct script_state * st
+// Parameter:   int loc
+// Parameter:   const char * desc
+// Parameter:   int & ret
+// Parameter:   bool allow_notexists
+// Parameter:   int defval
+// Returns:     bool
+// Author:      Sola丶小克(CairoLee)  2021/02/12 12:06
+//************************************
+bool script_get_optnum(struct script_state *st, int loc, const char* desc, int &ret, bool allow_notexists = false, int defval = 0) {
+	if (!st) return false;
+
+	if (!script_hasdata(st, loc)) {
+		if (allow_notexists) {
+			ret = defval;
+			return true;
+		}
+		script_reportsrc(st);
+		script_reportfunc(st);
+		if (!desc)
+			ShowError("buildin_%s: the No.%d parameter can not be found.\n", script_getfuncname(st), loc - 1);
+		else
+			ShowError("buildin_%s: the No.%d parameter (%s) can not be found.\n", script_getfuncname(st), loc - 1, desc);
+		return false;
+	}
+
+	if (!script_isint(st, loc)) {
+		script_reportsrc(st);
+		script_reportfunc(st);
+		if (!desc)
+			ShowError("buildin_%s: the No.%d parameter must be integer type.\n", script_getfuncname(st), loc - 1);
+		else
+			ShowError("buildin_%s: the No.%d parameter (%s) must be integer type.\n", script_getfuncname(st), loc - 1, desc);
+		return false;
+	}
+
+	ret = script_getnum(st, loc);
+	return true;
+}
+
+//************************************
+// Method:      script_get_optstr
+// Description: 获取 st 中指定 loc 位置的可选字符串参数
+// Access:      public
+// Parameter:   struct script_state * st
+// Parameter:   int loc
+// Parameter:   const char * desc
+// Parameter:   std::string & ret
+// Parameter:   bool allow_notexists
+// Parameter:   std::string defval
+// Returns:     bool
+// Author:      Sola丶小克(CairoLee)  2021/02/12 12:08
+//************************************
+bool script_get_optstr(struct script_state *st, int loc, const char* desc, std::string &ret, bool allow_notexists = false, std::string defval = "") {
+	if (!st) return false;
+
+	if (!script_hasdata(st, loc)) {
+		if (allow_notexists) {
+			ret = defval;
+			return true;
+		}
+		script_reportsrc(st);
+		script_reportfunc(st);
+		if (!desc)
+			ShowError("buildin_%s: the No.%d parameter can not be found.\n", script_getfuncname(st), loc - 1);
+		else
+			ShowError("buildin_%s: the No.%d parameter (%s) can not be found.\n", script_getfuncname(st), loc - 1, desc);
+		return false;
+	}
+
+	if (!script_isstring(st, loc)) {
+		script_reportsrc(st);
+		script_reportfunc(st);
+		if (!desc)
+			ShowError("buildin_%s: the No.%d parameter must be string type.\n", script_getfuncname(st), loc - 1);
+		else
+			ShowError("buildin_%s: the No.%d parameter (%s) must be string type.\n", script_getfuncname(st), loc - 1, desc);
+		return false;
+	}
+
+	ret = script_getstr(st, loc);
+	return true;
+}
+
+//************************************
+// Method:      script_cleararray_st
+// Description: 清理 st 中指定 loc 数组变量的内容
+// Access:      public
+// Parameter:   struct script_state * st
+// Parameter:   int loc
+// Parameter:   bool bslient
+// Returns:     bool
+// Author:      Sola丶小克(CairoLee)  2021/02/12 11:42
+//************************************
+bool script_cleararray_st(struct script_state* st, int loc, bool bslient = true) {
+	map_session_data* sd = nullptr;
+	struct script_data* param_data = script_getdata(st, loc);
+	int varid = reference_getid(param_data);
+	const char* varname = reference_getname(param_data);
+
+	if (!data_isreference(param_data)) {
+		if (!bslient) {
+			script_reportsrc(st);
+			script_reportfunc(st);
+			script_reportdata(param_data);
+			ShowError("buildin_%s: variable '%s' is not a array.\n", script_getfuncname(st), varname);
+		}
+		return false;
+	}
+
+	if (not_server_variable(*varname)) {
+		if (!script_rid2sd(sd)) {
+			if (!bslient) {
+				ShowError("buildin_%s: '%s' is not server variable, please attach to a player.\n", script_getfuncname(st), varname);
+				script_reportsrc(st);
+				script_reportfunc(st);
+				script_reportdata(param_data);
+			}
+			return false;
+		}
+	}
+
+	struct reg_db* src = nullptr;
+	if (!(src = script_array_src(st, sd, varname, reference_getref(param_data))))
+		return false;
+
+	script_array_ensure_zero(st, sd, param_data->u.num, reference_getref(param_data));
+
+	struct script_array* sa = nullptr;
+	if (!(sa = static_cast<script_array*>(idb_get(src->arrays, varid))))
+		return false;
+
+	unsigned int len = 0;
+	len = script_array_highest_key(st, sd, varname, reference_getref(param_data));
+
+	unsigned int* list = script_array_cpy_list(sa);
+	unsigned int size = sa->size;
+	for (unsigned int i = 0; i < size; i++) {
+		clear_reg(st, sd, reference_uid(varid, list[i]), varname, reference_getref(param_data));
+	}
+	return true;
+}
+
+//************************************
+// Method:      script_get_array
+// Description: 获取 st 中指定 loc 位置的数组参数
+// Access:      public
+// Parameter:   struct script_state * st
+// Parameter:   int loc
+// Parameter:   int & ret_varid
+// Parameter:   char * & ret_varname
+// Parameter:   struct script_data * ret_vardata
+// Parameter:   bool expected_str
+// Parameter:   const char * desc
+// Returns:     bool
+// Author:      Sola丶小克(CairoLee)  2021/02/12 16:26
+//************************************
+bool script_get_array(struct script_state* st, int loc, int& ret_varid, char*& ret_varname, struct script_data*& ret_vardata, bool expected_str = false, const char* desc = nullptr) {
+	if (!script_hasdata(st, loc)) {
+		script_reportsrc(st);
+		script_reportfunc(st);
+		if (!desc)
+			ShowError("buildin_%s: the No.%d parameter can not be found.\n", script_getfuncname(st), loc - 1);
+		else
+			ShowError("buildin_%s: the No.%d parameter (%s) can not be found.\n", script_getfuncname(st), loc - 1, desc);
+		return false;
+	}
+
+	map_session_data* sd = nullptr;
+	ret_vardata = script_getdata(st, loc);
+	ret_varid = reference_getid(ret_vardata);
+	ret_varname = reference_getname(ret_vardata);
+
+	if (!data_isreference(ret_vardata)) {
+		script_reportsrc(st);
+		script_reportfunc(st);
+		script_reportdata(ret_vardata);
+		ShowError("buildin_%s: variable '%s' is not a array.\n", script_getfuncname(st), ret_varname);
+		return false;
+	}
+
+	if (not_server_variable(*ret_varname)) {
+		if (!script_rid2sd(sd)) {
+			script_reportsrc(st);
+			script_reportfunc(st);
+			script_reportdata(ret_vardata);
+			ShowError("buildin_%s: '%s' is not server variable, please attach to a player.\n", script_getfuncname(st), ret_varname);
+			return false;
+		}
+	}
+
+	struct reg_db* src = nullptr;
+	if (!(src = script_array_src(st, sd, ret_varname, reference_getref(ret_vardata)))) {
+		script_reportsrc(st);
+		script_reportfunc(st);
+		script_reportdata(ret_vardata);
+		ShowError("buildin_%s: variable '%s' is not a array.\n", script_getfuncname(st), ret_varname);
+		return false;
+	}
+
+	if (expected_str && !is_string_variable(ret_varname)) {
+		script_reportsrc(st);
+		script_reportfunc(st);
+		script_reportdata(ret_vardata);
+		if (!desc)
+			ShowError("buildin_%s: the No.%d parameter '%s' must be string array type.\n", script_getfuncname(st), loc - 1, ret_varname);
+		else
+			ShowError("buildin_%s: the No.%d parameter '%s' (%s) must be string array type.\n", script_getfuncname(st), loc - 1, ret_varname, desc);
+		script_pushint(st, -1);
+		return false;
+	}
+
+	if (!expected_str && is_string_variable(ret_varname)) {
+		script_reportsrc(st);
+		script_reportfunc(st);
+		script_reportdata(ret_vardata);
+		if (!desc)
+			ShowError("buildin_%s: the No.%d parameter '%s' must be integer array type.\n", script_getfuncname(st), loc - 1, ret_varname);
+		else
+			ShowError("buildin_%s: the No.%d parameter '%s' (%s) must be integer array type.\n", script_getfuncname(st), loc - 1, ret_varname, desc);
+		script_pushint(st, -1);
+		return false;
+	}
+
+	return true;
+}
+
+//************************************
+// Method:      script_get_mapindex
+// Description: 获取地图名对应的地图索引值 (自动处理 this 特殊地图名)
+// Access:      public
+// Parameter:   struct script_state * st
+// Parameter:   const char * mapname
+// Parameter:   int & map_id
+// Returns:     bool
+// Author:      Sola丶小克(CairoLee)  2021/02/12 00:12
+//************************************
+bool script_get_mapindex(struct script_state *st, const char* mapname, int &mapindex, int char_id = 0) {
+	if (stricmp(mapname, "this") != 0) {
+		mapindex = map_mapname2mapid(mapname);
+		return (mapindex >= 0);
+	}
+
+	map_session_data* sd = nullptr;
+
+	if (char_id) {
+		sd = map_charid2sd(char_id);
+		if (!sd) {
+			script_reportsrc(st);
+			script_reportfunc(st);
+			ShowError("buildin_%s: mapname is 'this', but player with char id '%d' is not found.\n", script_getfuncname(st), char_id);
+			return false;
+		}
+	}
+	else {
+		sd = map_id2sd(st->rid);
+		if (!sd) {
+			script_reportsrc(st);
+			script_reportfunc(st);
+			ShowError("buildin_%s: mapname is 'this', please attach to a player.\n", script_getfuncname(st));
+			return false;
+		}
+	}
+	mapindex = sd->m;
+
+	return (mapindex >= 0);
+}
+
+//************************************
+// Method:      script_both_setreg
+// Description: 同时设置 $@ 和 @ 数值变量 (设置 @ 变量的前提是能找到 sd)
+// Access:      public
+// Parameter:   struct script_state * st
+// Parameter:   const char * varname_without_prefix
+// Parameter:   int64 value
+// Parameter:   bool isarray	是不是数组
+// Parameter:   int index		如果是数组那么索引是多少
+// Parameter:   int char_id		若提供了角色编号则将 @ 变量值写入该角色
+// Returns:     void
+// Author:      Sola丶小克(CairoLee)  2021/08/17 23:34
+//************************************
+void script_both_setreg(struct script_state* st, const char* varname_without_prefix, int64 value, bool isarray, int index = -1, int char_id = 0) {
+	map_session_data* sd = nullptr;
+	int64 varid = 0;
+
+	sd = map_id2sd(st->rid);
+	if (char_id) {
+		sd = map_charid2sd(char_id);
+	}
+
+	std::string varname = "$@";
+	varname += varname_without_prefix;
+	varid = (isarray ? reference_uid(add_str(varname.c_str()), index) : add_str(varname.c_str()));
+	mapreg_setreg(varid, value);
+
+	if (sd) {
+		varname = "@";
+		varname += varname_without_prefix;
+		varid = (isarray ? reference_uid(add_str(varname.c_str()), index) : add_str(varname.c_str()));
+		pc_setreg(sd, varid, value);
+	}
+}
+
+//************************************
+// Method:      script_both_setregstr
+// Description: 同时设置 $@ 和 @ 字符串变量 (设置 @ 变量的前提是能找到 sd)
+// Access:      public
+// Parameter:   struct script_state * st
+// Parameter:   const char * varname_without_prefix
+// Parameter:   const char * value
+// Parameter:   bool isarray	是不是数组
+// Parameter:   int index		如果是数组那么索引是多少
+// Parameter:   int char_id		若提供了角色编号则将 @ 变量值写入该角色
+// Returns:     void
+// Author:      Sola丶小克(CairoLee)  2021/08/17 23:36
+//************************************
+void script_both_setregstr(struct script_state* st, const char* varname_without_prefix, const char* value, bool isarray, int index = -1, int char_id = 0) {
+	map_session_data* sd = nullptr;
+	int64 varid = 0;
+
+	sd = map_id2sd(st->rid);
+	if (char_id) {
+		sd = map_charid2sd(char_id);
+	}
+
+	std::string varname = "$@";
+	varname += varname_without_prefix;
+	varid = (isarray ? reference_uid(add_str(varname.c_str()), index) : add_str(varname.c_str()));
+	mapreg_setregstr(varid, value);
+
+	if (sd) {
+		varname = "@";
+		varname += varname_without_prefix;
+		varid = (isarray ? reference_uid(add_str(varname.c_str()), index) : add_str(varname.c_str()));
+		pc_setregstr(sd, varid, value);
+	}
+}
+
+//************************************
+// Method:      script_getstorage
+// Description: 根据指令名称来获取不同的存储空间
+// Parameter:   struct script_state * st
+// Parameter:   map_session_data * sd
+// Parameter:   struct s_storage * * stor
+// Parameter:   struct item * * inventory
+// Parameter:   int stor_id
+// Returns:     bool
+// Author:      Sola丶小克(CairoLee)  2022/08/06 12:11
+//************************************
+bool script_getstorage(struct script_state* st, map_session_data* sd, struct s_storage** stor, struct item** inventory, int stor_id = 0) {
+	nullpo_retr(false, st);
+	nullpo_retr(false, sd);
+	nullpo_retr(false, stor);
+	nullpo_retr(false, inventory);
+
+	const char* command = script_getfuncname(st);
+
+	if (strstr(command, "cart")) {
+		if (!pc_iscarton(sd)) {
+			ShowError("buildin_%s: player doesn't have cart (CID: %d).\n", command, sd->status.char_id);
+			return false;
+		}
+		*stor = &sd->cart;
+		*inventory = (*stor)->u.items_cart;
+	}
+	else if (strstr(command, "guildstorage")) {
+		if (!sd->status.guild_id || !sd->guild) {
+			ShowError("buildin_%s: player doesn't join the guild (CID: %d).\n", command, sd->status.char_id);
+			return false;
+		}
+
+#ifdef OFFICIAL_GUILD_STORAGE
+		if (!guild_checkskill(sd->guild->guild, GD_GUILD_STORAGE)) {
+			ShowError("buildin_%s: player's guild has not learned the GD_GUILD_STORAGE skill (CID: %d).\n", command, sd->status.char_id);
+			return false;
+		}
+#endif // OFFICIAL_GUILD_STORAGE
+
+		if (guild2storage2(sd->status.guild_id) || st->waiting_guild_storage) {
+			// 如果该公会的仓库数据已经在地图服务器内存中, 则直接使用
+			*stor = guild2storage2(sd->status.guild_id);
+			if (!(*stor)) {
+				ShowError("buildin_%s: player's guild does not have a guild storage (CID: %d | Guild ID: %d).\n", command, sd->status.char_id, sd->status.guild_id);
+				return false;
+			}
+			*inventory = (*stor)->u.items_guild;
+
+			st->waiting_guild_storage = 0;
+			st->state = RUN;
+		}
+		else if (!st->waiting_guild_storage) {
+			// 否则, 需要先发送请求给角色服务器, 用于加载指定的公会仓库内容
+			st->state = RERUNLINE;
+			st->waiting_guild_storage = 1;
+			intif_request_guild_storage(sd->status.account_id, sd->status.guild_id);
+		}
+		else if (!guild2storage2(sd->status.guild_id)) {
+			ShowError("buildin_%s: player's guild does not have a guild storage (CID: %d | Guild ID: %d).\n", command, sd->status.char_id, sd->status.guild_id);
+			return false;
+		}
+	}
+	else if (strstr(command, "storage")) {
+		if (stor_id == 0) {
+			*stor = &sd->storage;
+			*inventory = (*stor)->u.items_storage;
+		}
+		else if (!storage_exists(stor_id)) {
+			ShowError("buildin_%s: Invalid storage id '%d'!\n", command, stor_id);
+			return false;
+		}
+		else {
+			if (sd->premiumStorage.stor_id == stor_id || st->waiting_premium_storage) {
+				// 如果现有的 premiumStorage 就是我们期望的拓展仓库
+				// 参考 storage_premiumStorage_load 的逻辑, 此时的 premiumStorage 内容可信
+				*stor = &sd->premiumStorage;
+				*inventory = (*stor)->u.items_storage;
+
+				st->waiting_premium_storage = 0;
+				st->state = RUN;
+			}
+			else if (!st->waiting_premium_storage) {
+				// 否则, 需要先发送请求给角色服务器, 用于加载指定的拓展仓库内容
+				st->state = RERUNLINE;
+				st->waiting_premium_storage = 1;
+				intif_storage_request(sd, TABLE_STORAGE, stor_id, STOR_MODE_ALL);
+			}
+		}
+	}
+	else {
+		if (!strstr(command, "inventory")) {
+			ShowWarning("%s: unknow function command: '%s', defaulting to inventory.\n", __func__, command);
+		}
+		*stor = &sd->inventory;
+		*inventory = (*stor)->u.items_inventory;
+	}
+
+	return true;
+}
+
+#endif // Pandas_ScriptCommands
+
 
 /*==========================================
  * Destructor
@@ -4879,6 +5735,10 @@ void script_reload(void) {
 	DBIterator *iter;
 	struct script_state *st;
 
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+	script_batch++; // Increment script batch number to prevent pending async SQL callbacks after reload.
+#endif // Pandas_ScriptCommand_QuerySql_Async
+
 	userfunc_db->clear(userfunc_db, db_script_free_code_sub);
 	db_clear(scriptlabel_db);
 
@@ -4898,6 +5758,20 @@ void script_reload(void) {
 		script_free_state(st);
 	dbi_destroy(iter);
 	db_clear(st_db);
+
+#ifdef Pandas_ScriptEngine_MutliStackBackup
+	{
+		struct s_mapiterator* iter = mapit_getallusers();
+		map_session_data* sd = nullptr;
+		for (sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); sd = (TBL_PC*)mapit_next(iter)) {
+			if (!sd)
+				continue;
+			sd->previous_st.clear();
+		}
+		if (iter)
+			mapit_free(iter);
+	}
+#endif // Pandas_ScriptEngine_MutliStackBackup
 
 	mapreg_reload();
 }
@@ -5124,6 +5998,9 @@ BUILDIN_FUNC(menu)
 
 		StringBuf_Init(&buf);
 		sd->npc_menu = 0;
+#ifdef Pandas_Fix_Prompt_Cancel_Combine_Close_Error
+		sd->npc_menu_npcid = 0;
+#endif // Pandas_Fix_Prompt_Cancel_Combine_Close_Error
 		for( i = 2; i < script_lastdata(st); i += 2 )
 		{
 			struct script_data* data;
@@ -5240,6 +6117,9 @@ BUILDIN_FUNC(select)
 
 		StringBuf_Init(&buf);
 		sd->npc_menu = 0;
+#ifdef Pandas_Fix_Prompt_Cancel_Combine_Close_Error
+		sd->npc_menu_npcid = 0;
+#endif // Pandas_Fix_Prompt_Cancel_Combine_Close_Error
 		for( i = 2; i <= script_lastdata(st); ++i ) {
 			text = script_getstr(st, i);
 
@@ -5318,6 +6198,9 @@ BUILDIN_FUNC(prompt)
 
 		StringBuf_Init(&buf);
 		sd->npc_menu = 0;
+#ifdef Pandas_Fix_Prompt_Cancel_Combine_Close_Error
+		sd->npc_menu_npcid = 0;
+#endif // Pandas_Fix_Prompt_Cancel_Combine_Close_Error
 		for( i = 2; i <= script_lastdata(st); ++i )
 		{
 			text = script_getstr(st, i);
@@ -5581,6 +6464,9 @@ BUILDIN_FUNC(rand)
 	int64 minimum;
 	int64 maximum;
 
+#ifdef Pandas_BattleConfig_Strict_Parameters_Of_Rand
+	if( battle_config.strict_parameters_of_rand ){
+#endif // Pandas_BattleConfig_Strict_Parameters_Of_Rand
 	// min,max
 	if( script_hasdata( st, 3 ) ){
 		minimum = script_getnum64( st, 2 );
@@ -5616,6 +6502,25 @@ BUILDIN_FUNC(rand)
 		st->state = END;
 		return SCRIPT_CMD_FAILURE;
 	}
+#ifdef Pandas_BattleConfig_Strict_Parameters_Of_Rand
+	}else{
+		if( script_hasdata( st, 3 ) ){
+			minimum = script_getnum64( st, 2 );
+			maximum = script_getnum64( st, 3 );
+		}else{
+			minimum = 0;
+			maximum = script_getnum64( st, 2 );
+
+			// The range version is exclusive maximum
+			maximum -= 1;
+
+			if( maximum < 1 ){
+				script_pushint64( st, 0 );
+				return SCRIPT_CMD_SUCCESS;
+			}
+		}
+	}
+#endif // Pandas_BattleConfig_Strict_Parameters_Of_Rand
 
 	script_pushint64( st, rnd_value( minimum, maximum ) );
 
@@ -5665,6 +6570,10 @@ static int32 buildin_areawarp_sub(block_list *bl,va_list ap)
 	y2 = va_arg(ap,int32);
 	x3 = va_arg(ap,int32);
 	y3 = va_arg(ap,int32);
+
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+	pc_mark_multitransfer(bl);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 
 	if(index == 0)
 		pc_randomwarp((TBL_PC *)bl,CLR_TELEPORT,true);
@@ -5867,8 +6776,18 @@ BUILDIN_FUNC(warpparty)
 		if( str2 && strcmp(str2, mapdata->name) != 0 )
 			continue;
 
+#ifndef Pandas_ScriptCommand_WarpPartyRevive
 		if( pc_isdead(pl_sd) )
 			continue;
+#else
+		// 若使用的为 warppartyrevive 指令名, 那么死亡的队员也不会被忽略
+		if (pc_isdead(pl_sd) && strcmpi(script_getfuncname(st), "warppartyrevive") != 0 && strcmpi(script_getfuncname(st), "warpparty2") != 0)
+			continue;
+#endif // Pandas_ScriptCommand_WarpPartyRevive
+
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+		pc_mark_multitransfer(pl_sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 
 		e_setpos ret = SETPOS_OK;
 
@@ -5975,6 +6894,10 @@ BUILDIN_FUNC(warpguild)
 	{
 		if( pl_sd->status.guild_id != gid )
 			continue;
+
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+		pc_mark_multitransfer(pl_sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 
 		switch( type )
 		{
@@ -7361,6 +8284,118 @@ BUILDIN_FUNC(storagecountitem)
 	return SCRIPT_CMD_SUCCESS;
 }
 
+#ifdef Pandas_ScriptCommand_StorageGetItem
+/* ===========================================================
+ * 指令: storagegetitem
+ * 描述: 往仓库直接创造一个指定的道具
+ * 用法: storagegetitem <物品编号>,<数量>{,<账号编号>};
+ * 用法: storagegetitem "<物品名称>",<数量>{,<账号编号>};
+ * 返回: 添加成功会返回 0, 返回小于 0 则表示有错误
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(storagegetitem)
+{
+	int32 get_count = 0, i = 0;
+	t_itemid nameid = 0;
+	uint16 amount = 0;
+	item it = {};
+	map_session_data* sd = nullptr;
+	std::shared_ptr<item_data> id;
+
+	if (script_isstring(st, 2)) {// "<item name>"
+		const char* name = script_getstr(st, 2);
+
+		id = item_db.searchname(name);
+
+		if (id == nullptr) {
+			ShowError("buildin_storagegetitem: Nonexistant item %s requested.\n", name);
+			script_pushint(st, -1);
+			return SCRIPT_CMD_SUCCESS; //No item created.
+		}
+
+		nameid = id->nameid;
+	} else {// <item id>
+		nameid = script_getnum(st, 2);
+
+		id = item_db.find(nameid);
+
+		if (id == nullptr) {
+			ShowError("buildin_storagegetitem: Nonexistant item %u requested.\n", nameid);
+			script_pushint(st, -1);
+			return SCRIPT_CMD_SUCCESS; //No item created.
+		}
+	}
+
+	// <amount>
+	if ((amount = script_getnum(st, 3)) <= 0) {
+		script_pushint(st, -2);
+		return SCRIPT_CMD_SUCCESS; //return if amount <=0, skip the useles iteration
+	}
+
+	it.nameid = nameid;
+	it.identify = 1;
+	it.bound = BOUND_NONE;
+
+	if (!strcmp(script_getfuncname(st), "storagegetitembound")) {
+		char bound = script_getnum(st, 4);
+
+		if (bound < BOUND_NONE || bound >= BOUND_MAX) {
+			ShowError("script_storagegetitembound: Not a correct bound type! Type=%d\n", bound);
+			script_pushint(st, -3);
+			return SCRIPT_CMD_SUCCESS;
+		}
+
+		script_mapid2sd(5, sd);
+		it.bound = bound;
+	} else {
+		script_mapid2sd(4, sd);
+	}
+
+	if (sd == nullptr) {
+		script_pushint(st, -4);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (sd->state.storage_flag == 1 || sd->state.storage_flag == 3) {
+		script_pushint(st, -5);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	//Check if it's stackable.
+	if (!itemdb_isstackable2(id.get()))
+		get_count = 1;
+	else
+		get_count = amount;
+
+	if (!itemdb_canstore(&it, pc_get_group_level(sd))) {
+		script_pushint(st, -6);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (pet_db_search(nameid, PET_EGG)) {
+		script_pushint(st, -7);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!sd->storage.state.put) {
+		script_pushint(st, -8);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	for (i = 0; i < amount; i += get_count) {
+		if (storage_additem(sd, &sd->storage, &it, get_count, true)) {
+			if (pc_candrop(sd, &it))
+				map_addflooritem(&it, get_count, sd->m, sd->x, sd->y, 0, 0, 0, 0, 0);
+			else
+				script_pushint(st, -9);
+		}
+	}
+
+	script_pushint(st, 0);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_StorageGetItem
+
 /**
  * Returns number of items in guild storage
  * guildstoragecountitem(<nameID>{,<accountID>})
@@ -7802,8 +8837,13 @@ BUILDIN_FUNC(getitem2)
 		if (strcmpi(command,"getitem3") == 0) {
 			offset = 11;
 			aid_pos = 14;
-		} 
+		}
+#ifndef Pandas_ScriptCommand_GetGradeItem
 		if (strcmpi(command,"getitem4") == 0) {
+#else
+		// 给 getitem4 添加一个别名叫 getgradeitem
+		if (strcmpi(command,"getitem4") == 0 || strcmpi(command, "getgradeitem") == 0) {
+#endif // Pandas_ScriptCommand_GetGradeItem
 			grade_offset = 11;
 			offset = 12;
 			aid_pos = 15;
@@ -7865,6 +8905,9 @@ BUILDIN_FUNC(getitem2)
 
 		item_tmp.nameid = nameid;
 		item_tmp.identify = iden;
+#ifdef Pandas_BattleConfig_Force_Identified
+		item_tmp.identify = (battle_config.force_identified & 128 ? 1 : item_tmp.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 		item_tmp.refine = ref;
 		item_tmp.attribute = attr;
 		item_tmp.card[0] = c1;
@@ -8039,6 +9082,9 @@ BUILDIN_FUNC(rentitem2) {
 
 	it.nameid = nameid;
 	it.identify = iden;
+#ifdef Pandas_BattleConfig_Force_Identified
+	it.identify = (battle_config.force_identified & 256 ? 1 : it.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 	it.refine = ref;
 	it.attribute = attr;
 	it.card[0] = c1;
@@ -8219,6 +9265,21 @@ BUILDIN_FUNC(makeitem) {
 		item_tmp.identify = 1;
 	else
 		item_tmp.identify = itemdb_isidentified(nameid);
+#ifdef Pandas_BattleConfig_Force_Identified
+	item_tmp.identify = (battle_config.force_identified & 32 ? 1 : item_tmp.identify);
+#endif // Pandas_BattleConfig_Force_Identified
+#ifdef Pandas_ScriptCommand_Next_Dropitem_Special
+	if (next_dropitem_special.bound != -1) {
+		item_tmp.bound = cap_value(next_dropitem_special.bound, BOUND_NONE, BOUND_MAX - 1);
+		next_dropitem_special.bound = -1;
+	}
+	if (next_dropitem_special.rent_duration != 0) {
+		item_tmp.expire_time = static_cast<uint32>(time(nullptr) + next_dropitem_special.rent_duration);
+		next_dropitem_special.rent_duration = 0;
+	}
+	// 提示: 在这里无需处理 next_dropitem_special.drop_effect,
+	// 这部分放在了 clif_dropflooritem 进行, 底部的 map_addflooritem 最终会调用它
+#endif // Pandas_ScriptCommand_Next_Dropitem_Special
 
 	map_addflooritem(&item_tmp, amount, m, x, y, 0, 0, 0, 4, 0, canShowEffect);
 	return SCRIPT_CMD_SUCCESS;
@@ -8297,12 +9358,27 @@ BUILDIN_FUNC(makeitem2) {
 		}
 
 		item_tmp.identify = iden;
+#ifdef Pandas_BattleConfig_Force_Identified
+		item_tmp.identify = (battle_config.force_identified & 32 ? 1 : item_tmp.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 		item_tmp.refine = ref;
 		item_tmp.attribute = attr;
 		item_tmp.card[0] = script_getnum(st,10);
 		item_tmp.card[1] = script_getnum(st,11);
 		item_tmp.card[2] = script_getnum(st,12);
 		item_tmp.card[3] = script_getnum(st,13);
+#ifdef Pandas_ScriptCommand_Next_Dropitem_Special
+		if (next_dropitem_special.bound != -1) {
+			item_tmp.bound = cap_value(next_dropitem_special.bound, BOUND_NONE, BOUND_MAX - 1);
+			next_dropitem_special.bound = -1;
+		}
+		if (next_dropitem_special.rent_duration != 0) {
+			item_tmp.expire_time = static_cast<uint32>(time(nullptr) + next_dropitem_special.rent_duration);
+			next_dropitem_special.rent_duration = 0;
+		}
+		// 提示: 在这里无需处理 next_dropitem_special.drop_effect,
+		// 这部分放在了 clif_dropflooritem 进行, 底部的 map_addflooritem 最终会调用它
+#endif // Pandas_ScriptCommand_Next_Dropitem_Special
 
 		bool canShowEffect = false;
 
@@ -10059,6 +11135,12 @@ BUILDIN_FUNC(bonus)
 		case SP_SKILL_DELAY:
 		case SP_SKILL_USE_SP:
 		case SP_SUB_SKILL:
+#ifdef Pandas_Bonus2_bAddSkillRange
+		case SP_PANDAS_ADDSKILLRANGE:
+#endif // Pandas_Bonus2_bAddSkillRange
+#ifdef Pandas_Bonus2_bSkillNoRequire
+		case SP_PANDAS_SKILLNOREQUIRE:
+#endif // Pandas_Bonus2_bSkillNoRequire
 			// these bonuses support skill names
 			if (script_isstring(st, 3)) {
 				const char *name = script_getstr(st, 3);
@@ -10499,6 +11581,13 @@ BUILDIN_FUNC(end)
 	sd = map_id2sd(st->rid);
 
 	st->state = END;
+
+#ifdef Pandas_ScriptEngine_Express
+	// 防止在穿透事件的脚本代码中使用 end 指令, 会导致角色正在执行的脚本或对话被强制中断,
+	// 或与 NPC 进行中的对话框直接显示出 [关闭] 按钮的问题 [Sola丶小克]
+	if (sd && npc_event_is_realtime(sd->pandas.workinevent))
+		return SCRIPT_CMD_SUCCESS;
+#endif // Pandas_ScriptEngine_Express
 
 	npc_data* nd = map_id2nd( st->oid );
 
@@ -11257,7 +12346,11 @@ BUILDIN_FUNC(monster)
 		std::shared_ptr<s_mob_db> mob = mobdb_search_aegisname( name );
 
 		if( mob == nullptr ){
+#ifndef Pandas_ScriptCommand_BossMonster
 			ShowWarning( "buildin_monster: Attempted to spawn non-existing monster \"%s\"\n", name );
+#else
+			ShowWarning("buildin_%s: Attempted to spawn non-existing monster \"%s\"\n", script_getfuncname(st), name);
+#endif // Pandas_ScriptCommand_BossMonster
 			return SCRIPT_CMD_FAILURE;
 		}
 
@@ -11266,7 +12359,11 @@ BUILDIN_FUNC(monster)
 		class_ = script_getnum( st, 6 );
 
 		if( class_ >= 0 && !mobdb_checkid( class_ ) ){
+#ifndef Pandas_ScriptCommand_BossMonster
 			ShowWarning( "buildin_monster: Attempted to spawn non-existing monster class %d\n", class_ );
+#else
+			ShowWarning("buildin_%s: Attempted to spawn non-existing monster class %d\n", script_getfuncname(st), class_);
+#endif // Pandas_ScriptCommand_BossMonster
 			return SCRIPT_CMD_FAILURE;
 		}
 	}
@@ -11279,7 +12376,11 @@ BUILDIN_FUNC(monster)
 	if (script_hasdata(st, 9)) {
 		size = script_getnum(st, 9);
 		if (size > SZ_BIG) {
+#ifndef Pandas_ScriptCommand_BossMonster
 			ShowWarning("buildin_monster: Attempted to spawn non-existing size %d for monster class %d\n", size, class_);
+#else
+			ShowWarning("buildin_%s: Attempted to spawn non-existing size %d for monster class %d\n", script_getfuncname(st), size, class_);
+#endif // Pandas_ScriptCommand_BossMonster
 			return SCRIPT_CMD_FAILURE;
 		}
 	}
@@ -11287,7 +12388,11 @@ BUILDIN_FUNC(monster)
 	if (script_hasdata(st, 10)) {
 		ai = static_cast<enum mob_ai>(script_getnum(st, 10));
 		if (ai >= AI_MAX) {
+#ifndef Pandas_ScriptCommand_BossMonster
 			ShowWarning("buildin_monster: Attempted to spawn non-existing ai %d for monster class %d\n", ai, class_);
+#else
+			ShowWarning("buildin_%s: Attempted to spawn non-existing ai %d for monster class %d\n", script_getfuncname(st), ai, class_);
+#endif // Pandas_ScriptCommand_BossMonster
 			return SCRIPT_CMD_FAILURE;
 		}
 	}
@@ -11302,7 +12407,11 @@ BUILDIN_FUNC(monster)
 	TBL_MOB* md;
 
 	for(i = 0; i < amount; i++) { //not optimised
+#ifndef Pandas_ScriptCommand_BossMonster
 		int32 mobid = mob_once_spawn(sd, m, x, y, str, class_, 1, event, size, ai);
+#else
+		int32 mobid = mob_once_spawn(sd, m, x, y, str, class_, 1, event, size, ai, (!strcmp(script_getfuncname(st), "boss_monster")) ? 1 : 0);
+#endif // Pandas_ScriptCommand_BossMonster
 
 		if (mobid > 0) {
 			md = map_id2md(mobid);
@@ -11964,7 +13073,11 @@ BUILDIN_FUNC(announce)
 	int32         fontAlign = script_hasdata(st,7) ? script_getnum(st,7) : 0;     // default fontAlign
 	int32         fontY     = script_hasdata(st,8) ? script_getnum(st,8) : 0;     // default fontY
 
+#ifndef Pandas_ScriptCommand_Announce
 	if (flag&(BC_TARGET_MASK|BC_SOURCE_MASK)) // Broadcast source or broadcast region defined
+#else
+	if (flag&(BC_TARGET_MASK|BC_SOURCE_MASK|BC_NAME)) // Broadcast source or broadcast region defined
+#endif // Pandas_ScriptCommand_Announce
 	{
 		send_target target;
 		block_list *bl;
@@ -11991,10 +13104,28 @@ BUILDIN_FUNC(announce)
 			default:		target = ALL_CLIENT;	break; // BC_ALL
 		}
 
+#ifndef Pandas_ScriptCommand_Announce
 		if (fontColor)
 			clif_broadcast2(bl, mes, (int32)strlen(mes)+1, strtol(fontColor, (char **)nullptr, 0), fontType, fontSize, fontAlign, fontY, target);
 		else
 			clif_broadcast(bl, mes, (int32)strlen(mes)+1, flag&BC_COLOR_MASK, target);
+#else
+		if ((flag & BC_NAME) != 0 && bl != nullptr && bl->type == BL_PC) {
+			char output[CHAT_SIZE_MAX] = { 0 };
+
+			if (!fontColor)
+				fontColor = "0xFFFF00";
+
+			sprintf(output, "%06lx%s", strtol(fontColor, (char**)nullptr, 0), mes);
+			clif_broadcast(bl, output, (int32)strlen(output) + 1, flag, target);
+		}
+		else {
+			if (fontColor)
+				clif_broadcast2(bl, mes, (int32)strlen(mes) + 1, strtol(fontColor, (char**)nullptr, 0), fontType, fontSize, fontAlign, fontY, target);
+			else
+				clif_broadcast(bl, mes, (int32)strlen(mes) + 1, flag & BC_COLOR_MASK, target);
+		}
+#endif // Pandas_ScriptCommand_Announce
 	}
 	else
 	{
@@ -12694,6 +13825,49 @@ BUILDIN_FUNC(catchpet)
 	return SCRIPT_CMD_SUCCESS;
 }
 
+#ifdef Pandas_ScriptCommand_MultiCatchPet
+/* ===========================================================
+ * 指令: multicatchpet
+ * 描述: 与 catchpet 指令类似, 但可以指定更多支持捕捉的魔物编号
+ * 用法: multicatchpet <魔物编号>{,<魔物编号>...};
+ * 返回: 该指令无论成功失败, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(multicatchpet) {
+	TBL_PC* sd;
+	uint32 i = 2;
+
+	if (!script_rid2sd(sd))
+		return SCRIPT_CMD_SUCCESS;
+
+	if (!script_hasdata(st, i)) {
+		ShowError("buildin_%s: no arguments given!\n", script_getfuncname(st));
+		st->state = END;
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	sd->pandas.multi_catch_target_class.clear();
+
+	while (script_hasdata(st, i)) {
+		struct script_data* data = script_getdata(st, i);
+
+		if (data_isint(data)) {
+			sd->pandas.multi_catch_target_class.push_back(script_getnum(st, i));
+		} else {
+			ShowError("buildin_%s: The No.%d parameter is not integer type.\n", script_getfuncname(st), i - 1);
+			script_reportdata(data);
+			st->state = END;
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		i++;
+	}
+
+	pet_catch_process_start(*sd, 0, PET_CATCH_MULTI_TARGET);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_MultiCatchPet
+
 /*==========================================
  * [orn]
  *------------------------------------------*/
@@ -13322,6 +14496,10 @@ BUILDIN_FUNC(warpwaitingpc)
 
 		mapreg_setreg(reference_uid(add_str("$@warpwaitingpc"), i), sd->id);
 
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+		pc_mark_multitransfer(sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
+
 		if( strcmp(map_name,"Random") == 0 )
 			pc_randomwarp(sd,CLR_TELEPORT,true);
 		else if( strcmp(map_name,"SavePoint") == 0 )
@@ -13559,7 +14737,7 @@ BUILDIN_FUNC(setmapflagnosave)
 	int16 m,x,y;
 	uint16 mapindex;
 	const char *str,*str2;
-	union u_mapflag_args args = {};
+	pds_mapflag_args args = {};
 
 	str=script_getstr(st,2);
 	str2=script_getstr(st,3);
@@ -13602,7 +14780,7 @@ BUILDIN_FUNC(getmapflag)
 		return SCRIPT_CMD_FAILURE;
 	}
 
-	union u_mapflag_args args = {};
+	pds_mapflag_args args = {};
 
 	if (mf == MF_SKILL_DAMAGE && !script_hasdata(st, 4))
 		args.flag_val = SKILLDMG_MAX;
@@ -13635,7 +14813,7 @@ BUILDIN_FUNC(setmapflag)
 		return SCRIPT_CMD_FAILURE;
 	}
 
-	union u_mapflag_args args = {};
+	pds_mapflag_args args = {};
 
 	switch(mf) {
 		case MF_SKILL_DAMAGE:
@@ -13675,6 +14853,39 @@ BUILDIN_FUNC(setmapflag)
 			break;
 	}
 
+#ifdef Pandas_Mapflags
+	auto conf = util::umap_find(mapflag_config, static_cast<e_mapflag>(mf));
+	if (conf != nullptr) {
+		size_t args_count = conf->args.size();
+		args.input.resize(args_count);
+
+		switch (args_count) {
+		case 0:
+			break;
+		case 1:
+			FETCH(4, args.input[0]);
+			break;
+		case 2:
+			FETCH(4, args.input[0]);
+			FETCH(5, args.input[1]);
+			break;
+		case 3:
+			FETCH(4, args.input[0]);
+			FETCH(5, args.input[1]);
+			FETCH(6, args.input[2]);
+			break;
+		case 4:
+			FETCH(4, args.input[0]);
+			FETCH(5, args.input[1]);
+			FETCH(6, args.input[2]);
+			FETCH(7, args.input[3]);
+			break;
+		default:
+			ShowError("buildin_setmapflag: Unsupported mapflag '%s' with %d arguments.\n", conf->name, args_count);
+			break;
+		}
+	}
+#endif // Pandas_Mapflags
 	map_setmapflag_sub(m, static_cast<e_mapflag>(mf), true, &args);
 
 	return SCRIPT_CMD_SUCCESS;
@@ -13685,7 +14896,7 @@ BUILDIN_FUNC(removemapflag)
 	int16 m;
 	int32 mf;
 	const char *str;
-	union u_mapflag_args args = {};
+	pds_mapflag_args args = {};
 
 	str = script_getstr(st, 2);
 	m = map_mapname2mapid(str);
@@ -14344,6 +15555,9 @@ BUILDIN_FUNC(mapwarp)	// Added by RoVeRT
 				for( i=0; i < g->guild.max_member; i++)
 				{
 					if(g->guild.member[i].sd && g->guild.member[i].sd->m==m){
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+						pc_mark_multitransfer(g->guild.member[i].sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 						pc_setpos(g->guild.member[i].sd,index,x,y,CLR_TELEPORT);
 					}
 				}
@@ -14354,6 +15568,9 @@ BUILDIN_FUNC(mapwarp)	// Added by RoVeRT
 			if(p){
 				for(i=0;i<MAX_PARTY; i++){
 					if(p->data[i].sd && p->data[i].sd->m == m){
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+						pc_mark_multitransfer(p->data[i].sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 						pc_setpos(p->data[i].sd,index,x,y,CLR_TELEPORT);
 					}
 				}
@@ -14822,6 +16039,38 @@ BUILDIN_FUNC(getiteminfo)
 		case ITEMINFO_ID: script_pushint(st, i_data->nameid); break;
 		case ITEMINFO_AEGISNAME: script_pushstrcopy(st, i_data->name.c_str()); break;
 		case ITEMINFO_SUBTYPE: script_pushint(st, i_data->subtype); break;
+#ifdef Pandas_ScriptParams_GetItemInfo
+		case -1: script_pushint(st, i_data->flag.no_refine ? 0 : 1); break;
+		case -2: {
+			int64 trade_mask = 0;
+			if (i_data && i_data->flag.trade_restriction.drop) trade_mask |= 1;
+			if (i_data && i_data->flag.trade_restriction.trade) trade_mask |= 2;
+			if (i_data && i_data->flag.trade_restriction.trade_partner) trade_mask |= 4;
+			if (i_data && i_data->flag.trade_restriction.sell) trade_mask |= 8;
+			if (i_data && i_data->flag.trade_restriction.cart) trade_mask |= 16;
+			if (i_data && i_data->flag.trade_restriction.storage) trade_mask |= 32;
+			if (i_data && i_data->flag.trade_restriction.guild_storage) trade_mask |= 64;
+			if (i_data && i_data->flag.trade_restriction.mail) trade_mask |= 128;
+			if (i_data && i_data->flag.trade_restriction.auction) trade_mask |= 256;
+			script_pushint(st, trade_mask);
+			break;
+		}
+#endif // Pandas_ScriptParams_GetItemInfo
+#ifdef Pandas_Persistence_Itemdb_Script
+		case -7:
+			script_pushstrcopy(st, i_data->pandas.script_plaintext.script.c_str());
+			break;
+		case -8:
+			script_pushstrcopy(st, i_data->pandas.script_plaintext.equip_script.c_str());
+			break;
+		case -9:
+			script_pushstrcopy(st, i_data->pandas.script_plaintext.unequip_script.c_str());
+			break;
+#else
+		case -7: script_pushconststr(st, "UnCompiled"); break;
+		case -8: script_pushconststr(st, "UnCompiled"); break;
+		case -9: script_pushconststr(st, "UnCompiled"); break;
+#endif // Pandas_Persistence_Itemdb_Script
 		default:
 			script_pushint(st, -1);
 			break;
@@ -15028,13 +16277,16 @@ BUILDIN_FUNC(petloot)
  *------------------------------------------*/
 BUILDIN_FUNC(getinventorylist)
 {
-	TBL_PC *sd;
-	char card_var[NAME_LENGTH], randopt_var[50];
-	int32 i,j=0,k;
+	map_session_data* sd = nullptr;
+	char card_var[NAME_LENGTH] = { 0 }, randopt_var[50] = { 0 };
+	int32 j = 0, k = 0;
 
-	if (!script_charid2sd(2,sd))
+	if (!script_charid2sd(2, sd)) {
 		return SCRIPT_CMD_FAILURE;
-	for(i=0;i<MAX_INVENTORY;i++){
+	}
+
+#ifndef Pandas_ScriptCommand_GetInventoryList
+	for(int32 i = 0; i < MAX_INVENTORY; i++){
 		if(sd->inventory.u.items_inventory[i].nameid > 0 && sd->inventory.u.items_inventory[i].amount > 0){
 			pc_setreg(sd,reference_uid(add_str("@inventorylist_id"), j),sd->inventory.u.items_inventory[i].nameid);
 			pc_setreg(sd,reference_uid(add_str("@inventorylist_idx"), j),i);
@@ -15065,7 +16317,117 @@ BUILDIN_FUNC(getinventorylist)
 			j++;
 		}
 	}
-	pc_setreg(sd,add_str("@inventorylist_count"),j);
+#else
+	uint32 query_flag = INV_ALL;
+	if (script_hasdata(st, 3)) {
+		query_flag = script_getnum(st, 3);
+	}
+
+	struct s_storage* stor = nullptr;
+	struct item* inventory = nullptr;
+	int32 stor_id = (script_hasdata(st, 4) ? script_getnum(st, 4) : 0);
+
+	pc_setreg(sd, add_str("@inventorylist_count"), 0);
+
+	if (!script_getstorage(st, sd, &stor, &inventory, stor_id)) {
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (st->state == RERUNLINE) {
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!stor || !inventory) {
+		const char* command = script_getfuncname(st);
+		ShowError("buildin_%s: cannot read inventory or storage data.\n", command);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+#define setreg(flag, arrayname, value) \
+	do { \
+		if ((query_flag & (flag)) == (flag)) \
+			pc_setreg(sd, reference_uid(add_str(arrayname), j), value); \
+	} while (0)
+#define setregstr(flag, arrayname, value) \
+	do { \
+		if ((query_flag & (flag)) == (flag)) \
+			pc_setregstr(sd, reference_uid(add_str(arrayname), j), value); \
+	} while (0)
+
+	script_cleararray_pc(sd, "@inventorylist_id");
+	script_cleararray_pc(sd, "@inventorylist_idx");
+	script_cleararray_pc(sd, "@inventorylist_amount");
+	script_cleararray_pc(sd, "@inventorylist_equip");
+	script_cleararray_pc(sd, "@inventorylist_refine");
+	script_cleararray_pc(sd, "@inventorylist_identify");
+	script_cleararray_pc(sd, "@inventorylist_attribute");
+	for (k = 0; k < MAX_SLOTS; k++) {
+		sprintf(card_var, "@inventorylist_card%d", k + 1);
+		script_cleararray_pc(sd, card_var);
+	}
+	script_cleararray_pc(sd, "@inventorylist_expire");
+	script_cleararray_pc(sd, "@inventorylist_bound");
+	script_cleararray_pc(sd, "@inventorylist_enchantgrade");
+	for (k = 0; k < MAX_ITEM_RDM_OPT; k++) {
+		sprintf(randopt_var, "@inventorylist_option_id%d", k + 1);
+		script_cleararray_pc(sd, randopt_var);
+		sprintf(randopt_var, "@inventorylist_option_value%d", k + 1);
+		script_cleararray_pc(sd, randopt_var);
+		sprintf(randopt_var, "@inventorylist_option_parameter%d", k + 1);
+		script_cleararray_pc(sd, randopt_var);
+	}
+	script_cleararray_pc(sd, "@inventorylist_tradable");
+	script_cleararray_pc(sd, "@inventorylist_favorite");
+	script_cleararray_pc(sd, "@inventorylist_uid$");
+	script_cleararray_pc(sd, "@inventorylist_equipswitch");
+
+	for (int32 i = 0; i < stor->max_amount; i++) {
+		if (inventory[i].nameid <= 0 || inventory[i].amount <= 0) {
+			continue;
+		}
+
+		setreg(INV_ID, "@inventorylist_id", inventory[i].nameid);
+		setreg(INV_IDX, "@inventorylist_idx", i);
+		setreg(INV_AMOUNT, "@inventorylist_amount", inventory[i].amount);
+		setreg(INV_EQUIP, "@inventorylist_equip", inventory[i].equip);
+		setreg(INV_REFINE, "@inventorylist_refine", inventory[i].refine);
+		setreg(INV_IDENTIFY, "@inventorylist_identify", inventory[i].identify);
+		setreg(INV_ATTRIBUTE, "@inventorylist_attribute", inventory[i].attribute);
+
+		for (k = 0; k < MAX_SLOTS; k++) {
+			sprintf(card_var, "@inventorylist_card%d", k + 1);
+			setreg(INV_CARD, card_var, inventory[i].card[k]);
+		}
+
+		setreg(INV_EXPIRE, "@inventorylist_expire", inventory[i].expire_time);
+		setreg(INV_BOUND, "@inventorylist_bound", inventory[i].bound);
+		setreg(INV_ENCHANTGRADE, "@inventorylist_enchantgrade", inventory[i].enchantgrade);
+
+		for (k = 0; k < MAX_ITEM_RDM_OPT; k++) {
+			sprintf(randopt_var, "@inventorylist_option_id%d", k + 1);
+			setreg(INV_OPTION, randopt_var, inventory[i].option[k].id);
+			sprintf(randopt_var, "@inventorylist_option_value%d", k + 1);
+			setreg(INV_OPTION, randopt_var, inventory[i].option[k].value);
+			sprintf(randopt_var, "@inventorylist_option_parameter%d", k + 1);
+			setreg(INV_OPTION, randopt_var, inventory[i].option[k].param);
+		}
+
+		setreg(INV_TRADABLE, "@inventorylist_tradable", pc_can_trade_item(sd, inventory[i]));
+		setreg(INV_FAVORITE, "@inventorylist_favorite", inventory[i].favorite);
+
+		char unique_id[64 + 1] = { 0 };
+		sprintf(unique_id, "%" PRIu64, inventory[i].unique_id);
+		setregstr(INV_UID, "@inventorylist_uid$", unique_id);
+
+		setreg(INV_EQUIPSWITCH, "@inventorylist_equipswitch", inventory[i].equipSwitch);
+		j++;
+	}
+
+#undef setreg
+#undef setregstr
+#endif // Pandas_ScriptCommand_GetInventoryList
+
+	pc_setreg(sd, add_str("@inventorylist_count"), j);
 	return SCRIPT_CMD_SUCCESS;
 }
 
@@ -17184,7 +18546,11 @@ BUILDIN_FUNC(delchar)
 	char *output;
 	size_t len = strlen(str);
 
+#ifndef Pandas_Crashfix_ScriptCommand_Delchar
 	if(index < 0 || index > len) {
+#else
+	if(index < 0 || index > len || !len) {
+#endif // Pandas_Crashfix_ScriptCommand_Delchar
 		//return original
 		output = aStrdup(str);
 		script_pushstr(st, output);
@@ -17511,14 +18877,22 @@ BUILDIN_FUNC(sprintf)
 		if(data_isstring(data))  // String
 			StringBuf_Printf(&final_buf, buf2, script_getstr(st, arg+3));
 		else if(data_isint(data))  // Number
+			#ifndef Pandas_Fix_Sprintf_ScriptCommand_Unsupport_Int64
 			StringBuf_Printf(&final_buf, buf2, script_getnum(st, arg+3));
+			#else
+			StringBuf_Printf(&final_buf, buf2, script_getnum64(st, arg+3));
+			#endif // Pandas_Fix_Sprintf_ScriptCommand_Unsupport_Int64
 		else if(data_isreference(data)) {  // Variable
 			char* name = reference_getname(data);
 
 			if(name[strlen(name)-1]=='$')  // var Str
 				StringBuf_Printf(&final_buf, buf2, script_getstr(st, arg+3));
 			else  // var Int
+				#ifndef Pandas_Fix_Sprintf_ScriptCommand_Unsupport_Int64
 				StringBuf_Printf(&final_buf, buf2, script_getnum(st, arg+3));
+				#else
+				StringBuf_Printf(&final_buf, buf2, script_getnum64(st, arg+3));
+				#endif // Pandas_Fix_Sprintf_ScriptCommand_Unsupport_Int64
 		} else {  // Unsupported type
 			ShowError("buildin_sprintf: Unknown argument type!\n");
 			if(buf) aFree(buf);
@@ -18024,6 +19398,10 @@ BUILDIN_FUNC(setd)
 	if(sscanf(buffer, "%99[^[][%11d]", varname, &elem) < 2)
 		elem = 0;
 
+#ifdef Pandas_Crashfix_ScriptCommand_Getd_And_Setd
+	trim(varname);
+#endif // Pandas_Crashfix_ScriptCommand_Getd_And_Setd
+
 	if( not_server_variable(*varname) ) {
 		if (!script_charid2sd(4,sd))
 			return SCRIPT_CMD_FAILURE;
@@ -18137,6 +19515,139 @@ BUILDIN_FUNC(query_logsql) {
 	return buildin_query_sql_sub(st, logmysql_handle);
 }
 
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+std::map<uint32, DBResultData*> query_sql_db;
+
+static int32 buildin_query_sql_async_sub(struct script_state* st, dbType type)
+{
+	if (!st->asyncSleep) {
+		const char* query = script_getstr(st, 2);
+		int batch_number = script_batch.load();
+
+		if (script_hasdata(st, 3)) {
+			st->state = RERUNLINE;
+			st->asyncSleep = true;
+
+			asyncquery_addDBJob(
+				type,
+				query,
+				[st, batch_number](FutureData result_data) {
+					if (batch_number != script_batch.load()) {
+						delete reinterpret_cast<DBResultData*>(result_data);
+						return;
+					}
+
+					query_sql_db[st->id] = reinterpret_cast<DBResultData*>(result_data);
+					run_script_main(st);
+				}
+			);
+		} else {
+			asyncquery_addDBJob(type, query);
+		}
+	} else {
+		auto it = query_sql_db.find(st->id);
+		if (it == query_sql_db.end() || it->second == nullptr) {
+			st->asyncSleep = false;
+			st->state = RUN;
+			script_pushint(st, -1);
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		DBResultData result_data(it->second);
+		delete it->second;
+		query_sql_db.erase(it);
+
+		int32 i, j;
+		TBL_PC* sd = nullptr;
+		struct script_data* data;
+		const char* name;
+		uint32 max_rows = SCRIPT_MAX_ARRAYSIZE;
+		size_t num_vars;
+		size_t num_cols;
+
+		st->asyncSleep = false;
+		st->state = RUN;
+
+		for (i = 3; script_hasdata(st, i); ++i) {
+			data = script_getdata(st, i);
+			if (data_isreference(data)) {
+				name = reference_getname(data);
+				if (not_server_variable(*name) && sd == nullptr) {
+					if (!script_rid2sd(sd)) {
+						script_reportdata(data);
+						st->state = END;
+						return SCRIPT_CMD_FAILURE;
+					}
+				}
+			} else {
+				ShowError("script:query_sql_async: not a variable\n");
+				script_reportdata(data);
+				st->state = END;
+				return SCRIPT_CMD_FAILURE;
+			}
+		}
+		num_vars = i - 3;
+
+		if (SQL_ERROR == result_data.sql_result_value) {
+			script_pushint(st, -1);
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		if (result_data.RowNum == 0) {
+			script_pushint(st, 0);
+			return SCRIPT_CMD_SUCCESS;
+		}
+
+		num_cols = result_data.ColumnNum;
+		if (num_vars < num_cols) {
+			ShowWarning("script:query_sql_async: Too many columns, discarding last %u columns.\n", (uint32)(num_cols - num_vars));
+			script_reportsrc(st);
+		} else if (num_vars > num_cols) {
+			ShowWarning("script:query_sql_async: Too many variables (%u extra).\n", (uint32)(num_vars - num_cols));
+			script_reportsrc(st);
+		}
+
+		for (i = 0; i < max_rows && static_cast<size_t>(i) < result_data.RowNum; ++i) {
+			for (j = 0; static_cast<size_t>(j) < num_vars; ++j) {
+				const char* str = nullptr;
+
+				if (static_cast<size_t>(j) < num_cols)
+					str = result_data.GetData(i, j);
+
+				data = script_getdata(st, j + 3);
+				name = reference_getname(data);
+
+				if (is_string_variable(name))
+					setd_sub_str(st, sd, name, i, str ? str : "", reference_getref(data));
+				else
+					setd_sub_num(st, sd, name, i, str ? strtoll(str, nullptr, 10) : 0, reference_getref(data));
+			}
+		}
+		if (i == max_rows && max_rows < result_data.RowNum) {
+			ShowWarning("script:query_sql_async: Only %d/%u rows have been stored.\n", max_rows, (uint32)result_data.RowNum);
+			script_reportsrc(st);
+		}
+
+		script_pushint(st, i);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+
+BUILDIN_FUNC(query_sql_async) {
+	return buildin_query_sql_async_sub(st, dbType::MAIN_DB);
+}
+
+BUILDIN_FUNC(query_logsql_async) {
+	if (!log_config.sql_logs) {
+		ShowWarning("buildin_query_logsql_async: SQL logs are disabled, query '%s' will not be executed.\n", script_getstr(st, 2));
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	return buildin_query_sql_async_sub(st, dbType::LOG_DB);
+}
+#endif // Pandas_ScriptCommand_QuerySql_Async
 //Allows escaping of a given string.
 BUILDIN_FUNC(escape_sql)
 {
@@ -18162,6 +19673,10 @@ BUILDIN_FUNC(getd)
 
 	if(sscanf(buffer, "%99[^[][%11d]", varname, &elem) < 2)
 		elem = 0;
+
+#ifdef Pandas_Crashfix_ScriptCommand_Getd_And_Setd
+	trim(varname);
+#endif // Pandas_Crashfix_ScriptCommand_Getd_And_Setd
 
 	// Push the 'pointer' so it's more flexible [Lance]
 	push_val(st->stack, C_NAME, reference_uid(add_str(varname), elem));
@@ -18790,8 +20305,14 @@ BUILDIN_FUNC(checkvending) {
 		else if (sd->state.buyingstore)
 			ret = 4;
 
+		#ifndef Pandas_Struct_Autotrade_Extend
 		if (sd->state.autotrade)
 			ret |= 2;
+		#else
+		if ((sd->state.autotrade & AUTOTRADE_VENDING) ||
+			(sd->state.autotrade & AUTOTRADE_BUYINGSTORE))
+			ret |= 2;
+		#endif // Pandas_Struct_Autotrade_Extend
 		script_pushint(st, ret);
 	}
 	return SCRIPT_CMD_SUCCESS;
@@ -19018,10 +20539,31 @@ BUILDIN_FUNC(unitexists)
 
 	bl = map_id2bl(script_getnum(st, 2));
 
+#ifndef Pandas_ScriptCommand_UnitExists
 	if (!bl)
 		script_pushint(st, false);
 	else
 		script_pushint(st, true);
+#else
+	int require_alive = 0;
+	if (!script_get_optnum(st, 3, "Require Unit alive or not", require_alive, true, 0)) {
+		script_pushint(st, false);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (!require_alive) {
+		if (!bl)
+			script_pushint(st, false);
+		else
+			script_pushint(st, true);
+	}
+	else {
+		if (!bl || status_isdead(*bl))
+			script_pushint(st, false);
+		else
+			script_pushint(st, true);
+	}
+#endif // Pandas_ScriptCommand_UnitExists
 
 	return SCRIPT_CMD_SUCCESS;
 }
@@ -19152,6 +20694,18 @@ BUILDIN_FUNC(getunitdata)
 			getunitdata_sub(UMOB_RES, md->status.res);
 			getunitdata_sub(UMOB_MRES, md->status.mres);
 			getunitdata_sub(UMOB_DAMAGETAKEN, md->damagetaken);
+#ifdef Pandas_ScriptParams_DamageTaken_From_Database
+			getunitdata_sub(UMOB_DAMAGETAKEN_DB, md->db->damagetaken);
+#endif // Pandas_ScriptParams_DamageTaken_From_Database
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+			getunitdata_sub(UMOB_AURA, md->ucd.aura.id);
+#endif // Pandas_Struct_Unit_CommonData_Aura
+#ifdef Pandas_ScriptParams_UnitData_Experience
+			getunitdata_sub(UMOB_MOBBASEEXP, md->pandas.base_exp);
+			getunitdata_sub(UMOB_MOBBASEEXP_DB, md->db->base_exp);
+			getunitdata_sub(UMOB_MOBJOBEXP, md->pandas.job_exp);
+			getunitdata_sub(UMOB_MOBJOBEXP_DB, md->db->job_exp);
+#endif // Pandas_ScriptParams_UnitData_Experience
 			} break;
 
 		case BL_HOM: {
@@ -19198,6 +20752,9 @@ BUILDIN_FUNC(getunitdata)
 			getunitdata_sub(UHOM_DMOTION, hd->battle_status.dmotion);
 			getunitdata_sub(UHOM_TARGETID, hd->ud.target);
 			getunitdata_sub(UHOM_GROUP_ID, hd->ud.group_id);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+			getunitdata_sub(UHOM_AURA, hd->ucd.aura.id);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 			} break;
 
 		case BL_PET: {
@@ -19241,6 +20798,9 @@ BUILDIN_FUNC(getunitdata)
 			getunitdata_sub(UPET_ADELAY, pd->status.adelay);
 			getunitdata_sub(UPET_DMOTION, pd->status.dmotion);
 			getunitdata_sub(UPET_GROUP_ID, pd->ud.group_id);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+			getunitdata_sub(UPET_AURA, pd->ucd.aura.id);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 			} break;
 
 		case BL_MER: {
@@ -19284,6 +20844,9 @@ BUILDIN_FUNC(getunitdata)
 			getunitdata_sub(UMER_DMOTION, mc->base_status.dmotion);
 			getunitdata_sub(UMER_TARGETID, mc->ud.target);
 			getunitdata_sub(UMER_GROUP_ID, mc->ud.group_id);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+			getunitdata_sub(UMER_AURA, mc->ucd.aura.id);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 			} break;
 
 		case BL_ELEM: {
@@ -19329,6 +20892,9 @@ BUILDIN_FUNC(getunitdata)
 			getunitdata_sub(UELE_DMOTION, ed->base_status.dmotion);
 			getunitdata_sub(UELE_TARGETID, ed->ud.target);
 			getunitdata_sub(UELE_GROUP_ID, ed->ud.group_id);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+			getunitdata_sub(UELE_AURA, ed->ucd.aura.id);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 			} break;
 
 		case BL_NPC: {
@@ -19380,6 +20946,9 @@ BUILDIN_FUNC(getunitdata)
 			getunitdata_sub(UNPC_BODY2, nd->vd.look[LOOK_BODY2]);
 			getunitdata_sub(UNPC_DEADSIT, nd->vd.dead_sit);
 			getunitdata_sub(UNPC_GROUP_ID, nd->ud.group_id);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+			getunitdata_sub(UNPC_AURA, nd->ucd.aura.id);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 			} break;
 
 		default:
@@ -19408,11 +20977,19 @@ BUILDIN_FUNC(setunitdata)
 	int32 type = script_getnum(st, 3), value = 0;
 	const char *mapname = nullptr;
 	bool calc_status = false;
+#ifdef Pandas_ScriptParams_UnitData_Experience
+	int64 value64 = 0;
+#endif // Pandas_ScriptParams_UnitData_Experience
 
 	if ((type == UMOB_MAPID || type == UHOM_MAPID || type == UPET_MAPID || type == UMER_MAPID || type == UELE_MAPID || type == UNPC_MAPID) && script_isstring(st, 4))
 		mapname = script_getstr(st, 4);
 	else
 		value = script_getnum(st, 4);
+
+#ifdef Pandas_ScriptParams_UnitData_Experience
+	if (bl->type == BL_MOB && (type == UMOB_MOBBASEEXP || type == UMOB_MOBJOBEXP))
+		value64 = script_getnum64(st, 4);
+#endif // Pandas_ScriptParams_UnitData_Experience
 
 	switch (bl->type) {
 	case BL_MOB: {
@@ -19421,6 +20998,11 @@ BUILDIN_FUNC(setunitdata)
 		if (!md->base_status) {
 			md->base_status = (struct status_data*)aCalloc(1, sizeof(struct status_data));
 			memcpy(md->base_status, &md->db->status, sizeof(struct status_data));
+#ifdef Pandas_Struct_Mob_Data_Special_SetUnitData
+			if (md->pandas.special_setunitdata) {
+				md->pandas.special_setunitdata->clear();
+			}
+#endif // Pandas_Struct_Mob_Data_Special_SetUnitData
 		}
 
 		// Check if the view data will be modified
@@ -19496,8 +21078,8 @@ BUILDIN_FUNC(setunitdata)
 			case UMOB_ATKMAX: md->base_status->rhw.atk2 = (uint16)value; calc_status = true; break;
 			case UMOB_MATKMIN: md->base_status->matk_min = (uint16)value; calc_status = true; break;
 			case UMOB_MATKMAX: md->base_status->matk_max = (uint16)value; calc_status = true; break;
-			case UMOB_DEF: md->base_status->def = (defType)value; calc_status = true; break;
-			case UMOB_MDEF: md->base_status->mdef = (defType)value; calc_status = true; break;
+			case UMOB_DEF: md->base_status->def = (pec_defType)value; calc_status = true; break;
+			case UMOB_MDEF: md->base_status->mdef = (pec_defType)value; calc_status = true; break;
 			case UMOB_HIT: md->base_status->hit = (int16)value; calc_status = true; break;
 			case UMOB_FLEE: md->base_status->flee = (int16)value; calc_status = true; break;
 			case UMOB_PDODGE: md->base_status->flee2 = (int16)value; calc_status = true; break;
@@ -19525,13 +21107,36 @@ BUILDIN_FUNC(setunitdata)
 			case UMOB_BODY2: clif_changelook(bl, LOOK_BODY2, (uint16)value); break;
 			case UMOB_GROUP_ID: md->ud.group_id = value; unit_refresh(bl); break;
 			case UMOB_IGNORE_CELL_STACK_LIMIT: md->ud.state.ignore_cell_stack_limit = value > 0; break;
-			case UMOB_RES: md->base_status->res = (int16)value; calc_status = true; break;
-			case UMOB_MRES: md->base_status->mres = (int16)value; calc_status = true; break;
+			case UMOB_RES: md->base_status->res = (pec_int16)value; calc_status = true; break;
+			case UMOB_MRES: md->base_status->mres = (pec_int16)value; calc_status = true; break;
+#ifndef Pandas_ScriptParams_DamageTaken_Extend
 			case UMOB_DAMAGETAKEN: md->damagetaken = (uint16)value; break;
+#else
+			case UMOB_DAMAGETAKEN: md->damagetaken = cap_value(value, -1, UINT16_MAX); break;
+#endif // Pandas_ScriptParams_DamageTaken_Extend
+#if defined(Pandas_Struct_Unit_CommonData_Aura) && defined(Pandas_Aura_Mechanism)
+			case UMOB_AURA:
+				aura_make_effective(bl, value);
+				break;
+#endif // Pandas_Struct_Unit_CommonData_Aura && Pandas_Aura_Mechanism
+#ifdef Pandas_ScriptParams_UnitData_Experience
+			case UMOB_MOBBASEEXP: md->pandas.base_exp = cap_value(value64, -1, (int64)MAX_EXP); break;
+			case UMOB_MOBJOBEXP: md->pandas.job_exp = cap_value(value64, -1, (int64)MAX_EXP); break;
+#endif // Pandas_ScriptParams_UnitData_Experience
 			default:
 				ShowError("buildin_setunitdata: Unknown data identifier %d for BL_MOB.\n", type);
 				return SCRIPT_CMD_FAILURE;
 			}
+#ifdef Pandas_Persistent_SetUnitData_For_Monster_StatusData
+			if (md->pandas.special_setunitdata) {
+				int32 data_type = type;
+
+				if (data_type == UMOB_SLAVECPYMSTRMD)
+					data_type = UMOB_MODE;
+
+				(*md->pandas.special_setunitdata)[data_type] = value;
+			}
+#endif // Pandas_Persistent_SetUnitData_For_Monster_StatusData
 			if (calc_status)
 				status_calc_bl_(md, status_db.getSCB_BATTLE());
 		} break;
@@ -19567,8 +21172,8 @@ BUILDIN_FUNC(setunitdata)
 			case UHOM_ATKMAX: hd->base_status.rhw.atk2 = (uint16)value; calc_status = true; break;
 			case UHOM_MATKMIN: hd->base_status.matk_min = (uint16)value; calc_status = true; break;
 			case UHOM_MATKMAX: hd->base_status.matk_max = (uint16)value; calc_status = true; break;
-			case UHOM_DEF: hd->base_status.def = (defType)value; calc_status = true; break;
-			case UHOM_MDEF: hd->base_status.mdef = (defType)value; calc_status = true; break;
+			case UHOM_DEF: hd->base_status.def = (pec_defType)value; calc_status = true; break;
+			case UHOM_MDEF: hd->base_status.mdef = (pec_defType)value; calc_status = true; break;
 			case UHOM_HIT: hd->base_status.hit = (int16)value; calc_status = true; break;
 			case UHOM_FLEE: hd->base_status.flee = (int16)value; calc_status = true; break;
 			case UHOM_PDODGE: hd->base_status.flee2 = (int16)value; calc_status = true; break;
@@ -19593,6 +21198,11 @@ BUILDIN_FUNC(setunitdata)
 				break;
 			}
 			case UHOM_GROUP_ID: hd->ud.group_id = value; unit_refresh(bl); break;
+#if defined(Pandas_Struct_Unit_CommonData_Aura) && defined(Pandas_Aura_Mechanism)
+			case UHOM_AURA:
+				aura_make_effective(bl, value);
+				break;
+#endif // Pandas_Struct_Unit_CommonData_Aura && Pandas_Aura_Mechanism
 			default:
 				ShowError("buildin_setunitdata: Unknown data identifier %d for BL_HOM.\n", type);
 				return SCRIPT_CMD_FAILURE;
@@ -19633,8 +21243,8 @@ BUILDIN_FUNC(setunitdata)
 			case UPET_ATKMAX: pd->status.rhw.atk2 = (uint16)value; break;
 			case UPET_MATKMIN: pd->status.matk_min = (uint16)value; break;
 			case UPET_MATKMAX: pd->status.matk_max = (uint16)value; break;
-			case UPET_DEF: pd->status.def = (defType)value; break;
-			case UPET_MDEF: pd->status.mdef = (defType)value; break;
+			case UPET_DEF: pd->status.def = (pec_defType)value; break;
+			case UPET_MDEF: pd->status.mdef = (pec_defType)value; break;
 			case UPET_HIT: pd->status.hit = (int16)value; break;
 			case UPET_FLEE: pd->status.flee = (int16)value; break;
 			case UPET_PDODGE: pd->status.flee2 = (int16)value; break;
@@ -19646,6 +21256,11 @@ BUILDIN_FUNC(setunitdata)
 			case UPET_ADELAY: pd->status.adelay = (int16)value; break;
 			case UPET_DMOTION: pd->status.dmotion = (int16)value; break;
 			case UPET_GROUP_ID: pd->ud.group_id = value; unit_refresh(bl); break;
+#if defined(Pandas_Struct_Unit_CommonData_Aura) && defined(Pandas_Aura_Mechanism)
+			case UPET_AURA:
+				aura_make_effective(bl, value);
+				break;
+#endif // Pandas_Struct_Unit_CommonData_Aura && Pandas_Aura_Mechanism
 			default:
 				ShowError("buildin_setunitdata: Unknown data identifier %d for BL_PET.\n", type);
 				return SCRIPT_CMD_FAILURE;
@@ -19683,8 +21298,8 @@ BUILDIN_FUNC(setunitdata)
 			case UMER_ATKMAX: mc->base_status.rhw.atk2 = (uint16)value; calc_status = true; break;
 			case UMER_MATKMIN: mc->base_status.matk_min = (uint16)value; calc_status = true; break;
 			case UMER_MATKMAX: mc->base_status.matk_max = (uint16)value; calc_status = true; break;
-			case UMER_DEF: mc->base_status.def = (defType)value; calc_status = true; break;
-			case UMER_MDEF: mc->base_status.mdef = (defType)value; calc_status = true; break;
+			case UMER_DEF: mc->base_status.def = (pec_defType)value; calc_status = true; break;
+			case UMER_MDEF: mc->base_status.mdef = (pec_defType)value; calc_status = true; break;
 			case UMER_HIT: mc->base_status.hit = (int16)value; calc_status = true; break;
 			case UMER_FLEE: mc->base_status.flee = (int16)value; calc_status = true; break;
 			case UMER_PDODGE: mc->base_status.flee2 = (int16)value; calc_status = true; break;
@@ -19709,6 +21324,11 @@ BUILDIN_FUNC(setunitdata)
 				break;
 			}
 			case UMER_GROUP_ID: mc->ud.group_id = value; unit_refresh(bl); break;
+#if defined(Pandas_Struct_Unit_CommonData_Aura) && defined(Pandas_Aura_Mechanism)
+			case UMER_AURA:
+				aura_make_effective(bl, value);
+				break;
+#endif // Pandas_Struct_Unit_CommonData_Aura && Pandas_Aura_Mechanism
 			default:
 				ShowError("buildin_setunitdata: Unknown data identifier %d for BL_MER.\n", type);
 				return SCRIPT_CMD_FAILURE;
@@ -19753,8 +21373,8 @@ BUILDIN_FUNC(setunitdata)
 			case UELE_ATKMAX: ed->base_status.rhw.atk2 = (uint16)value; calc_status = true; break;
 			case UELE_MATKMIN: ed->base_status.matk_min = (uint16)value; calc_status = true; break;
 			case UELE_MATKMAX: ed->base_status.matk_max = (uint16)value; calc_status = true; break;
-			case UELE_DEF: ed->base_status.def = (defType)value; calc_status = true; break;
-			case UELE_MDEF: ed->base_status.mdef = (defType)value; calc_status = true; break;
+			case UELE_DEF: ed->base_status.def = (pec_defType)value; calc_status = true; break;
+			case UELE_MDEF: ed->base_status.mdef = (pec_defType)value; calc_status = true; break;
 			case UELE_HIT: ed->base_status.hit = (int16)value; calc_status = true; break;
 			case UELE_FLEE: ed->base_status.flee = (int16)value; calc_status = true; break;
 			case UELE_PDODGE: ed->base_status.flee2 = (int16)value; calc_status = true; break;
@@ -19780,6 +21400,11 @@ BUILDIN_FUNC(setunitdata)
 				break;
 			}
 			case UELE_GROUP_ID: ed->ud.group_id = value; unit_refresh(bl); break;
+#if defined(Pandas_Struct_Unit_CommonData_Aura) && defined(Pandas_Aura_Mechanism)
+			case UELE_AURA:
+				aura_make_effective(bl, value);
+				break;
+#endif // Pandas_Struct_Unit_CommonData_Aura && Pandas_Aura_Mechanism
 			default:
 				ShowError("buildin_setunitdata: Unknown data identifier %d for BL_ELEM.\n", type);
 				return SCRIPT_CMD_FAILURE;
@@ -19820,8 +21445,8 @@ BUILDIN_FUNC(setunitdata)
 			case UNPC_ATKMAX: nd->status.rhw.atk2 = (uint16)value; break;
 			case UNPC_MATKMIN: nd->status.matk_min = (uint16)value; break;
 			case UNPC_MATKMAX: nd->status.matk_max = (uint16)value; break;
-			case UNPC_DEF: nd->status.def = (defType)value; break;
-			case UNPC_MDEF: nd->status.mdef = (defType)value; break;
+			case UNPC_DEF: nd->status.def = (pec_defType)value; break;
+			case UNPC_MDEF: nd->status.mdef = (pec_defType)value; break;
 			case UNPC_HIT: nd->status.hit = (int16)value; break;
 			case UNPC_FLEE: nd->status.flee = (int16)value; break;
 			case UNPC_PDODGE: nd->status.flee2 = (int16)value; break;
@@ -19846,6 +21471,11 @@ BUILDIN_FUNC(setunitdata)
 			case UNPC_BODY2: clif_changelook(bl, LOOK_BODY2, (uint16)value); break;
 			case UNPC_DEADSIT: nd->vd.dead_sit = (char)value; unit_refresh(bl); break;
 			case UNPC_GROUP_ID: nd->ud.group_id = value; unit_refresh(bl); break;
+#if defined(Pandas_Struct_Unit_CommonData_Aura) && defined(Pandas_Aura_Mechanism)
+			case UNPC_AURA:
+				aura_make_effective(bl, value);
+				break;
+#endif // Pandas_Struct_Unit_CommonData_Aura && Pandas_Aura_Mechanism
 			default:
 				ShowError("buildin_setunitdata: Unknown data identifier %d for BL_NPC.\n", type);
 				return SCRIPT_CMD_FAILURE;
@@ -20292,6 +21922,24 @@ BUILDIN_FUNC(unitskilluseid)
 			else
 				status_calc_npc(((TBL_NPC*)bl), SCO_NONE);
 		}
+#ifdef Pandas_NpcFilter_USE_SKILL
+		if (bl && bl->type == BL_PC) {
+			map_session_data* esd = (TBL_PC*)bl;
+
+			pc_setreg(esd, add_str("@useskill_id"), skill_id);
+			pc_setreg(esd, add_str("@useskill_lv"), skill_lv);
+			pc_setreg(esd, add_str("@useskill_pos_x"), -1);
+			pc_setreg(esd, add_str("@useskill_pos_y"), -1);
+			pc_setreg(esd, add_str("@useskill_target_gid"), target_id);
+
+			pc_setreg(esd, add_str("@useskill_x"), -1);
+			pc_setreg(esd, add_str("@useskill_y"), -1);
+			pc_setreg(esd, add_str("@useskill_target"), target_id);
+
+			if (npc_script_filter(esd, NPCF_USE_SKILL))
+				return SCRIPT_CMD_SUCCESS;
+		}
+#endif // Pandas_NpcFilter_USE_SKILL
 		unit_skilluse_id2(bl, target_id, skill_id, skill_lv, (casttime * 1000) + skill_castfix(bl, skill_id, skill_lv), cancel, ignore_range);
 	}
 
@@ -20347,6 +21995,24 @@ BUILDIN_FUNC(unitskillusepos)
 			else
 				status_calc_npc(((TBL_NPC*)bl), SCO_NONE);
 		}
+#ifdef Pandas_NpcFilter_USE_SKILL
+		if (bl && bl->type == BL_PC) {
+			map_session_data* esd = (TBL_PC*)bl;
+
+			pc_setreg(esd, add_str("@useskill_id"), skill_id);
+			pc_setreg(esd, add_str("@useskill_lv"), skill_lv);
+			pc_setreg(esd, add_str("@useskill_pos_x"), skill_x);
+			pc_setreg(esd, add_str("@useskill_pos_y"), skill_y);
+			pc_setreg(esd, add_str("@useskill_target_gid"), 0);
+
+			pc_setreg(esd, add_str("@useskill_x"), skill_x);
+			pc_setreg(esd, add_str("@useskill_y"), skill_y);
+			pc_setreg(esd, add_str("@useskill_target"), 0);
+
+			if (npc_script_filter(esd, NPCF_USE_SKILL))
+				return SCRIPT_CMD_SUCCESS;
+		}
+#endif // Pandas_NpcFilter_USE_SKILL
 		unit_skilluse_pos2(bl, skill_x, skill_y, skill_id, skill_lv, (casttime * 1000) + skill_castfix(bl, skill_id, skill_lv), cancel, ignore_range);
 	}
 
@@ -21649,6 +23315,10 @@ BUILDIN_FUNC(bg_info)
  */
 int32 script_instancegetid(struct script_state* st, e_instance_mode mode)
 {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!st) return 0;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	int32 instance_id = 0;
 
 	if (mode == IM_NONE) {
@@ -21931,6 +23601,9 @@ static int32 buildin_instance_warpall_sub(block_list *bl, va_list ap)
 			break;
 	}
 
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+	pc_mark_multitransfer(sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 	pc_setpos(sd, m, x, y, CLR_TELEPORT);
 
 	return 1;
@@ -22952,6 +24625,40 @@ BUILDIN_FUNC(getcharip)
 	}
 	return SCRIPT_CMD_SUCCESS;
 }
+#ifdef Pandas_ScriptCommand_GetCharMacAddress
+/* ===========================================================
+ * 指令: getcharmac
+ * 描述: 获取指定角色登录时使用的 MAC 地址
+ * 用法: getcharmac(<账户编号>/<角色编号>/<"角色名称">);
+ * 返回: 成功则返回 MAC 地址, 失败则返回空字符串
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getcharmac) {
+	map_session_data* sd = nullptr;
+
+	if (script_hasdata(st, 2)) {
+		if (script_isstring(st, 2)) {
+			sd = map_nick2sd(script_getstr(st, 2), false);
+		} else {
+			int32 id = script_getnum(st, 2);
+
+			sd = map_id2sd(id);
+			if (sd == nullptr)
+				sd = map_charid2sd(id);
+		}
+	} else {
+		script_rid2sd(sd);
+	}
+
+	if (sd == nullptr || !session_isValid(sd->fd) || session[sd->fd]->mac_address[0] == '\0') {
+		script_pushconststr(st, "");
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushstrcopy(st, session[sd->fd]->mac_address);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetCharMacAddress
 /**
  * is_function(<function name>) -> 1 if function exists, 0 otherwise
  **/
@@ -23184,6 +24891,9 @@ BUILDIN_FUNC(getrandgroupitem) {
 
 	item_tmp.nameid   = entry->nameid;
 	item_tmp.identify = identify ? 1 : itemdb_isidentified(entry->nameid);
+#ifdef Pandas_BattleConfig_Force_Identified
+	item_tmp.identify = (battle_config.force_identified & 64 ? 1 : item_tmp.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 
 	if (!qty)
 		qty = entry->amount;
@@ -23869,8 +25579,16 @@ BUILDIN_FUNC(bonus_script) {
 	const char *script_str = nullptr;
 	struct s_bonus_script_entry *entry = nullptr;
 
+#ifdef Pandas_BonusScript_Unique_ID
+	if ( !script_charid2sd(7,sd) )
+	{
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+#else
 	if ( !script_charid2sd(7,sd) )
 		return SCRIPT_CMD_FAILURE;
+#endif // Pandas_BonusScript_Unique_ID
 	
 	script_str = script_getstr(st,2);
 	dur = 1000 * abs(script_getnum(st,3));
@@ -23881,11 +25599,17 @@ BUILDIN_FUNC(bonus_script) {
 	// No Script string, No Duration!
 	if (script_str[0] == '\0' || !dur) {
 		ShowError("buildin_bonus_script: Invalid! Script: \"%s\". Duration: %d\n", script_str, dur);
+#ifdef Pandas_BonusScript_Unique_ID
+		script_pushint(st, 0);
+#endif // Pandas_BonusScript_Unique_ID
 		return SCRIPT_CMD_FAILURE;
 	}
 
 	if (strlen(script_str) >= MAX_BONUS_SCRIPT_LENGTH) {
 		ShowError("buildin_bonus_script: Script string to long: \"%s\".\n", script_str);
+#ifdef Pandas_BonusScript_Unique_ID
+		script_pushint(st, 0);
+#endif // Pandas_BonusScript_Unique_ID
 		return SCRIPT_CMD_FAILURE;
 	}
 
@@ -23895,6 +25619,9 @@ BUILDIN_FUNC(bonus_script) {
 	if ((entry = pc_bonus_script_add(sd, script_str, dur, (enum efst_type)icon, flag, type))) {
 		linkdb_insert(&sd->bonus_script.head, (void *)((intptr_t)entry), entry);
 		status_calc_pc(sd,SCO_NONE);
+#ifdef Pandas_BonusScript_Unique_ID
+		script_pushint(st, entry->bonus_id);
+#endif // Pandas_BonusScript_Unique_ID
 	}
 	return SCRIPT_CMD_SUCCESS;
 }
@@ -25673,7 +27400,9 @@ BUILDIN_FUNC(unloadnpc) {
 
 	npc_unload_duplicates(nd);
 	npc_unload(nd, true);
+#ifndef Pandas_Speedup_Unloadnpc_Without_Refactoring_ScriptEvent
 	npc_read_event_script();
+#endif // Pandas_Speedup_Unloadnpc_Without_Refactoring_ScriptEvent
 
 	return SCRIPT_CMD_SUCCESS;
 }
@@ -25840,8 +27569,18 @@ BUILDIN_FUNC(achievementadd) {
 	}
 
 	if( !sd->state.pc_loaded ){
+	#ifndef Pandas_NpcExpress_STATCALC
 		// Simply ignore it on the first call, because the status will be recalculated after loading anyway
 		return SCRIPT_CMD_SUCCESS;
+	#else
+		if( !running_npc_stat_calc_event ){
+			ShowError( "buildin_achievementadd: call was too early. Character %s(CID: '%u') was not loaded yet.\n", sd->status.name, sd->status.char_id );
+			return SCRIPT_CMD_FAILURE;
+		}else{
+			// Simply ignore it on the first call, because the status will be recalculated after loading anyway
+			return SCRIPT_CMD_SUCCESS;
+		}
+	#endif // Pandas_NpcExpress_STATCALC
 	}
 
 	if (achievement_add(sd, achievement_id))
@@ -25872,8 +27611,18 @@ BUILDIN_FUNC(achievementremove) {
 	}
 
 	if( !sd->state.pc_loaded ){
+	#ifndef Pandas_NpcExpress_STATCALC
 		// Simply ignore it on the first call, because the status will be recalculated after loading anyway
 		return SCRIPT_CMD_SUCCESS;
+	#else
+		if( !running_npc_stat_calc_event ){
+			ShowError( "buildin_achievementremove: call was too early. Character %s(CID: '%u') was not loaded yet.\n", sd->status.name, sd->status.char_id );
+			return SCRIPT_CMD_FAILURE;
+		}else{
+			// Simply ignore it on the first call, because the status will be recalculated after loading anyway
+			return SCRIPT_CMD_SUCCESS;
+		}
+	#endif // Pandas_NpcExpress_STATCALC
 	}
 
 	if (achievement_remove(sd, achievement_id))
@@ -25904,8 +27653,18 @@ BUILDIN_FUNC(achievementinfo) {
 
 	if( !sd->state.pc_loaded ){
 		script_pushint(st, false);
+	#ifndef Pandas_NpcExpress_STATCALC
 		// Simply ignore it on the first call, because the status will be recalculated after loading anyway
 		return SCRIPT_CMD_SUCCESS;
+	#else
+		if( !running_npc_stat_calc_event ){
+			ShowError( "buildin_achievementinfo: call was too early. Character %s(CID: '%u') was not loaded yet.\n", sd->status.name, sd->status.char_id );
+			return SCRIPT_CMD_FAILURE;
+		}else{
+			// Simply ignore it on the first call, because the status will be recalculated after loading anyway
+			return SCRIPT_CMD_SUCCESS;
+		}
+	#endif // Pandas_NpcExpress_STATCALC
 	}
 
 	script_pushint(st, achievement_check_progress(sd, achievement_id, script_getnum(st, 3)));
@@ -25932,8 +27691,18 @@ BUILDIN_FUNC(achievementcomplete) {
 	}
 	
 	if( !sd->state.pc_loaded ){
+	#ifndef Pandas_NpcExpress_STATCALC
 		// Simply ignore it on the first call, because the status will be recalculated after loading anyway
 		return SCRIPT_CMD_SUCCESS;
+	#else
+		if( !running_npc_stat_calc_event ){
+			ShowError( "buildin_achievementcomplete: call was too early. Character %s(CID: '%u') was not loaded yet.\n", sd->status.name, sd->status.char_id );
+			return SCRIPT_CMD_FAILURE;
+		}else{
+			// Simply ignore it on the first call, because the status will be recalculated after loading anyway
+			return SCRIPT_CMD_SUCCESS;
+		}
+	#endif // Pandas_NpcExpress_STATCALC
 	}
 
 	ARR_FIND(0, sd->achievement_data.count, i, sd->achievement_data.achievements[i].achievement_id == achievement_id);
@@ -25965,8 +27734,18 @@ BUILDIN_FUNC(achievementexists) {
 
 	if( !sd->state.pc_loaded ){
 		script_pushint(st, false);
+	#ifndef Pandas_NpcExpress_STATCALC
 		// Simply ignore it on the first call, because the status will be recalculated after loading anyway
 		return SCRIPT_CMD_SUCCESS;
+	#else
+		if( !running_npc_stat_calc_event ){
+			ShowError( "buildin_achievementexists: call was too early. Character %s(CID: '%u') was not loaded yet.\n", sd->status.name, sd->status.char_id );
+			return SCRIPT_CMD_FAILURE;
+		}else{
+			// Simply ignore it on the first call, because the status will be recalculated after loading anyway
+			return SCRIPT_CMD_SUCCESS;
+		}
+	#endif // Pandas_NpcExpress_STATCALC
 	}
 
 	ARR_FIND(0, sd->achievement_data.count, i, sd->achievement_data.achievements[i].achievement_id == achievement_id && sd->achievement_data.achievements[i].completed > 0 );
@@ -25998,8 +27777,18 @@ BUILDIN_FUNC(achievementupdate) {
 	}
 
 	if( !sd->state.pc_loaded ){
+	#ifndef Pandas_NpcExpress_STATCALC
 		// Simply ignore it on the first call, because the status will be recalculated after loading anyway
 		return SCRIPT_CMD_SUCCESS;
+	#else
+		if( !running_npc_stat_calc_event ){
+			ShowError( "buildin_achievementupdate: call was too early. Character %s(CID: '%u') was not loaded yet.\n", sd->status.name, sd->status.char_id );
+			return SCRIPT_CMD_FAILURE;
+		}else{
+			// Simply ignore it on the first call, because the status will be recalculated after loading anyway
+			return SCRIPT_CMD_SUCCESS;
+		}
+	#endif // Pandas_NpcExpress_STATCALC
 	}
 
 	ARR_FIND(0, sd->achievement_data.count, i, sd->achievement_data.achievements[i].achievement_id == achievement_id);
@@ -26612,7 +28401,11 @@ BUILDIN_FUNC(getinstancevar)
 
 	std::shared_ptr<s_instance_data> im = util::umap_find(instances, instance_id);
 
+#ifdef Pandas_Crashfix_GetInstanceVar_Invaild_InstanceID
+	if (!im || im->state != INSTANCE_BUSY) {
+#else
 	if (im->state != INSTANCE_BUSY) {
+#endif // Pandas_Crashfix_GetInstanceVar_Invaild_InstanceID
 		ShowError("buildin_getinstancevar: Unknown instance ID %d.\n", instance_id);
 		script_pushnil(st);
 		st->state = END;
@@ -26663,7 +28456,11 @@ BUILDIN_FUNC(setinstancevar)
 
 	std::shared_ptr<s_instance_data> im = util::umap_find(instances, instance_id);
 
+#ifdef Pandas_Crashfix_SetInstanceVar_Invaild_InstanceID
+	if (!im || im->state != INSTANCE_BUSY) {
+#else
 	if (im->state != INSTANCE_BUSY) {
+#endif // Pandas_Crashfix_SetInstanceVar_Invaild_InstanceID
 		ShowError("buildin_%s: Unknown instance ID %d.\n", command, instance_id);
 		script_pushnil(st);
 		st->state = END;
@@ -26969,6 +28766,13 @@ BUILDIN_FUNC( laphine_synthesis ){
 			return SCRIPT_CMD_FAILURE;
 		}
 
+#ifdef Pandas_Crashfix_Laphine_Synthesis_Without_DelayConsume
+		if (!sd->inventory_data[sd->itemindex]) {
+			ShowError( "buildin_laphine_synthesis: Called from item %u, the item data is invalid, it's maybe not a consumed delayed.\n", sd->itemid );
+			return SCRIPT_CMD_FAILURE;
+		}
+#endif // Pandas_Crashfix_Laphine_Synthesis_Without_DelayConsume
+
 		if( sd->inventory_data[sd->itemindex]->flag.delay_consume == 0 ){
 			ShowError( "buildin_laphine_synthesis: Called from item %u, which is not a consumed delayed.\n", sd->itemid );
 			return SCRIPT_CMD_FAILURE;
@@ -27005,6 +28809,13 @@ BUILDIN_FUNC( laphine_upgrade ){
 		ShowError( "buildin_laphine_upgrade: Called outside of an item script without item id.\n" );
 		return SCRIPT_CMD_FAILURE;
 	}
+
+#ifdef Pandas_Crashfix_Laphine_Upgrade_Without_DelayConsume
+	if (!sd->inventory_data[sd->itemindex]) {
+		ShowError( "buildin_laphine_upgrade: Called from item %u, the item data is invalid, it's maybe not a consumed delayed.\n", sd->itemid );
+		return SCRIPT_CMD_FAILURE;
+	}
+#endif // Pandas_Crashfix_Laphine_Upgrade_Without_DelayConsume
 
 	if( sd->inventory_data[sd->itemindex]->flag.delay_consume == 0 ){
 		ShowError( "buildin_laphine_upgrade: Called from item %u, which is not a consumed delayed.\n", sd->itemid );
@@ -27085,15 +28896,35 @@ BUILDIN_FUNC(openbank){
 	map_session_data* sd = nullptr;
 
 	if (!script_charid2sd(2, sd)) {
+#ifdef Pandas_ScriptCommand_OpenBank
+		script_pushint(st, 0);
+#endif // Pandas_ScriptCommand_OpenBank
 		return SCRIPT_CMD_FAILURE;
 	}
 
 	if( !battle_config.feature_banking ){
 		ShowError( "buildin_openbank: banking is disabled.\n" );
+#ifdef Pandas_ScriptCommand_OpenBank
+		script_pushint(st, 0);
+#endif // Pandas_ScriptCommand_OpenBank
 		return SCRIPT_CMD_FAILURE;
 	}
 
+#ifdef Pandas_MapFlag_NoBank
+	if (map_getmapflag(sd->m, MF_NOBANK)) {
+		// You cannot use the Bank on this map.
+		clif_messagecolor(sd, color_table[COLOR_RED], msg_txt(sd, 831), false, SELF);
+#ifdef Pandas_ScriptCommand_OpenBank
+		script_pushint(st, 0);
+#endif // Pandas_ScriptCommand_OpenBank
+		return SCRIPT_CMD_SUCCESS;
+	}
+#endif // Pandas_MapFlag_NoBank
+
 	clif_ui_open( *sd, OUT_UI_BANK, 0 );
+#ifdef Pandas_ScriptCommand_OpenBank
+	script_pushint(st, 1);
+#endif // Pandas_ScriptCommand_OpenBank
 	return SCRIPT_CMD_SUCCESS;
 #endif
 }
@@ -27878,50 +29709,4036 @@ BUILDIN_FUNC(mesemotion){
 #include <custom/script.inc>
 
 // declarations that were supposed to be exported from npc_chat.cpp
-#ifdef PCRE_SUPPORT
 BUILDIN_FUNC(defpattern);
 BUILDIN_FUNC(activatepset);
 BUILDIN_FUNC(deactivatepset);
 BUILDIN_FUNC(deletepset);
-#endif
+
+#ifdef Pandas_ScriptCommand_Copynpc
+/* ===========================================================
+ * 指令: copynpc
+ * 描述: 复制指定的 NPC 到一个新的位置
+ * 用法: copynpc "<复制出来的新NPC所在地图名称>,<X坐标>,<Y坐标>,<朝向编号>","duplicate(<来源NPC名称>)","<复制出来的新NPC名称>","<图档外观编号>";
+ * 用法: copynpc "<复制出来的新NPC所在地图名称>",<X坐标>,<Y坐标>,<朝向编号>,"<来源NPC名称>","<复制出来的新NPC名称>",<图档外观编号>;
+ * 返回: 复制成功则返回新 NPC 的 GID, 复制失败则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(copynpc) {
+	const char *w1 = nullptr, *w2 = nullptr, *w3 = nullptr, *w4 = nullptr;
+	char w1buf[256] = { 0 }, w2buf[256] = { 0 }, w3buf[256] = { 0 }, w4buf[256] = { 0 };
+	DBMap* npcname_db = get_npcname_db_ptr();
+	int32* npc_script = get_npc_script_ptr();
+	int32* npc_shop = get_npc_shop_ptr();
+	int32* npc_warp = get_npc_warp_ptr();
+	npc_data* local_nd = map_id2nd(st->oid);
+	const char* filepath = local_nd ? local_nd->path : "Unable to confirm the file path where the NPC executes 'copynpc' command.";
+	const char *start = nullptr, *buffer = nullptr;
+
+	if (filepath == nullptr) {
+		filepath = __func__;
+	}
+
+	do {
+		if (script_lastdata(st) == 5) {
+			if (script_isstring(st, 2) && script_isstring(st, 3) &&
+				script_isstring(st, 4) && (script_isstring(st, 5) || script_isint(st, 5))) {
+				w1 = script_getstr(st, 2);
+				w2 = script_getstr(st, 3);
+				w3 = script_getstr(st, 4);
+				w4 = script_getstr(st, 5);
+				break;
+			}
+		} else if (script_lastdata(st) == 8) {
+			if (script_isstring(st, 2) && script_isint(st, 3) &&
+				script_isint(st, 4) && script_isint(st, 5) &&
+				script_isstring(st, 6) && script_isstring(st, 7) && script_isint(st, 8)) {
+				snprintf(w1buf, sizeof(w1buf), "%s,%d,%d,%d", script_getstr(st, 2), script_getnum(st, 3), script_getnum(st, 4), script_getnum(st, 5));
+				snprintf(w2buf, sizeof(w2buf), "%s", script_getstr(st, 6));
+				snprintf(w3buf, sizeof(w3buf), "%s", script_getstr(st, 7));
+				snprintf(w4buf, sizeof(w4buf), "%d", script_getnum(st, 8));
+				w1 = w1buf;
+				w2 = w2buf;
+				w3 = w3buf;
+				w4 = w4buf;
+				break;
+			}
+		}
+
+		ShowError("buildin_copynpc: Invalid parameters, please read the manual for copynpc.\n");
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	} while (false);
+
+	int16 x, y, m, xs = -1, ys = -1;
+	int16 dir;
+	char srcname[128];
+	size_t length = strlen(w2);
+
+	if (strncmpi(w2, "duplicate(", 10) == 0) {
+		if (w2[length - 1] != ')' || length <= 11 || length - 11 >= sizeof(srcname)) {
+			ShowError("buildin_copynpc: bad duplicate name in file '%s' : %s\n", filepath, w2);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_FAILURE;
+		}
+		safestrncpy(srcname, w2 + 10, length - 10);
+	} else {
+		safestrncpy(srcname, w2, sizeof(srcname));
+	}
+
+	npc_data* dnd = npc_name2id(srcname);
+	if (dnd == nullptr) {
+		ShowError("buildin_copynpc: original npc not found for duplicate in file '%s' : %s\n", filepath, srcname);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int32 src_id = dnd->src_id ? dnd->src_id : dnd->id;
+	int32 type = dnd->subtype;
+
+	if ((type == NPCTYPE_SHOP || type == NPCTYPE_CASHSHOP || type == NPCTYPE_ITEMSHOP || type == NPCTYPE_POINTSHOP || type == NPCTYPE_SCRIPT || type == NPCTYPE_MARKETSHOP) && strcmp(w1, "-") == 0) {
+		x = y = dir = 0;
+		m = -1;
+	} else {
+		char mapname[MAP_NAME_LENGTH_EXT];
+
+		if (sscanf(w1, "%15[^,],%6hd,%6hd,%4hd", mapname, &x, &y, &dir) != 4) {
+			ShowError("buildin_copynpc: Invalid placement format for duplicate in file '%s'\n * w1=%s\n * w2=%s\n * w3=%s\n * w4=%s\n", filepath, w1, w2, w3, w4);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_FAILURE;
+		}
+		m = map_mapname2mapid(mapname);
+	}
+
+	map_data* mapdata = map_getmapdata(m);
+
+	if (m != -1 && (x < 0 || x >= mapdata->xs || y < 0 || y >= mapdata->ys)) {
+		ShowError("buildin_copynpc: coordinates %d/%d are out of bounds in map %s(%dx%d), in file '%s'\n", x, y, mapdata->name, mapdata->xs, mapdata->ys, filepath);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (type == NPCTYPE_WARP && sscanf(w4, "%6hd,%6hd", &xs, &ys) == 2);
+	else if (type == NPCTYPE_SCRIPT && sscanf(w4, "%*[^,],%6hd,%6hd", &xs, &ys) == 2);
+	else if (type == NPCTYPE_WARP) {
+		ShowError("buildin_copynpc: Invalid span format for duplicate warp in file '%s'\n * w1=%s\n * w2=%s\n * w3=%s\n * w4=%s\n", filepath, w1, w2, w3, w4);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	npc_data* nd = npc_create_npc(m, x, y);
+	npc_parsename(nd, w3, start, buffer, filepath);
+	nd->class_ = m == -1 ? JT_FAKENPC : npc_parseview(w4, start, buffer, filepath);
+	nd->speed = DEFAULT_NPC_WALK_SPEED;
+	nd->src_id = src_id;
+	nd->type = BL_NPC;
+	nd->subtype = static_cast<npc_subtype>(type);
+
+	switch (type) {
+		case NPCTYPE_SCRIPT:
+			++(*npc_script);
+			nd->u.scr.xs = xs;
+			nd->u.scr.ys = ys;
+			nd->u.scr.script = dnd->u.scr.script;
+			nd->u.scr.label_list = dnd->u.scr.label_list;
+			nd->u.scr.label_list_num = dnd->u.scr.label_list_num;
+			break;
+
+		case NPCTYPE_SHOP:
+		case NPCTYPE_CASHSHOP:
+		case NPCTYPE_ITEMSHOP:
+		case NPCTYPE_POINTSHOP:
+		case NPCTYPE_MARKETSHOP:
+			++(*npc_shop);
+			safestrncpy(nd->u.shop.pointshop_str, dnd->u.shop.pointshop_str, strlen(dnd->u.shop.pointshop_str));
+			nd->u.shop.itemshop_nameid = dnd->u.shop.itemshop_nameid;
+#ifndef Pandas_Fix_Duplicate_Shop_With_FullyShopItemList
+			nd->u.shop.shop_item = dnd->u.shop.shop_item;
+#else
+			// 为了避免被复制出来的[子商店]和[来源商店]使用相同的商品道具信息源,
+			// 而导致后面对[来源商店]或任意一个[子商店]的道具进行增删操作时影响到同一个[来源商店]的[子商店]
+			// 这里在复制商店 NPC 的时候, 将全部的商品列表完整的复制一份出来, 他们之间相互独立
+			CREATE(nd->u.shop.shop_item, struct npc_item_list, dnd->u.shop.count);
+			memcpy(nd->u.shop.shop_item, dnd->u.shop.shop_item, sizeof(struct npc_item_list) * dnd->u.shop.count);
+#endif // Pandas_Fix_Duplicate_Shop_With_FullyShopItemList
+			nd->u.shop.count = dnd->u.shop.count;
+			nd->u.shop.discount = dnd->u.shop.discount;
+#ifdef Pandas_Support_Pointshop_Variable_DisplayName
+			safestrncpy(nd->u.shop.pointshop_str_nick, dnd->u.shop.pointshop_str_nick, sizeof(dnd->u.shop.pointshop_str_nick));
+#endif // Pandas_Support_Pointshop_Variable_DisplayName
+			break;
+
+		case NPCTYPE_WARP:
+			++(*npc_warp);
+			if (!battle_config.warp_point_debug)
+				nd->class_ = JT_WARPNPC;
+			else
+				nd->class_ = JT_GUILD_FLAG;
+			nd->u.warp.xs = xs;
+			nd->u.warp.ys = ys;
+			nd->u.warp.mapindex = dnd->u.warp.mapindex;
+			nd->u.warp.x = dnd->u.warp.x;
+			nd->u.warp.y = dnd->u.warp.y;
+			nd->trigger_on_hidden = dnd->trigger_on_hidden;
+			break;
+	}
+
+	if (m >= 0) {
+		map_addnpc(m, nd);
+		unit_dataset(nd);
+		nd->ud.dir = static_cast<uint8>(dir);
+		npc_setcells(nd);
+		if (map_addblock(nd)) {
+			script_pushint(st, 0);
+			return SCRIPT_CMD_FAILURE;
+		}
+#ifdef Pandas_BattleRecord
+		batrec_new(nd);
+#endif // Pandas_BattleRecord
+		if (nd->class_ != JT_FAKENPC) {
+			status_set_viewdata(nd, nd->class_);
+			if (map_getmapdata(nd->m)->users)
+				clif_spawn(nd);
+		}
+	} else {
+		map_addiddb(nd);
+#ifdef Pandas_BattleRecord
+		batrec_new(nd);
+#endif // Pandas_BattleRecord
+	}
+
+	strdb_put(npcname_db, nd->exname, nd);
+
+	if (dnd->state != NPCVIEW_ENABLE)
+		npc_enable_target(*nd, 0, dnd->state);
+	nd->state = dnd->state;
+
+	if (type != NPCTYPE_SCRIPT) {
+		script_pushint(st, nd->id);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	for (int32 i = 0; i < nd->u.scr.label_list_num; i++) {
+		if (npc_event_export(nd, i)) {
+			ShowWarning("buildin_copynpc: duplicate event %s::%s (%s)\n", nd->exname, nd->u.scr.label_list[i].name, filepath);
+		}
+		npc_timerevent_export(nd, i);
+	}
+
+	if (m >= 0 && mapdata->instance_id > 0)
+		nd->instance_id = mapdata->instance_id;
+
+	nd->u.scr.timerid = INVALID_TIMER;
+	script_pushint(st, nd->id);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_Copynpc
+
+#ifdef Pandas_ScriptCommand_GetTimeFmt
+/* ===========================================================
+ * 指令: gettimefmt
+ * 描述: 将当前时间格式化输出成字符串, 是 gettimestr 的改进版
+ * 用法: gettimefmt <"时间格式化标准">{,<要转换的秒数>{,<是否格式化成 UTC 时间>}};
+ * 返回: 成功则返回被格式化的时间, 失败则返回空字符串
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(gettimefmt) {
+	const char *fmtstr = script_getstr(st, 2);
+	int32 is_utc = 0;
+	int32 default_len = 32;
+	size_t result = 0;
+	time_t time_tick = time(nullptr);
+
+	if (script_hasdata(st, 3)) {
+		if (!script_isint(st, 3)) {
+			ShowError("buildin_gettimefmt: The 'time_tick' param must be a integer.\n");
+			script_pushconststr(st, "");
+			return SCRIPT_CMD_FAILURE;
+		}
+		time_tick = static_cast<time_t>(script_getnum(st, 3));
+	}
+
+	if (script_hasdata(st, 4)) {
+		if (!script_isint(st, 4)) {
+			ShowError("buildin_gettimefmt: The 'is_utc' param must be a integer.\n");
+			script_pushconststr(st, "");
+			return SCRIPT_CMD_FAILURE;
+		}
+		is_utc = cap_value(script_getnum(st, 4), 0, 1);
+	}
+
+	struct tm *now_time = (is_utc ? gmtime(&time_tick) : localtime(&time_tick));
+	char* buf = (char *)aMalloc(default_len + 1);
+	result = strftime(buf, default_len, fmtstr, now_time);
+	if (!result) {
+		buf = (char *)aRealloc(buf, (default_len * 4) + 1);
+		result = strftime(buf, (default_len * 4), fmtstr, now_time);
+	}
+	if (!result) {
+		if (buf) aFree(buf);
+		ShowError("buildin_gettimefmt: time format is too long : %s\n", fmtstr);
+		script_pushconststr(st, "");
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	script_pushstr(st, buf);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetTimeFmt
 
 /** Regular expression matching
  * preg_match(<pattern>,<string>{,<offset>})
  */
 BUILDIN_FUNC(preg_match) {
-#ifdef PCRE_SUPPORT
-	pcre *re;
-	pcre_extra *pcreExtra;
-	const char *error;
-	int32 erroffset, r, offset = 0;
-	int32 subStrVec[30];
-
 	const char* pattern = script_getstr(st,2);
 	const char* subject = script_getstr(st,3);
+	int32 offset = 0;
 	if (script_hasdata(st,4))
 		offset = script_getnum(st,4);
 
-	re = pcre_compile(pattern, 0, &error, &erroffset, nullptr);
-	pcreExtra = pcre_study(re, 0, &error);
-
-	r = pcre_exec(re, pcreExtra, subject, (int32)strlen(subject), offset, 0, subStrVec, 30);
-
-	pcre_free(re);
-	if (pcreExtra != nullptr)
-		pcre_free(pcreExtra);
-
-	if (r < 0)
+	int32 subject_len = static_cast<int32>(strlen(subject));
+	if (offset < 0 || offset > subject_len) {
 		script_pushint(st,0);
-	else
-		script_pushint(st,(r > 0) ? r : 30 / 3);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	try {
+		std::regex re(pattern);
+		std::cmatch match_result;
+		auto flags = std::regex_constants::match_default;
+		if (offset > 0)
+			flags |= std::regex_constants::match_prev_avail | std::regex_constants::match_not_bol;
+
+		if (!std::regex_search(subject + offset, subject + subject_len, match_result, re, flags)) {
+			script_pushint(st,0);
+		} else {
+			script_pushint(st,static_cast<int32>(match_result.size()));
+		}
+	} catch (const std::regex_error& e) {
+		ShowError("%s: throw regex_error : %s\n", __func__, e.what());
+		script_pushint(st,0);
+		return SCRIPT_CMD_FAILURE;
+	}
 
 	return SCRIPT_CMD_SUCCESS;
+}
+
+#ifdef Pandas_ScriptCommand_SetHeadDir
+/* ===========================================================
+ * 指令: setheaddir
+ * 描述: 调整角色纸娃娃脑袋的朝向
+ * 用法: setheaddir <朝向编号>{,<角色编号>};
+ * 朝向: 0为看正前方, 1为向右看, 2为向左看
+ * 返回: 该指令无论成功与否, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(setheaddir) {
+	map_session_data *sd = nullptr;
+	int head_dir = script_getnum(st, 2);
+	head_dir = cap_value(head_dir, 0, 2);
+
+	if (!script_charid2sd(3, sd))
+		return SCRIPT_CMD_SUCCESS;
+
+	pc_setdir(sd, sd->ud.dir, head_dir);
+	clif_changed_dir(*sd, AREA_WOS);
+	clif_changed_dir(*sd, SELF);
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_SetHeadDir
+
+#ifdef Pandas_ScriptCommand_SetBodyDir
+/* ===========================================================
+ * 指令: setbodydir
+ * 描述: 用于调整角色纸娃娃身体的朝向
+ * 用法: setbodydir <朝向编号>{,<角色编号>};
+ * 返回: 该指令无论成功与否, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(setbodydir) {
+	map_session_data *sd = nullptr;
+	int body_dir = script_getnum(st, 2);
+	body_dir = cap_value(body_dir, 0, 7);
+
+	if (!script_charid2sd(3, sd))
+		return SCRIPT_CMD_SUCCESS;
+
+	pc_setdir(sd, body_dir, sd->head_dir);
+	clif_changed_dir(*sd, AREA_WOS);
+	clif_changed_dir(*sd, SELF);
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_SetBodyDir
+
+#ifdef Pandas_ScriptCommand_InstanceUsers
+/* ===========================================================
+ * 指令: instance_users
+ * 描述: 获取指定的副本实例中已经进入副本地图的人数
+ * 用法: instance_users <副本实例编号>;
+ * 返回: 成功直接返回副本中的人数, 副本不存在或副本中无人存在则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(instance_users) {
+	int users = 0;
+	int instance_id = script_getnum(st, 2);
+	std::shared_ptr<s_instance_data> idata = util::umap_find(instances, instance_id);
+
+	if (!idata || idata->state != INSTANCE_BUSY) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	for (const auto& it : idata->map)
+		users += max(map_getmapdata(it.m)->users, 0);
+
+	script_pushint(st, users);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_InstanceUsers
+
+#ifdef Pandas_ScriptCommand_Script4Each
+/* ===========================================================
+ * 指令: buildin_script4each_sub
+ * 描述: 配合 script4each 指令使用的一个内部处理函数
+ * -----------------------------------------------------------*/
+static int buildin_script4each_sub(struct block_list *bl, va_list ap) {
+	struct script_code* script = va_arg(ap, struct script_code*);
+	int pos = va_arg(ap, int);
+
+	if (!bl || !script) return 0;
+
+	mapreg_setreg(add_str("$@gid"), bl->id);
+	run_script(script, pos, bl->id, 0);
+	return 1;
+}
+
+/* ===========================================================
+ * 指令: script4each / script4eachmob / script4eachnpc
+ * 描述: 对指定范围的玩家执行相同的一段脚本
+ * 用法: script4each <"{脚本}">,<脚本的执行范围>{,<动态参数>...};
+ * 用法: script4eachmob <"{脚本}">,<脚本的执行范围>{,<动态参数>...};
+ * 用法: script4eachnpc <"{脚本}">,<脚本的执行范围>{,<动态参数>...};
+ * 返回: 该指令无论成功失败, 都不会有返回值
+ * 作者: Sola丶小克 (最早借鉴自 Sense 的代码进行改进)
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(script4each) {
+	const char *execute_script = script_getstr(st, 2);
+	int execute_range = script_getnum(st, 3);
+
+	struct script_code* script = nullptr;
+	int pos = 0;
+	bool script_needfree = false;
+
+#if !defined(Pandas_Helper_Common_Function) || !defined(Pandas_Redeclaration_Struct_Event_Data)
+	ShowWarning("This version is not support 'NPCNAME::EVENT' script in '%s' command.\n", script_getfuncname(st));
 #else
-	ShowDebug("script:preg_match: cannot run without PCRE library enabled.\n");
-	script_pushint(st,0);
+	struct event_data* ev = npc_event_data(execute_script);
+	if (ev != nullptr) {
+		script = ev->nd->u.scr.script;
+		pos = ev->pos;
+	}
+	else {
+		script = parse_script(execute_script, script_getfuncname(st), 0, SCRIPT_IGNORE_EXTERNAL_BRACKETS);
+		script_needfree = (script != nullptr);
+	}
+#endif // !defined(Pandas_Helper_Common_Function) || !defined(Pandas_Redeclaration_Struct_Event_Data)
+	struct s_mapiterator *iter = nullptr;
+	struct block_list* bl = nullptr;
+	enum bl_type bltype = BL_PC;
+
+	// 根据使用的指令名称, 确定后续对什么类型的单位进行遍历
+	const char* command = script_getfuncname(st);
+	if (stricmp(command, "script4each") == 0) {
+		bltype = BL_PC;
+		iter = mapit_geteachpc();
+	}
+	else if (stricmp(command, "script4eachmob") == 0) {
+		bltype = BL_MOB;
+		iter = mapit_geteachmob();
+	}
+	else if (stricmp(command, "script4eachnpc") == 0) {
+		bltype = BL_NPC;
+		iter = mapit_geteachnpc();
+	}
+
+	switch (execute_range)
+	{
+	case 0: {
+		// 全服单位 - script4each "{<脚本>}",0;
+		for (bl = mapit_first(iter); mapit_exists(iter); bl = mapit_next(iter)) {
+			if (!bl || bl->type != bltype) continue;
+			mapreg_setreg(add_str("$@gid"), bl->id);
+			run_script(script, pos, bl->id, 0);
+		}
+		break;
+	}
+	case 1: {
+		// 指定地图上的全部单位 - script4each "{<脚本>}",1,<"地图名称">;
+		int map_id = -1;
+
+		if (!script_hasdata(st, 4) || !script_isstring(st, 4)) break;
+		if ((map_id = map_mapname2mapid(script_getstr(st, 4))) < 0) break;
+
+		for (bl = mapit_first(iter); mapit_exists(iter); bl = mapit_next(iter)) {
+			if (!bl || bl->type != bltype || bl->m != map_id) continue;
+			mapreg_setreg(add_str("$@gid"), bl->id);
+			run_script(script, pos, bl->id, 0);
+		}
+		break;
+	}
+	case 2: {
+		// 以地图某个点为中心半径距离内的单位 - script4each "{<脚本>}",2,<"地图名称">,<中心坐标x>,<中心坐标y>,<范围>;
+		int map_id = -1, map_x = 0, map_y = 0, range = 0;
+
+		if (!script_hasdata(st, 4) || !script_isstring(st, 4)) break;
+		if (!script_hasdata(st, 5) || !script_isint(st, 5)) break;
+		if (!script_hasdata(st, 6) || !script_isint(st, 6)) break;
+		if (!script_hasdata(st, 7) || !script_isint(st, 7)) break;
+
+		if ((map_id = map_mapname2mapid(script_getstr(st, 4))) < 0) break;
+		map_x = script_getnum(st, 5);
+		map_y = script_getnum(st, 6);
+		range = script_getnum(st, 7);
+
+		struct block_list center_bl = { 0 };
+		center_bl.m = map_id;
+		center_bl.x = map_x;
+		center_bl.y = map_y;
+
+		map_foreachinrange(buildin_script4each_sub, &center_bl, range, bltype, script, pos);
+		break;
+	}
+	case 3: {
+		// 指定玩家所在的队伍中的全部队伍成员 - script4each "{<脚本>}",3,<角色编号>;
+		int party_id = 0;
+		map_session_data *target_sd = nullptr;
+
+		// 该类型不支持 script4eachmob 和 script4eachnpc 指令
+		if (bltype != BL_PC) break;
+
+		if (!script_hasdata(st, 4) || !script_isint(st, 4)) break;
+		target_sd = map_charid2sd(script_getnum(st, 4));
+		if (!target_sd || (party_id = target_sd->status.party_id) <= 0) break;
+
+		for (bl = mapit_first(iter); mapit_exists(iter); bl = mapit_next(iter)) {
+			if (!bl || bl->type != bltype) continue;
+			if (((TBL_PC*)bl)->status.party_id != party_id) continue;
+			mapreg_setreg(add_str("$@gid"), bl->id);
+			run_script(script, pos, bl->id, 0);
+		}
+		break;
+	}
+	case 4: {
+		// 指定玩家所在的公会中的全部公会成员 - script4each "{<脚本>}",4,<角色编号>;
+		int guild_id = 0;
+		map_session_data *target_sd = nullptr;
+
+		// 该类型不支持 script4eachmob 和 script4eachnpc 指令
+		if (bltype != BL_PC) break;
+
+		if (!script_hasdata(st, 4) || !script_isint(st, 4)) break;
+		target_sd = map_charid2sd(script_getnum(st, 4));
+		if (!target_sd || (guild_id = target_sd->status.guild_id) <= 0) break;
+
+		for (bl = mapit_first(iter); mapit_exists(iter); bl = mapit_next(iter)) {
+			if (!bl || bl->type != bltype) continue;
+			if (((TBL_PC*)bl)->status.guild_id != guild_id) continue;
+			mapreg_setreg(add_str("$@gid"), bl->id);
+			run_script(script, pos, bl->id, 0);
+		}
+		break;
+	}
+	case 5: {
+		// 指定区域 - script4each "{<脚本>}",5,<"地图名称">,<坐标x0>,<坐标y0>,<坐标x1>,<坐标y1>;
+		int map_id = -1, map_x0 = 0, map_y0 = 0, map_x1 = 0, map_y1 = 0;
+
+		if (!script_hasdata(st, 4) || !script_isstring(st, 4)) break;
+		if (!script_hasdata(st, 5) || !script_isint(st, 5)) break;
+		if (!script_hasdata(st, 6) || !script_isint(st, 6)) break;
+		if (!script_hasdata(st, 7) || !script_isint(st, 7)) break;
+		if (!script_hasdata(st, 8) || !script_isint(st, 8)) break;
+
+		if ((map_id = map_mapname2mapid(script_getstr(st, 4))) < 0) break;
+		map_x0 = script_getnum(st, 5);
+		map_y0 = script_getnum(st, 6);
+		map_x1 = script_getnum(st, 7);
+		map_y1 = script_getnum(st, 8);
+
+		map_foreachinarea(buildin_script4each_sub, map_id, map_x0, map_y0, map_x1, map_y1, bltype, script, pos);
+		break;
+	}
+	case 6: {
+		// 指定队伍中的全部队伍成员 - script4each "{<脚本>}",6,<队伍编号>;
+		int party_id = 0;
+
+		// 该类型不支持 script4eachmob 和 script4eachnpc 指令
+		if (bltype != BL_PC) break;
+
+		if (!script_hasdata(st, 4) || !script_isint(st, 4)) break;
+		if ((party_id = script_getnum(st, 4)) <= 0) break;;
+
+		for (bl = mapit_first(iter); mapit_exists(iter); bl = mapit_next(iter)) {
+			if (!bl || bl->type != bltype) continue;
+			if (((TBL_PC*)bl)->status.party_id != party_id) continue;
+			mapreg_setreg(add_str("$@gid"), bl->id);
+			run_script(script, pos, bl->id, 0);
+		}
+		break;
+	}
+	case 7: {
+		// 指定公会中的全部公会成员 - script4each "{<脚本>}",7,<公会编号>;
+		int guild_id = 0;
+
+		// 该类型不支持 script4eachmob 和 script4eachnpc 指令
+		if (bltype != BL_PC) break;
+
+		if (!script_hasdata(st, 4) || !script_isint(st, 4)) break;
+		if ((guild_id = script_getnum(st, 4)) <= 0) break;
+
+		for (bl = mapit_first(iter); mapit_exists(iter); bl = mapit_next(iter)) {
+			if (!bl || bl->type != bltype) continue;
+			if (((TBL_PC*)bl)->status.guild_id != guild_id) continue;
+			mapreg_setreg(add_str("$@gid"), bl->id);
+			run_script(script, pos, bl->id, 0);
+		}
+		break;
+	}
+	default:
+		ShowWarning("buildin_%s: Invalid execute range '%d'.\n", script_getfuncname(st), execute_range);
+		break;
+	}
+
+	if (script && script_needfree) script_free_code(script);
+	if (iter) mapit_free(iter);
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_Script4Each
+#ifdef Pandas_ScriptCommand_GetSameIpInfo
+/* ===========================================================
+ * 指令: buildin_getsameipinfo_sub
+ * 描述: 配合 getsameipinfo 指令使用的一个内部处理函数
+ * -----------------------------------------------------------*/
+static int32 buildin_getsameipinfo_sub(map_session_data* pl_sd, va_list ap)
+{
+	map_session_data *sd = va_arg(ap, map_session_data*);
+	uint32 ipaddr = va_arg(ap, uint32);
+	uint32 *count = va_arg(ap, uint32*);
+	int32 m = va_arg(ap, int32);	// int16 通过可变参数方式传递, 会被提升为 int32
+
+	if (!ipaddr || !sd || !count) return 0;
+	if (!pl_sd || pl_sd->state.autotrade) return 0;
+	if (m >= 0 && pl_sd->m != m) return 0;
+
+	if (ipaddr == session[pl_sd->fd]->client_addr) {
+		pc_setreg(sd, reference_uid(add_str("@sameip_aid"), (*count)), pl_sd->status.account_id);
+		pc_setreg(sd, reference_uid(add_str("@sameip_cid"), (*count)), pl_sd->status.char_id);
+		pc_setregstr(sd, reference_uid(add_str("@sameip_name$"), (*count)), pl_sd->status.name);
+		(*count)++;
+		return 1;
+	}
+
+	return 0;
+}
+
+/* ===========================================================
+ * 指令: getsameipinfo
+ * 描述: 获得某个指定 IP 在线的玩家信息
+ * 用法: getsameipinfo {<"IP地址">{<,"地图名">}};
+ * 返回: 出错返回 -1, 其他含 0 正整数表示查到的此 IP 的在线玩家数
+ * 作者: Sola丶小克, 晓晓
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getsameipinfo) {
+	map_session_data *sd = nullptr;
+	uint32 ipaddr = 0, match_count = 0;
+	int16 m = -1;
+
+	if (!script_rid2sd(sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (script_hasdata(st, 2) && !script_isstring(st, 2)) {
+		ShowError("buildin_getsameipinfo: ip address must be string variable\n");
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (script_hasdata(st, 2)) {
+		ipaddr = str2ip(script_getstr(st, 2));
+	}
+	else {
+		ipaddr = session[sd->fd]->client_addr;
+	}
+
+	if (script_hasdata(st, 3)) {
+		const char* map_name = script_getstr(st, 3);
+		if ((m = map_mapname2mapid(map_name)) < 0) {
+			ShowWarning("buildin_getsameipinfo: Invalid map name '%s'.\n", map_name);
+			script_pushint(st, -1);
+			return SCRIPT_CMD_SUCCESS;
+		}
+	}
+
+	map_foreachpc(buildin_getsameipinfo_sub, sd, ipaddr, &match_count, m);
+	pc_setreg(sd, add_str("@sameip_amount"), match_count);
+
+	script_pushint(st, match_count);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetSameIpInfo
+#ifdef Pandas_ScriptCommand_Logout
+/* ===========================================================
+ * 指令: logout
+ * 描述: 使指定的角色立刻登出游戏
+ * 用法: logout <登出理由>{,"<角色名称>"|<账号编号>|<角色编号>};
+ * 返回: 该指令无论成功失败, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(logout) {
+	map_session_data *sd = nullptr;
+	int reason = script_getnum(st, 2);
+
+	if (script_hasdata(st, 3)) {
+		if (script_isstring(st, 3)) {
+			sd = map_nick2sd(script_getstr(st, 3), false);
+		}
+		else {
+			int id = script_getnum(st, 3);
+			sd = (map_id2sd(id) ? map_id2sd(id) : map_charid2sd(id));
+		}
+	}
+	else {
+		script_rid2sd(sd);
+	}
+
+	if (!sd) {
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!((reason >= 0 && reason <= 18) || (reason >= 100 && reason <= 110) || reason == 111)) {
+		ShowWarning("buildin_logout: unknown logout reason %d\n", reason);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (sd->fd) {
+		clif_authfail_fd(sd->fd, reason);
+	}
+	else {
+		map_quit(sd);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_Logout
+#ifdef Pandas_ScriptCommand_GetAreaGid
+/* ===========================================================
+ * 指令: buildin_getareagid_sub
+ * 描述: 配合 getareagid 指令使用的一个内部处理函数
+ * -----------------------------------------------------------*/
+static int32 buildin_getareagid_sub(struct block_list *bl, va_list ap) {
+	map_session_data *sd = nullptr;
+	struct script_state *st = va_arg(ap, struct script_state *);
+	struct script_data *retdata = va_arg(ap, struct script_data *);
+	uint32* found_count = va_arg(ap, uint32*);
+
+	if (!st || !retdata || !found_count) {
+		return 0;
+	}
+
+	int64 uid = reference_uid(reference_getid(retdata), (*found_count));
+	const char *retname = reference_getname(retdata);
+
+	sd = map_id2sd(st->rid);
+	set_reg_num(st, sd, uid, retname, bl->id, reference_getref(retdata));
+
+	(*found_count)++;
+	return 1;
+}
+
+/* ===========================================================
+ * 指令: getareagid
+ * 描述: 获取指定范围内特定类型单位的全部 GID
+ * 用法: getareagid <返回数组>,<搜索范围>{,<动态参数>...};
+ * 返回: 操作失败返回 -1, 其他含 0 正整数表示搜索到的 GID 数量
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getareagid) {
+	map_session_data *sd = nullptr;
+	struct script_data *retdata = script_getdata(st, 2);
+	struct reg_db *src_reg_db = nullptr;
+	int search_range = script_getnum(st, 3);
+	uint32 found_count = 0;
+
+	if (!data_isreference(retdata)) {
+		ShowError("buildin_getareagid: error argument! please give a array variable for save gameid.\n");
+		script_reportdata(retdata);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int retid = reference_getid(retdata);
+	const char *retname = reference_getname(retdata);
+
+	if (not_server_variable(*retname)) {
+		if (!script_rid2sd(sd)) {
+			ShowError("buildin_getareagid: '%s' is not server variable, please attach to a player.\n", retname);
+			script_reportdata(retdata);
+			script_pushint(st, -1);
+			return SCRIPT_CMD_FAILURE;
+		}
+	}
+
+	if (!(src_reg_db = script_array_src(st, sd, retname, reference_getref(retdata)))) {
+		ShowError("buildin_getareagid: variable '%s' is not a array.\n", retname);
+		script_reportdata(retdata);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (is_string_variable(retname)) {
+		ShowError("buildin_getareagid: the array variable '%s' must be integer type.\n", retname);
+		script_reportdata(retdata);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	// 以下用于清空存放返回数据的数值型数组 (参考 script_cleararray_pc 的实现)
+	script_array_ensure_zero(st, nullptr, retdata->u.num, reference_getref(retdata));
+	struct script_array* sa = static_cast<script_array *>(idb_get(src_reg_db->arrays, retid));
+	if (sa) {
+		// 若给定的数组是存在的, 那么需要清空一下
+		unsigned int* list = script_array_cpy_list(sa);
+		unsigned int size = sa->size;
+		for (unsigned int i = 0; i < size; i++) {
+			clear_reg(st, sd, reference_uid(retid, list[i]), retname, reference_getref(retdata));
+		}
+	}
+
+	switch (search_range)
+	{
+	case 0: {
+		// getareagid <返回数组>,0,<想搜索的单位类型>,<"地图名称">;
+		int map_id = -1, unitfilter = BL_ALL;
+		std::string mapname;
+
+		if (!script_get_optnum(st, 4, "Unit Type", unitfilter)) { script_pushint(st, -1); return SCRIPT_CMD_SUCCESS; }
+		if (!script_get_optstr(st, 5, "Map Name", mapname)) { script_pushint(st, -1); return SCRIPT_CMD_SUCCESS; }
+		if (!script_get_mapindex(st, mapname.c_str(), map_id)) { script_pushint(st, -1); return SCRIPT_CMD_SUCCESS; }
+
+		map_foreachinmap(buildin_getareagid_sub, map_id, unitfilter, st, retdata, &found_count);
+		break;
+	}
+	case 1: {
+		// getareagid <返回数组>,1,<想搜索的单位类型>,<"地图名称">,<中心坐标x>,<中心坐标y>,<范围>;
+		int map_id = -1, unitfilter = BL_ALL;
+		int map_x = 0, map_y = 0, range = 0;
+		std::string mapname;
+
+		if (!script_get_optnum(st, 4, "Unit Type", unitfilter)) { script_pushint(st, -1); return SCRIPT_CMD_SUCCESS; }
+		if (!script_get_optstr(st, 5, "Map Name", mapname)) { script_pushint(st, -1); return SCRIPT_CMD_SUCCESS; }
+		if (!script_get_optnum(st, 6, "Center X", map_x)) { script_pushint(st, -1); return SCRIPT_CMD_SUCCESS; }
+		if (!script_get_optnum(st, 7, "Center Y", map_y)) { script_pushint(st, -1); return SCRIPT_CMD_SUCCESS; }
+		if (!script_get_optnum(st, 8, "Range", range)) { script_pushint(st, -1); return SCRIPT_CMD_SUCCESS; }
+		if (!script_get_mapindex(st, mapname.c_str(), map_id)) { script_pushint(st, -1); return SCRIPT_CMD_SUCCESS; }
+
+		struct block_list center_bl = { 0 };
+		center_bl.m = map_id;
+		center_bl.x = map_x;
+		center_bl.y = map_y;
+
+		map_foreachinrange(buildin_getareagid_sub, &center_bl, range, unitfilter, st, retdata, &found_count);
+		break;
+	}
+	case 2: {
+		// getareagid <返回数组>,2,<想搜索的单位类型>,<"地图名称">,<坐标x0>,<坐标y0>,<坐标x1>,<坐标y1>;
+		int map_id = -1, unitfilter = BL_ALL;
+		int map_x0 = 0, map_y0 = 0, map_x1 = 0, map_y1 = 0;
+		std::string mapname;
+
+		if (!script_get_optnum(st, 4, "Unit Type", unitfilter)) { script_pushint(st, -1); return SCRIPT_CMD_SUCCESS; }
+		if (!script_get_optstr(st, 5, "Map Name", mapname)) { script_pushint(st, -1); return SCRIPT_CMD_SUCCESS; }
+		if (!script_get_optnum(st, 6, "x0 coordinate", map_x0)) { script_pushint(st, -1); return SCRIPT_CMD_SUCCESS; }
+		if (!script_get_optnum(st, 7, "y0 coordinate", map_y0)) { script_pushint(st, -1); return SCRIPT_CMD_SUCCESS; }
+		if (!script_get_optnum(st, 8, "x1 coordinate", map_x1)) { script_pushint(st, -1); return SCRIPT_CMD_SUCCESS; }
+		if (!script_get_optnum(st, 9, "y1 coordinate", map_y1)) { script_pushint(st, -1); return SCRIPT_CMD_SUCCESS; }
+		if (!script_get_mapindex(st, mapname.c_str(), map_id)) { script_pushint(st, -1); return SCRIPT_CMD_SUCCESS; }
+
+		map_foreachinarea(buildin_getareagid_sub, map_id, map_x0, map_y0, map_x1, map_y1, unitfilter, st, retdata, &found_count);
+		break;
+	}
+	default:
+		ShowWarning("buildin_getareagid: Invalid search range '%d'.\n", search_range);
+		break;
+	}
+
+	script_pushint(st, found_count);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetAreaGid
+#ifdef Pandas_ScriptCommand_ProcessHalt
+/* ===========================================================
+ * 指令: processhalt
+ * 描述: 在事件处理代码中使用该指令, 可以中断源代码的后续处理逻辑
+ * 用法: processhalt {<是否设置中断>};
+ * 返回: 该指令无论成功失败, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(processhalt) {
+	map_session_data *sd = nullptr;
+
+	if (!script_rid2sd(sd))
+		return SCRIPT_CMD_SUCCESS;
+
+	if (sd->pandas.workinevent == NPCE_MAX) {
+		ShowError("buildin_processhalt: Require work in event script.\n");
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	const char* name = npc_get_script_event_name(sd->pandas.workinevent);
+
+	if (name == nullptr) {
+		ShowError("buildin_processhalt: Can not get the event name for event type : %d\n", sd->pandas.workinevent);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	std::string evname = std::string(name);
+
+	if (evname.find("Filter") == std::string::npos) {
+		ShowError("buildin_processhalt: The '%s' event is not support processhalt.\n", evname.c_str());
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	bool makehalt = true;
+
+	if (script_hasdata(st, 2) && script_isint(st, 2)) {
+		makehalt = (cap_value(script_getnum(st, 2), 0, 1) == 1);
+	}
+
+	if (!setProcessHalt(sd, sd->pandas.workinevent, makehalt)) {
+		ShowError("buildin_processhalt: An error occurred while setting the '%s' event halt status to '%d'.\n", evname.c_str(), (int32)makehalt);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_ProcessHalt
+
+#ifdef Pandas_ScriptCommand_SetEventTrigger
+/* ===========================================================
+ * 指令: settrigger
+ * 描述: 使用该指令可以设置某个事件或过滤器的触发行为 (禁止触发、下次触发、永久触发)
+ * 用法: settrigger <事件的常量名称>,<触发行为>;
+ * 返回: 该指令无论成功失败, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(settrigger) {
+	map_session_data *sd = nullptr;
+
+	if (!script_rid2sd(sd))
+		return SCRIPT_CMD_SUCCESS;
+
+	uint16 envtype = script_getnum(st, 2);
+
+	if (envtype >= NPCE_MAX) {
+		ShowError("buildin_settrigger: Invalid npc event type: %d\n", envtype);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	uint16 triggerflag = script_getnum(st, 3);
+
+	if (triggerflag >= EVENT_TRIGGER_MAX) {
+		ShowError("buildin_settrigger: Invalid npc event trigger type: %d\n", triggerflag);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	const char* name = npc_get_script_event_name(envtype);
+
+	if (name == nullptr) {
+		ShowError("buildin_settrigger: Can not get the event name for event type: %d\n", envtype);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (!setEventTrigger(sd, static_cast<npce_event>(envtype), static_cast<npce_trigger>(triggerflag))) {
+		ShowError("buildin_settrigger: An error occurred while setting the '%s' event trigger type to '%d'.\n", name, triggerflag);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_SetEventTrigger
+
+#ifdef Pandas_ScriptCommand_MessageColor
+/* ===========================================================
+ * 指令: messagecolor
+ * 描述: 发送指定颜色的消息文本到聊天窗口中
+ * 用法: messagecolor "<消息文本>"{,"<文本颜色代码>",<发送目标>,<游戏单位编号>};
+ * 返回: 该指令无论成功失败, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(messagecolor) {
+	const char* text = script_getstr(st, 2);
+
+	const char* color = "ffffff";
+	if (script_hasdata(st, 3)) {
+		color = script_getstr(st, 3);
+	}
+
+	struct block_list *bl = nullptr;
+	if (!script_rid2bl(5, bl)) {
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	send_target target = AREA;
+	if (script_hasdata(st, 4)) {
+		switch (script_getnum(st, 4)) {
+			case BC_ALL:	target = ALL_CLIENT;	break;
+			case BC_MAP:	target = ALL_SAMEMAP;	break;
+			case BC_SELF:	target = SELF;			break;
+			case BC_AREA:
+			default:		target = AREA;			break;
+		}
+	}
+
+	clif_messagecolor(bl, strtol(color, nullptr, 16), text, true, target);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_MessageColor
+
+#ifdef Pandas_ScriptCommand_BattleRecordQuery
+/* ===========================================================
+ * 指令: batrec_query
+ * 描述: 查询指定单位的战斗记录, 查看与交互目标单位产生的具体记录值
+ * 用法: batrec_query <记录宿主的单位编号>,<交互目标的单位编号>,<记录类型>{,<聚合规则>};
+ * 返回: 返回 -1 表示查无记录或发生错误, 含 0 正整数表示伤害值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(batrec_query) {
+	struct block_list* bl = map_id2bl(script_getnum(st, 2));
+
+	if (bl == nullptr) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int32 rec_type = script_getnum(st, 4);
+
+	if (rec_type != BRT_DMG_RECEIVE && rec_type != BRT_DMG_CAUSE) {
+		ShowError("%s: The battle record type is invalid.\n", __func__);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int32 aggregation = BRA_COMBINE;
+
+	if (!script_get_optnum(st, 5, "Aggregation strategy", aggregation, true, BRA_COMBINE)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int64 damage = batrec_query(bl, script_getnum(st, 3), static_cast<e_batrec_type>(rec_type), static_cast<e_batrec_agg>(aggregation));
+
+	script_pushint(st, damage);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BattleRecordQuery
+
+#ifdef Pandas_ScriptCommand_BattleRecordRank
+/* ===========================================================
+ * 指令: batrec_rank
+ * 描述: 查询指定单位的战斗记录并对记录的值进行排序, 返回排行榜单
+ * 用法: batrec_rank <记录宿主的单位编号>,<返回交互目标的单位编号数组>,<返回记录值数组>,<记录类型>{,<聚合规则>{,<排序规则>}};
+ * 返回: 失败返回 -1, 含 0 正整数表示数组中返回的榜单记录数
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(batrec_rank) {
+	map_session_data* sd = map_id2sd(st->rid);
+	struct block_list* bl = map_id2bl(script_getnum(st, 2));
+
+	if (bl == nullptr) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int32 gid_array_varid = 0;
+	char* gid_array_varname = nullptr;
+	struct script_data* gid_array_vardata = nullptr;
+
+	if (!script_get_array(st, 3, gid_array_varid, gid_array_varname, gid_array_vardata)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	script_cleararray_st(st, 3);
+
+	int32 dmg_array_varid = 0;
+	char* dmg_array_varname = nullptr;
+	struct script_data* dmg_array_vardata = nullptr;
+
+	if (!script_get_array(st, 4, dmg_array_varid, dmg_array_varname, dmg_array_vardata)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	script_cleararray_st(st, 4);
+
+	int32 rec_type = script_getnum(st, 5);
+
+	if (rec_type != BRT_DMG_RECEIVE && rec_type != BRT_DMG_CAUSE) {
+		ShowError("%s: The battle record type is invalid.\n", __func__);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int32 aggregation = BRA_COMBINE;
+
+	if (!script_get_optnum(st, 6, "Aggregation strategy", aggregation, true, BRA_COMBINE)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int32 sort_type = BRS_DESC;
+
+	if (!script_get_optnum(st, 7, "Sort Type", sort_type, true, BRS_DESC)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	batrec_map* origin_rec = batrec_getmap(bl, static_cast<e_batrec_type>(rec_type));
+
+	if (origin_rec == nullptr) {
+		ShowError("%s: The battle record type is invalid.\n", __func__);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	batrec_map rec;
+	batrec_aggregation(origin_rec, rec, static_cast<e_batrec_agg>(aggregation));
+
+	std::vector<std::pair<uint32, s_batrec_item_ptr>> rec_sorted;
+
+	for (auto& it : rec) {
+		rec_sorted.push_back(it);
+	}
+
+	if (sort_type == BRS_DESC) {
+		std::sort(rec_sorted.begin(), rec_sorted.end(), batrec_cmp_desc);
+	} else {
+		std::sort(rec_sorted.begin(), rec_sorted.end(), batrec_cmp_asc);
+	}
+
+	for (size_t i = 0; i < rec_sorted.size(); i++) {
+		int64 uid = reference_uid(gid_array_varid, i);
+		set_reg_num(st, sd, uid, gid_array_varname, rec_sorted[i].first, reference_getref(gid_array_vardata));
+
+		uid = reference_uid(dmg_array_varid, i);
+		set_reg_num(st, sd, uid, dmg_array_varname, rec_sorted[i].second->damage, reference_getref(dmg_array_vardata));
+	}
+
+	script_pushint(st, rec_sorted.size());
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BattleRecordRank
+
+#ifdef Pandas_ScriptCommand_BattleRecordSortout
+/* ===========================================================
+ * 指令: batrec_sortout
+ * 描述: 移除指定单位的战斗记录中交互单位已经不存在 (或下线) 的记录
+ * 用法: batrec_sortout <记录宿主的单位编号>{,<记录类型>};
+ * 返回: 该指令无论成功与否, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(batrec_sortout) {
+	struct block_list* bl = map_id2bl(script_getnum(st, 2));
+
+	if (bl == nullptr) {
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!script_hasdata(st, 3)) {
+		batrec_sortout(bl);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int32 rec_type = script_getnum(st, 3);
+
+	if (rec_type != BRT_DMG_RECEIVE && rec_type != BRT_DMG_CAUSE) {
+		ShowError("%s: The battle record type is invalid.\n", __func__);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	batrec_sortout(bl, static_cast<e_batrec_type>(rec_type));
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BattleRecordSortout
+
+#ifdef Pandas_ScriptCommand_BattleRecordReset
+/* ===========================================================
+ * 指令: batrec_reset
+ * 描述: 清除指定单位的战斗记录
+ * 用法: batrec_reset <记录宿主的单位编号>;
+ * 返回: 该指令无论成功与否, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(batrec_reset) {
+	struct block_list* bl = map_id2bl(script_getnum(st, 2));
+
+	batrec_reset(bl);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BattleRecordReset
+
+#ifdef Pandas_ScriptCommand_EnableBattleRecord
+/* ===========================================================
+ * 指令: enable_batrec
+ * 描述: 启用指定单位的战斗记录
+ * 用法: enable_batrec {<游戏单位编号>};
+ * 返回: 该指令无论成功与否, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(enable_batrec) {
+	int32 unit_id = st->rid;
+
+	if (script_hasdata(st, 2)) {
+		unit_id = script_getnum(st, 2);
+	}
+
+	struct block_list* bl = map_id2bl(unit_id);
+
+	if (bl == nullptr) {
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	struct s_unit_common_data* ucd = status_get_ucd(bl);
+
+	if (ucd == nullptr) {
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	ucd->batrec.dorecord = true;
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_EnableBattleRecord
+
+#ifdef Pandas_ScriptCommand_DisableBattleRecord
+/* ===========================================================
+ * 指令: disable_batrec
+ * 描述: 禁用指定单位的战斗记录
+ * 用法: disable_batrec {<游戏单位编号>};
+ * 返回: 该指令无论成功与否, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(disable_batrec) {
+	int32 unit_id = st->rid;
+
+	if (script_hasdata(st, 2)) {
+		unit_id = script_getnum(st, 2);
+	}
+
+	struct block_list* bl = map_id2bl(unit_id);
+
+	if (bl == nullptr) {
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	struct s_unit_common_data* ucd = status_get_ucd(bl);
+
+	if (ucd == nullptr) {
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	ucd->batrec.dorecord = false;
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_DisableBattleRecord
+
+#ifdef Pandas_ScriptCommand_UnlockCmd
+/* ===========================================================
+ * 指令: unlockcmd
+ * 描述: 解锁实时事件和过滤器事件的指令限制, 只能用于实时或过滤器事件
+ * 用法: unlockcmd;
+ * 返回: 该指令无论成功与否, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(unlockcmd) {
+	map_session_data* sd = nullptr;
+	sd = map_id2sd(st->rid);
+
+	if (!sd) {
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!npc_event_is_realtime(sd->pandas.workinevent)) {
+		ShowError("buildin_unlockcmd: This command can only be used for Filter or Express Event.\n");
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	st->unlockcmd = 1;
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_UnlockCmd
+
+#ifdef Pandas_ScriptCommand_Login
+/* ===========================================================
+ * 指令: login
+ * 描述: 将指定的角色以特定的登录模式拉上线
+ * 用法: login <角色编号>{,<默认是否坐下>{,<默认身体朝向>{,<默认脑袋朝向>{,<登录模式>}}}};
+ * 返回: 成功返回 1, 失败返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(login) {
+	uint32 charid = static_cast<uint32>(script_getnum(st, 2));
+
+	int sit = 0;
+	if (!script_get_optnum(st, 3, "Sitdown or not", sit, true, 0)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+	sit = cap_value(sit, 0, 1);
+
+	int body_dir = DIR_SOUTH;
+	if (!script_get_optnum(st, 4, "Body Direction", body_dir, true, DIR_SOUTH)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+	body_dir = cap_value(body_dir, 0, 7);
+
+	int head_dir = 0;
+	if (!script_get_optnum(st, 5, "Head Direction", head_dir, true, 0)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+	head_dir = cap_value(head_dir, 0, 2);
+
+	int mode = SUSPEND_MODE_NONE;
+	if (!script_get_optnum(st, 6, "Login Mode", mode, true, SUSPEND_MODE_NORMAL)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (!suspend_mode_valid(mode)) {
+		mode = SUSPEND_MODE_NORMAL;
+	}
+
+	if (suspend_recall(charid, static_cast<e_suspend_mode>(mode), static_cast<unsigned char>(body_dir), static_cast<unsigned char>(head_dir), static_cast<unsigned char>(sit))) {
+		script_pushint(st, 1);
+	} else {
+		script_pushint(st, 0);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_Login
+
+#ifdef Pandas_ScriptCommand_CheckSuspend
+/* ===========================================================
+ * 指令: checksuspend
+ * 描述: 获取指定角色或指定账号当前在线角色的挂机模式
+ * 用法: checksuspend {<角色编号|账号编号|"角色名称">};
+ * 返回: 角色不存在返回 -1, 否则返回当前的挂机状态
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(checksuspend) {
+	map_session_data* sd = nullptr;
+
+	if (script_hasdata(st, 2)) {
+		if (script_isstring(st, 2)) {
+			sd = map_nick2sd(script_getstr(st, 2), false);
+		} else {
+			int32 id = script_getnum(st, 2);
+
+			sd = map_id2sd(id);
+			if (sd == nullptr) {
+				sd = map_charid2sd(id);
+			}
+		}
+	} else if (!script_rid2sd(sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (sd == nullptr) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if ((sd->state.autotrade & AUTOTRADE_OFFLINE) == AUTOTRADE_OFFLINE) {
+		script_pushint(st, SUSPEND_MODE_OFFLINE);
+	} else if ((sd->state.autotrade & AUTOTRADE_AFK) == AUTOTRADE_AFK) {
+		script_pushint(st, SUSPEND_MODE_AFK);
+	} else if ((sd->state.autotrade & AUTOTRADE_NORMAL) == AUTOTRADE_NORMAL) {
+		script_pushint(st, SUSPEND_MODE_NORMAL);
+	} else {
+		script_pushint(st, SUSPEND_MODE_NONE);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_CheckSuspend
+
+#ifdef Pandas_ScriptCommand_BonusScriptRemove
+/* ===========================================================
+ * 指令: bonus_script_remove
+ * 描述: 移除指定的 bonus_script 效果脚本
+ * 用法: bonus_script_remove <效果脚本编号>{,<角色编号>};
+ * 返回: 成功移除则返回 true, 找不到脚本代码或移除失败则返回 false
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(bonus_script_remove) {
+	TBL_PC* sd = nullptr;
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, false);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	uint64 bonus_id = script_getnum64(st, 2);
+	if (pc_bonus_script_remove(sd, bonus_id)) {
+		script_pushint(st, true);
+	} else {
+		script_pushint(st, false);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BonusScriptRemove
+
+#ifdef Pandas_ScriptCommand_BonusScriptList
+/* ===========================================================
+ * 指令: bonus_script_list
+ * 描述: 用于获取指定角色当前激活的全部 bonus_script 效果脚本编号
+ * 用法: bonus_script_list <返回效果脚本编号的数值型数组>{,<角色编号>};
+ * 返回: 获取到的脚本代码数量, 发生错误则返回 -1
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(bonus_script_list) {
+	TBL_PC* sd = nullptr;
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int script_array_varid = 0;
+	char* script_array_varname = nullptr;
+	struct script_data* script_array_vardata = nullptr;
+	if (!script_get_array(st, 2, script_array_varid, script_array_varname, script_array_vardata)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	script_cleararray_st(st, 2);
+
+	uint16 count = 0;
+	struct linkdb_node* node = nullptr;
+	struct s_bonus_script_entry* entry = nullptr;
+	if ((node = sd->bonus_script.head)) {
+		while (node) {
+			struct linkdb_node* next = node->next;
+			entry = (struct s_bonus_script_entry*)node->data;
+			if (!entry)
+				continue;
+
+			int64 uid = reference_uid(script_array_varid, count);
+			set_reg_num(st, sd, uid, script_array_varname, entry->bonus_id, reference_getref(script_array_vardata));
+			count++;
+			node = next;
+		}
+	}
+
+	script_pushint(st, count);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BonusScriptList
+
+#ifdef Pandas_ScriptCommand_BonusScriptExists
+/* ===========================================================
+ * 指令: bonus_script_exists
+ * 描述: 查询指定角色是否已经激活了特定的 bonus_script 效果脚本
+ * 用法: bonus_script_exists <效果脚本编号>{,<角色编号>};
+ * 返回: 效果已经存在则返回 true, 角色不在线或效果不存在否则返回 false
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(bonus_script_exists) {
+	TBL_PC* sd = nullptr;
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	uint64 bonus_id = script_getnum64(st, 2);
+	if (pc_bonus_script_exists(sd, bonus_id)) {
+		script_pushint(st, true);
+	} else {
+		script_pushint(st, false);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BonusScriptExists
+
+#ifdef Pandas_ScriptCommand_BonusScriptGetId
+/* ===========================================================
+ * 指令: bonus_script_getid
+ * 描述: 用于查询效果脚本代码对应的效果脚本编号
+ * 用法: bonus_script_getid <"效果脚本代码">,<返回效果脚本编号数组>{,<角色编号>};
+ * 返回: 查询到的记录数
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(bonus_script_getid) {
+	TBL_PC* sd = nullptr;
+	if (!script_charid2sd(4, sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	const char* script_str = nullptr;
+	script_str = script_getstr(st, 2);
+
+	int ret_varid = 0;
+	char* ret_varname = nullptr;
+	struct script_data* ret_vardata = nullptr;
+	if (!script_get_array(st, 3, ret_varid, ret_varname, ret_vardata)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+	script_cleararray_st(st, 3);
+
+	uint16 count = 0;
+	struct linkdb_node* node = nullptr;
+	struct s_bonus_script_entry* entry = nullptr;
+
+	if ((node = sd->bonus_script.head)) {
+		while (node) {
+			struct linkdb_node* next = node->next;
+			entry = (struct s_bonus_script_entry*)node->data;
+			if (strcmpi(script_str, StringBuf_Value(entry->script_buf)) == 0) {
+				int64 uid = reference_uid(ret_varid, count);
+				set_reg_num(st, sd, uid, ret_varname, entry->bonus_id, reference_getref(ret_vardata));
+				count++;
+			}
+			node = next;
+		}
+	}
+
+	script_pushint(st, count);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BonusScriptGetId
+
+#ifdef Pandas_ScriptCommand_BonusScriptInfo
+/* ===========================================================
+ * 指令: bonus_script_info
+ * 描述: 查询指定效果脚本的相关信息
+ * 用法: bonus_script_info <效果脚本编号>,<查询类型>{,<角色编号>};
+ * 返回: 直接返回所查询的结果值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(bonus_script_info) {
+	TBL_PC* sd = nullptr;
+	if (!script_charid2sd(4, sd)) {
+		script_pushint(st, -2);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	uint64 bonus_id = script_getnum64(st, 2);
+	int32 query_type = script_getnum(st, 3);
+
+	bool found = false;
+	struct linkdb_node* node = nullptr;
+	struct s_bonus_script_entry* entry = nullptr;
+
+	if ((node = sd->bonus_script.head)) {
+		while (node) {
+			struct linkdb_node* next = node->next;
+			entry = (struct s_bonus_script_entry*)node->data;
+			if (bonus_id == entry->bonus_id) {
+				found = true;
+				break;
+			}
+			node = next;
+		}
+	}
+
+	if (!found) {
+		script_pushint(st, -3);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	switch (query_type) {
+		case 0: // 效果脚本代码
+			script_pushstrcopy(st, StringBuf_Value(entry->script_buf));
+			break;
+		case 1: // 标记位
+			script_pushint(st, entry->flag);
+			break;
+		case 2: // 状态图标编号
+			script_pushint(st, entry->icon);
+			break;
+		case 3: // 类型
+			script_pushint(st, entry->type);
+			break;
+		case 4: // 剩余时间 (毫秒)
+			if (entry->tid == INVALID_TIMER) {
+				script_pushint(st, -1);
+				break;
+			}
+			script_pushint(st, DIFF_TICK(get_timer(entry->tid)->tick, gettick()));
+			break;
+		default:
+			ShowWarning("buildin_bonus_script_info: The type should be in range 0-%d, currently type is: %d.\n", 4, query_type);
+			script_pushint(st, -4);
+			break;
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BonusScriptInfo
+
+#ifdef Pandas_ScriptCommand_ExpandInventoryAdjust
+/* ===========================================================
+ * 指令: expandinventory_adjust
+ * 描述: 增加角色的背包容量上限
+ * 用法: expandinventory_adjust <增加多少容量>;
+ * 返回: 调整成功返回 1, 失败返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(expandinventory_adjust) {
+	TBL_PC* sd = nullptr;
+	if (!script_rid2sd(sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int expand_count = script_getnum(st, 2);
+
+	if (sd->status.inventory_slots + expand_count <= MAX_INVENTORY &&
+		sd->status.inventory_slots + expand_count >= sd->inventory.amount &&
+		sd->status.inventory_slots + expand_count >= INVENTORY_BASE_SIZE) {
+		sd->status.inventory_slots += expand_count;
+		clif_inventory_expansion_info(sd);
+		chrif_save(sd, CSAVE_NORMAL);
+		script_pushint(st, 1);
+	} else {
+		script_pushint(st, 0);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_ExpandInventoryAdjust
+
+#ifdef Pandas_ScriptCommand_GetInventorySize
+/* ===========================================================
+ * 指令: getinventorysize
+ * 描述: 查询并获取当前角色的背包容量上限
+ * 用法: getinventorysize {<角色编号>};
+ * 返回: 找不到角色则返回 0, 否则返回查询到的背包容量
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getinventorysize) {
+	TBL_PC* sd = nullptr;
+	if (!script_charid2sd(2, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+	script_pushint(st, sd->status.inventory_slots);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetInventorySize
+
+#ifdef Pandas_ScriptCommand_GetCalendarTime
+/* ===========================================================
+ * 指令: getcalendartime
+ * 描述: 获取下次出现指定时间的 UNIX 时间戳
+ * 用法: getcalendartime <小时>,<分钟>{,<月的第几天>{,<周的第几天>}};
+ * 返回: 成功则返回时间戳, 失败则返回 -1
+ * 作者: Haru <haru@dotalux.com>
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getcalendartime) {
+	struct tm info = { 0 };
+	int day_of_month = script_hasdata(st, 4) ? script_getnum(st, 4) : -1;
+	int day_of_week = script_hasdata(st, 5) ? script_getnum(st, 5) : -1;
+	int year = date_get_year();
+	int month = date_get_month();
+	int day = date_get_dayofmonth();
+	int cur_hour = date_get_hour();
+	int cur_min = date_get_min();
+	int hour = script_getnum(st, 2);
+	int minute = script_getnum(st, 3);
+
+	info.tm_sec = 0;
+	info.tm_min = minute;
+	info.tm_hour = hour;
+	info.tm_mday = day;
+	info.tm_mon = month - 1;
+	info.tm_year = year - 1900;
+
+	if (day_of_month > -1 && day_of_week > -1) {
+		ShowError("buildin_getcalendartime: You must only specify a day_of_week or a day_of_month, not both\n");
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+	if (day_of_month > -1 && (day_of_month < 1 || day_of_month > 31)) {
+		ShowError("buildin_getcalendartime: Day of Month in invalid range. Must be between 1 and 31.\n");
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+	if (day_of_week > -1 && (day_of_week < 0 || day_of_week > 6)) {
+		ShowError("buildin_getcalendartime: Day of Week in invalid range. Must be between 0 and 6.\n");
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+	if (hour > -1 && (hour > 23)) {
+		ShowError("buildin_getcalendartime: Hour in invalid range. Must be between 0 and 23.\n");
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+	if (minute > -1 && (minute > 59)) {
+		ShowError("buildin_getcalendartime: Minute in invalid range. Must be between 0 and 59.\n");
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+	if (hour == -1 || minute == -1) {
+		ShowError("buildin_getcalendartime: Minutes and Hours are required\n");
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (day_of_month > -1) {
+		if (day_of_month < day) { // Next Month
+			info.tm_mon++;
+		} else if (day_of_month == day) { // Today
+			if (hour < cur_hour || (hour == cur_hour && minute < cur_min)) { // But past time, next month
+				info.tm_mon++;
+			}
+		}
+		// Loops until month has finding a month that has day_of_month
+		do {
+			time_t t;
+			struct tm* lt;
+			info.tm_mday = day_of_month;
+			t = mktime(&info);
+			lt = localtime(&t);
+			info = *lt;
+		} while (info.tm_mday != day_of_month);
+	} else if (day_of_week > -1) {
+		int cur_wday = date_get_dayofweek();
+
+		if (day_of_week > cur_wday) { // This week
+			info.tm_mday += (day_of_week - cur_wday);
+		} else if (day_of_week == cur_wday) { // Today
+			if (hour < cur_hour || (hour == cur_hour && minute <= cur_min)) {
+				info.tm_mday += 7; // Next week
+			}
+		} else if (day_of_week < cur_wday) { // Next week
+			info.tm_mday += (7 - cur_wday + day_of_week);
+		}
+	} else if (day_of_week == -1 && day_of_month == -1) { // Next occurence of hour/min
+		if (hour < cur_hour || (hour == cur_hour && minute < cur_min)) {
+			info.tm_mday++;
+		}
+	}
+
+	script_pushint(st, mktime(&info));
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetCalendarTime
+
+#ifdef Pandas_ScriptCommand_GetSkillInfo
+/* ===========================================================
+ * 指令: getskillinfo
+ * 描述: 获取指定技能在技能数据库中所配置的各项信息
+ * 用法: getskillinfo <查询的信息类型>,<技能编号>{,<技能等级>{,<角色编号>}};
+ * 用法: getskillinfo <查询的信息类型>,<"技能名称">{,<技能等级>{,<角色编号>}};
+ * 返回: 请查阅 doc/pandas_script_commands.txt 中的说明
+ * 作者: 聽風
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getskillinfo) {
+	int type = 0;
+	uint16 skill_id = 0;
+	int i = 0, j = 0;
+	int skill_lv = (script_hasdata(st, 4) && script_isint(st, 4)) ? script_getnum(st, 4) : 0;
+	int char_id = (script_hasdata(st, 5) && script_isint(st, 5)) ? script_getnum(st, 5) : 0;
+
+	type = script_getnum(st, 2);
+	if (script_isstring(st, 3)) {
+		const char *name = script_getstr(st, 3);
+		if (!(skill_id = skill_name2id(name))) {
+			ShowError("buildin_getskillinfo: Invalid skill name %s.\n", name);
+			return SCRIPT_CMD_FAILURE;
+		}
+	} else {
+		skill_id = script_getnum(st, 3);
+		if (!skill_get_index(skill_id)) {
+			ShowError("buildin_getskillinfo: Invalid skill ID %d.\n", skill_id);
+			return SCRIPT_CMD_FAILURE;
+		}
+	}
+
+	std::shared_ptr<s_skill_db> skill = skill_db.find(skill_id);
+	if (skill == nullptr) {
+		ShowError("buildin_getskillinfo: Invalid skill ID %d.\n", skill_id);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	switch (type) {
+		case SKI_CASTTYPE: script_pushint(st, skill_get_casttype(skill_id)); break;
+		case SKI_NAME: script_pushstrcopy(st, skill_get_name(skill_id)); break;
+		case SKI_DESCRIPTION: script_pushstrcopy(st, skill_get_desc(skill_id)); break;
+		case SKI_MAXLEVEL_IN_SKILLTREE: script_pushint(st, skill_tree_get_max(skill_id,skill_lv)); break;
+		case SKI_SKILLTYPE: script_pushint(st, skill_get_type(skill_id)); break;
+		case SKI_HIT: script_pushint(st, skill_get_hit(skill_id)); break;
+		case SKI_TARGETTYPE: script_pushint(st, skill_get_inf(skill_id)); break;
+		case SKI_ELEMENT: script_pushint(st, skill_get_ele(skill_id,skill_lv)); break;
+		case SKI_MAXLEVEL: script_pushint(st, skill_get_max(skill_id)); break;
+		case SKI_RANGE: script_pushint(st, skill_get_range(skill_id,skill_lv)); break;
+		case SKI_SPLASHAREA: script_pushint(st, skill_get_splash(skill_id,skill_lv)); break;
+		case SKI_HITCOUNT: script_pushint(st, skill_get_num(skill_id,skill_lv)); break;
+		case SKI_CASTTIME: script_pushint(st, skill_get_cast(skill_id,skill_lv)); break;
+#ifdef RENEWAL_CAST
+		case SKI_FIXEDCASTTIME: script_pushint(st, skill_get_fixed_cast(skill_id,skill_lv)); break;
+#else
+		case SKI_FIXEDCASTTIME: script_pushint(st, -1); break;
+#endif // RENEWAL_CAST
+		case SKI_AFTERCASTACTDELAY: script_pushint(st, skill_get_delay(skill_id,skill_lv)); break;
+		case SKI_AFTERCASTWALKDELAY: script_pushint(st, skill_get_walkdelay(skill_id,skill_lv)); break;
+		case SKI_DURATION1: script_pushint(st, skill_get_time(skill_id,skill_lv)); break;
+		case SKI_DURATION2: script_pushint(st, skill_get_time2(skill_id,skill_lv)); break;
+		case SKI_CASTTIMEFLAGS: script_pushint(st, skill_get_castnodex(skill_id)); break;
+		case SKI_CASTDELAYFLAGS: script_pushint(st, skill_get_delaynodex(skill_id)); break;
+		case SKI_CASTDEFENSEREDUCTION: script_pushint(st, skill_get_castdef(skill_id)); break;
+		case SKI_CASTCANCEL: script_pushint(st, skill_get_castcancel(skill_id)); break;
+		case SKI_ACTIVEINSTANCE: script_pushint(st, skill_get_maxcount(skill_id,skill_lv)); break;
+		case SKI_KNOCKBACK: script_pushint(st, skill_get_blewcount(skill_id,skill_lv)); break;
+		case SKI_COOLDOWN: script_pushint(st, skill_get_cooldown(skill_id,skill_lv)); break;
+		case SKI_NONEARNPC_TYPE: script_pushint(st, skill->unit_nonearnpc_type); break;
+		case SKI_NONEARNPC_ADDITIONALRANGE: script_pushint(st, skill->unit_nonearnpc_range); break;
+		case SKI_COPYFLAGS_SKILL: script_pushint(st, skill->copyable.option); break;
+		case SKI_COPYFLAGS_REMOVEREQUIREMENT: script_pushint(st, skill->copyable.req_opt); break;
+		case SKI_UNIT_ID: script_pushint(st, skill_get_unit_id(skill_id)); break;
+		case SKI_UNIT_ALTERNATEID: script_pushint(st, skill_get_unit_id2(skill_id)); break;
+		case SKI_UNIT_LAYOUT: script_pushint(st, skill_get_unit_layout_type(skill_id,skill_lv)); break;
+		case SKI_UNIT_RANGE: script_pushint(st, skill_get_unit_range(skill_id,skill_lv)); break;
+		case SKI_UNIT_INTERVAL: script_pushint(st, skill_get_unit_interval(skill_id)); break;
+		case SKI_UNIT_TARGET: script_pushint(st, skill_get_unit_target(skill_id)); break;
+		case SKI_REQUIRES_HPCOST: script_pushint(st, skill_get_hp(skill_id,skill_lv)); break;
+		case SKI_REQUIRES_SPCOST: script_pushint(st, skill_get_sp(skill_id,skill_lv)); break;
+		case SKI_REQUIRES_MAXHPTRIGGER: script_pushint(st, skill_get_mhp(skill_id,skill_lv)); break;
+		case SKI_REQUIRES_HPRATECOST: script_pushint(st, skill_get_hp_rate(skill_id,skill_lv)); break;
+		case SKI_REQUIRES_SPRATECOST: script_pushint(st, skill_get_sp_rate(skill_id,skill_lv)); break;
+		case SKI_REQUIRES_ZENYCOST: script_pushint(st, skill_get_zeny(skill_id,skill_lv)); break;
+		case SKI_REQUIRES_WEAPON: script_pushint(st, skill_get_weapontype(skill_id)); break;
+		case SKI_REQUIRES_AMMO: script_pushint(st, skill_get_ammotype(skill_id)); break;
+		case SKI_REQUIRES_AMMOAMOUNT: script_pushint(st, skill_get_ammo_qty(skill_id,skill_lv)); break;
+		case SKI_REQUIRES_STATE: script_pushint(st, skill_get_state(skill_id)); break;
+		case SKI_REQUIRES_SPHERECOST: script_pushint(st, skill_get_spiritball(skill_id,skill_lv)); break;
+		case SKI_REQUIRES_STATUS:
+			for (const auto& sc : skill->require.status) {
+				script_both_setreg(st, "skill_requires_status", (int64)sc, true, j, char_id);
+				j++;
+			}
+			script_pushint(st, j);
+			break;
+		case SKI_DAMAGEFLAGS:
+			for (i = 0; i < NK_MAX; i++) {
+				script_both_setreg(st, "skill_damage_flags", skill->nk[i], true, i, char_id);
+			}
+			script_pushint(st, NK_MAX);
+			break;
+		case SKI_FLAGS:
+			for (i = 0; i < INF2_MAX; i++) {
+				script_both_setreg(st, "skill_flags", skill->inf2[i], true, i, char_id);
+			}
+			script_pushint(st, INF2_MAX);
+			break;
+		case SKI_UNIT_FLAG:
+			for (i = 0; i < UF_MAX; i++) {
+				script_both_setreg(st, "skill_unit_flag", skill->unit_flag[i], true, i, char_id);
+			}
+			script_pushint(st, UF_MAX);
+			break;
+		case SKI_REQUIRES_EQUIPMENT:
+			for (const auto& item : skill->require.eqItem) {
+				script_both_setreg(st, "skill_requires_equipment", (int64)item, true, j, char_id);
+				j++;
+			}
+			script_pushint(st, j);
+			break;
+		case SKI_REQUIRES_ITEMCOST:
+			for (i = 0; i < MAX_SKILL_ITEM_REQUIRE; i++) {
+				if (!skill->require.itemid[i]) continue;
+				script_both_setreg(st, "skill_requires_itemid", skill->require.itemid[i], true, j, char_id);
+				script_both_setreg(st, "skill_requires_amount", skill->require.amount[i], true, j, char_id);
+				j++;
+			}
+			script_pushint(st, j);
+			break;
+		default:
+			script_pushint(st, -1);
+			return SCRIPT_CMD_FAILURE;
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetSkillInfo
+
+#ifdef Pandas_ScriptCommand_Sleep3
+/* ===========================================================
+ * 指令: sleep3
+ * 描述: 休眠一段时间再执行后续脚本, 与 sleep2 类似但忽略报错
+ * 用法: sleep3 <休眠毫秒数>;
+ * 返回: 该指令无论成功与否, 都不会有返回值
+ * 作者: 人鱼姬的思念
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(sleep3) {
+	// First call(by function call)
+	if (st->sleep.tick == 0) {
+		int32 ticks;
+
+		ticks = script_getnum(st, 2);
+
+		if (ticks <= 0) {
+			ShowError("buildin_sleep3: negative or zero amount('%d') of milli seconds is not supported\n", ticks);
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		// sleep for the target amount of time
+		st->state = RERUNLINE;
+		st->sleep.tick = ticks;
+	// Second call(by timer after sleeping time is over)
+	} else {
+		// The unit is still attached - continue the script
+		st->state = RUN;
+		st->sleep.tick = 0;
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_Sleep3
+
+#ifdef Pandas_ScriptCommand_GetQuestTime
+/* ===========================================================
+ * 指令: getquesttime
+ * 描述: 查询角色指定任务的时间信息
+ * 用法: getquesttime <任务编号>{,<想查询的时间类型>{,<角色编号>}};
+ * 返回: 成功返回时间戳, 失败返回 -1
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getquesttime) {
+	int32 quest_id = script_getnum(st, 2);
+	int32 query_time_type = (script_hasdata(st, 3) && script_isint(st, 3)) ? script_getnum(st, 3) : 0;
+	map_session_data* sd = nullptr;
+
+	if (!script_charid2sd(4, sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	std::shared_ptr<s_quest_db> qi = quest_search(quest_id);
+	if (!qi) {
+		ShowError("buildin_getquesttime: Quest %d not found in DB.\n", quest_id);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int32 i = 0;
+	ARR_FIND(0, sd->num_quests, i, sd->quest_log[i].quest_id == quest_id);
+	if (i == sd->num_quests) {
+		ShowError("buildin_getquesttime: Character %d doesn't have quest %d.\n", sd->status.char_id, quest_id);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	switch (query_time_type) {
+		case 0:
+			script_pushint(st, sd->quest_log[i].time);
+			break;
+		case 1:
+			script_pushint(st, sd->quest_log[i].time - qi->time);
+			break;
+		case 2:
+			script_pushint(st, i64max(static_cast<int64>(sd->quest_log[i].time) - time(nullptr), 0));
+			break;
+		default:
+			ShowError("buildin_getquesttime: Invaild type for quest time.\n");
+			script_pushint(st, -1);
+			break;
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetQuestTime
+
+#ifdef Pandas_ScriptCommand_UnitSpecialEffect
+/* ===========================================================
+ * 指令: unitspecialeffect
+ * 描述: 使指定游戏单位可以显示某个特效, 并支持控制特效可见范围
+ * 用法: unitspecialeffect <游戏单位编号>,<特效编号>{,<谁能看见特效>{,<能看见特效的账号编号>}};
+ * 返回: 该指令无论成功与否, 都不会有返回值
+ * 作者: 人鱼姬的思念
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(unitspecialeffect) {
+	block_list* bl = map_id2bl(script_getnum(st, 2));
+	int32 type = script_getnum(st, 3);
+	enum send_target target = AREA;
+
+	if (bl == nullptr) {
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (script_hasdata(st, 4)) {
+		target = static_cast<send_target>(script_getnum(st, 4));
+	}
+
+	if (type <= EF_NONE || type >= EF_MAX) {
+		ShowError("buildin_unitspecialeffect: unsupported effect id %d\n", type);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (target != SELF) {
+		clif_specialeffect(bl, type, target);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	map_session_data* sd = nullptr;
+	if (!script_mapid2sd(5, sd)) {
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (sd->type == BL_PC) {
+		clif_specialeffect_single(bl, type, sd->fd);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_UnitSpecialEffect
+
+#ifdef Pandas_ScriptCommand_Next_Dropitem_Special
+/* ===========================================================
+ * 指令: next_dropitem_special
+ * 描述: 对下一个掉落到地面上的物品进行特殊设置
+ * 用法: next_dropitem_special <道具绑定类型>,<租赁时长>,<掉落光柱颜色>;
+ * 返回: 该指令无论成功与否, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(next_dropitem_special) {
+	next_dropitem_special.bound = cap_value(script_getnum(st, 2), BOUND_NONE, BOUND_MAX - 1);
+	next_dropitem_special.rent_duration = cap_value(script_getnum(st, 3), 0, INT32_MAX);
+	next_dropitem_special.drop_effect = cap_value(script_getnum(st, 4), -1, DROPEFFECT_MAX - 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_Next_Dropitem_Special
+
+#ifdef Pandas_ScriptCommand_GetRateIdx
+/* ===========================================================
+ * 指令: getrateidx
+ * 描述: 随机获取一个数值型数组的索引序号, 数组中每个元素的值为权重值
+ * 用法: getrateidx <数值型数组变量>;
+ * 用法: getrateidx <数值1>{, <数值2>{, ...<数值n>}};
+ * 返回: 返回随机命中的索引序号
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getrateidx) {
+	uint64 total_weight = 0;
+	struct script_data* data = script_getdata(st, 2);
+	std::vector<uint64> weights;
+
+	// 如果不是一个数组, 那么将参数逐个累加
+	if (!data_isreference(data)) {
+		for (int32 i = 0; i < script_lastdata(st) - 1; i++) {
+			uint64 weight = script_getnum(st, i + 2);
+			weights.push_back(weight);
+			total_weight += weight;
+		}
+	}
+	// 否则说明传递的是一个数组, 从数组中读取内容
+	else {
+		map_session_data* sd = nullptr;
+		int32 varid = reference_getid(data);
+		const char* varname = reference_getname(data);
+
+		// 若不是服务器变量, 那么必须要关联到玩家
+		if (not_server_variable(*varname)) {
+			if (!script_rid2sd(sd)) {
+				ShowError("buildin_getrateidx: '%s' is not server variable, please attach to a player.\n", varname);
+				script_abort(st);
+				return SCRIPT_CMD_FAILURE;
+			}
+		}
+
+		// 检查是否为数值类型的数组变量, 不是则报错并终止
+		if (is_string_variable(varname)) {
+			ShowError("buildin_getrateidx: '%s' is not an int array.\n", varname);
+			script_abort(st);
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		// 获取数组的元素个数, 并判断是否在有效范围内
+		uint32 array_size = script_array_highest_key(st, sd, varname, reference_getref(data));
+		if (array_size == 0 || array_size > SCRIPT_MAX_ARRAYSIZE) {
+			ShowError("buildin_getrateidx: The size of '%s' is not in valid range.\n", varname);
+			script_abort(st);
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		for (uint32 i = 0; i < array_size; i++) {
+			uint64 weight = get_val2_num(st, reference_uid(varid, i), reference_getref(data));
+			weights.push_back(weight);
+			total_weight += weight;
+		}
+	}
+
+	if (!weights.size() || !total_weight) {
+		ShowError("buildin_getrateidx: Could not find any valid data for the calculation.\n");
+		script_abort(st);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	uint64 randNum = rnd() % total_weight;
+	uint64 start = 0, end = 0;
+	size_t idx = 0;
+
+	for (idx = 0; idx < weights.size(); idx++) {
+		if (weights[idx] == 0) {
+			continue;
+		}
+
+		end = start + weights[idx];
+		if (start <= randNum && randNum < end) {
+			break;
+		}
+		start = end;
+	}
+
+	if (idx == weights.size()) {
+		// Shouldn't happen
+		ShowError("buildin_getrateidx: Some accidents happened.\n");
+		script_abort(st);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	script_pushint(st, idx);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetRateIdx
+
+#ifdef Pandas_ScriptCommand_MobRemove
+/* ===========================================================
+ * 指令: mobremove
+ * 描述: 根据 GID 移除一个魔物单位 (只是移除, 不会让魔物死亡)
+ * 用法: mobremove <魔物的GID>;
+ * 返回: 该指令无论成功失败, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(mobremove) {
+	block_list* bl = map_id2bl(script_getnum(st, 2));
+
+	if (bl == nullptr || bl->type != BL_MOB)
+		return SCRIPT_CMD_SUCCESS;
+
+	TBL_MOB* md = reinterpret_cast<TBL_MOB*>(bl);
+
+	if (md->spawn == nullptr) {
+		unit_free(bl, CLR_OUTSIGHT);
+	} else {
+		unit_remove_map(bl, CLR_OUTSIGHT);
+		if (!(md->sc.getSCE(SC_KAIZEL) || (md->sc.getSCE(SC_REBIRTH) && !md->state.rebirth)))
+			mob_setdelayspawn(md);
+#ifdef Pandas_BattleRecord
+		map_mobiddb(bl, npc_get_new_npc_id());
+#endif // Pandas_BattleRecord
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_MobRemove
+
+#ifdef Pandas_ScriptCommand_BattleIgnore
+/* ===========================================================
+ * 指令: battleignore
+ * 描述: 将角色设置为魔物免战状态, 避免被魔物攻击
+ * 用法: battleignore <开关状态>{,<角色编号>};
+ * 返回: 该指令无论成功失败, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(battleignore) {
+	map_session_data *sd = nullptr;
+	int immune = script_getnum(st, 2);
+
+	if (!script_charid2sd(3, sd))
+		return SCRIPT_CMD_SUCCESS;
+
+	if (cap_value(immune, 0, 1))
+		sd->state.block_action |= PCBLOCK_IMMUNE;
+	else
+		sd->state.block_action &= ~PCBLOCK_IMMUNE;
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BattleIgnore
+
+#ifdef Pandas_ScriptCommand_GetHotkey
+/* ===========================================================
+ * 指令: gethotkey
+ * 描述: 获取指定快捷键位置当前的信息
+ * 用法: gethotkey <快捷键位置编号>{,<要获取的数据类型>};
+ * 返回: 若携带 <要获取的数据类型> 参数时, 发生错误将返回 -1, 成功则返回查询的值;
+		不携带 <要获取的数据类型> 参数时, 发生错误将返回 -1, 成功则将信息保存到变量并返回 1
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(gethotkey) {
+	map_session_data *sd = nullptr;
+
+	if (!script_rid2sd(sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int hotkey_idx = script_getnum(st, 2);
+	if (hotkey_idx < 0 || hotkey_idx >= MAX_HOTKEYS_DB) {
+		ShowError("buildin_gethotkey: hotkey index %d is out of range (0..%d).\n", hotkey_idx, MAX_HOTKEYS_DB - 1);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (script_hasdata(st, 3)) {
+		if (!script_isint(st, 3)) {
+			ShowError("buildin_gethotkey: request date type must be a integer value.\n");
+			script_pushint(st, -1);
+			return SCRIPT_CMD_SUCCESS;
+		}
+
+		switch (script_getnum(st, 3)) {
+		case 0:
+			script_pushint(st, sd->status.hotkeys[hotkey_idx].type);
+			break;
+		case 1:
+			script_pushint(st, sd->status.hotkeys[hotkey_idx].id);
+			break;
+		case 2:
+			script_pushint(st, sd->status.hotkeys[hotkey_idx].lv);
+			break;
+		default:
+			ShowError("buildin_gethotkey: request date type %d is out of range (0..2).\n", script_getnum(st, 3));
+			script_pushint(st, -1);
+		}
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	pc_setreg(sd, add_str("@hotkey_type"), (int)sd->status.hotkeys[hotkey_idx].type);
+	pc_setreg(sd, add_str("@hotkey_id"), (int)sd->status.hotkeys[hotkey_idx].id);
+	pc_setreg(sd, add_str("@hotkey_lv"), (int)sd->status.hotkeys[hotkey_idx].lv);
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetHotkey
+
+#ifdef Pandas_ScriptCommand_SetHotkey
+/* ===========================================================
+ * 指令: sethotkey
+ * 描述: 设置指定快捷键位置的信息
+ * 用法: sethotkey <快捷键位置编号>,<快捷键的类型>,<物品/技能的ID>,<技能等级>;
+ * 返回: 设置成功则返回 1, 设置失败则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(sethotkey) {
+	map_session_data *sd = nullptr;
+
+	if (!script_rid2sd(sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int hotkey_idx = script_getnum(st, 2);
+	if (hotkey_idx < 0 || hotkey_idx >= MAX_HOTKEYS_DB) {
+		ShowError("buildin_sethotkey: hotkey index %d is out of range (0..%d).\n", hotkey_idx, MAX_HOTKEYS_DB - 1);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int hotkey_type = script_getnum(st, 3);
+	if (hotkey_type < 0 || hotkey_type > 1) {
+		ShowError("buildin_sethotkey: hotkey type %d is out of range (0..1).\n", hotkey_type);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int hotkey_id = script_getnum(st, 4);
+	if (hotkey_type == 0) {
+		if (!item_db.exists(hotkey_id)) {
+			ShowError("buildin_sethotkey: Nonexistant item %d requested.\n", hotkey_id);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_SUCCESS;
+		}
+	} else {
+		if (!skill_get_index(hotkey_id)) {
+			ShowError("buildin_sethotkey: Invalid skill ID %d , please review.\n", hotkey_id);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_SUCCESS;
+		}
+	}
+
+	int hotkey_lv = script_getnum(st, 5);
+	if (hotkey_type == 0) {
+		hotkey_lv = 0;
+	}
+
+	sd->status.hotkeys[hotkey_idx].type = hotkey_type;
+	sd->status.hotkeys[hotkey_idx].id = hotkey_id;
+	sd->status.hotkeys[hotkey_idx].lv = hotkey_lv;
+	clif_hotkeys_send(sd, 0);
+#if PACKETVER_MAIN_NUM >= 20190522 || PACKETVER_RE_NUM >= 20190508 || PACKETVER_ZERO_NUM >= 20190605
+	clif_hotkeys_send(sd, 1);
+#endif
+	clif_inventorylist(sd);
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_SetHotkey
+
+#ifdef Pandas_ScriptCommand_ShowVend
+/* ===========================================================
+ * 指令: showvend
+ * 描述: 使指定的 NPC 头上可以显示露天商店的招牌
+ * 用法: showvend "<NPC名称>",<是否显示>{,"<招牌名称>"};
+ * 返回: 操作成功则返回 1, 操作失败则返回 0
+ * 作者: Jian916, Rewrite By Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(showvend) {
+	npc_data *nd = nullptr;
+	const char *npcname = nullptr, *message = nullptr;
+	char buf[NAME_LENGTH + 1] = { 0 };
+	int showit = 0;
+
+	npcname = script_getstr(st, 2);
+	showit = script_getnum(st, 3);
+
+	if (showit && !script_hasdata(st, 4)) {
+		ShowError("buildin_showvend: Can't create vendingboard without any message.\n");
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	} else if (showit && !script_isstring(st, 4)) {
+		ShowError("buildin_showvend: The 'message' param must be a string.\n");
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	} else if (showit) {
+		message = script_getstr(st, 4);
+	}
+
+	nd = npc_name2id(npcname);
+	if (nd == nullptr) {
+		ShowError("buildin_showvend: No such NPC '%s'.\n", npcname);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	switch (showit) {
+	case 0:
+		clif_closevendingboard(*nd, AREA_WOS, nullptr);
+		memset(nd->vendingboard.message, 0, NAME_LENGTH + 1);
+		nd->vendingboard.show = false;
+		break;
+	default:
+		safestrncpy(buf, message, sizeof(buf));
+		clif_showvendingboard(nd, buf);
+		nd->vendingboard.show = true;
+		safestrncpy(nd->vendingboard.message, buf, sizeof(nd->vendingboard.message));
+		break;
+	}
+
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_ShowVend
+
+#ifdef Pandas_ScriptCommand_ViewEquip
+/* ===========================================================
+ * 指令: viewequip
+ * 描述: 查看指定在线角色的装备面板信息
+ * 用法: viewequip <目标的角色编号|目标的账号编号>{,<是否强制查看>};
+ * 返回: 操作成功则返回 1, 操作失败则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(viewequip) {
+	map_session_data *sd = nullptr;
+	int cid = script_getnum(st, 2), force = 0;
+	map_session_data *tsd = map_charid2sd(cid);
+
+	if (!tsd || !script_rid2sd(sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (script_hasdata(st, 3)) {
+		if (!script_isint(st, 3)) {
+			ShowError("buildin_showvend: The 'force' param must be a integer.\n");
+			script_pushint(st, 0);
+			return SCRIPT_CMD_SUCCESS;
+		}
+		force = cap_value(script_getnum(st, 3), 0, 1);
+	}
+
+	if (tsd->status.show_equip || pc_has_permission(sd, PC_PERM_VIEW_EQUIPMENT) || force == 1) {
+		clif_viewequip_ack(*sd, *tsd);
+		script_pushint(st, 1);
+	} else {
+		clif_msg(*sd, MSI_OPEN_EQUIPEDITEM_REFUSED);
+		script_pushint(st, 0);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_ViewEquip
+
+#ifdef Pandas_ScriptCommand_CountItemIdx
+/* ===========================================================
+ * 指令: countitemidx
+ * 描述: 获取指定背包序号的道具在背包中的数量
+ * 用法: countitemidx <背包序号>{,<角色编号>};
+ * 返回: 操作成功则返回道具的数量, 操作失败则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(countitemidx) {
+	map_session_data *sd = nullptr;
+	int idx = -1;
+
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	idx = script_getnum(st, 2);
+	if (idx < 0 || idx >= sd->inventory.max_amount) {
+		ShowWarning("buildin_countitemidx: Index (%d) should be from 0-%d.\n", idx, sd->inventory.max_amount - 1);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!item_db.find(sd->inventory.u.items_inventory[idx].nameid)) {
+		ShowWarning("buildin_countitemidx: Invalid Item ID (%u).\n", sd->inventory.u.items_inventory[idx].nameid);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushint(st, sd->inventory.u.items_inventory[idx].amount);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_CountItemIdx
+
+#ifdef Pandas_ScriptCommand_IdentifyIdx
+/* ===========================================================
+ * 指令: identifyidx
+ * 描述: 鉴定指定背包序号的道具
+ * 用法: identifyidx <背包序号>{,<角色编号>};
+ * 返回: 操作成功则返回 1, 操作失败则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(identifyidx) {
+	map_session_data *sd = nullptr;
+	int idx = -1;
+
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	idx = script_getnum(st, 2);
+	if (idx < 0 || idx >= sd->inventory.max_amount) {
+		ShowWarning("buildin_identifyidx: Index (%d) should be from 0-%d.\n", idx, sd->inventory.max_amount - 1);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!item_db.find(sd->inventory.u.items_inventory[idx].nameid)) {
+		ShowWarning("buildin_identifyidx: Invalid Item ID (%u).\n", sd->inventory.u.items_inventory[idx].nameid);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (sd->inventory.u.items_inventory[idx].identify != 1) {
+		sd->inventory.u.items_inventory[idx].identify = 1;
+		clif_item_identified(*sd, idx, false);
+	}
+
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_IdentifyIdx
+
+#ifdef Pandas_ScriptCommand_UnEquipIdx
+/* ===========================================================
+ * 指令: unequipidx
+ * 描述: 脱下指定背包序号的道具
+ * 用法: unequipidx <背包序号>{,<角色编号>};
+ * 返回: 操作成功则返回 1, 操作失败则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(unequipidx) {
+	map_session_data *sd = nullptr;
+	int idx = -1;
+
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	idx = script_getnum(st, 2);
+	if (idx < 0 || idx >= sd->inventory.max_amount) {
+		ShowWarning("buildin_unequipidx: Index (%d) should be from 0-%d.\n", idx, sd->inventory.max_amount - 1);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	std::shared_ptr<item_data> id = item_db.find(sd->inventory.u.items_inventory[idx].nameid);
+	if (id == nullptr) {
+		ShowWarning("buildin_unequipidx: Invalid Item ID (%u).\n", sd->inventory.u.items_inventory[idx].nameid);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!itemdb_isequip2(id.get())) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (sd->inventory.u.items_inventory[idx].equip == 0) {
+		script_pushint(st, 1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushint(st, pc_unequipitem(sd, idx, id->equip) ? 1 : 0);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_UnEquipIdx
+
+#ifdef Pandas_ScriptCommand_EquipIdx
+/* ===========================================================
+ * 指令: equipidx
+ * 描述: 穿戴指定背包序号的道具
+ * 用法: equipidx <背包序号>{,<角色编号>};
+ * 返回: 操作成功则返回 1, 操作失败则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(equipidx) {
+	map_session_data *sd = nullptr;
+	int idx = -1;
+
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	idx = script_getnum(st, 2);
+	if (idx < 0 || idx >= sd->inventory.max_amount) {
+		ShowWarning("buildin_equipidx: Index (%d) should be from 0-%d.\n", idx, sd->inventory.max_amount - 1);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	std::shared_ptr<item_data> id = item_db.find(sd->inventory.u.items_inventory[idx].nameid);
+	if (id == nullptr) {
+		ShowWarning("buildin_equipidx: Invalid Item ID (%u).\n", sd->inventory.u.items_inventory[idx].nameid);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!itemdb_isequip2(id.get())) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (sd->inventory.u.items_inventory[idx].equip != 0) {
+		script_pushint(st, 1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushint(st, pc_equipitem(sd, idx, id->equip) ? 1 : 0);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_EquipIdx
+
+#ifdef Pandas_ScriptCommand_ItemExists
+/* ===========================================================
+ * 指令: itemexists
+ * 描述: 确认物品数据库中是否存在指定物品
+ * 用法: itemexists <物品编号/"物品名称">;
+ * 返回: 若物品指定的道具编号不存在于物品数据库中则返回 0,
+ *      若物品存在且可堆叠则返回正数物品编号, 不可堆叠则返回负数物品编号
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(itemexists) {
+	std::shared_ptr<item_data> id;
+
+	if (script_isstring(st, 2))
+		id = item_db.searchname(script_getstr(st, 2));
+	else
+		id = item_db.find(script_getnum(st, 2));
+
+	if (id == nullptr) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushint(st, (itemdb_isstackable2(id.get()) ? id->nameid : -(int64)id->nameid));
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_ItemExists
+
+#ifdef Pandas_ScriptCommand_RentTime
+/* ===========================================================
+ * 指令: renttime
+ * 描述: 增加/减少指定位置装备的租赁时间
+ * 用法: renttime <EQI装备位置>,<增减的时间秒数>{,<角色编号>};
+ * 返回: 操作失败返回 0, 非 0 的正数表示成功增减后新的剩余时间秒数
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(renttime) {
+	map_session_data *sd = nullptr;
+	int equip_num = script_getnum(st, 2);
+	int second = script_getnum(st, 3);
+	int idx = -1, expire_tick = 0;
+
+	if (!script_charid2sd(4, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!equip_index_check(equip_num)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	idx = pc_checkequip(sd, equip_bitmask[equip_num]);
+	if (idx < 0 || idx >= sd->inventory.max_amount) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (sd->inventory.u.items_inventory[idx].expire_time == 0) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	sd->inventory.u.items_inventory[idx].expire_time += second;
+	expire_tick = (unsigned int)(sd->inventory.u.items_inventory[idx].expire_time - time(nullptr));
+	script_pushint(st, expire_tick);
+
+	if (expire_tick > 0) {
+		clif_rental_time(sd, sd->inventory.u.items_inventory[idx].nameid, expire_tick);
+		pc_inventory_rental_add(sd, expire_tick);
+		clif_inventorylist(sd);
+	} else {
+		int i = 0, c = 0;
+		for (i = 0; i < sd->status.inventory_slots; i++) {
+			if (sd->inventory.u.items_inventory[i].nameid == 0)
+				continue;
+			if (sd->inventory.u.items_inventory[i].expire_time == 0)
+				continue;
+			if (sd->inventory.u.items_inventory[i].expire_time <= time(nullptr)) {
+				if (sd->inventory_data[i]->unequip_script)
+					run_script(sd->inventory_data[i]->unequip_script, 0, sd->id, fake_nd->id);
+				clif_rental_expired(sd, i, sd->inventory.u.items_inventory[i].nameid);
+				pc_delitem(sd, i, sd->inventory.u.items_inventory[i].amount, 0, 0, LOG_TYPE_OTHER);
+			} else {
+				c++;
+			}
+		}
+
+		if (c <= 0) {
+			pc_inventory_rental_clear(sd);
+		}
+	}
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_RentTime
+
+#ifdef Pandas_ScriptCommand_GetEquipIdx
+/* ===========================================================
+ * 指令: getequipidx
+ * 描述: 获取指定位置装备的背包序号
+ * 用法: getequipidx <EQI装备位置>{,<角色编号>};
+ * 返回: 获取失败返回各种负数, 非 0 的正数表示获取到的背包序号
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getequipidx) {
+	map_session_data *sd = nullptr;
+	int equip_num = script_getnum(st, 2), idx = -1;
+
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, -3);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!equip_index_check(equip_num)) {
+		script_pushint(st, -2);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	idx = pc_checkequip(sd, equip_bitmask[equip_num]);
+	if (idx < 0 || idx >= sd->inventory.max_amount) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushint(st, idx);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetEquipIdx
+
+#ifdef Pandas_ScriptCommand_GetEquipExpireTick
+/* ===========================================================
+ * 指令: getequipexpiretick
+ * 描述: 获取指定位置装备的租赁到期剩余秒数
+ * 用法: getequipexpiretick <EQI装备位置>{,<角色编号>};
+ * 返回: 获取失败返回各种负数, 返回 0 表示目标装备非租赁, 其他非 0 正整数则代表剩余秒数
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getequipexpiretick) {
+	map_session_data *sd = nullptr;
+	int equip_num = script_getnum(st, 2), idx = -1;
+	int64 left_seconds = 0;
+
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, -3);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!equip_index_check(equip_num)) {
+		script_pushint(st, -2);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	idx = pc_checkequip(sd, equip_bitmask[equip_num]);
+	if (idx < 0 || idx >= sd->inventory.max_amount) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!sd->inventory.u.items_inventory[idx].expire_time) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	left_seconds = (int64)(sd->inventory.u.items_inventory[idx].expire_time - time(nullptr));
+	if (left_seconds < 0) {
+		script_pushint(st, -4);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushint(st, left_seconds);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetEquipExpireTick
+
+#ifdef Pandas_ScriptCommand_GetInventoryInfo
+/* ===========================================================
+ * 指令: getinventoryinfo
+ * 描述: 查询指定背包序号的道具的详细信息
+ * 用法: getinventoryinfo <道具的背包序号>,<要查看的信息类型>{,<角色编号>};
+ * 用法: getcartinfo <道具的手推车序号>,<要查看的信息类型>{,<角色编号>};
+ * 用法: getguildstorageinfo <道具的公会仓库序号>,<要查看的信息类型>{,<角色编号>};
+ * 用法: getstorageinfo <道具的个人仓库/扩充仓库序号>,<要查看的信息类型>{{,<仓库编号>},<角色编号>};
+ * 返回: 查询失败返回 -1, 若查询成功则返回你所查询的信息
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getinventoryinfo) {
+	map_session_data *sd = nullptr;
+	int idx = script_getnum(st, 2);
+	const char* command = script_getfuncname(st);
+	int charid_slot = (!stricmp(command, "getstorageinfo") ? 5 : 4);
+
+	if (!script_charid2sd(charid_slot, sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	struct s_storage* stor = nullptr;
+	struct item* inventory = nullptr;
+	int stor_id = (script_hasdata(st, 4) ? script_getnum(st, 4) : 0);
+
+	if (!script_getstorage(st, sd, &stor, &inventory, stor_id)) {
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (st->state == RERUNLINE) {
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!stor || !inventory) {
+		ShowError("buildin_%s: cannot read inventory or storage data.\n", command);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (idx < 0 || idx >= stor->max_amount) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!item_db.exists(inventory[idx].nameid)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (inventory[idx].amount <= 0) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int type = script_getnum(st, 3);
+	switch (type) {
+		case 0:  script_pushint(st, inventory[idx].nameid); break;
+		case 1:  script_pushint(st, inventory[idx].amount); break;
+		case 2:  script_pushint(st, inventory[idx].equip); break;
+		case 3:  script_pushint(st, inventory[idx].refine); break;
+		case 4:  script_pushint(st, inventory[idx].identify); break;
+		case 5:  script_pushint(st, inventory[idx].attribute); break;
+		case 6:  script_pushint(st, inventory[idx].card[0]); break;
+		case 7:  script_pushint(st, inventory[idx].card[1]); break;
+		case 8:  script_pushint(st, inventory[idx].card[2]); break;
+		case 9:  script_pushint(st, inventory[idx].card[3]); break;
+		case 10: script_pushint(st, inventory[idx].expire_time); break;
+		case 11: script_pushint(st, inventory[idx].unique_id); break;
+		case 12: case 13: case 14: case 15: case 16:
+			script_pushint(st, inventory[idx].option[type - 12].id); break;
+		case 17: case 18: case 19: case 20: case 21:
+			script_pushint(st, inventory[idx].option[type - 17].value); break;
+		case 22: case 23: case 24: case 25: case 26:
+			script_pushint(st, inventory[idx].option[type - 22].param); break;
+		case 27: script_pushint(st, inventory[idx].bound); break;
+		case 28: script_pushint(st, inventory[idx].enchantgrade); break;
+		case 29: script_pushint(st, inventory[idx].equipSwitch); break;
+		case 30: script_pushint(st, inventory[idx].favorite); break;
+		default:
+			ShowWarning("buildin_%s: The type should be in range 0-%d, currently type is: %d.\n", command, 30, type);
+			script_pushint(st, -1);
+			return SCRIPT_CMD_FAILURE;
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetInventoryInfo
+
+#ifdef Pandas_ScriptCommand_StatusCheck
+/* ===========================================================
+ * 指令: statuscheck
+ * 描述: 判断状态是否存在, 并取得相关的状态参数
+ * 用法: statuscheck <状态编号>{,<游戏单位编号>};
+ * 返回: 获取成功则返回 1, 角色没有该状态则返回 0, 其他错误返回 -1
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(statuscheck) {
+	map_session_data *sd = nullptr;
+
+	if (!script_mapid2sd(3, sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int id = script_getnum(st, 2);
+	if (id <= SC_NONE || id >= SC_MAX) {
+		ShowWarning("buildin_statuscheck: Invalid status type given (%d).\n", id);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (sd->sc.empty() || !sd->sc.getSCE(id)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	pc_setreg(sd, add_str("@sc_val1"), sd->sc.getSCE(id)->val1);
+	pc_setreg(sd, add_str("@sc_val2"), sd->sc.getSCE(id)->val2);
+	pc_setreg(sd, add_str("@sc_val3"), sd->sc.getSCE(id)->val3);
+	pc_setreg(sd, add_str("@sc_val4"), sd->sc.getSCE(id)->val4);
+
+	// 这种返回方式若剩余时间过长的话 @sc_tickleft 保存的数值会被截断, 不可靠
+	// 建议还是多使用 rAthena 自带的 getstatus 指令来替代 statuscheck / sc_check
+	// 之所以实现 statuscheck / sc_check 完全出于兼容目的考虑
+	struct TimerData* timer = (struct TimerData*)get_timer(sd->sc.getSCE(id)->timer);
+	t_tick tickleft = (timer ? DIFF_TICK(timer->tick, gettick()) : -1);
+	pc_setreg(sd, add_str("@sc_tickleft"), tickleft);
+
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_StatusCheck
+
+#if defined(Pandas_ScriptCommand_RentTimeIdx) || defined(Pandas_ScriptCommand_SetInventoryInfo)
+//************************************
+// Method:      inventory_rental_update
+// Description: 移除过期租赁道具; 最后如果连一件租赁道具都没有, 那么直接删掉计时器
+// Parameter:   map_session_data * sd
+// Returns:     void
+// Author:      Sola丶小克(CairoLee)  2020/5/26 23:23
+//************************************
+void inventory_rental_update(map_session_data* sd) {
+	int i = 0, c = 0;
+
+	if (!sd) {
+		return;
+	}
+
+	for (i = 0; i < sd->status.inventory_slots; i++) {
+		if (sd->inventory.u.items_inventory[i].nameid == 0)
+			continue;
+		if (sd->inventory.u.items_inventory[i].expire_time == 0)
+			continue;
+		if (sd->inventory.u.items_inventory[i].expire_time <= time(nullptr)) {
+			if (sd->inventory_data[i]->unequip_script)
+				run_script(sd->inventory_data[i]->unequip_script, 0, sd->id, fake_nd->id);
+			clif_rental_expired(sd, i, sd->inventory.u.items_inventory[i].nameid);
+			pc_delitem(sd, i, sd->inventory.u.items_inventory[i].amount, 0, 0, LOG_TYPE_OTHER);
+		} else {
+			c++;
+		}
+	}
+
+	if (c <= 0) {
+		pc_inventory_rental_clear(sd);
+	}
+}
+#endif // defined(Pandas_ScriptCommand_RentTimeIdx) || defined(Pandas_ScriptCommand_SetInventoryInfo)
+
+#ifdef Pandas_ScriptCommand_RentTimeIdx
+/* ===========================================================
+ * 指令: renttimeidx
+ * 描述: 增加/减少指定背包序号道具的租赁时间
+ * 用法: renttimeidx <背包序号>,<增减的时间秒数>{,<角色编号>};
+ * 返回: 操作失败返回 0, 非 0 的正数表示成功增减后新的剩余时间秒数
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(renttimeidx) {
+	map_session_data *sd = nullptr;
+	int idx = script_getnum(st, 2);
+	int second = script_getnum(st, 3);
+	int expire_tick = 0;
+
+	if (!script_charid2sd(4, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (idx < 0 || idx >= sd->inventory.max_amount) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (sd->inventory.u.items_inventory[idx].expire_time == 0) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	sd->inventory.u.items_inventory[idx].expire_time += second;
+	expire_tick = (unsigned int)(sd->inventory.u.items_inventory[idx].expire_time - time(nullptr));
+	script_pushint(st, expire_tick);
+
+	if (expire_tick > 0) {
+		clif_rental_time(sd, sd->inventory.u.items_inventory[idx].nameid, expire_tick);
+		pc_inventory_rental_add(sd, expire_tick);
+		clif_inventorylist(sd);
+	} else {
+		inventory_rental_update(sd);
+	}
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_RentTimeIdx
+
+#ifdef Pandas_ScriptCommand_SetInventoryInfo
+/* ===========================================================
+ * 指令: setinventoryinfo
+ * 描述: 设置指定背包序号道具的部分详细信息, 与 getinventoryinfo 对应
+ * 用法: setinventoryinfo <道具的背包序号>,<要设置的信息类型>,<值>{{,<标记位>},<角色编号>};
+ * 返回: 设置成功则返回 1, 设置失败或角色不存在则返回 0, 返回负数也是失败 (值表示不同失败原因)
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(setinventoryinfo) {
+	map_session_data* sd = nullptr;
+	int expire_tick = 0, flag = 0;
+	int idx = script_getnum(st, 2);
+	int type = script_getnum(st, 3);
+	uint64 value = script_getnum(st, 4);
+	bool need_recalc_status = false;
+
+	if (!script_charid2sd(6, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (idx < 0 || idx >= sd->status.inventory_slots || !sd->inventory_data[idx]) {
+		ShowError("buildin_setinventoryinfo: Nonexistant item index.\n");
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (script_hasdata(st, 5) && script_isint(st, 5)) {
+		//   0 : 维持默认行为
+		// & 1 : 跳过角色能力重算
+		// & 2 : 跳过全量刷新角色的背包数据
+		// & 4 : 忽略卡片插入合理性的校验(必须是卡片, 卡片位置和装备位置符合)
+		// & 8 : 插入卡片无需写入 picklog 记录(凭空生成)
+		flag = script_getnum(st, 5);
+	}
+
+	switch (type) {
+		case 3:
+			value = cap_value(value, 0, MAX_REFINE);
+			sd->inventory.u.items_inventory[idx].refine = (char)value;
+			need_recalc_status = true;
+			break;
+		case 4:
+			value = cap_value(value, 0, 1);
+			sd->inventory.u.items_inventory[idx].identify = (char)value;
+			if (sd->inventory.u.items_inventory[idx].equip && !value)
+				pc_unequipitem(sd, idx, 3);
+			break;
+		case 5:
+			value = cap_value(value, 0, 1);
+			sd->inventory.u.items_inventory[idx].attribute = (char)value;
+			if (sd->inventory.u.items_inventory[idx].equip && value)
+				pc_unequipitem(sd, idx, 3);
+			break;
+		case 6: case 7: case 8: case 9: {
+			if (!value) {
+				sd->inventory.u.items_inventory[idx].card[type - 6] = 0;
+				need_recalc_status = true;
+				break;
+			}
+
+			std::shared_ptr<item_data> card_itemdata = item_db.find((t_itemid)value);
+			if (!card_itemdata) {
+				ShowWarning("buildin_setinventoryinfo: Nonexistant item : %u.\n", static_cast<uint32>(value));
+				script_pushint(st, 0);
+				return SCRIPT_CMD_SUCCESS;
+			}
+			if (!(flag & 4)) {
+				if (card_itemdata->type != IT_CARD || (sd->inventory_data[idx]->equip & card_itemdata->equip) == 0) {
+					script_pushint(st, -1);
+					return SCRIPT_CMD_SUCCESS;
+				}
+			}
+			sd->inventory.u.items_inventory[idx].card[type - 6] = card_itemdata->nameid;
+			if (!(flag & 8)) {
+				struct item item_tmp = { 0 };
+				item_tmp.nameid = card_itemdata->nameid;
+				item_tmp.identify = 1;
+				if (card_itemdata->flag.guid && !item_tmp.unique_id)
+					item_tmp.unique_id = pc_generate_unique_id(sd);
+				log_pick_pc(sd, LOG_TYPE_SCRIPT, 1, &item_tmp);
+			}
+			need_recalc_status = true;
+			break;
+		}
+		case 10:
+			value = cap_value(value, 0, INT_MAX);
+			sd->inventory.u.items_inventory[idx].expire_time = (uint32)value; // Timestamp, not seconds
+			expire_tick = (uint32)(sd->inventory.u.items_inventory[idx].expire_time - time(nullptr));
+			if (expire_tick > 0) {
+				uint32 seconds = (uint32)(value - time(nullptr));
+				clif_rental_time(sd, sd->inventory.u.items_inventory[idx].nameid, seconds);
+				pc_inventory_rental_add(sd, seconds);
+			} else {
+				inventory_rental_update(sd);
+			}
+			need_recalc_status = true;
+			break;
+		case 11:
+			sd->inventory.u.items_inventory[idx].unique_id = value;
+			break;
+		case 12: case 13: case 14: case 15: case 16:
+			if (value) {
+				sd->inventory.u.items_inventory[idx].option[type - 12].id = (short)value;
+			} else {
+				sd->inventory.u.items_inventory[idx].option[type - 12].id = 0;
+				sd->inventory.u.items_inventory[idx].option[type - 12].value = 0;
+				sd->inventory.u.items_inventory[idx].option[type - 12].param = 0;
+			}
+			need_recalc_status = true;
+			break;
+		case 17: case 18: case 19: case 20: case 21:
+			sd->inventory.u.items_inventory[idx].option[type - 17].value = (short)value;
+			need_recalc_status = true;
+			break;
+		case 22: case 23: case 24: case 25: case 26:
+			sd->inventory.u.items_inventory[idx].option[type - 22].param = (char)value;
+			need_recalc_status = true;
+			break;
+		case 27:
+			if (value < BOUND_NONE || value >= BOUND_MAX) {
+				ShowWarning("buildin_setinventoryinfo: Invalid bound type\n");
+				script_pushint(st, 0);
+				return SCRIPT_CMD_SUCCESS;
+			}
+			sd->inventory.u.items_inventory[idx].bound = (char)value;
+			break;
+		case 28:
+			if (value < 0 || value > MAX_ENCHANTGRADE) {
+				ShowWarning("buildin_setinventoryinfo: The Value should be in range 0-%d, but you passed %d.\n", MAX_ENCHANTGRADE, static_cast<int32>(value));
+				script_pushint(st, 0);
+				return SCRIPT_CMD_SUCCESS;
+			}
+			sd->inventory.u.items_inventory[idx].enchantgrade = (uint8)value;
+			need_recalc_status = true;
+			break;
+		case 29:
+			sd->inventory.u.items_inventory[idx].equipSwitch = (uint32)value;
+			break;
+		case 30:
+			value = cap_value(value, 0, 1);
+			sd->inventory.u.items_inventory[idx].favorite = (char)value;
+			break;
+		default:
+			ShowWarning("buildin_setinventoryinfo: The type should be in range 3-%d, currently type is: %d.\n", 30, type);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (need_recalc_status && !(flag & 1))
+		status_calc_pc(sd, SCO_NONE);
+
+	if (!(flag & 2))
+		clif_inventorylist(sd);
+
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_SetInventoryInfo
+
+#ifdef Pandas_ScriptCommand_UpdateInventory
+/* ===========================================================
+ * 指令: updateinventory
+ * 描述: 重新下发关联玩家的背包数据给客户端 (刷新客户端背包数据)
+ * 用法: updateinventory {<角色编号>};
+ * 返回: 返回 1 表示成功, 0 表示失败
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(updateinventory) {
+	map_session_data* sd = nullptr;
+	if (!script_charid2sd(2, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	clif_inventorylist(sd);
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_UpdateInventory
+
+#ifdef Pandas_ScriptCommand_GetConstant
+/* ===========================================================
+ * 指令: getconstant
+ * 描述: 查询一个常量字符串对应的数值
+ * 用法: getconstant <"常量字符串">;
+ * 返回: 成功则返回常量对应的数值, 查询失败则返回 -255
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getconstant) {
+	const char* name = script_getstr(st, 2);
+	int64 value = 0;
+
+	if (script_get_constant(name, &value)) {
+		script_pushint(st, value);
+	} else {
+		script_pushint(st, -255);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetConstant
+
+#ifdef Pandas_ScriptCommand_Preg_Search
+/* ===========================================================
+ * 指令: preg_search
+ * 描述: 使用正则表达式搜索并返回首个匹配的分组内容
+ * 用法: preg_search <"字符串">,<"匹配表达式">,<拓展标记位>,<存放匹配结果的字符串数组>;
+ * 返回: 返回负数表示错误, 其他正整数表示匹配到的分组个数
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(preg_search) {
+	map_session_data* sd = nullptr;
+	std::string text = std::string(script_getstr(st, 2));
+	std::string patterns = std::string(script_getstr(st, 3));
+	int flag = cap_value(script_getnum(st, 4), 0, 1);
+	struct script_data* retdata = script_getdata(st, 5);
+	struct reg_db* src_reg_db = nullptr;
+
+	if (!data_isreference(retdata)) {
+		ShowError("buildin_preg_search: error argument! please give a array variable for save gameid.\n");
+		script_reportdata(retdata);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int retid = reference_getid(retdata);
+	const char* retname = reference_getname(retdata);
+
+	if (not_server_variable(*retname)) {
+		if (!script_rid2sd(sd)) {
+			ShowError("buildin_preg_search: '%s' is not server variable, please attach to a player.\n", retname);
+			script_reportdata(retdata);
+			script_pushint(st, -1);
+			return SCRIPT_CMD_FAILURE;
+		}
+	}
+
+	if (!(src_reg_db = script_array_src(st, sd, retname, reference_getref(retdata)))) {
+		ShowError("buildin_preg_search: variable '%s' is not a array.\n", retname);
+		script_reportdata(retdata);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (!is_string_variable(retname)) {
+		ShowError("buildin_preg_search: the array variable '%s' must be string type.\n", retname);
+		script_reportdata(retdata);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	// 以下用于清空存放返回数据的字符串数组 (参考 script_cleararray_pc 的实现)
+	script_array_ensure_zero(st, nullptr, retdata->u.num, reference_getref(retdata));
+	struct script_array* sa = static_cast<script_array*>(idb_get(src_reg_db->arrays, retid));
+	unsigned int array_len = script_array_highest_key(st, sd, retname, reference_getref(retdata));
+	if (sa) {
+		// 若给定的数组是存在的, 那么需要清空一下
+		unsigned int* list = script_array_cpy_list(sa);
+		unsigned int size = sa->size;
+		for (unsigned int i = 0; i < size; i++) {
+			clear_reg(st, sd, reference_uid(retid, list[i]), retname, reference_getref(retdata));
+		}
+	}
+
+	try {
+		std::regex re;
+		if (flag & 1) {
+			re = std::regex(patterns, std::regex::icase);
+		} else {
+			re = std::regex(patterns);
+		}
+
+		std::smatch match_result;
+		if (!std::regex_search(text, match_result, re)) {
+			script_pushint(st, -1);
+			return SCRIPT_CMD_SUCCESS;
+		}
+
+		for (size_t i = 0; i < match_result.size(); i++) {
+			int64 uid = reference_uid(retid, i);
+			set_reg_str(st, sd, uid, retname, match_result[i].str().c_str(), reference_getref(retdata));
+		}
+		script_pushint(st, match_result.size());
+	} catch (const std::regex_error& e) {
+		ShowError("%s: throw regex_error : %s\n", __func__, e.what());
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_Preg_Search
+
+#ifdef Pandas_ScriptCommand_PartyLeave
+/* ===========================================================
+ * 指令: party_leave
+ * 描述: 使当前角色或指定角色退出队伍
+ * 用法: party_leave {<角色编号>};
+ * 返回: 若指定的角色不在线或不在队伍中则返回 0, 若角色成功退出队伍则返回 1
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(party_leave) {
+	map_session_data *sd = nullptr;
+
+	if (!script_charid2sd(2, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushint(st, party_leave(*sd));
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_PartyLeave
+
+#ifdef Pandas_ScriptCommand_GetMapSpawns
+/* ===========================================================
+ * 指令: getmapspawns
+ * 描述: 获取指定地图的魔物刷新点信息
+ * 用法: getmapspawns "<地图名称>"{,<角色编号>};
+ * 返回: 成功则返回找到的刷新点数量, 失败则返回 -1
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getmapspawns) {
+	int32 mapindex = -1;
+	std::string mapname = script_getstr(st, 2);
+	int32 char_id = script_hasdata(st, 3) ? script_getnum(st, 3) : 0;
+
+	script_both_setreg(st, "spawn_count", 0, false, -1, char_id);
+
+	if (!script_get_mapindex(st, mapname.c_str(), mapindex, char_id)) {
+		ShowError("buildin_getmapspawns: Could not found valid map by map name '%s'\n", mapname.c_str());
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	struct map_data* mapdata = map_getmapdata(mapindex);
+
+	if (mapdata == nullptr) {
+		script_reportsrc(st);
+		script_reportfunc(st);
+		ShowError("buildin_getmapspawns: Could not found valid map by map name '%s'\n", mapname.c_str());
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int32 j = 0;
+
+	for (const auto& data : mapdata->mobspawns) {
+		if (data == nullptr) {
+			continue;
+		}
+
+		std::shared_ptr<s_mob_db> mob = mob_db.find(data->id);
+		if (mob == nullptr) {
+			continue;
+		}
+
+		script_both_setreg(st, "spawn_mobid", data->id, true, j, char_id);
+		script_both_setregstr(st, "spawn_name$", data->name, true, j, char_id);
+		script_both_setreg(st, "spawn_num", data->num, true, j, char_id);
+		script_both_setreg(st, "spawn_active", data->active, true, j, char_id);
+		script_both_setreg(st, "spawn_size", data->state.size, true, j, char_id);
+		script_both_setreg(st, "spawn_isboss", data->state.boss, true, j, char_id);
+		script_both_setreg(st, "spawn_ai", data->state.ai, true, j, char_id);
+		script_both_setreg(st, "spawn_level", data->level > 0 ? data->level : mob->lv, true, j, char_id);
+		script_both_setreg(st, "spawn_delay1", data->delay1, true, j, char_id);
+		script_both_setreg(st, "spawn_delay2", data->delay2, true, j, char_id);
+		script_both_setregstr(st, "spawn_eventname$", data->eventname, true, j, char_id);
+		script_both_setreg(st, "spawn_mapid", data->m, true, j, char_id);
+		script_both_setregstr(st, "spawn_mapname$", mapdata->name, true, j, char_id);
+		script_both_setreg(st, "spawn_x", data->x, true, j, char_id);
+		script_both_setreg(st, "spawn_y", data->y, true, j, char_id);
+		script_both_setreg(st, "spawn_xs", data->xs, true, j, char_id);
+		script_both_setreg(st, "spawn_ys", data->ys, true, j, char_id);
+		j++;
+	}
+
+	script_both_setreg(st, "spawn_count", j, false, -1, char_id);
+	script_pushint(st, j);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetMapSpawns
+
+#ifdef Pandas_ScriptCommand_GetMobSpawns
+/* ===========================================================
+ * 指令: getmobspawns
+ * 描述: 查询指定魔物在不同地图的刷新点信息
+ * 用法: getmobspawns <魔物编号>{,"<地图名称>"{,<角色编号>}};
+ * 返回: 成功则返回找到的刷新点数量, 失败则返回 -1
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getmobspawns) {
+	int32 mapindex = -1;
+	int32 mob_id = script_getnum(st, 2);
+	std::string mapname = (script_hasdata(st, 3) && script_isstring(st, 3)) ? script_getstr(st, 3) : "";
+	int32 char_id = (script_hasdata(st, 4) && script_isint(st, 4)) ? script_getnum(st, 4) : 0;
+
+	script_both_setreg(st, "spawn_count", 0, false, -1, char_id);
+
+	if (!mapname.empty()) {
+		if (!script_get_mapindex(st, mapname.c_str(), mapindex, char_id)) {
+			ShowError("buildin_getmobspawns: Could not found valid map by map name '%s'\n", mapname.c_str());
+			script_pushint(st, -1);
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		struct map_data* mapdata = map_getmapdata(mapindex);
+
+		if (mapdata == nullptr) {
+			script_reportsrc(st);
+			script_reportfunc(st);
+			ShowError("buildin_getmobspawns: Could not found valid map by map name '%s'\n", mapname.c_str());
+			script_pushint(st, -1);
+			return SCRIPT_CMD_FAILURE;
+		}
+	}
+
+	const std::vector<spawn_info> spawns = mob_get_spawns(mob_id);
+	int32 j = 0;
+
+	for (const auto& spawn : spawns) {
+		int16 mapid = map_mapindex2mapid(spawn.mapindex);
+
+		if (mapindex != -1 && mapid != mapindex) {
+			continue;
+		}
+
+		struct map_data* mapdata = map_getmapdata(mapid);
+
+		if (mapdata == nullptr) {
+			continue;
+		}
+
+		for (const auto& data : mapdata->mobspawns) {
+			if (data == nullptr) {
+				continue;
+			}
+
+			if (data->id != mob_id) {
+				continue;
+			}
+
+			std::shared_ptr<s_mob_db> mob = mob_db.find(data->id);
+			if (mob == nullptr) {
+				continue;
+			}
+
+			script_both_setreg(st, "spawn_mobid", data->id, true, j, char_id);
+			script_both_setregstr(st, "spawn_name$", data->name, true, j, char_id);
+			script_both_setreg(st, "spawn_num", data->num, true, j, char_id);
+			script_both_setreg(st, "spawn_active", data->active, true, j, char_id);
+			script_both_setreg(st, "spawn_size", data->state.size, true, j, char_id);
+			script_both_setreg(st, "spawn_isboss", data->state.boss, true, j, char_id);
+			script_both_setreg(st, "spawn_ai", data->state.ai, true, j, char_id);
+			script_both_setreg(st, "spawn_level", data->level > 0 ? data->level : mob->lv, true, j, char_id);
+			script_both_setreg(st, "spawn_delay1", data->delay1, true, j, char_id);
+			script_both_setreg(st, "spawn_delay2", data->delay2, true, j, char_id);
+			script_both_setregstr(st, "spawn_eventname$", data->eventname, true, j, char_id);
+			script_both_setreg(st, "spawn_mapid", data->m, true, j, char_id);
+			script_both_setregstr(st, "spawn_mapname$", mapdata->name, true, j, char_id);
+			script_both_setreg(st, "spawn_x", data->x, true, j, char_id);
+			script_both_setreg(st, "spawn_y", data->y, true, j, char_id);
+			script_both_setreg(st, "spawn_xs", data->xs, true, j, char_id);
+			script_both_setreg(st, "spawn_ys", data->ys, true, j, char_id);
+			j++;
+		}
+	}
+
+	script_both_setreg(st, "spawn_count", j, false, -1, char_id);
+	script_pushint(st, j);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetMobSpawns
+
+#ifdef Pandas_ScriptCommand_GetBossInfo
+/* ===========================================================
+ * 指令: getbossinfo
+ * 描述: 查询 BOSS 魔物重生时间及其坟墓等信息
+ * 用法: getbossinfo {<"地图名称">{,<魔物编号>{,<角色编号>}}};
+ * 返回: 返回查询到的记录数
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getbossinfo) {
+	const char* mapname = nullptr;
+	map_session_data* sd = nullptr;
+	int32 mobid = 0, char_id = 0, mapid = -1;
+
+	if (script_hasdata(st, 4)) {
+		char_id = script_getnum(st, 4);
+	}
+
+	if (script_hasdata(st, 2)) {
+		mapname = script_getstr(st, 2);
+
+		if (strcmpi(mapname, "all") == 0) {
+			mapid = -1;
+		} else if (strcmpi(mapname, "this") == 0) {
+			if (!script_charid2sd(4, sd)) {
+				script_pushint(st, 0);
+				return SCRIPT_CMD_FAILURE;
+			}
+
+			mapid = sd->m;
+		} else {
+			mapid = map_mapname2mapid(mapname);
+
+			if (mapid < 0) {
+				ShowError("buildin_getbossinfo: Unknown map name %s.\n", mapname);
+				script_pushint(st, 0);
+				return SCRIPT_CMD_FAILURE;
+			}
+		}
+	}
+
+	if (script_hasdata(st, 3)) {
+		mobid = script_getnum(st, 3);
+	}
+
+	script_both_setreg(st, "boss_count", 0, false, -1, char_id);
+
+	DBIterator* iter = db_iterator(get_bossid_db());
+	mob_data* md = nullptr;
+	int32 count = 0;
+
+	for (md = (mob_data*)dbi_first(iter); dbi_exists(iter); md = (mob_data*)dbi_next(iter)) {
+		if (mapid != -1 && mapid != md->m)
+			continue;
+		if (mobid != 0 && mobid != md->mob_id)
+			continue;
+
+		npc_data* tomb_nd = nullptr;
+
+		if (md->tomb_nid) {
+			tomb_nd = map_id2nd(md->tomb_nid);
+		}
+
+		script_both_setreg(st, "boss_mapid", md->m, true, count, char_id);
+		script_both_setregstr(st, "boss_mapname$", (md->m >= 0 ? map[md->m].name : ""), true, count, char_id);
+		script_both_setreg(st, "boss_x", md->x, true, count, char_id);
+		script_both_setreg(st, "boss_y", md->y, true, count, char_id);
+		script_both_setreg(st, "boss_gid", md->id, true, count, char_id);
+
+		t_tick boss_respawn_tick = md->spawn_timer != INVALID_TIMER ? gettick_timer(md->spawn_timer) : -1;
+		script_both_setreg(st, "boss_spawn", (boss_respawn_tick != -1 ? DIFF_TICK(boss_respawn_tick, gettick()) : 0), true, count, char_id);
+		script_both_setreg(st, "boss_classid", md->mob_id, true, count, char_id);
+
+		script_both_setreg(st, "boss_tomb_mapid", (tomb_nd ? tomb_nd->m : -1), true, count, char_id);
+		script_both_setregstr(st, "boss_tomb_mapname$", (tomb_nd && tomb_nd->m >= 0 ? map[tomb_nd->m].name : ""), true, count, char_id);
+		script_both_setreg(st, "boss_tomb_x", (tomb_nd ? tomb_nd->x : 0), true, count, char_id);
+		script_both_setreg(st, "boss_tomb_y", (tomb_nd ? tomb_nd->y : 0), true, count, char_id);
+		script_both_setreg(st, "boss_tomb_gid", (tomb_nd ? tomb_nd->id : 0), true, count, char_id);
+		script_both_setreg(st, "boss_tomb_createtime", (tomb_nd ? tomb_nd->u.tomb.kill_time : 0), true, count, char_id);
+		script_both_setreg(st, "boss_tomb_respawnsecs", -1, true, count, char_id);
+
+		t_tick respawntime = -1;
+
+		if (tomb_nd && tomb_nd->u.tomb.md->spawn) {
+			respawntime = gettick_timer(tomb_nd->u.tomb.md->spawn_timer);
+
+			if (respawntime != -1) {
+				respawntime = DIFF_TICK(respawntime, gettick());
+				respawntime = respawntime / 1000;
+				script_both_setreg(st, "boss_tomb_respawnsecs", respawntime, true, count, char_id);
+				respawntime = respawntime + (int32)time(nullptr);
+			}
+		}
+
+		script_both_setreg(st, "boss_tomb_respawntime", respawntime, true, count, char_id);
+		script_both_setregstr(st, "boss_tomb_killer_name$", (tomb_nd ? tomb_nd->u.tomb.killer_name : ""), true, count, char_id);
+#ifdef Pandas_FuncParams_Mob_MvpTomb_Create
+		script_both_setreg(st, "boss_tomb_killer_gid", (tomb_nd ? tomb_nd->u.tomb.killer_gid : 0), true, count, char_id);
+#endif // Pandas_FuncParams_Mob_MvpTomb_Create
+
+		count++;
+	}
+
+	dbi_destroy(iter);
+	script_both_setreg(st, "boss_count", count, false, -1, char_id);
+	script_pushint(st, count);
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetBossInfo
+
+#ifdef Pandas_ScriptCommand_WhoDropItem
+/* ===========================================================
+ * 指令: whodropitem
+ * 描述: 查询指定道具会从哪些魔物身上掉落以及掉落的机率信息
+ * 用法: whodropitem <物品编号/"物品名称">{,<返回的最大记录数>{,<角色编号>}};
+ * 返回: 返回查询到的记录数量
+ * 作者: Sola丶小克 (感谢 "人鱼姬的思念")
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(whodropitem) {
+	t_itemid nameid = 0;
+	int32 max_result = (script_hasdata(st, 3) && script_isint(st, 3)) ? script_getnum(st, 3) : 0;
+	int32 char_id = (script_hasdata(st, 4) && script_isint(st, 4)) ? script_getnum(st, 4) : 0;
+	std::shared_ptr<item_data> id;
+	map_session_data* sd = nullptr;
+
+	script_both_setreg(st, "whodropitem_count", 0, false, 0, char_id);
+
+	if (script_isstring(st, 2)) {
+		const char* name = script_getstr(st, 2);
+
+		id = item_db.searchname(name);
+
+		if (id == nullptr) {
+			ShowError("buildin_whodropitem: Nonexistant item %s requested.\n", name);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		nameid = id->nameid;
+	} else {
+		nameid = script_getnum(st, 2);
+		id = item_db.find(nameid);
+
+		if (id == nullptr) {
+			ShowError("buildin_whodropitem: Nonexistant item %u requested.\n", nameid);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_FAILURE;
+		}
+	}
+
+	max_result = max_result ? max_result : MAX_SEARCH;
+	max_result = cap_value(max_result, 1, 500);
+
+	if (id->mob[0].chance == 0) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (char_id && !(sd = map_charid2sd(char_id))) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	} else if (st->rid != 0) {
+		sd = map_id2sd(st->rid);
+	}
+
+	std::map<uint32, int32> result_cache;
+
+	for (auto const& pair : mob_db) {
+		if (mob_is_clone(pair.first)) {
+			continue;
+		}
+
+		for (const std::shared_ptr<s_mob_drop>& entry : pair.second->dropitem) {
+			if (entry->nameid != nameid) {
+				continue;
+			}
+
+			if (rathena::util::map_exists(result_cache, pair.first)) {
+				if (result_cache[pair.first] < entry->rate) {
+					result_cache[pair.first] = entry->rate;
+				}
+			} else {
+				result_cache[pair.first] = entry->rate;
+			}
+		}
+	}
+
+	for (auto const& it : result_cache) {
+		int32 dropchance = it.second;
+
+#ifdef RENEWAL_DROP
+		if (sd && battle_config.atcommand_mobinfo_type) {
+			std::shared_ptr<s_mob_db> mob = mob_db.find(it.first);
+			dropchance = dropchance * pc_level_penalty_mod(sd, PENALTY_DROP, mob) / 100;
+
+			if (dropchance <= 0 && !battle_config.drop_rate0item) {
+				dropchance = 1;
+			}
+		}
+#endif // RENEWAL_DROP
+		if (sd && pc_isvip(sd)) {
+			dropchance += (dropchance * battle_config.vip_drop_increase) / 100;
+		}
+
+#ifdef Pandas_Database_MobItem_FixedRatio
+		if (mobdrop_strict_droprate(nameid, it.first)) {
+			dropchance = it.second;
+		}
+#endif // Pandas_Database_MobItem_FixedRatio
+
+		result_cache[it.first] = dropchance;
+	}
+
+	std::vector<std::pair<uint32, int32>> result_sortd;
+
+	for (auto const& pair : result_cache) {
+		result_sortd.push_back(std::make_pair(pair.first, pair.second));
+	}
+
+	std::sort(result_sortd.begin(), result_sortd.end(),
+		[](const std::pair<uint32, int32>& a, const std::pair<uint32, int32>& b) {
+			return a.first < b.first;
+		}
+	);
+
+	std::sort(result_sortd.begin(), result_sortd.end(),
+		[](const std::pair<uint32, int32>& a, const std::pair<uint32, int32>& b) {
+			return a.second > b.second;
+		}
+	);
+
+	if (result_sortd.empty()) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int32 current_index = 0;
+
+	for (const auto& it : result_sortd) {
+		int32 dropchance = it.second;
+		std::shared_ptr<s_mob_db> mob = mob_db.find(it.first);
+
+		if (!mob) {
+			continue;
+		}
+
+		script_both_setreg(st, "whodropitem_mob_id", mob->id, true, current_index, char_id);
+		script_both_setregstr(st, "whodropitem_mob_jname$", mob->jname.c_str(), true, current_index, char_id);
+		script_both_setreg(st, "whodropitem_chance", dropchance, true, current_index, char_id);
+
+		current_index++;
+
+		if (current_index >= max_result) {
+			break;
+		}
+	}
+
+	script_both_setreg(st, "whodropitem_count", current_index, false, 0, char_id);
+	script_pushint(st, current_index);
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_WhoDropItem
+
+#ifdef Pandas_ScriptCommand_SelfDeletion
+// 当一个玩家结束与某 NPC 的交互时, 检查是否需要自毁此 NPC
+void selfdeletion_exec_endtalk(struct script_state* st) {
+	if (!st->oid)
+		return;
+
+	TBL_NPC* nd = map_id2nd(st->oid);
+	if (!nd || nd->pandas.destruction_strategy != 1)
+		return;
+
+	nd->pandas.destruction_timer = add_timer(
+		gettick() + 500, selfdeletion_timer, st->oid, st->rid
+	);
+}
+
+TIMER_FUNC(selfdeletion_timer) {
+	TBL_NPC* nd = map_id2nd(id);
+	if (!nd)
+		return 1;
+
+	if (nd->pandas.destruction_timer != INVALID_TIMER) {
+		delete_timer(nd->pandas.destruction_timer, selfdeletion_timer);
+		nd->pandas.destruction_timer = INVALID_TIMER;
+	}
+
+	if (nd->pandas.destruction_strategy == 1) {
+		// 执行结束对话后是否自毁的检测
+		// 若当前没有其他玩家正在与此 NPC 交互则自动卸载此 NPC
+		struct s_mapiterator* iter = mapit_geteachpc();
+		struct block_list* bl = nullptr;
+		bool interacting = false;
+
+		for (bl = mapit_first(iter); mapit_exists(iter); bl = mapit_next(iter)) {
+			if (!bl || bl->m != nd->m)
+				continue;
+
+			struct script_state* bl_st = ((TBL_PC*)bl)->st;
+			if (bl_st == nullptr)
+				continue;
+
+			if (bl_st->oid == id) {
+				interacting = true;
+				break;
+			}
+		}
+		if (iter)
+			mapit_free(iter);
+
+		if (!interacting) {
+			npc_unload_duplicates(nd);
+			npc_unload(nd, true);
+#ifndef Pandas_Speedup_Unloadnpc_Without_Refactoring_ScriptEvent
+			npc_read_event_script();
+#endif // Pandas_Speedup_Unloadnpc_Without_Refactoring_ScriptEvent
+		}
+	} else {
+		npc_unload_duplicates(nd);
+		npc_unload(nd, true);
+#ifndef Pandas_Speedup_Unloadnpc_Without_Refactoring_ScriptEvent
+		npc_read_event_script();
+#endif // Pandas_Speedup_Unloadnpc_Without_Refactoring_ScriptEvent
+	}
+
+	return 1;
+}
+
+/* ===========================================================
+ * 指令: selfdeletion
+ * 描述: 设置 NPC 的自毁策略
+ * 用法: selfdeletion <自毁策略>;
+ * 返回: 该指令无论成功失败, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(selfdeletion) {
+	TBL_PC* sd = map_id2sd(st->rid);
+	int option = (script_hasdata(st, 2) ? script_getnum(st, 2) : SELFDEL_NOW);
+
+	// SELFDEL_NOW = 立刻终止全部与此 NPC 相关的玩家对话, 并立刻自毁
+	// SELFDEL_WAITFREE = 与最后一个与玩家的交互结束后自毁
+	// SELFDEL_CANCEL = 取消与最后一个与玩家的交互结束后自毁
+
+	TBL_NPC* nd = map_id2nd(st->oid);
+	bool immediately = (option == SELFDEL_NOW);
+
+	if (sd && sd->state.using_fake_npc)
+		return SCRIPT_CMD_SUCCESS;
+
+	if (nd->id == fake_nd->id)
+		return SCRIPT_CMD_SUCCESS;
+
+	if (!immediately) {
+		nd->pandas.destruction_strategy = (option == SELFDEL_WAITFREE ? 1 : 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	// 能执行到这里表示期望立刻销毁当前的 NPC
+	// 先看看当前地图有多少人正在和此 NPC 对话, 且其 st 状态的 mes_active 为 1 的
+	// 若发现了则先送此玩家一个关闭按钮, 并将他和此 NPC 的脚本流设置为 END
+	struct s_mapiterator* iter = mapit_geteachpc();
+	struct block_list* bl = nullptr;
+
+	for (bl = mapit_first(iter); mapit_exists(iter); bl = mapit_next(iter)) {
+		if (!bl || bl->m != nd->m)
+			continue;
+		if (bl->id == st->rid)
+			continue;
+
+		struct script_state* bl_st = ((TBL_PC*)bl)->st;
+		if (bl_st == nullptr || bl_st->oid != st->oid)
+			continue;
+
+		pc_close_npc(((TBL_PC*)bl), 1 | 4);
+	}
+	if (iter)
+		mapit_free(iter);
+
+	// 其他正在与当前 NPC 发生对话的角色, 至此已经全部发送了关闭按钮并终止了后续脚本执行
+	// 接下来设置一个定时器, 时间到了把当前 NPC 直接 unload 掉
+	nd->pandas.destruction_timer = add_timer(
+		gettick() + 500, selfdeletion_timer, st->oid, st->rid
+	);
+
+	if (sd) {
+		// 关闭当前 NPC 和当前玩家的对话, 若存在对话框则送一个关闭按钮
+		pc_close_npc(sd, 1 | 4);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_SelfDeletion
+
+#ifdef Pandas_ScriptCommand_SetCharTitle
+/* ===========================================================
+ * 指令: setchartitle
+ * 描述: 设置指定玩家的称号ID
+ * 用法: setchartitle <称号ID>{,<角色编号>};
+ * 返回: 设置成功则返回 1, 设置失败则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(setchartitle) {
+#if PACKETVER < 20150513
+	ShowWarning("%s: Title System it requires PACKETVER 2015-05-13 or newer...\n", __func__);
+	script_pushint(st, 0);
+	return SCRIPT_CMD_FAILURE;
+#else
+	TBL_PC* sd = nullptr;
+	int64 input_title_id = script_getnum(st, 2);
+
+	if (input_title_id < 0)
+		input_title_id = 0;
+
+	uint32 title_id = static_cast<uint32>(input_title_id);
+
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushint(st, (npc_change_title_event(sd, title_id, 1) ? 1 : 0));
 	return SCRIPT_CMD_SUCCESS;
 #endif
 }
+#endif // Pandas_ScriptCommand_SetCharTitle
+
+#ifdef Pandas_ScriptCommand_GetCharTitle
+/* ===========================================================
+ * 指令: getchartitle
+ * 描述: 获得指定玩家的称号ID
+ * 用法: getchartitle {<角色编号>};
+ * 返回: 返回玩家的称号ID (若为 0 则表示此玩家没有称号), 获取失败则返回 -1
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getchartitle) {
+#if PACKETVER < 20150513
+	ShowWarning("%s: Title System it requires PACKETVER 2015-05-13 or newer...\n", __func__);
+	script_pushint(st, -1);
+	return SCRIPT_CMD_FAILURE;
+#else
+	TBL_PC* sd = nullptr;
+
+	if (!script_charid2sd(2, sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushint(st, sd->status.title_id);
+	return SCRIPT_CMD_SUCCESS;
+#endif
+}
+#endif // Pandas_ScriptCommand_GetCharTitle
+
+#ifdef Pandas_ScriptCommand_NpcExists
+/* ===========================================================
+ * 指令: npcexists
+ * 描述: 判断指定名称的 NPC 是否存在, 就算不存在控制台也不会报错
+ * 用法: npcexists "<NPC名称>"{,<用于保存 GameID 的变量>};
+ * 返回: 存在返回 1, 不存在返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(npcexists) {
+	struct script_data* vardata = nullptr;
+	TBL_PC* sd = nullptr;
+	int64 num = 0;
+	const char* name = nullptr;
+
+	if (script_hasdata(st, 3)) {
+		vardata = script_getdata(st, 3);
+
+		if (!data_isreference(vardata)) {
+			ShowWarning("%s: GameID value is not a variable.\n", __func__);
+			script_reportdata(vardata);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		if (is_string_variable(reference_getname(vardata))) {
+			ShowWarning("%s: %s is not a integer variable.\n", __func__, reference_getname(vardata));
+			script_reportdata(vardata);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		num = reference_getuid(vardata);
+		name = reference_getname(vardata);
+		char prefix = *name;
+
+		if (not_server_variable(prefix) && !script_rid2sd(sd)) {
+			ShowError("%s: variable '%s' for GameID is not a server variable, but no player is attached!\n", __func__, name);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		// 将用于保存 GameID 的变量内容设置为 0
+		clear_reg(st, sd, num, name, script_getref(st, 3));
+	}
+
+	TBL_NPC* nd = nullptr;
+	if ((nd = npc_name2id(script_getstr(st, 2))) != nullptr) {
+		script_pushint(st, 1);
+		if (vardata != nullptr)
+			set_reg_num(st, sd, num, name, nd->id, script_getref(st, 3));
+	} else {
+		script_pushint(st, 0);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_NpcExists
+
+#ifdef Pandas_ScriptCommand_Aura
+/* ===========================================================
+ * 指令: aura
+ * 描述: 激活指定的光环组合
+ * 用法: aura <光环编号>{,<角色编号>};
+ * 返回: 成功返回 1 失败返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(aura) {
+	TBL_PC* sd = nullptr;
+	int64 input_aura_id = script_getnum(st, 2);
+
+	if (input_aura_id < 0)
+		input_aura_id = 0;
+
+	uint32 aura_id = static_cast<uint32>(input_aura_id);
+
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (aura_id && !aura_search(aura_id)) {
+		ShowError("buildin_aura: The specified aura id '%d' is invalid.\n", static_cast<int32>(aura_id));
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	aura_make_effective(sd, aura_id);
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_Aura
+
+#ifdef Pandas_ScriptCommand_UnitAura
+/* ===========================================================
+ * 指令: unitaura
+ * 描述: 用于调整七种单位的光环组合 (但仅 BL_PC 会被持久化)
+ * 用法: unitaura <单位编号>,<光环编号>;
+ * 返回: 成功返回 1 失败返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(unitaura) {
+	struct block_list* bl = nullptr;
+	struct s_unit_common_data* ucd = nullptr;
+	int64 input_aura_id = script_getnum(st, 3);
+
+	if (input_aura_id < 0)
+		input_aura_id = 0;
+
+	uint32 aura_id = static_cast<uint32>(input_aura_id);
+
+	if (!script_rid2bl(2, bl)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	ucd = status_get_ucd(bl);
+	if (!ucd) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (aura_id && !aura_search(aura_id)) {
+		ShowError("buildin_unitaura: The specified aura id '%d' is invalid.\n", static_cast<int32>(aura_id));
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	aura_make_effective(bl, aura_id);
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_UnitAura
+
+#ifdef Pandas_ScriptCommand_GetUnitTarget
+/* ===========================================================
+ * 指令: getunittarget
+ * 描述: 该指令用于获取指定单位当前正在攻击的目标单位编号
+ * 用法: getunittarget <游戏单位编号>;
+ * 返回: 目标的 GameID, 返回 0 表示没有目标
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getunittarget) {
+	struct block_list* bl = nullptr;
+	bl = map_id2bl(script_getnum(st, 2));
+
+	if (!bl) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	switch (bl->type) {
+	case BL_PC:  script_pushint(st, ((TBL_PC*)bl)->ud.target); break;
+	case BL_MOB: script_pushint(st, ((TBL_MOB*)bl)->target_id); break;
+	case BL_NPC: script_pushint(st, ((TBL_NPC*)bl)->ud.target); break;
+	case BL_HOM: script_pushint(st, ((TBL_HOM*)bl)->ud.target); break;
+	case BL_MER: script_pushint(st, ((TBL_MER*)bl)->ud.target); break;
+	case BL_PET: script_pushint(st, ((TBL_PET*)bl)->target_id); break;
+	case BL_ELEM: script_pushint(st, ((TBL_ELEM*)bl)->ud.target); break;
+	default:
+		script_pushint(st, 0);
+		break;
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetUnitTarget
 
 /// script command definitions
 /// for an explanation on args, see add_buildin_func
@@ -27951,6 +33768,24 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(warpparty,"siii???"), // [Fredzilla] [Paradox924X]
 	BUILDIN_DEF(warpguild,"siii"), // [Fredzilla]
 	BUILDIN_DEF(setlook,"ii?"),
+#ifdef Pandas_ScriptCommand_SetCharTitle
+	BUILDIN_DEF(setchartitle, "i?"),					// 设置指定玩家的称号ID [Sola丶小克]
+#endif // Pandas_ScriptCommand_SetCharTitle
+#ifdef Pandas_ScriptCommand_GetCharTitle
+	BUILDIN_DEF(getchartitle, "?"),					// 获得指定玩家的称号ID [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetCharTitle
+#ifdef Pandas_ScriptCommand_NpcExists
+	BUILDIN_DEF(npcexists, "s?"),						// 判断指定名称的 NPC 是否存在 [Sola丶小克]
+#endif // Pandas_ScriptCommand_NpcExists
+#ifdef Pandas_ScriptCommand_Aura
+	BUILDIN_DEF(aura, "i?"),							// 激活指定的光环组合 [Sola丶小克]
+#endif // Pandas_ScriptCommand_Aura
+#ifdef Pandas_ScriptCommand_UnitAura
+	BUILDIN_DEF(unitaura, "ii"),						// 用于调整七种单位的光环组合 [Sola丶小克]
+#endif // Pandas_ScriptCommand_UnitAura
+#ifdef Pandas_ScriptCommand_GetUnitTarget
+	BUILDIN_DEF(getunittarget, "i"),					// 获取指定单位当前正在攻击的目标单位编号 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetUnitTarget
 	BUILDIN_DEF(changelook,"ii?"), // Simulates but don't Store it
 	BUILDIN_DEF2(setr,"set","rv?"),
 	BUILDIN_DEF(setr,"rv??"), // Not meant to be used directly, required for var++/var--
@@ -27961,6 +33796,9 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(deletearray,"r?"),
 	BUILDIN_DEF(getelementofarray,"ri"),
 	BUILDIN_DEF(inarray,"rv"),
+#ifdef Pandas_ScriptCommand_SearchArray
+	BUILDIN_DEF2(inarray, "searcharray", "rv"),			// 由于 rAthena 已经实现 inarray 指令, 这里兼容老版本 searcharray 指令 [Sola丶小克]
+#endif // Pandas_ScriptCommand_SearchArray
 	BUILDIN_DEF(countinarray,"rr"),
 	BUILDIN_DEF(getitem,"vi?"),
 	BUILDIN_DEF(rentitem,"vi?"),
@@ -27991,6 +33829,22 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(rand,"i?"),
 	BUILDIN_DEF(countitem,"v?"),
 	BUILDIN_DEF(storagecountitem,"v?"),
+#ifdef Pandas_ScriptCommand_StorageGetItem
+	BUILDIN_DEF(storagegetitem, "vi?"),
+	BUILDIN_DEF2(storagegetitem, "storagegetitembound", "vii?"),
+#endif // Pandas_ScriptCommand_StorageGetItem
+#ifdef Pandas_ScriptCommand_SetInventoryInfo
+	BUILDIN_DEF(setinventoryinfo, "iii??"),				// 设置指定背包序号的道具的详细信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_SetInventoryInfo
+#ifdef Pandas_ScriptCommand_UpdateInventory
+	BUILDIN_DEF(updateinventory, "?"),					// 重新下发关联玩家的背包数据给客户端 [Sola丶小克]
+#endif // Pandas_ScriptCommand_UpdateInventory
+#ifdef Pandas_ScriptCommand_GetConstant
+	BUILDIN_DEF(getconstant, "s"),						// 查询一个常量字符串对应的数值 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetConstant
+#ifdef Pandas_ScriptCommand_Preg_Search
+	BUILDIN_DEF(preg_search, "ssir"),					// 使用正则表达式搜索并返回首个匹配的分组内容 [Sola丶小克]
+#endif // Pandas_ScriptCommand_Preg_Search
 	BUILDIN_DEF(guildstoragecountitem,"v?"),
 	BUILDIN_DEF(cartcountitem,"v?"),
 	BUILDIN_DEF2(countitem,"countitem2","viiiiiii?"),
@@ -28076,6 +33930,9 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(produce,"i"),
 	BUILDIN_DEF(cooking,"i"),
 	BUILDIN_DEF(monster,"siisvi???"),
+#ifdef Pandas_ScriptCommand_BossMonster
+	BUILDIN_DEF2(monster,"boss_monster", "siisvi???"),
+#endif // Pandas_ScriptCommand_BossMonster
 	BUILDIN_DEF(getmobdrops,"i"),
 	BUILDIN_DEF(areamonster,"siiiisvi???"),
 	BUILDIN_DEF(killmonster,"ss?"),
@@ -28126,6 +33983,10 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF2(catchpet,"pet","??"),
 	BUILDIN_DEF2(birthpet,"bpet",""),
 	BUILDIN_DEF(catchpet,"??"),
+#ifdef Pandas_ScriptCommand_MultiCatchPet
+	BUILDIN_DEF(multicatchpet, "*"), // 与 catchpet 指令类似, 但可以指定更多支持捕捉的魔物编号 [Sola丶小克]
+	BUILDIN_DEF2(multicatchpet, "mpet", "*"), // 指定一个别名, 以便简化编码工作量
+#endif // Pandas_ScriptCommand_MultiCatchPet
 	BUILDIN_DEF(birthpet,""),
 	BUILDIN_DEF(resetlvl,"i?"),
 	BUILDIN_DEF(resetstatus,"?"),
@@ -28153,7 +34014,12 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(isloggedin,"i?"),
 	BUILDIN_DEF(setmapflagnosave,"ssii"),
 	BUILDIN_DEF(getmapflag,"si?"),
+#ifndef Pandas_Mapflags
 	BUILDIN_DEF(setmapflag,"si??"),
+#else
+	// setmapflag "<map name>",<flag>{,<val1>{,<val2>{,<val3>{,<val4>}}}};
+	BUILDIN_DEF(setmapflag,"si????"),
+#endif // Pandas_Mapflags
 	BUILDIN_DEF(removemapflag,"si?"),
 	BUILDIN_DEF(pvpon,"s"),
 	BUILDIN_DEF(pvpoff,"s"),
@@ -28185,7 +34051,14 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(getitemslots,"i"),
 	BUILDIN_DEF(makepet,"i"),
 	BUILDIN_DEF(getexp,"ii?"),
+#ifndef Pandas_ScriptCommand_GetInventoryList
 	BUILDIN_DEF(getinventorylist,"?"),
+#else
+	BUILDIN_DEF(getinventorylist, "??"),
+	BUILDIN_DEF2(getinventorylist, "getcartlist", "??"),
+	BUILDIN_DEF2(getinventorylist, "getguildstoragelist", "??"),
+	BUILDIN_DEF2(getinventorylist, "getstoragelist", "???"),
+#endif // Pandas_ScriptCommand_GetInventoryList
 	BUILDIN_DEF(getskilllist,"?"),
 	BUILDIN_DEF(clearitem,"?"),
 	BUILDIN_DEF(classchange,"i??"),
@@ -28240,13 +34113,209 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(getrefine,""), // returns the refined number of the current item, or an item with index specified [celest]
 	BUILDIN_DEF(night,""), // sets the server to night time
 	BUILDIN_DEF(day,""), // sets the server to day time
-#ifdef PCRE_SUPPORT
 	BUILDIN_DEF(defpattern,"iss"), // Define pattern to listen for [MouseJstr]
 	BUILDIN_DEF(activatepset,"i"), // Activate a pattern set [MouseJstr]
 	BUILDIN_DEF(deactivatepset,"i"), // Deactive a pattern set [MouseJstr]
 	BUILDIN_DEF(deletepset,"i"), // Delete a pattern set [MouseJstr]
-#endif
 	BUILDIN_DEF(preg_match,"ss?"),
+#ifdef Pandas_ScriptCommand_Script4Each
+	BUILDIN_DEF(script4each, "si?????"),					// 对指定范围的玩家执行相同的一段脚本 [Sola丶小克]
+	BUILDIN_DEF2(script4each, "script4eachmob", "si?????"),	// 对指定范围的魔物执行相同的一段脚本
+	BUILDIN_DEF2(script4each, "script4eachnpc", "si?????"),	// 对指定范围的 NPC 执行相同的一段脚本
+#endif // Pandas_ScriptCommand_Script4Each
+#ifdef Pandas_ScriptCommand_GetSameIpInfo
+	BUILDIN_DEF(getsameipinfo, "??"),					// 获得某个指定 IP 在线的玩家信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetSameIpInfo
+#ifdef Pandas_ScriptCommand_Logout
+	BUILDIN_DEF(logout, "i?"),							// 使指定的角色立刻登出游戏 [Sola丶小克]
+#endif // Pandas_ScriptCommand_Logout
+#ifdef Pandas_ScriptCommand_WarpPartyRevive
+	BUILDIN_DEF2(warpparty, "warppartyrevive", "siii???"),	// 与 warpparty 类似, 但可以复活死亡的队友并传送 [Sola丶小克]
+	BUILDIN_DEF2(warpparty, "warpparty2", "siii???"),		// 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_WarpPartyRevive
+#ifdef Pandas_ScriptCommand_GetAreaGid
+	BUILDIN_DEF(getareagid, "ri??????"),				// 获取指定范围内特定类型单位的全部 GID [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetAreaGid
+#ifdef Pandas_ScriptCommand_ProcessHalt
+	BUILDIN_DEF(processhalt, "?"), // 用于中断源代码的后续处理逻辑 [Sola丶小克]
+#endif // Pandas_ScriptCommand_ProcessHalt
+#ifdef Pandas_ScriptCommand_SetEventTrigger
+	BUILDIN_DEF(settrigger, "ii"), // 使用该指令可以设置某个事件或过滤器的触发行为 [Sola丶小克]
+#endif // Pandas_ScriptCommand_SetEventTrigger
+#ifdef Pandas_ScriptCommand_MessageColor
+	BUILDIN_DEF(messagecolor, "s???"),					// 发送指定颜色的消息文本到聊天窗口中 [Sola丶小克]
+#endif // Pandas_ScriptCommand_MessageColor
+#ifdef Pandas_ScriptCommand_Copynpc
+	BUILDIN_DEF(copynpc, "???????"), // 复制指定的 NPC 到一个新的位置 [Sola丶小克]
+#endif // Pandas_ScriptCommand_Copynpc
+#ifdef Pandas_ScriptCommand_GetTimeFmt
+	BUILDIN_DEF(gettimefmt, "s??"),						// 将当前时间格式化输出成字符串, 是 gettimestr 的改进版 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetTimeFmt
+#ifdef Pandas_ScriptCommand_SelfDeletion
+	BUILDIN_DEF(selfdeletion, "*"),						// 设置 NPC 的自毁策略 [Sola丶小克]
+#endif // Pandas_ScriptCommand_SelfDeletion
+#ifdef Pandas_ScriptCommand_BattleRecordQuery
+	BUILDIN_DEF(batrec_query, "iii?"), // 查询指定单位的战斗记录, 查看与交互目标单位产生的具体记录值 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BattleRecordQuery
+#ifdef Pandas_ScriptCommand_BattleRecordRank
+	BUILDIN_DEF(batrec_rank, "irri??"), // 查询指定单位的战斗记录并对记录的值进行排序, 返回排行榜单 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BattleRecordRank
+#ifdef Pandas_ScriptCommand_BattleRecordSortout
+	BUILDIN_DEF(batrec_sortout, "i?"), // 移除指定单位的战斗记录中交互单位已经不存在 (或下线) 的记录 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BattleRecordSortout
+#ifdef Pandas_ScriptCommand_BattleRecordReset
+	BUILDIN_DEF(batrec_reset, "i"), // 清除指定单位的战斗记录 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BattleRecordReset
+#ifdef Pandas_ScriptCommand_EnableBattleRecord
+	BUILDIN_DEF(enable_batrec, "?"), // 启用指定单位的战斗记录 [Sola丶小克]
+#endif // Pandas_ScriptCommand_EnableBattleRecord
+#ifdef Pandas_ScriptCommand_DisableBattleRecord
+	BUILDIN_DEF(disable_batrec, "?"), // 禁用指定单位的战斗记录 [Sola丶小克]
+#endif // Pandas_ScriptCommand_DisableBattleRecord
+#ifdef Pandas_ScriptCommand_UnlockCmd
+	BUILDIN_DEF(unlockcmd, ""), // 解锁实时事件和过滤器事件的指令限制 [Sola丶小克]
+#endif // Pandas_ScriptCommand_UnlockCmd
+#ifdef Pandas_ScriptCommand_Login
+	BUILDIN_DEF(login, "i????"), // 将指定的角色以特定的登录模式拉上线 [Sola丶小克]
+#endif // Pandas_ScriptCommand_Login
+#ifdef Pandas_ScriptCommand_CheckSuspend
+	BUILDIN_DEF(checksuspend, "?"), // 获取指定角色或指定账号当前在线角色的挂机模式 [Sola丶小克]
+#endif // Pandas_ScriptCommand_CheckSuspend
+#ifdef Pandas_ScriptCommand_BonusScriptRemove
+	BUILDIN_DEF(bonus_script_remove, "i?"), // 移除指定的 bonus_script 效果脚本 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BonusScriptRemove
+#ifdef Pandas_ScriptCommand_BonusScriptList
+	BUILDIN_DEF(bonus_script_list, "r?"), // 获取指定角色当前激活的全部 bonus_script 效果脚本编号 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BonusScriptList
+#ifdef Pandas_ScriptCommand_BonusScriptExists
+	BUILDIN_DEF(bonus_script_exists, "i?"), // 查询指定角色是否已经激活了特定的 bonus_script 效果脚本 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BonusScriptExists
+#ifdef Pandas_ScriptCommand_BonusScriptGetId
+	BUILDIN_DEF(bonus_script_getid, "sr?"), // 查询效果脚本代码对应的效果脚本编号 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BonusScriptGetId
+#ifdef Pandas_ScriptCommand_BonusScriptInfo
+	BUILDIN_DEF(bonus_script_info, "ii?"), // 查询指定效果脚本的相关信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BonusScriptInfo
+#ifdef Pandas_ScriptCommand_ExpandInventoryAdjust
+	BUILDIN_DEF(expandinventory_adjust, "i"), // 增加角色的背包容量上限 [Sola丶小克]
+#endif // Pandas_ScriptCommand_ExpandInventoryAdjust
+#ifdef Pandas_ScriptCommand_GetInventorySize
+	BUILDIN_DEF(getinventorysize, "?"), // 查询并获取当前角色的背包容量上限 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetInventorySize
+#ifdef Pandas_ScriptCommand_GetCalendarTime
+	BUILDIN_DEF(getcalendartime, "ii??"), // 获取下次出现指定时间的 UNIX 时间戳 [Haru]
+#endif // Pandas_ScriptCommand_GetCalendarTime
+#ifdef Pandas_ScriptCommand_GetSkillInfo
+	BUILDIN_DEF(getskillinfo, "iv??"), // 获取指定技能在技能数据库中所配置的各项信息 [聽風]
+#endif // Pandas_ScriptCommand_GetSkillInfo
+#ifdef Pandas_ScriptCommand_Sleep3
+	BUILDIN_DEF(sleep3, "i"), // 休眠一段时间再执行后续脚本, 与 sleep2 类似但忽略报错 [人鱼姬的思念]
+#endif // Pandas_ScriptCommand_Sleep3
+#ifdef Pandas_ScriptCommand_GetQuestTime
+	BUILDIN_DEF(getquesttime, "i??"), // 查询角色指定任务的时间信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetQuestTime
+#ifdef Pandas_ScriptCommand_UnitSpecialEffect
+	BUILDIN_DEF(unitspecialeffect, "ii??"), // 使指定游戏单位可以显示某个特效, 并支持控制特效可见范围 [人鱼姬的思念]
+#endif // Pandas_ScriptCommand_UnitSpecialEffect
+#ifdef Pandas_ScriptCommand_Next_Dropitem_Special
+	BUILDIN_DEF(next_dropitem_special, "iii"), // 对下一个掉落到地面上的物品进行特殊设置 [Sola丶小克]
+#endif // Pandas_ScriptCommand_Next_Dropitem_Special
+#ifdef Pandas_ScriptCommand_GetGradeItem
+	BUILDIN_DEF2(getitem2, "getgradeitem", "viiiiiiiiirrr?"), // 创造带有指定附魔评级的道具 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetGradeItem
+#ifdef Pandas_ScriptCommand_GetRateIdx
+	BUILDIN_DEF(getrateidx, "*"), // 随机获取一个数值型数组的索引序号 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetRateIdx
+#ifdef Pandas_ScriptCommand_MobRemove
+	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
+#endif // Pandas_ScriptCommand_MobRemove
+#ifdef Pandas_ScriptCommand_MesClear
+	BUILDIN_DEF2(clear, "mesclear", ""), // 由于 rAthena 已经实现 clear 指令, 这里兼容老版本 mesclear 指令 [Sola丶小克]
+#endif // Pandas_ScriptCommand_MesClear
+#ifdef Pandas_ScriptCommand_BattleIgnore
+	BUILDIN_DEF(battleignore, "i?"), // 将角色设置为魔物免战状态, 避免被魔物攻击 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BattleIgnore
+#ifdef Pandas_ScriptCommand_GetHotkey
+	BUILDIN_DEF(gethotkey, "i?"), // 获取指定快捷键位置当前的信息 [Sola丶小克]
+	BUILDIN_DEF2(gethotkey, "get_hotkey", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_GetHotkey
+#ifdef Pandas_ScriptCommand_SetHotkey
+	BUILDIN_DEF(sethotkey, "iiii"), // 设置指定快捷键位置的信息 [Sola丶小克]
+	BUILDIN_DEF2(sethotkey, "set_hotkey", "iiii"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_SetHotkey
+#ifdef Pandas_ScriptCommand_ShowVend
+	BUILDIN_DEF(showvend, "si?"), // 使指定的 NPC 头上可以显示露天商店的招牌 [Jian916]
+#endif // Pandas_ScriptCommand_ShowVend
+#ifdef Pandas_ScriptCommand_ViewEquip
+	BUILDIN_DEF(viewequip, "i?"), // 查看指定在线角色的装备面板信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_ViewEquip
+#ifdef Pandas_ScriptCommand_CountItemIdx
+	BUILDIN_DEF(countitemidx, "i?"), // 获取指定背包序号的道具在背包中的数量 [Sola丶小克]
+	BUILDIN_DEF2(countitemidx, "countinventory", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_CountItemIdx
+#ifdef Pandas_ScriptCommand_DelItemIdx
+	BUILDIN_DEF2(delitemidx, "delinventory", "i??"), // 指定一个别名, 以便兼容的老版本或其他服务端 [Sola丶小克]
+#endif // Pandas_ScriptCommand_DelItemIdx
+#ifdef Pandas_ScriptCommand_IdentifyIdx
+	BUILDIN_DEF(identifyidx, "i?"), // 鉴定指定背包序号的道具 [Sola丶小克]
+	BUILDIN_DEF2(identifyidx, "identifybyidx", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_IdentifyIdx
+#ifdef Pandas_ScriptCommand_UnEquipIdx
+	BUILDIN_DEF(unequipidx, "i?"), // 脱下指定背包序号的道具 [Sola丶小克]
+	BUILDIN_DEF2(unequipidx, "unequipinventory", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_UnEquipIdx
+#ifdef Pandas_ScriptCommand_EquipIdx
+	BUILDIN_DEF(equipidx, "i?"), // 穿戴指定背包序号的道具 [Sola丶小克]
+	BUILDIN_DEF2(equipidx, "equipinventory", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_EquipIdx
+#ifdef Pandas_ScriptCommand_ItemExists
+	BUILDIN_DEF(itemexists, "v"), // 确认物品数据库中是否存在指定物品 [Sola丶小克]
+	BUILDIN_DEF2(itemexists, "existitem", "v"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_ItemExists
+#ifdef Pandas_ScriptCommand_RentTime
+	BUILDIN_DEF(renttime, "ii?"), // 增加/减少指定位置装备的租赁时间 [Sola丶小克]
+	BUILDIN_DEF2(renttime, "setrenttime", "ii?"), // 指定一个别名, 以便兼容的老版本或其他服务端
+	BUILDIN_DEF2(renttime, "resume", "ii?"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_RentTime
+#ifdef Pandas_ScriptCommand_GetEquipIdx
+	BUILDIN_DEF(getequipidx, "i?"), // 获取指定位置装备的背包序号 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetEquipIdx
+#ifdef Pandas_ScriptCommand_StatusCalc
+	BUILDIN_DEF2(recalculatestat, "statuscalc", ""), // 由于 rAthena 已经实现 recalculatestat 指令, 这里兼容老版本 statuscalc 指令 [Sola丶小克]
+	BUILDIN_DEF2(recalculatestat, "status_calc", ""), // 由于 rAthena 已经实现 recalculatestat 指令, 这里兼容老版本 status_calc 指令
+#endif // Pandas_ScriptCommand_StatusCalc
+#ifdef Pandas_ScriptCommand_GetEquipExpireTick
+	BUILDIN_DEF(getequipexpiretick, "i?"), // 获取指定位置装备的租赁到期剩余秒数 [Sola丶小克]
+	BUILDIN_DEF2(getequipexpiretick, "isrental", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_GetEquipExpireTick
+#ifdef Pandas_ScriptCommand_GetInventoryInfo
+	BUILDIN_DEF(getinventoryinfo, "ii?"), // 查询指定背包序号的道具详细信息 [Sola丶小克]
+	BUILDIN_DEF2(getinventoryinfo, "getcartinfo", "ii?"), // 查询指定手推车序号的道具详细信息 [Sola丶小克]
+	BUILDIN_DEF2(getinventoryinfo, "getguildstorageinfo", "ii?"), // 查询指定公会仓库序号的道具详细信息 [Sola丶小克]
+	BUILDIN_DEF2(getinventoryinfo, "getstorageinfo", "ii??"), // 查询指定个人仓库/扩充仓库序号的道具详细信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetInventoryInfo
+#ifdef Pandas_ScriptCommand_StatusCheck
+	BUILDIN_DEF(statuscheck, "i?"), // 判断状态是否存在, 并取得相关的状态参数 [Sola丶小克]
+	BUILDIN_DEF2(statuscheck, "sc_check", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_StatusCheck
+#ifdef Pandas_ScriptCommand_RentTimeIdx
+	BUILDIN_DEF(renttimeidx, "ii?"), // 增加/减少指定背包序号道具的租赁时间 [Sola丶小克]
+#endif // Pandas_ScriptCommand_RentTimeIdx
+#ifdef Pandas_ScriptCommand_PartyLeave
+	BUILDIN_DEF(party_leave, "?"), // 使当前角色或指定角色退出队伍 [Sola丶小克]
+#endif // Pandas_ScriptCommand_PartyLeave
+#ifdef Pandas_ScriptCommand_GetMapSpawns
+	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetMapSpawns
+#ifdef Pandas_ScriptCommand_GetMobSpawns
+	BUILDIN_DEF(getmobspawns, "i??"), // 查询指定魔物在不同地图的刷新点信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetMobSpawns
+#ifdef Pandas_ScriptCommand_GetBossInfo
+	BUILDIN_DEF(getbossinfo, "???"), // 查询 BOSS 魔物重生时间及其坟墓等信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetBossInfo
+#ifdef Pandas_ScriptCommand_WhoDropItem
+	BUILDIN_DEF(whodropitem, "v??"), // 查询指定道具会从哪些魔物身上掉落以及掉落的机率信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_WhoDropItem
 	BUILDIN_DEF(dispbottom,"s??"), //added from jA [Lupus]
 	BUILDIN_DEF(recovery,"i???"),
 	BUILDIN_DEF(getpetinfo,"i?"),
@@ -28278,7 +34347,11 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(setnpcdisplay,"sv??"),
 	BUILDIN_DEF(compare,"ss"), // Lordalfa - To bring strstr to scripting Engine.
 	BUILDIN_DEF(strcmp,"ss"),
+#ifndef Pandas_ScriptParams_GetItemInfo
 	BUILDIN_DEF(getiteminfo,"vi"), //[Lupus] returns Items Buy / sell Price, etc info
+#else
+	BUILDIN_DEF(getiteminfo, "vi?"), //[Lupus] returns Items Buy / sell Price, etc info
+#endif // Pandas_ScriptParams_GetItemInfo
 	BUILDIN_DEF(setiteminfo,"vii"), //[Lupus] set Items Buy / sell Price, etc info
 	BUILDIN_DEF(getequipcardid,"ii"), //[Lupus] returns CARD ID or other info from CARD slot N of equipped item
 	// [zBuffer] List of mathematics commands --->
@@ -28314,6 +34387,23 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(axtoi,"s"),
 	BUILDIN_DEF(query_sql,"s*"),
 	BUILDIN_DEF(query_logsql,"s*"),
+	// 熊猫模拟器拓展脚本指令 - 开始
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+	BUILDIN_DEF(query_sql_async, "s*"),
+	BUILDIN_DEF(query_logsql_async, "s*"),
+#endif // Pandas_ScriptCommand_QuerySql_Async
+#ifdef Pandas_ScriptCommand_SetHeadDir
+	BUILDIN_DEF(setheaddir, "i?"), // 调整角色纸娃娃脑袋的朝向 [Sola丶小克]
+#endif // Pandas_ScriptCommand_SetHeadDir
+#ifdef Pandas_ScriptCommand_SetBodyDir
+	BUILDIN_DEF(setbodydir, "i?"), // 用于调整角色纸娃娃身体的朝向 [Sola丶小克]
+#endif // Pandas_ScriptCommand_SetBodyDir
+#ifdef Pandas_ScriptCommand_InstanceUsers
+	BUILDIN_DEF(instance_users, "i"), // 获取指定的副本实例中, 已经进入副本地图的人数 [Sola丶小克]
+#endif // Pandas_ScriptCommand_InstanceUsers
+#ifdef Pandas_ScriptCommand_CapValue
+	BUILDIN_DEF2(cap_value, "cap", "iii"), // 为 cap_value 指定一个别名, 以便兼容的老版本或其他服务端 [Sola丶小克]
+#endif // Pandas_ScriptCommand_CapValue
 	BUILDIN_DEF(escape_sql,"v"),
 	BUILDIN_DEF(atoi,"s"),
 	BUILDIN_DEF(strtol,"si"),
@@ -28329,7 +34419,11 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(getpcblock, "?"),
 	// <--- [zBuffer] List of player cont commands
 	// [zBuffer] List of unit control commands --->
+#ifndef Pandas_ScriptCommand_UnitExists
 	BUILDIN_DEF(unitexists,"i"),
+#else
+	BUILDIN_DEF(unitexists,"i?"),
+#endif // Pandas_ScriptCommand_UnitExists
 	BUILDIN_DEF(getunittype,"i"),
 	BUILDIN_DEF(getunitname,"i"),
 	BUILDIN_DEF(setunitname,"is"),
@@ -28445,6 +34539,9 @@ struct script_function buildin_func[] = {
 	 **/
 	BUILDIN_DEF(getargcount,""),
 	BUILDIN_DEF(getcharip,"?"),
+#ifdef Pandas_ScriptCommand_GetCharMacAddress
+	BUILDIN_DEF(getcharmac, "?"),					// 获取指定角色登录时使用的 MAC 地址 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetCharMacAddress
 	BUILDIN_DEF(is_function,"s"),
 	BUILDIN_DEF(get_revision,""),
 	BUILDIN_DEF(get_githash,""),
@@ -28653,6 +34750,7 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF( mesitemicon, "v??" ),
 	BUILDIN_DEF(meshyperlink, "ss"),
 	BUILDIN_DEF(mesemotion,"i"),
+	// PYHELP - SCRIPTCMD - INSERT POINT - <Section 3>
 
 #include <custom/script_def.inc>
 

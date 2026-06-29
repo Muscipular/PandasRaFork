@@ -44,7 +44,7 @@ public:
 
 struct s_hom_stats {
 	uint32 HP, SP;
-	uint16 str, agi, vit, int_, dex, luk;
+	pec_uint16 str, agi, vit, int_, dex, luk;
 };
 
 /// Homunculus skill entry [Celest]
@@ -86,6 +86,9 @@ enum e_hom_state2 : uint8 {
 
 struct homun_data : public block_list {
 	struct unit_data  ud;
+#ifdef Pandas_Struct_Unit_CommonData
+	struct s_unit_common_data ucd;
+#endif // Pandas_Struct_Unit_CommonData
 	struct view_data *vd;
 	struct status_data base_status, battle_status;
 	status_change sc;
@@ -206,7 +209,11 @@ int32 hom_recv_data(uint32 account_id, struct s_homunculus *sh, int32 flag); //a
 struct view_data* hom_get_viewdata(int32 class_);
 int32 hom_class2mapid(int32 hom_class);
 enum homun_type hom_class2type(int32 class_);
+#ifndef Pandas_FuncDefine_UnitDead_With_ExtendInfo
 int32 hom_dead(homun_data *hd);
+#else
+int32 hom_dead(homun_data *hd, block_list *src, uint16 skill_id);
+#endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
 void hom_skillup(homun_data *hd,uint16 skill_id);
 void hom_calc_skilltree(homun_data *hd);
 int16 hom_checkskill(homun_data *hd,uint16 skill_id);

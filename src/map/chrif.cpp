@@ -430,7 +430,11 @@ int32 chrif_changemapserver(map_session_data* sd, uint32 ip, uint16 port) {
 
 	chrif_check(-1);
 
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	WFIFOHEAD( char_fd, 37 + MAP_NAME_LENGTH_EXT );
+#else
+	WFIFOHEAD( char_fd, 37 + MAP_NAME_LENGTH_EXT + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH );
+#endif // Pandas_Extract_SSOPacket_MacAddress
 	WFIFOW(char_fd, 0) = 0x2b05;
 	WFIFOL(char_fd, 2) = sd->id;
 	WFIFOL(char_fd, 6) = sd->login_id1;
@@ -445,7 +449,13 @@ int32 chrif_changemapserver(map_session_data* sd, uint32 ip, uint16 port) {
 	WFIFOB( char_fd, offset + 10 ) = sd->status.sex;
 	WFIFOL( char_fd, offset + 11 ) = htonl( session[sd->fd]->client_addr );
 	WFIFOL( char_fd, offset + 15 ) = sd->group_id;
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	WFIFOSET( char_fd, 37 + MAP_NAME_LENGTH_EXT );
+#else
+	memcpy(WFIFOCP(char_fd, offset + 19), session[sd->fd]->mac_address, MACADDRESS_LENGTH);
+	memcpy(WFIFOCP(char_fd, offset + 19 + MACADDRESS_LENGTH), session[sd->fd]->lan_address, IP4ADDRESS_LENGTH);
+	WFIFOSET( char_fd, 37 + MAP_NAME_LENGTH_EXT + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH );
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	return 0;
 }
@@ -560,6 +570,10 @@ void chrif_on_ready(void) {
 	{
 		do_init_buyingstore_autotrade();
 		do_init_vending_autotrade();
+#ifdef Pandas_Player_Suspend_System
+		// 将处于离线挂机和离开模式的玩家召回自动上线。
+		suspend_recall_all();
+#endif // Pandas_Player_Suspend_System
 		char_init_done = true;
 	}
 }
@@ -657,8 +671,13 @@ void chrif_authok(int32 fd) {
 	TBL_PC* sd;
 
 	//Check if both servers agree on the struct's size
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	if( RFIFOW(fd,2) - 25 != sizeof(struct mmo_charstatus) ) {
 		ShowError("chrif_authok: Data size mismatch! %d != %" PRIuPTR "\n", RFIFOW(fd,2) - 25, sizeof(struct mmo_charstatus));
+#else
+	if( RFIFOW(fd,2) - (25 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH) != sizeof(struct mmo_charstatus) ) {
+		ShowError("chrif_authok: Data size mismatch! %d != %" PRIuPTR "\n", RFIFOW(fd,2) - (25 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH), sizeof(struct mmo_charstatus));
+#endif // Pandas_Extract_SSOPacket_MacAddress
 		return;
 	}
 
@@ -668,7 +687,15 @@ void chrif_authok(int32 fd) {
 	expiration_time = (time_t)(int32)RFIFOL(fd,16);
 	group_id = RFIFOL(fd,20);
 	changing_mapservers = (RFIFOB(fd,24)) > 0;
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	status = (struct mmo_charstatus*)RFIFOP(fd,25);
+#else
+	char macaddress[MACADDRESS_LENGTH] = { 0 };
+	char lanaddress[IP4ADDRESS_LENGTH] = { 0 };
+	safestrncpy(macaddress, RFIFOCP(fd,25), MACADDRESS_LENGTH);
+	safestrncpy(lanaddress, RFIFOCP(fd,25 + MACADDRESS_LENGTH), IP4ADDRESS_LENGTH);
+	status = (struct mmo_charstatus*)RFIFOP(fd,25 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 	char_id = status->char_id;
 
 	//Check if we don't already have player data in our server
@@ -692,6 +719,12 @@ void chrif_authok(int32 fd) {
 	}
 
 	sd = node->sd;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	if( sd != nullptr && session[sd->fd] != nullptr ){
+		safestrncpy(session[sd->fd]->mac_address, macaddress, MACADDRESS_LENGTH);
+		safestrncpy(session[sd->fd]->lan_address, lanaddress, IP4ADDRESS_LENGTH);
+	}
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	if( global_core->is_running() &&
 		node->char_dat == nullptr &&
@@ -780,13 +813,23 @@ int32 chrif_charselectreq(map_session_data* sd, uint32 s_ip) {
 
 	chrif_check(-1);
 
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	WFIFOHEAD(char_fd,18);
+#else
+	WFIFOHEAD(char_fd,18 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 	WFIFOW(char_fd, 0) = 0x2b02;
 	WFIFOL(char_fd, 2) = sd->id;
 	WFIFOL(char_fd, 6) = sd->login_id1;
 	WFIFOL(char_fd,10) = sd->login_id2;
 	WFIFOL(char_fd,14) = htonl(s_ip);
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	WFIFOSET(char_fd,18);
+#else
+	memcpy(WFIFOCP(char_fd,18), session[sd->fd]->mac_address, MACADDRESS_LENGTH);
+	memcpy(WFIFOCP(char_fd,18 + MACADDRESS_LENGTH), session[sd->fd]->lan_address, IP4ADDRESS_LENGTH);
+	WFIFOSET(char_fd,18 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	return 0;
 }
@@ -1656,6 +1699,9 @@ int32 chrif_bsdata_save(map_session_data *sd, bool quit) {
 			bs.flag = entry->flag;
 			bs.type = entry->type;
 			bs.icon = entry->icon;
+#ifdef Pandas_BonusScript_Unique_ID
+			bs.bonus_id = entry->bonus_id;
+#endif // Pandas_BonusScript_Unique_ID
 			memcpy(WFIFOP(char_fd, 9 + i * sizeof(struct bonus_script_data)), &bs, sizeof(struct bonus_script_data));
 			i++;
 		}
@@ -1702,8 +1748,24 @@ int32 chrif_bsdata_received(int32 fd) {
 			if (bs->script_str[0] == '\0' || !bs->tick)
 				continue;
 
+#ifdef Pandas_Fix_Bonus_Script_Effective_Timing_Exception
+			if ((bs->flag & BSF_REM_ON_LOGOUT) == BSF_REM_ON_LOGOUT) {
+				// 若 bonus_script 被打上了 BSF_REM_ON_LOGOUT 标记位, 那么它不应该再被加载.
+				// 目前看应该只有在玩家进入游戏的时候,
+				// 地图服务器在 intif_parse_Registers 收到角色服务器发来的全部变量数据之后,
+				// 才会触发 pc_reg_received -> chrif_bsdata_request -> 来请求 bonus_script 数据,
+				// 最终落到本函数 chrif_bsdata_received 进行处理.
+				continue;
+			}
+#endif // Pandas_Fix_Bonus_Script_Effective_Timing_Exception
+
+#ifndef Pandas_BonusScript_Unique_ID
 			if (!(entry = pc_bonus_script_add(sd, bs->script_str, bs->tick, (enum efst_type)bs->icon, bs->flag, bs->type)))
 				continue;
+#else
+			if (!(entry = pc_bonus_script_add(sd, bs->script_str, bs->tick, (enum efst_type)bs->icon, bs->flag, bs->type, bs->bonus_id)))
+				continue;
+#endif // Pandas_BonusScript_Unique_ID
 
 			linkdb_insert(&sd->bonus_script.head, (void *)((intptr_t)entry), entry);
 		}
@@ -1944,10 +2006,17 @@ void do_init_chrif(void) {
 		exit(EXIT_FAILURE);
 	}
 
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 	if (sizeof(struct s_storage) > 0xFFFF) {
 		ShowError("s_storage size = %" PRIuPTR " is too big to be transmitted. (must be below 0xFFFF)\n", sizeof(struct s_storage));
 		exit(EXIT_FAILURE);
 	}
+#else
+	if (sizeof(struct s_storage) > 0xFFFFF) {
+		ShowError("s_storage size = %" PRIuPTR " is too big to be transmitted. (must be below 0xFFFFF)\n", sizeof(struct s_storage));
+		exit(EXIT_FAILURE);
+	}
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 
 	if((sizeof(struct bonus_script_data) * MAX_PC_BONUS_SCRIPT) > 0xFFFF){
 		ShowError("bonus_script_data size = %d is too big, please reduce MAX_PC_BONUS_SCRIPT (%d) size. (must be below 0xFFFF).\n",

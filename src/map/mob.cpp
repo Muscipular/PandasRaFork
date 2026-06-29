@@ -25,12 +25,21 @@
 
 #include "achievement.hpp"
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "clif.hpp"
 #include "elemental.hpp"
 #include "guild.hpp"
 #include "homunculus.hpp"
 #include "intif.hpp"
 #include "itemdb.hpp"
+#ifdef Pandas_Database_MobItem_FixedRatio
+#include "mobdrop.hpp"
+#endif // Pandas_Database_MobItem_FixedRatio
+#ifdef Pandas_Item_Special_Annouce
+#include "itemprops.hpp"
+#endif // Pandas_Item_Special_Annouce
 #include "log.hpp"
 #include "map.hpp"
 #include "mercenary.hpp"
@@ -183,7 +192,11 @@ TIMER_FUNC(mvptomb_delayspawn){
  * @param time: time of mob's death
  * @author [GreenBox]
  */
+#ifndef Pandas_FuncParams_Mob_MvpTomb_Create
 void mvptomb_create(mob_data *md, char *killer, time_t time)
+#else
+void mvptomb_create(mob_data *md, char *killer, time_t time, int32 killer_gid)
+#endif // Pandas_FuncParams_Mob_MvpTomb_Create
 {
 	npc_data *nd;
 
@@ -210,6 +223,9 @@ void mvptomb_create(mob_data *md, char *killer, time_t time)
 	nd->u.tomb.md = md;
 	nd->u.tomb.kill_time = time;
 	nd->u.tomb.spawn_timer = INVALID_TIMER;
+#ifdef Pandas_FuncParams_Mob_MvpTomb_Create
+	nd->u.tomb.killer_gid = killer_gid;
+#endif // Pandas_FuncParams_Mob_MvpTomb_Create
 
 	nd->dynamicnpc.owner_char_id = 0;
 	nd->dynamicnpc.last_interaction = 0;
@@ -493,7 +509,23 @@ mob_data* mob_spawn_dataset(struct spawn_data *data)
 	status_set_viewdata(md, md->mob_id);
 	unit_dataset(md);
 
+#ifdef Pandas_ScriptParams_DamageTaken_Extend
+	md->damagetaken = -1;
+#endif // Pandas_ScriptParams_DamageTaken_Extend
+
+#ifdef Pandas_Struct_Mob_Data_SpecialExperience
+	md->pandas.base_exp = -1;
+	md->pandas.job_exp = -1;
+#endif // Pandas_Struct_Mob_Data_SpecialExperience
+
+#ifdef Pandas_Struct_Mob_Data_Special_SetUnitData
+	md->pandas.special_setunitdata = new std::map<uint16, int64>;
+#endif // Pandas_Struct_Mob_Data_Special_SetUnitData
+
 	map_addiddb(md);
+#ifdef Pandas_BattleRecord
+	batrec_new(md);
+#endif // Pandas_BattleRecord
 	return md;
 }
 
@@ -633,7 +665,11 @@ bool mob_ksprotected (block_list *src, block_list *target)
 	return false;
 }
 
+#ifndef Pandas_FuncDefine_Mob_Once_Spawn_Sub
 mob_data *mob_once_spawn_sub(block_list *bl, int16 m, int16 x, int16 y, const char *mobname, int32 mob_id, const char *event, uint32 size, enum mob_ai ai)
+#else
+mob_data *mob_once_spawn_sub(block_list *bl, int16 m, int16 x, int16 y, const char *mobname, int32 mob_id, const char *event, uint32 size, enum mob_ai ai, uint16 spawn_flag)
+#endif // Pandas_FuncDefine_Mob_Once_Spawn_Sub
 {
 	struct spawn_data data;
 
@@ -643,6 +679,9 @@ mob_data *mob_once_spawn_sub(block_list *bl, int16 m, int16 x, int16 y, const ch
 	data.id = mob_id;
 	data.state.size = size;
 	data.state.ai = ai;
+#ifdef Pandas_FuncDefine_Mob_Once_Spawn_Sub
+	data.state.boss = (spawn_flag & 1);
+#endif // Pandas_FuncDefine_Mob_Once_Spawn_Sub
 
 	if (mobname)
 		safestrncpy(data.name, mobname, sizeof(data.name));
@@ -676,7 +715,11 @@ mob_data *mob_once_spawn_sub(block_list *bl, int16 m, int16 x, int16 y, const ch
 /*==========================================
  * Spawn a single mob on the specified coordinates.
  *------------------------------------------*/
+#ifndef Pandas_FuncDefine_Mob_Once_Spawn
 int32 mob_once_spawn(map_session_data* sd, int16 m, int16 x, int16 y, const char* mobname, int32 mob_id, int32 amount, const char* event, uint32 size, enum mob_ai ai)
+#else
+int32 mob_once_spawn(map_session_data* sd, int16 m, int16 x, int16 y, const char* mobname, int32 mob_id, int32 amount, const char* event, uint32 size, enum mob_ai ai, uint16 spawn_flag)
+#endif // Pandas_FuncDefine_Mob_Once_Spawn
 {
 	mob_data* md = nullptr;
 	int32 count, lv;
@@ -689,7 +732,11 @@ int32 mob_once_spawn(map_session_data* sd, int16 m, int16 x, int16 y, const char
 	for (count = 0; count < amount; count++)
 	{
 		int32 c = (mob_id >= 0) ? mob_id : mob_get_random_id(-mob_id - 1, (battle_config.random_monster_checklv) ? static_cast<e_random_monster_flags>(RMF_DB_RATE|RMF_CHECK_MOB_LV) : RMF_DB_RATE, lv);
+#ifndef Pandas_FuncDefine_Mob_Once_Spawn
 		md = mob_once_spawn_sub((sd) ? sd : nullptr, m, x, y, mobname, c, event, size, ai);
+#else
+		md = mob_once_spawn_sub((sd) ? sd : nullptr, m, x, y, mobname, c, event, size, ai, spawn_flag);
+#endif // Pandas_FuncDefine_Mob_Once_Spawn
 
 		if (!md)
 			continue;
@@ -1053,6 +1100,9 @@ TIMER_FUNC(mob_delayspawn){
 			return 0;
 		}
 		md->spawn_timer = INVALID_TIMER;
+#ifdef Pandas_BattleRecord
+		map_mobiddb(md, npc_get_new_npc_id());
+#endif // Pandas_BattleRecord
 		mob_spawn(md);
 	}
 	return 0;
@@ -1200,6 +1250,62 @@ int32 mob_spawn (mob_data *md)
 		md->spotted_log[i] = 0;
 
 	md->dmglog.clear();
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	md->ucd.aura = {};
+#endif // Pandas_Struct_Unit_CommonData_Aura
+#ifdef Pandas_BattleRecord
+	batrec_reset(md);
+#endif // Pandas_BattleRecord
+
+// =======================================================================
+// 非 md->base_status 中的数据但可以被 setunitdata 修改的属性重置 - 以下开始
+// =======================================================================
+
+#ifdef Pandas_ScriptParams_DamageTaken_Extend
+	if (md->db) {
+		md->damagetaken = md->db->damagetaken;
+	}
+#endif // Pandas_ScriptParams_DamageTaken_Extend
+
+#ifdef Pandas_Struct_Mob_Data_SpecialExperience
+	md->pandas.base_exp = -1;
+	md->pandas.job_exp = -1;
+#endif // Pandas_Struct_Mob_Data_SpecialExperience
+
+#ifdef Pandas_Struct_Mob_Data_Special_SetUnitData
+	if (md->pandas.special_setunitdata) {
+		md->pandas.special_setunitdata->clear();
+	}
+#endif // Pandas_Struct_Mob_Data_Special_SetUnitData
+
+#ifdef Pandas_Fix_SetUnitData_Forget_Reset_After_Monster_Dead
+	status_set_viewdata(md, md->mob_id);
+	md->ud.immune_attack = false;
+	md->ud.canmove_tick = gettick();
+	md->ud.group_id = 0;
+	md->ud.state.ignore_cell_stack_limit = 0;
+
+	if (md->db) {
+		md->level = md->db->lv;
+	}
+
+	if (md->spawn) {
+		safestrncpy(md->name, md->spawn->name, sizeof(md->name));
+
+		if (md->spawn->level > 0)
+			md->level = md->spawn->level;
+
+		if (md->spawn->state.ai)
+			md->special_state.ai = md->spawn->state.ai;
+
+		if (md->spawn->state.size)
+			md->special_state.size = md->spawn->state.size;
+	}
+#endif // Pandas_Fix_SetUnitData_Forget_Reset_After_Monster_Dead
+
+// =======================================================================
+// 非 md->base_status 中的数据但可以被 setunitdata 修改的属性重置 - 到此结束
+// =======================================================================
 
 	if (md->lootitems)
 		memset(md->lootitems, 0, sizeof(*md->lootitems));
@@ -2499,6 +2605,9 @@ static std::shared_ptr<s_item_drop> mob_setdropitem( const std::shared_ptr<s_mob
 	drop->item_data.nameid = mobdrop->nameid;
 	drop->item_data.amount = qty;
 	drop->item_data.identify = itemdb_isidentified( mobdrop->nameid );
+#ifdef Pandas_BattleConfig_Force_Identified
+	drop->item_data.identify = (battle_config.force_identified & 2 ? 1 : drop->item_data.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 	mob_setdropitem_option( drop->item_data, mobdrop );
 	drop->mob_id = mob_id;
 
@@ -2593,6 +2702,9 @@ static void mob_item_drop(mob_data *md, std::shared_ptr<s_item_drop_list>& dlist
 		&& (drop_rate <= sd->state.autoloot || pc_isautolooting(sd, ditem->item_data.nameid))
 		&& (flag ? ((battle_config.homunculus_autoloot ? (battle_config.hom_idle_no_share == 0 || !pc_isidle_hom(sd)) : 0) || (battle_config.mercenary_autoloot ? (battle_config.mer_idle_no_share == 0 || !pc_isidle_mer(sd)) : 0)) :
 			(battle_config.idle_no_autoloot == 0 || DIFF_TICK(last_tick, sd->idletime) < battle_config.idle_no_autoloot));
+#ifdef Pandas_MapFlag_NoAutoLoot
+	test_autoloot = test_autoloot && (sd && sd->m >= 0 && !map_getmapflag(sd->m, MF_NOAUTOLOOT));
+#endif // Pandas_MapFlag_NoAutoLoot
 #ifdef AUTOLOOT_DISTANCE
 		test_autoloot = test_autoloot && sd->m == md->m
 		&& check_distance_blxy(sd, dlist->x, dlist->y, AUTOLOOT_DISTANCE);
@@ -2870,6 +2982,17 @@ int32 mob_getdroprate(block_list *src, std::shared_ptr<s_mob_db> mob, int32 base
 			}
 		}
 	}
+#ifdef Pandas_MapFlag_MobDroprate
+	if( md && !status_has_mode( &md->status, MD_MVP ) ){
+		drop_rate = apply_rate( drop_rate, map_getmapflag_param( md->m, MF_MOBDROPRATE, 1 ) );
+	}
+#endif // Pandas_MapFlag_MobDroprate
+
+#ifdef Pandas_MapFlag_MvpDroprate
+	if( md && status_has_mode( &md->status, MD_MVP ) ){
+		drop_rate = apply_rate( drop_rate, map_getmapflag_param( md->m, MF_MVPDROPRATE, 1 ) );
+	}
+#endif // Pandas_MapFlag_MvpDroprate
 
 #ifdef RENEWAL_DROP
 	drop_rate = apply_rate( drop_rate, drop_modifier );
@@ -2931,7 +3054,11 @@ map_session_data* mob_data::get_mvp_player(map_session_data* first_sd) {
  * Signals death of mob.
  * type&1 -> no drops, type&2 -> no exp
  *------------------------------------------*/
+#ifndef Pandas_FuncDefine_UnitDead_With_ExtendInfo
 int32 mob_dead(mob_data *md, block_list *src, int32 type)
+#else
+int32 mob_dead(mob_data *md, block_list *src, int32 type, uint16 skill_id)
+#endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
 {
 	struct status_data *status;
 	map_session_data *sd = nullptr, *tmpsd[DAMAGELOG_SIZE];
@@ -3152,16 +3279,31 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 					zeny*=rnd()%250;
 			}
 
-			if (map_getmapflag(m, MF_NOBASEEXP) || !md->db->base_exp)
+			if (map_getmapflag(m, MF_NOBASEEXP)
+#ifdef Pandas_ScriptParams_UnitData_Experience
+				|| (!md->db->base_exp && md->pandas.base_exp <= 0) || (md->db->base_exp && !md->pandas.base_exp)
+#else
+				|| !md->db->base_exp
+#endif // Pandas_ScriptParams_UnitData_Experience
+			)
 				base_exp = 0;
 			else {
 				double exp = apply_rate2(md->db->base_exp, per, 1);
+#ifdef Pandas_ScriptParams_UnitData_Experience
+				if (md->pandas.base_exp >= 0)
+					exp = apply_rate2(md->pandas.base_exp, per, 1);
+#endif // Pandas_ScriptParams_UnitData_Experience
 				exp = apply_rate(exp, bonus);
 				exp = apply_rate(exp, map_getmapflag(m, MF_BEXP));
 				base_exp = (t_exp)cap_value(exp, 1, MAX_EXP);
 			}
 
-			if (map_getmapflag(m, MF_NOJOBEXP) || !md->db->job_exp
+			if (map_getmapflag(m, MF_NOJOBEXP)
+#ifdef Pandas_ScriptParams_UnitData_Experience
+				|| (!md->db->job_exp && md->pandas.job_exp <= 0) || (md->db->job_exp && !md->pandas.job_exp)
+#else
+				|| !md->db->job_exp
+#endif // Pandas_ScriptParams_UnitData_Experience
 #ifndef RENEWAL
 				|| entry.flag == MDLF_HOMUN // Homun earned job-exp is always lost.
 #endif
@@ -3169,6 +3311,10 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 				job_exp = 0;
 			else {
 				double exp = apply_rate2(md->db->job_exp, per, 1);
+#ifdef Pandas_ScriptParams_UnitData_Experience
+				if (md->pandas.job_exp >= 0)
+					exp = apply_rate2(md->pandas.job_exp, per, 1);
+#endif // Pandas_ScriptParams_UnitData_Experience
 				exp = apply_rate(exp, bonus);
 				exp = apply_rate(exp, map_getmapflag(m, MF_JEXP));
 				job_exp = (t_exp)cap_value(exp, 1, MAX_EXP);
@@ -3243,6 +3389,10 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 	// Process items looted by the mob
 	if (md->lootitems) {
 		for (i = 0; i < md->lootitem_count; i++) {
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+			if (!npc_express_aide_mobdropitem(md, src, lootlist, md->lootitems[i].item.nameid, 10000, 4))
+				continue;
+#endif // Pandas_NpcExpress_MOBDROPITEM
 			std::shared_ptr<s_item_drop> ditem = mob_setlootitem(md->lootitems[i], md->mob_id);
 			mob_item_drop(md, lootlist, ditem, 1, 10000, homkillonly || merckillonly);
 		}
@@ -3305,6 +3455,11 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 						mobdrop->rate = entry->adj_rate * drop_rate / 10000;
 					}
 
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+					if (!npc_express_aide_mobdropitem(md, src, dlist, mobdrop->nameid, drop_rate, 3))
+						continue;
+#endif // Pandas_NpcExpress_MOBDROPITEM
+
 					std::shared_ptr<s_item_drop> ditem = mob_setdropitem(mobdrop, 1, md->mob_id);
 
 					mob_item_drop(md, dlist, ditem, 0, mobdrop->rate, homkillonly || merckillonly);
@@ -3331,9 +3486,20 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 
 			drop_rate = mob_getdroprate(src, md->db, entry->rate, drop_modifier, md);
 
+#ifdef Pandas_Database_MobItem_FixedRatio
+			// 若严格固定掉率, 那么无视上面的等级惩罚、VIP掉率加成、地图标记掉率修正等计算
+			if (mobdrop_strict_droprate(entry->nameid, md->mob_id))
+				drop_rate = entry->rate;
+#endif // Pandas_Database_MobItem_FixedRatio
+
 			// attempt to drop the item
 			if (rnd() % 10000 >= drop_rate)
 				continue;
+
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+			if (!npc_express_aide_mobdropitem(md, src, dlist, entry->nameid, drop_rate, 1))
+				continue;
+#endif // Pandas_NpcExpress_MOBDROPITEM
 
 			if (first_sd != nullptr && it->type == IT_PETEGG) {
 				pet_create_egg(first_sd, entry->nameid);
@@ -3342,6 +3508,24 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 
 			std::shared_ptr<s_item_drop> ditem = mob_setdropitem(entry, 1, md->mob_id);
 
+#ifdef Pandas_Item_Special_Annouce
+			bool is_special_announced = false;
+
+			if (first_sd != nullptr && ditem != nullptr) {
+				struct item_data* dd = itemdb_search(ditem->item_data.nameid);
+
+				if (ITEM_PROPERTIES_HASFLAG(dd, annouce_mask, ITEM_ANNOUCE_DROP_TO_GROUND)) {
+					char message[128] = { 0 };
+					sprintf(message, msg_txt(nullptr, 541), first_sd->status.name, md->name, it->ename.c_str(), (float)drop_rate / 100);
+					intif_broadcast(message, strlen(message) + 1, BC_DEFAULT);
+					is_special_announced = true;
+				}
+			}
+
+			// 若道具已经遵守 item_properties.yml 的配置被执行了公告,
+			// 那么就无需再次执行 battle_config.rare_drop_announce 指定的根据掉率进行的公告策略
+			if (!is_special_announced)
+#endif // Pandas_Item_Special_Annouce
 			//A Rare Drop Global Announce by Lupus
 			if (first_sd != nullptr && entry->rate <= battle_config.rare_drop_announce) {
 				char message[128];
@@ -3365,6 +3549,9 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 
 				std::shared_ptr<s_item_drop> ditem = mob_setdropitem(mobdrop, 1, md->mob_id);
 
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+				if (npc_express_aide_mobdropitem(md, src, dlist, mobdrop->nameid, mobdrop->rate, 2))
+#endif // Pandas_NpcExpress_MOBDROPITEM
 				mob_item_drop(md, dlist, ditem, 0, mobdrop->rate, homkillonly || merckillonly);
 			}
 		}
@@ -3501,12 +3688,34 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 						continue;
 				}
 
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+				if (!npc_express_aide_mobdropitem(md, src, mvp_sd ? mvp_sd->id : 0, entry->nameid, temp, 5))
+					continue;
+#endif // Pandas_NpcExpress_MOBDROPITEM
+
 				struct item item = {};
 				item.nameid=entry->nameid;
 				item.identify= itemdb_isidentified(item.nameid);
+#ifdef Pandas_BattleConfig_Force_Identified
+				item.identify = (battle_config.force_identified & 4 ? 1 : item.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 				clif_mvp_item(mvp_sd,item.nameid);
 				log_mvp_nameid = item.nameid;
 
+#ifdef Pandas_Item_Special_Annouce
+				bool is_special_announced = false;
+
+				if (ITEM_PROPERTIES_HASFLAG(i_data, annouce_mask, ITEM_ANNOUCE_DROP_TO_INVENTORY_FOR_MVP)) {
+					char message[128] = { 0 };
+					sprintf(message, msg_txt(nullptr, 541), mvp_sd->status.name, md->name, i_data->ename.c_str(), temp / 100.);
+					intif_broadcast(message, strlen(message) + 1, BC_DEFAULT);
+					is_special_announced = true;
+				}
+
+				// 若道具已经遵守 item_properties.yml 的配置被执行了公告,
+				// 那么就无需再次执行 battle_config.rare_drop_announce 指定的根据掉率进行的公告策略
+				if (!is_special_announced)
+#endif // Pandas_Item_Special_Annouce
 				//A Rare MVP Drop Global Announce by Lupus
 				if(temp<=battle_config.rare_drop_announce) {
 					char message[128];
@@ -3607,12 +3816,35 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 			pc_setparam(first_sd, SP_KILLEDRID, md->mob_id);
 			npc_script_event( *first_sd, NPCE_KILLNPC );
 		}
+#ifdef Pandas_BattleConfig_AlwaysTriggerNPCKillEvent
+		if (md->npc_event[0] && first_sd != nullptr &&
+			!md->state.npc_killmonster && battle_config.always_trigger_npc_killevent) {
+			pc_setparam(first_sd, SP_KILLEDGID, md->id);
+			pc_setparam(first_sd, SP_KILLEDRID, md->mob_id);
+			npc_script_event( *first_sd, NPCE_KILLNPC );
+		}
+#endif // Pandas_BattleConfig_AlwaysTriggerNPCKillEvent
+#if defined(Pandas_NpcEvent_KILLMVP) && defined(Pandas_BattleConfig_AlwaysTriggerMVPKillEvent)
+		if (!md->state.npc_killmonster &&
+			(!md->npc_event[0] || battle_config.always_trigger_mvp_killevent)) {
+			npc_event_aide_killmvp(sd, mvp_sd, md);
+		}
+#endif // defined(Pandas_NpcEvent_KILLMVP) && defined(Pandas_BattleConfig_AlwaysTriggerMVPKillEvent)
+
+#ifdef Pandas_NpcExpress_UNIT_KILL
+		if (src && md) {
+			npc_event_aide_unitkill(src, md, skill_id);
+		}
+#endif // Pandas_NpcExpress_UNIT_KILL
 	}
 
 	if(md->deletetimer != INVALID_TIMER) {
 		delete_timer(md->deletetimer,mob_timer_delete);
 		md->deletetimer = INVALID_TIMER;
 	}
+#ifdef Pandas_BattleRecord
+	batrec_reset(md);
+#endif // Pandas_BattleRecord
 	/**
 	 * Only loops if necessary (e.g. a poring would never need to loop)
 	 **/
@@ -3623,6 +3855,12 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 	freeLock.unlock();
 
 	if( !rebirth ) {
+
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+		unit_stop_attack(md);
+		unit_stop_walking(md, USW_FORCE_STOP);
+		unit_skillcastcancel(md, 0);
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 
 		if( pcdb_checkid(md->vd->look[LOOK_BASE])) {//Player mobs are not removed automatically by the client.
 			/* first we set them dead, then we delay the outsight effect */
@@ -3646,7 +3884,11 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 
 	// MvP tomb [GreenBox]
 	if (battle_config.mvp_tomb_enabled && md->spawn->state.boss && map_getmapflag(md->m, MF_NOTOMB) != 1)
+#ifndef Pandas_FuncParams_Mob_MvpTomb_Create
 		mvptomb_create(md, mvp_sd != nullptr ? mvp_sd->status.name : (first_sd != nullptr ? first_sd->status.name : nullptr), time(nullptr));
+#else
+		mvptomb_create(md, mvp_sd != nullptr ? mvp_sd->status.name : (first_sd != nullptr ? first_sd->status.name : nullptr), time(nullptr), mvp_sd != nullptr ? mvp_sd->id : 0);
+#endif // Pandas_FuncParams_Mob_MvpTomb_Create
 
 	if( !rebirth )
 		mob_setdelayspawn(md); //Set respawning.
@@ -3668,6 +3910,9 @@ void mob_revive(mob_data *md, uint32 hp)
 	//We reset the damage log and then set the already lost damage as self damage so players don't get exp for it [Playtester]
 	md->dmglog.clear();
 	mob_log_damage(md, md, static_cast<int64>(md->status.max_hp - hp));
+#ifdef Pandas_BattleRecord
+	batrec_reset(md);
+#endif // Pandas_BattleRecord
 	if (!md->prev){
 		if(map_addblock(md))
 			return;
@@ -3848,6 +4093,9 @@ int32 mob_class_change (mob_data *md, int32 mob_id)
 
 	if (battle_config.monster_class_change_recover) {
 		md->dmglog.clear();
+#ifdef Pandas_BattleRecord
+		batrec_reset(md);
+#endif // Pandas_BattleRecord
 	} else {
 		md->status.hp = md->status.max_hp*hp_rate/100;
 		if(md->status.hp < 1) md->status.hp = 1;
@@ -3997,6 +4245,12 @@ int32 mob_summonslave(mob_data *md2,int32 *value,int32 amount,uint16 skill_id)
 
 	if(mobdb_checkid(value[0]) == 0)
 		return 0;
+
+#ifdef Pandas_MapFlag_NoSlave
+	if (map_getmapflag(md2->m, MF_NOSLAVE))
+		return 0;
+#endif // Pandas_MapFlag_NoSlave
+
 	/**
 	 * Flags this monster is able to summon; saves a worth amount of memory upon deletion
 	 **/
@@ -4282,6 +4536,13 @@ bool mobskill_use(mob_data *md, t_tick tick, int32 event, int64 damage)
 	nullpo_ret(md);
 
 	std::vector<std::shared_ptr<s_mob_skill>> &ms = md->db->skill;
+
+#ifdef Pandas_MapFlag_NoSkill2
+	if (map_getmapflag(md->m, MF_NOSKILL2)) {
+		if ((map_getmapflag_param(md->m, MF_NOSKILL2, 1) & BL_MOB) == BL_MOB)
+			return 0;
+	}
+#endif // Pandas_MapFlag_NoSkill2
 
 	if (!battle_config.mob_skill_rate || md->ud.skilltimer != INVALID_TIMER || ms.empty() || status_has_mode(&md->status,MD_NOCAST))
 		return 0;
@@ -4960,6 +5221,22 @@ s_mob_db::s_mob_db()
 	this->status.adelay = MAX_ASPD_NOPC;
 	this->status.amotion = MAX_ASPD_NOPC/AMOTION_DIVIDER_NOPC;
 	this->status.clientamotion = cap_value(status.amotion, 1, USHRT_MAX);
+#ifdef Pandas_BattleConfig_MobDB_DamageMotion_Min
+	if( battle_config.mob_default_damagemotion ){
+		uint16 speed = battle_config.mob_default_damagemotion;
+
+		if( battle_config.monster_damage_delay_rate != 100 )
+			speed = speed * battle_config.monster_damage_delay_rate / 100;
+
+		this->status.dmotion = speed;
+
+		if( battle_config.mob_default_damagemotion == 1 && battle_config.monster_damage_delay_rate < 100 && speed == 0 ){
+			this->status.dmotion = 1;
+		}
+	}else{
+		this->status.dmotion = 0;
+	}
+#endif // Pandas_BattleConfig_MobDB_DamageMotion_Min
 	this->status.mode = static_cast<e_mode>(MONSTER_TYPE_06);
 	this->vd = {};
 	this->option = {};
@@ -5842,7 +6119,11 @@ static int32 mob_read_sqldb(void)
 		uint32 total_columns = Sql_NumColumns(mmysql_handle);
 		uint64 total_rows = Sql_NumRows(mmysql_handle), rows = 0, count = 0;
 
+#ifndef Pandas_Fix_Use_SQL_DB_Make_Terminal_Show_Null
 		ShowStatus("Loading '" CL_WHITE "%" PRIdPTR CL_RESET "' entries in '" CL_WHITE "%s" CL_RESET "'\n", total_rows, mob_db_name[fi]);
+#else
+		ShowStatus("Loading '" CL_WHITE "%" PRIu64 CL_RESET "' entries in '" CL_WHITE "%s" CL_RESET "'\n", total_rows, mob_db_name[fi]);
+#endif // Pandas_Fix_Use_SQL_DB_Make_Terminal_Show_Null
 
 		// process rows one by one
 		while( SQL_SUCCESS == Sql_NextRow(mmysql_handle) ) {
@@ -6801,6 +7082,10 @@ static void mob_drop_ratio_adjust(void){
 			// Adjust rate with given algorithms
 			int32 rate = mob_drop_adjust( entry->rate, rate_adjust, battle_config.item_drop_mvp_min, battle_config.item_drop_mvp_max );
 
+#ifdef Pandas_Database_MobItem_FixedRatio
+			rate = mobdrop_fixed_droprate_adjust(entry->nameid, mob_id, rate);
+#endif // Pandas_Database_MobItem_FixedRatio
+
 			// calculate and store Max available drop chance of the MVP item
 			if( rate ){
 				item_data* id = itemdb_search( entry->nameid );
@@ -6903,6 +7188,10 @@ static void mob_drop_ratio_adjust(void){
 			}
 
 			rate = mob_drop_adjust( rate, rate_adjust, ratemin, ratemax );
+
+#ifdef Pandas_Database_MobItem_FixedRatio
+			rate = mobdrop_fixed_droprate_adjust(entry->nameid, mob_id, rate);
+#endif // Pandas_Database_MobItem_FixedRatio
 
 			// calculate and store Max available drop chance of the item
 			// but skip treasure chests.
@@ -7223,6 +7512,10 @@ static void mob_load(void)
  * Initialize monster data
  */
 void mob_db_load(bool is_reload){
+#ifdef Pandas_Database_MobItem_FixedRatio
+	mobitem_fixedratio_db.load();
+#endif // Pandas_Database_MobItem_FixedRatio
+
 	mob_load();
 }
 
@@ -7374,6 +7667,9 @@ void do_final_mob(bool is_reload){
 	mob_item_drop_ratio.clear();
 	mob_summon_db.clear();
 	map_drop_db.clear();
+#ifdef Pandas_Database_MobItem_FixedRatio
+	mobitem_fixedratio_db.clear();
+#endif // Pandas_Database_MobItem_FixedRatio
 	if( !is_reload ) {
 		mob_delayed_drops.clear();
 	}

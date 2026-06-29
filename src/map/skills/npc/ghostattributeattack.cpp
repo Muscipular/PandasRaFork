@@ -10,6 +10,6 @@ void SkillGhostAttributeAttack::calculateSkillRatio(const Damage *wd, const bloc
 	base_skillratio += 100 * (skill_lv - 1);
 }
 
-void SkillGhostAttributeAttack::modifyHitRate(int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
+void SkillGhostAttributeAttack::modifyHitRate(pec_int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
 	hit_rate += hit_rate * 20 / 100;
 }

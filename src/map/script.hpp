@@ -168,7 +168,147 @@ struct Script_Config {
 	const char *baselvup_event_name;
 	const char *joblvup_event_name;
 	const char *identify_event_name;
-
+	/* Filter 类型的过滤事件，这些事件可以被 processhalt 中断                    */
+#ifdef Pandas_NpcFilter_IDENTIFY
+	const char* identify_filter_name;
+#endif // Pandas_NpcFilter_IDENTIFY
+#ifdef Pandas_NpcFilter_ENTERCHAT
+	const char* enterchat_filter_name;
+#endif // Pandas_NpcFilter_ENTERCHAT
+#ifdef Pandas_NpcFilter_INSERT_CARD
+	const char* insert_card_filter_name;
+#endif // Pandas_NpcFilter_INSERT_CARD
+#ifdef Pandas_NpcFilter_USE_ITEM
+	const char* use_item_filter_name;
+#endif // Pandas_NpcFilter_USE_ITEM
+#ifdef Pandas_NpcFilter_USE_SKILL
+	const char* use_skill_filter_name;
+#endif // Pandas_NpcFilter_USE_SKILL
+#ifdef Pandas_NpcFilter_ROULETTE_OPEN
+	const char* roulette_open_filter_name;
+#endif // Pandas_NpcFilter_ROULETTE_OPEN
+#ifdef Pandas_NpcFilter_VIEW_EQUIP
+	const char* view_equip_filter_name;
+#endif // Pandas_NpcFilter_VIEW_EQUIP
+#ifdef Pandas_NpcFilter_EQUIP
+	const char* equip_filter_name;
+#endif // Pandas_NpcFilter_EQUIP
+#ifdef Pandas_NpcFilter_UNEQUIP
+	const char* unequip_filter_name;
+#endif // Pandas_NpcFilter_UNEQUIP
+#ifdef Pandas_NpcFilter_CHANGETITLE
+	const char* changetitle_filter_name;
+#endif // Pandas_NpcFilter_CHANGETITLE
+#ifdef Pandas_NpcFilter_SC_START
+	const char* sc_start_filter_name;
+#endif // Pandas_NpcFilter_SC_START
+#ifdef Pandas_NpcFilter_USE_REVIVE_TOKEN
+	const char* use_revive_token_filter_name;
+#endif // Pandas_NpcFilter_USE_REVIVE_TOKEN
+#ifdef Pandas_NpcFilter_ONECLICK_IDENTIFY
+	const char* oneclick_identify_filter_name;
+#endif // Pandas_NpcFilter_ONECLICK_IDENTIFY
+#ifdef Pandas_NpcFilter_GUILDCREATE
+	const char* guildcreate_filter_name;
+#endif // Pandas_NpcFilter_GUILDCREATE
+#ifdef Pandas_NpcFilter_GUILDJOIN
+	const char* guildjoin_filter_name;
+#endif // Pandas_NpcFilter_GUILDJOIN
+#ifdef Pandas_NpcFilter_GUILDLEAVE
+	const char* guildleave_filter_name;
+#endif // Pandas_NpcFilter_GUILDLEAVE
+#ifdef Pandas_NpcFilter_PARTYCREATE
+	const char* partycreate_filter_name;
+#endif // Pandas_NpcFilter_PARTYCREATE
+#ifdef Pandas_NpcFilter_PARTYJOIN
+	const char* partyjoin_filter_name;
+#endif // Pandas_NpcFilter_PARTYJOIN
+#ifdef Pandas_NpcFilter_PARTYLEAVE
+	const char* partyleave_filter_name;
+#endif // Pandas_NpcFilter_PARTYLEAVE
+#ifdef Pandas_NpcFilter_DROPITEM
+	const char* dropitem_filter_name;
+#endif // Pandas_NpcFilter_DROPITEM
+#ifdef Pandas_NpcFilter_CLICKTOMB
+	const char* clicktomb_filter_name;
+#endif // Pandas_NpcFilter_CLICKTOMB
+#ifdef Pandas_NpcFilter_STORAGE_ADD
+	const char* storage_add_filter_name;
+#endif // Pandas_NpcFilter_STORAGE_ADD
+#ifdef Pandas_NpcFilter_STORAGE_DEL
+	const char* storage_del_filter_name;
+#endif // Pandas_NpcFilter_STORAGE_DEL
+#ifdef Pandas_NpcFilter_CART_ADD
+	const char* cart_add_filter_name;
+#endif // Pandas_NpcFilter_CART_ADD
+#ifdef Pandas_NpcFilter_CART_DEL
+	const char* cart_del_filter_name;
+#endif // Pandas_NpcFilter_CART_DEL
+#ifdef Pandas_NpcFilter_FAVORITE_ADD
+	const char* favorite_add_filter_name;
+#endif // Pandas_NpcFilter_FAVORITE_ADD
+#ifdef Pandas_NpcFilter_FAVORITE_DEL
+	const char* favorite_del_filter_name;
+#endif // Pandas_NpcFilter_FAVORITE_DEL
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 4>
+	/* Event  类型的标准事件，这些事件不能被 processhalt 打断                    */
+#ifdef Pandas_NpcEvent_KILLMVP
+	const char* killmvp_event_name;	// NPCE_KILLMVP		// OnPCKillMvpEvent		// 当玩家杀死 MVP 魔物后触发事件
+#endif // Pandas_NpcEvent_KILLMVP
+#ifdef Pandas_NpcEvent_INSERT_CARD
+	const char* insert_card_event_name;	// NPCE_INSERT_CARD	// OnPCInsertCardEvent	// 当玩家成功插入卡片后触发事件
+#endif // Pandas_NpcEvent_INSERT_CARD
+#ifdef Pandas_NpcEvent_USE_ITEM
+	const char* use_item_event_name;	// NPCE_USE_ITEM	// OnPCUseItemEvent	// 当玩家成功使用非装备类道具后触发事件
+#endif // Pandas_NpcEvent_USE_ITEM
+#ifdef Pandas_NpcEvent_USE_SKILL
+	const char* use_skill_event_name;	// NPCE_USE_SKILL	// OnPCUseSkillEvent	// 当玩家成功使用技能后触发事件
+#endif // Pandas_NpcEvent_USE_SKILL
+#ifdef Pandas_NpcEvent_EQUIP
+	const char* equip_event_name;	// NPCE_EQUIP	// OnPCEquipEvent	// 当玩家成功穿戴一件装备时触发事件
+#endif // Pandas_NpcEvent_EQUIP
+#ifdef Pandas_NpcEvent_UNEQUIP
+	const char* unequip_event_name;	// NPCE_UNEQUIP	// OnPCUnequipEvent	// 当玩家成功脱下一件装备时触发事件
+#endif // Pandas_NpcEvent_UNEQUIP
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 10>
+	/* Express 类型的快速事件，这些事件将会被立刻执行, 不进事件队列                */
+#ifdef Pandas_NpcExpress_STATCALC
+	const char* statcalc_express_name;	// NPCE_STATCALC	// OnPCStatCalcEvent	// 当角色能力被重新计算时触发事件
+#endif // Pandas_NpcExpress_STATCALC
+#ifdef Pandas_NpcExpress_SC_END
+	const char* sc_end_express_name;	// NPCX_SC_END	// OnPCBuffEndExpress	// 当玩家成功解除一个状态(Buff)后触发实时事件
+#endif // Pandas_NpcExpress_SC_END
+#ifdef Pandas_NpcExpress_SC_START
+	const char* sc_start_express_name;	// NPCX_SC_START	// OnPCBuffStartExpress	// 当玩家成功获得一个状态(Buff)后触发实时事件
+#endif // Pandas_NpcExpress_SC_START
+#ifdef Pandas_NpcExpress_ENTERMAP
+	const char* entermap_express_name;	// NPCX_ENTERMAP	// OnPCEnterMapExpress	// 当玩家进入或者改变地图时触发实时事件
+#endif // Pandas_NpcExpress_ENTERMAP
+#ifdef Pandas_NpcExpress_PROGRESSABORT
+	const char* progressabort_express_name;	// NPCX_PROGRESSABORT	// OnPCProgressAbortExpress	// 当 progressbar 进度条被打断时触发实时事件
+#endif // Pandas_NpcExpress_PROGRESSABORT
+#ifdef Pandas_NpcExpress_UNIT_KILL
+	const char* unit_kill_express_name;	// NPCX_UNIT_KILL	// OnUnitKillExpress	// 当某个单位被击杀时触发实时事件
+#endif // Pandas_NpcExpress_UNIT_KILL
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+	const char* mobdropitem_express_name;	// NPCX_MOBDROPITEM	// OnMobDropItemExpress	// 当魔物即将掉落道具时触发实时事件
+#endif // Pandas_NpcExpress_MOBDROPITEM
+#ifdef Pandas_NpcExpress_PCATTACK
+	const char* pcattack_express_name;	// NPCX_PCATTACK	// OnPCAttackExpress	// 当玩家发起攻击并即将进行结算时触发实时事件 [聽風]
+#endif // Pandas_NpcExpress_PCATTACK
+#ifdef Pandas_NpcExpress_MER_CALL
+	const char* mer_call_express_name;	// NPCX_MER_CALL	// OnPCMerCallExpress	// 当玩家成功召唤出佣兵时触发实时事件
+#endif // Pandas_NpcExpress_MER_CALL
+#ifdef Pandas_NpcExpress_MER_LEAVE
+	const char* mer_leave_express_name;	// NPCX_MER_LEAVE	// OnPCMerLeaveExpress	// 当佣兵离开玩家时触发实时事件
+#endif // Pandas_NpcExpress_MER_LEAVE
+#ifdef Pandas_NpcExpress_PC_TALK
+	const char* pc_talk_express_name;	// NPCX_PC_TALK	// OnPCTalkExpress	// 当玩家往聊天框发送信息时触发实时事件 [人鱼姬的思念]
+#endif // Pandas_NpcExpress_PC_TALK
+#ifdef Pandas_NpcExpress_PCHARMED
+	const char* pcharmed_express_name;	// NPCX_PCHARMED	// OnPCHarmedExpress	// 当玩家受到伤害并即将进行结算时触发实时事件 [人鱼姬的思念]
+#endif // Pandas_NpcExpress_PCHARMED
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 16>
 	// NPC related
 	const char* ontouch_event_name;
 	const char* ontouch2_event_name;
@@ -323,17 +463,36 @@ struct script_state {
 	struct sleep_data {
 		int32 tick,timer,charid;
 	} sleep;
+#ifndef Pandas_ScriptEngine_MutliStackBackup
 	//For backing up purposes
 	struct script_state *bk_st;
 	int32 bk_npcid;
+#endif // Pandas_ScriptEngine_MutliStackBackup
 	unsigned freeloop : 1;// used by buildin_freeloop
+#ifdef Pandas_ScriptCommand_UnlockCmd
+	unsigned unlockcmd : 1;
+#endif // Pandas_ScriptCommand_UnlockCmd
+#ifdef Pandas_ScriptCommand_GetInventoryList
+	unsigned waiting_premium_storage : 1;
+	unsigned waiting_guild_storage : 1;
+#endif // Pandas_ScriptCommand_GetInventoryList
 	unsigned op2ref : 1;// used by op_2
 	unsigned npc_item_flag : 1;
 	unsigned mes_active : 1;  // Store if invoking character has a NPC dialog box open.
 	unsigned clear_cutin : 1;
 	char* funcname; // Stores the current running function name
 	uint32 id;
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+	bool asyncSleep;
+#endif // Pandas_ScriptCommand_QuerySql_Async
 };
+
+#ifdef Pandas_ScriptEngine_MutliStackBackup
+struct mutli_state {
+	struct script_state* bk_st;
+	int bk_npcid;
+};
+#endif // Pandas_ScriptEngine_MutliStackBackup
 
 struct script_reg {
 	int64 index;
@@ -428,6 +587,63 @@ enum e_questinfo_markcolor : uint8 {
 	QMARK_MAX
 };
 
+#ifdef Pandas_ScriptCommand_GetSkillInfo
+enum skillinfo_types {
+	SKI_CASTTYPE = 1,
+	SKI_NAME,
+	SKI_DESCRIPTION,
+	SKI_MAXLEVEL_IN_SKILLTREE,
+	SKI_SKILLTYPE,
+	SKI_HIT,
+	SKI_TARGETTYPE,
+	SKI_ELEMENT,
+	SKI_DAMAGEFLAGS,
+	SKI_MAXLEVEL,
+	SKI_RANGE,
+	SKI_SPLASHAREA,
+	SKI_HITCOUNT,
+	SKI_CASTTIME,
+	SKI_FIXEDCASTTIME,
+	SKI_AFTERCASTACTDELAY,
+	SKI_AFTERCASTWALKDELAY,
+	SKI_DURATION1,
+	SKI_DURATION2,
+	SKI_CASTTIMEFLAGS,
+	SKI_CASTDELAYFLAGS,
+	SKI_CASTDEFENSEREDUCTION,
+	SKI_FLAGS,
+	SKI_CASTCANCEL,
+	SKI_ACTIVEINSTANCE,
+	SKI_KNOCKBACK,
+	SKI_COOLDOWN,
+	SKI_NONEARNPC_TYPE,
+	SKI_NONEARNPC_ADDITIONALRANGE,
+	SKI_COPYFLAGS_SKILL,
+	SKI_COPYFLAGS_REMOVEREQUIREMENT,
+	SKI_UNIT_ID,
+	SKI_UNIT_ALTERNATEID,
+	SKI_UNIT_LAYOUT,
+	SKI_UNIT_RANGE,
+	SKI_UNIT_INTERVAL,
+	SKI_UNIT_TARGET,
+	SKI_UNIT_FLAG,
+	SKI_REQUIRES_HPCOST,
+	SKI_REQUIRES_SPCOST,
+	SKI_REQUIRES_MAXHPTRIGGER,
+	SKI_REQUIRES_HPRATECOST,
+	SKI_REQUIRES_SPRATECOST,
+	SKI_REQUIRES_ZENYCOST,
+	SKI_REQUIRES_WEAPON,
+	SKI_REQUIRES_AMMO,
+	SKI_REQUIRES_AMMOAMOUNT,
+	SKI_REQUIRES_STATE,
+	SKI_REQUIRES_STATUS,
+	SKI_REQUIRES_SPHERECOST,
+	SKI_REQUIRES_ITEMCOST,
+	SKI_REQUIRES_EQUIPMENT,
+};
+#endif // Pandas_ScriptCommand_GetSkillInfo
+
 #ifndef WIN32
 	// These are declared in wingdi.h
 	/* Font Weights */
@@ -501,6 +717,18 @@ enum unitdata_mobtypes {
 	UMOB_RES,
 	UMOB_MRES,
 	UMOB_DAMAGETAKEN,
+#ifdef Pandas_ScriptParams_DamageTaken_From_Database
+	UMOB_DAMAGETAKEN_DB,
+#endif // Pandas_ScriptParams_DamageTaken_From_Database
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	UMOB_AURA,
+#endif // Pandas_Struct_Unit_CommonData_Aura
+#ifdef Pandas_ScriptParams_UnitData_Experience
+	UMOB_MOBBASEEXP,
+	UMOB_MOBBASEEXP_DB,
+	UMOB_MOBJOBEXP,
+	UMOB_MOBJOBEXP_DB,
+#endif // Pandas_ScriptParams_UnitData_Experience
 };
 
 enum unitdata_homuntypes {
@@ -545,6 +773,9 @@ enum unitdata_homuntypes {
 	UHOM_DMOTION,
 	UHOM_TARGETID,
 	UHOM_GROUP_ID,
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	UHOM_AURA,
+#endif // Pandas_Struct_Unit_CommonData_Aura
 };
 
 enum unitdata_pettypes {
@@ -586,6 +817,9 @@ enum unitdata_pettypes {
 	UPET_ADELAY,
 	UPET_DMOTION,
 	UPET_GROUP_ID,
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	UPET_AURA,
+#endif // Pandas_Struct_Unit_CommonData_Aura
 };
 
 enum unitdata_merctypes {
@@ -627,6 +861,9 @@ enum unitdata_merctypes {
 	UMER_DMOTION,
 	UMER_TARGETID,
 	UMER_GROUP_ID,
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	UMER_AURA,
+#endif // Pandas_Struct_Unit_CommonData_Aura
 };
 
 enum unitdata_elemtypes {
@@ -670,6 +907,9 @@ enum unitdata_elemtypes {
 	UELE_DMOTION,
 	UELE_TARGETID,
 	UELE_GROUP_ID,
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	UELE_AURA,
+#endif // Pandas_Struct_Unit_CommonData_Aura
 };
 
 enum unitdata_npctypes {
@@ -719,6 +959,9 @@ enum unitdata_npctypes {
 	UNPC_BODY2,
 	UNPC_DEADSIT,
 	UNPC_GROUP_ID,
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	UNPC_AURA,
+#endif // Pandas_Struct_Unit_CommonData_Aura
 };
 
 enum navigation_service {
@@ -2290,6 +2533,36 @@ public:
 	uint64 parseBodyNode(const ryml::NodeRef& node) override;
 };
 
+#ifdef Pandas_ScriptCommand_SelfDeletion
+enum e_selfdeletion_flag : uint16 {
+	SELFDEL_CANCEL     = 0x00,
+	SELFDEL_NOW        = 0x01,
+	SELFDEL_WAITFREE   = 0x02
+};
+#endif // Pandas_ScriptCommand_SelfDeletion
+
+#ifdef Pandas_ScriptCommand_GetInventoryList
+enum e_inventory_query_flag : uint32 {
+	INV_ID           = 0x0001,
+	INV_IDX          = 0x0002,
+	INV_AMOUNT       = 0x0004,
+	INV_EQUIP        = 0x0008,
+	INV_REFINE       = 0x0010,
+	INV_IDENTIFY     = 0x0020,
+	INV_ATTRIBUTE    = 0x0040,
+	INV_CARD         = 0x0080,
+	INV_EXPIRE       = 0x0100,
+	INV_BOUND        = 0x0200,
+	INV_ENCHANTGRADE = 0x0400,
+	INV_OPTION       = 0x0800,
+	INV_TRADABLE     = 0x1000,
+	INV_FAVORITE     = 0x2000,
+	INV_UID          = 0x4000,
+	INV_EQUIPSWITCH  = 0x8000,
+	INV_ALL          = 0xFFFF
+};
+#endif // Pandas_ScriptCommand_GetInventoryList
+
 /**
  * used to generate quick script_array entries
  **/
@@ -2321,6 +2594,9 @@ TIMER_FUNC(run_script_timer);
 void script_stop_sleeptimers(int32 id);
 struct linkdb_node *script_erase_sleepdb(struct linkdb_node *n);
 void script_attach_state(struct script_state* st);
+#ifdef Pandas_ScriptEngine_MutliStackBackup
+void script_detach_state(struct script_state* st, bool dequeue_event);
+#endif // Pandas_ScriptEngine_MutliStackBackup
 void script_detach_rid(struct script_state* st);
 void run_script_main(struct script_state *st);
 
@@ -2375,5 +2651,10 @@ void script_generic_ui_array_expand(uint32 plus);
 uint32 *script_array_cpy_list(struct script_array *sa);
 
 bool script_check_RegistryVariableLength(int32 pType, const char *val, size_t* vlen);
+
+#ifdef Pandas_ScriptCommand_SelfDeletion
+TIMER_FUNC(selfdeletion_timer);
+void selfdeletion_exec_endtalk(struct script_state* st);
+#endif // Pandas_ScriptCommand_SelfDeletion
 
 #endif /* SCRIPT_HPP */

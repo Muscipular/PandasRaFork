@@ -69,6 +69,9 @@ enum e_pet_catch_flag : uint8 {
 	PET_CATCH_NORMAL = 0,
 	PET_CATCH_UNIVERSAL_NO_BOSS, // The catch attempt is universal (ignoring MD_STATUS_IMMUNE/Boss)
 	PET_CATCH_UNIVERSAL_ALL,
+#ifdef Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
+	PET_CATCH_MULTI_TARGET,
+#endif // Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
 	PET_CATCH_MAX
 };
 
@@ -183,6 +186,9 @@ extern std::unordered_map<std::string, std::shared_ptr<s_pet_autobonus_wrapper>>
 
 struct pet_data : public block_list {
 	struct unit_data ud;
+#ifdef Pandas_Struct_Unit_CommonData
+	struct s_unit_common_data ucd;
+#endif // Pandas_Struct_Unit_CommonData
 	struct view_data vd;
 	struct s_pet pet;
 	struct status_data status;

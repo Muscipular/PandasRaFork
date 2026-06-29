@@ -24,6 +24,12 @@
 
 #include "achievement.hpp"
 #include "battle.hpp"
+#ifdef Pandas_Aura_Mechanism
+#include "aura.hpp"
+#endif // Pandas_Aura_Mechanism
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "buyingstore.hpp"
 #include "channel.hpp"
 #include "chat.hpp"
@@ -44,6 +50,9 @@
 #include "mapreg.hpp"
 #include "mercenary.hpp"
 #include "mob.hpp"
+#ifdef Pandas_Database_MobItem_FixedRatio
+#include "mobdrop.hpp"
+#endif // Pandas_Database_MobItem_FixedRatio
 #include "npc.hpp"
 #include "party.hpp"
 #include "pc.hpp"
@@ -252,6 +261,7 @@ ACMD_FUNC(send)
 {
 	int32 len=0,type;
 	// read message type as hex number (without the 0x)
+#ifndef Pandas_CodeAnalysis_Suggestion
 	if(!message || !*message ||
 			!((sscanf(message, "len %8x", &type)==1 && (len=1))
 			|| sscanf(message, "%8x", &type)==1) )
@@ -261,6 +271,21 @@ ACMD_FUNC(send)
 			clif_displaymessage(fd, msg_txt(sd,i));
 		return -1;
 	}
+#else
+	if (!message || !*message ||
+		!(sscanf(message, "len %8x", &type) == 1 || sscanf(message, "%8x", &type) == 1))
+	{
+		int32 i;
+		for (i = 900; i <= 903; ++i)
+			clif_displaymessage(fd, msg_txt(sd, i));
+		return -1;
+	}
+
+	// 由于 rAthena 默认的写法在一个 if 语句里面使用了 = 赋值符号
+	// 这样的行为会被 LGTM 判定为有潜在错误风险, 为了修正此警告, 我们将 len 的赋值单独拆开
+	if (sscanf(message, "len %8x", &type) == 1)
+		len = 1;
+#endif // Pandas_CodeAnalysis_Suggestion
 
 #define PARSE_ERROR(error,p) \
 	{\
@@ -2944,7 +2969,7 @@ ACMD_FUNC(param)
 
 	uint8 stat;
 	int32 value = 0;
-	uint16 new_value, status, max_status;
+	pec_uint16 new_value, status, max_status;
 
 	memset(atcmd_output, '\0', sizeof(atcmd_output));
 
@@ -2972,7 +2997,7 @@ ACMD_FUNC(param)
 	}
 
 	if( pc_has_permission( sd, PC_PERM_BYPASS_MAX_STAT ) ){
-		max_status = SHRT_MAX;
+		max_status = PEC_SHRT_MAX;
 	}else{
 		max_status = pc_maxparameter( sd, static_cast<e_params>( stat ) );
 	}
@@ -3023,7 +3048,7 @@ ACMD_FUNC(stat_all)
 
 	int32 value = 0;
 	uint8 count, i;
-	uint16 status[PARAM_MAX] = {}, max_status[PARAM_MAX] = {};
+	pec_uint16 status[PARAM_MAX] = {}, max_status[PARAM_MAX] = {};
 
 	for (i = PARAM_STR; i < PARAM_POW; i++)
 		status[i] = pc_getstat(sd, SP_STR + i);
@@ -3031,11 +3056,11 @@ ACMD_FUNC(stat_all)
 	if (!message || !*message || sscanf(message, "%11d", &value) < 1 || value == 0) {
 		for (i = PARAM_STR; i < PARAM_POW; i++)
 			max_status[i] = pc_maxparameter(sd, static_cast<e_params>(i));
-		value = SHRT_MAX;
+		value = PEC_SHRT_MAX;
 	} else {
 		if (pc_has_permission(sd, PC_PERM_BYPASS_MAX_STAT)) {
 			for (i = PARAM_STR; i < PARAM_POW; i++)
-				max_status[i] = SHRT_MAX;
+				max_status[i] = PEC_SHRT_MAX;
 		} else {
 			for (i = PARAM_STR; i < PARAM_POW; i++)
 				max_status[i] = pc_maxparameter(sd, static_cast<e_params>(i));
@@ -3044,7 +3069,7 @@ ACMD_FUNC(stat_all)
 	
 	count = 0;
 	for (i = PARAM_STR; i < PARAM_POW; i++) {
-		int16 new_value;
+		pec_int16 new_value;
 
 		if (value > 0 && status[i] + value >= max_status[i])
 			new_value = max_status[i];
@@ -3096,7 +3121,7 @@ ACMD_FUNC(trait_all) {
 
 	int32 value = 0;
 	uint8 i;
-	uint16 status[PARAM_MAX] = {}, max_status[PARAM_MAX] = {};
+	pec_uint16 status[PARAM_MAX] = {}, max_status[PARAM_MAX] = {};
 
 	for (i = PARAM_POW; i < PARAM_MAX; i++)
 		status[i] = pc_getstat(sd, SP_POW + i - PARAM_POW);
@@ -3104,11 +3129,11 @@ ACMD_FUNC(trait_all) {
 	if (!message || !*message || sscanf(message, "%11d", &value) < 1 || value == 0) {
 		for (i = PARAM_POW; i < PARAM_MAX; i++)
 			max_status[i] = pc_maxparameter(sd, static_cast<e_params>(i));
-		value = SHRT_MAX;
+		value = PEC_SHRT_MAX;
 	} else {
 		if (pc_has_permission(sd, PC_PERM_BYPASS_MAX_STAT)) {
 			for (i = PARAM_POW; i < PARAM_MAX; i++)
-				max_status[i] = SHRT_MAX;
+				max_status[i] = PEC_SHRT_MAX;
 		} else {
 			for (i = PARAM_POW; i < PARAM_MAX; i++)
 				max_status[i] = pc_maxparameter(sd, static_cast<e_params>(i));
@@ -3118,7 +3143,7 @@ ACMD_FUNC(trait_all) {
 	uint8 count = 0;
 
 	for (i = PARAM_POW; i < PARAM_MAX; i++) {
-		int16 new_value;
+		pec_int16 new_value;
 
 		if (value > 0 && status[i] + value >= max_status[i])
 			new_value = max_status[i];
@@ -4196,6 +4221,9 @@ ACMD_FUNC(recallall)
 			if (pl_sd->m >= 0 && map_getmapflag(pl_sd->m, MF_NOWARP) && !pc_has_permission(sd, PC_PERM_WARP_ANYWHERE))
 				count++;
 			else {
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+				pc_mark_multitransfer(pl_sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 				if( pc_setpos(pl_sd, sd->mapindex, sd->x, sd->y, CLR_RESPAWN) == SETPOS_AUTOTRADE ){
 					count++;
 				}
@@ -4255,6 +4283,9 @@ ACMD_FUNC(guildrecall)
 			if (pl_sd->m >= 0 && map_getmapflag(pl_sd->m, MF_NOWARP) && !pc_has_permission(sd, PC_PERM_WARP_ANYWHERE))
 				count++;
 			else{
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+				pc_mark_multitransfer(pl_sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 				if( pc_setpos(pl_sd, sd->mapindex, sd->x, sd->y, CLR_RESPAWN) == SETPOS_AUTOTRADE ){
 					count++;
 				}
@@ -4317,6 +4348,9 @@ ACMD_FUNC(partyrecall)
 			if (pl_sd->m >= 0 && map_getmapflag(pl_sd->m, MF_NOWARP) && !pc_has_permission(sd, PC_PERM_WARP_ANYWHERE))
 				count++;
 			else{
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+				pc_mark_multitransfer(pl_sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 				if( pc_setpos(pl_sd, sd->mapindex, sd->x, sd->y, CLR_RESPAWN) == SETPOS_AUTOTRADE ){
 					count++;
 				}
@@ -4339,6 +4373,18 @@ ACMD_FUNC(partyrecall)
  *
  *------------------------------------------*/
 void atcommand_doload();
+
+#ifdef Pandas_FuncLogic_ATCOMMAND_RELOAD
+static void atcommand_status_recalc_pc() {
+	map_session_data *sd = nullptr;
+	s_mapiterator *iter = mapit_geteachpc();
+
+	for (sd = (map_session_data*)mapit_first(iter); mapit_exists(iter); sd = (map_session_data*)mapit_next(iter))
+		status_calc_pc(sd, SCO_FORCE);
+
+	mapit_free(iter);
+}
+#endif // Pandas_FuncLogic_ATCOMMAND_RELOAD
 
 ACMD_FUNC(reloadcashdb){
 	nullpo_retr(-1, sd);
@@ -4397,6 +4443,16 @@ ACMD_FUNC(reloadscript){
 		bg_queue_leave(pl_sd);
 	}
 	mapit_free(iter);
+
+#ifdef Pandas_BattleRecord
+	block_list* bl = nullptr;
+	iter = mapit_geteachiddb();
+	for (bl = reinterpret_cast<block_list*>(mapit_first(iter)); mapit_exists(iter); bl = reinterpret_cast<block_list*>(mapit_next(iter))) {
+		if (bl->type == BL_NPC || bl->type == BL_MOB)
+			batrec_free(bl);
+	}
+	mapit_free(iter);
+#endif // Pandas_BattleRecord
 
 	for (auto &bg : bg_queues) {
 		for (auto &bg_sd : bg->teama_members)
@@ -4473,6 +4529,9 @@ ACMD_FUNC(reloadbattleconf){
 	{	// Exp or Drop rates changed.
 		mob_reload(); //Needed as well so rate changes take effect.
 	}
+#ifdef Pandas_FuncLogic_ATCOMMAND_RELOAD
+	atcommand_status_recalc_pc();
+#endif // Pandas_FuncLogic_ATCOMMAND_RELOAD
 	clif_displaymessage(fd, msg_txt(sd,255)); // Battle configuration has been reloaded.
 
 	return 0;
@@ -4854,6 +4913,55 @@ ACMD_FUNC(mapinfo) {
 	if (map_getmapflag(m_id, MF_NIGHTENABLED))
 		strcat(atcmd_output, "  Displays Night |");
 	clif_displaymessage(fd, atcmd_output);
+
+#ifdef Pandas_Mapflags
+	std::string atcmd_output_str(msg_txt_cn(sd, 100)); // 熊猫地图标记:
+	for (const auto& it : mapflag_config) {
+		size_t args_count = it.second.args.size();
+
+		if (map_getmapflag(m_id, it.first)) {
+			if (args_count == 0) {
+				std::string temp_str = atcmd_output_str + " " + it.second.name + " |";
+
+				if (temp_str.size() < CHAT_SIZE_MAX - 1) {
+					atcmd_output_str = temp_str;
+				} else {
+					strncpy(atcmd_output, atcmd_output_str.c_str(), sizeof(atcmd_output) - 1);
+					atcmd_output[sizeof(atcmd_output) - 1] = '\0';
+					clif_displaymessage(fd, atcmd_output);
+					atcmd_output_str.clear();
+					atcmd_output_str = std::string(it.second.name) + " |";
+				}
+			} else {
+				std::string args_mes;
+				for (size_t i = 0; i < args_count; i++) {
+					const char* unit = it.second.args[i].unit;
+					if (unit == nullptr) {
+						unit = "";
+					}
+					args_mes += std::to_string(map_getmapflag_param(m_id, it.first, i + 1)) + unit;
+					if (i != args_count - 1) {
+						args_mes += ", ";
+					}
+				}
+
+				std::string temp_str = atcmd_output_str + " " + it.second.name + ": " + args_mes + " |";
+				if (temp_str.size() < CHAT_SIZE_MAX - 1) {
+					atcmd_output_str = temp_str;
+				} else {
+					strncpy(atcmd_output, atcmd_output_str.c_str(), sizeof(atcmd_output) - 1);
+					atcmd_output[sizeof(atcmd_output) - 1] = '\0';
+					clif_displaymessage(fd, atcmd_output);
+					atcmd_output_str.clear();
+					atcmd_output_str = std::string(it.second.name) + ": " + args_mes + " |";
+				}
+			}
+		}
+	}
+	strncpy(atcmd_output, atcmd_output_str.c_str(), sizeof(atcmd_output) - 1);
+	atcmd_output[sizeof(atcmd_output) - 1] = '\0';
+	clif_displaymessage(fd, atcmd_output);
+#endif // Pandas_Mapflags
 
 	strcpy(atcmd_output,msg_txt(sd,1050)); // Other Flags:
 	if (map_getmapflag(m_id, MF_NOBRANCH))
@@ -5385,7 +5493,9 @@ ACMD_FUNC(unloadnpc)
 
 	npc_unload_duplicates(nd);
 	npc_unload(nd,true);
+#ifndef Pandas_Speedup_Unloadnpc_Without_Refactoring_ScriptEvent
 	npc_read_event_script();
+#endif // Pandas_Speedup_Unloadnpc_Without_Refactoring_ScriptEvent
 	clif_displaymessage(fd, msg_txt(sd,112)); // Npc Disabled.
 	return 0;
 }
@@ -6824,7 +6934,25 @@ ACMD_FUNC(autotrade) {
 		return -1;
 	}
 
+#ifndef Pandas_Struct_Autotrade_Extend
 	sd->state.autotrade = 1;
+#else
+	sd->state.autotrade = AUTOTRADE_ENABLED;
+	if (sd->vender_id)
+		sd->state.autotrade |= AUTOTRADE_VENDING;
+	else if (sd->buyer_id)
+		sd->state.autotrade |= AUTOTRADE_BUYINGSTORE;
+#endif // Pandas_Struct_Autotrade_Extend
+#ifdef Pandas_Struct_Map_Session_Data_Autotrade_Configure
+	// 这里需要立刻填充相关的备份信息, 避免在完成指令下线后,
+	// 服务器没还重启的情况下, 角色就被 recall 导致朝向等数据无法恢复
+	sd->pandas.at_dir = sd->ud.dir;
+	sd->pandas.at_head_dir = sd->head_dir;
+	sd->pandas.at_sit = pc_issit(sd);
+#endif // Pandas_Struct_Map_Session_Data_Autotrade_Configure
+#ifdef Pandas_Player_Suspend_System
+	suspend_deactive(sd, false);
+#endif // Pandas_Player_Suspend_System
 	if (battle_config.autotrade_monsterignore)
 		sd->state.block_action |= PCBLOCK_IMMUNE;
 
@@ -8162,6 +8290,12 @@ ACMD_FUNC(mobinfo)
 
 				int32 droprate = mob_getdroprate( sd, mob, entry->rate, drop_modifier );
 
+#ifdef Pandas_Database_MobItem_FixedRatio
+				// 若严格固定掉率, 那么无视上面的等级惩罚、VIP掉率加成等计算
+				if (mobdrop_strict_droprate(id->nameid, mob->id))
+					droprate = entry->rate;
+#endif // Pandas_Database_MobItem_FixedRatio
+
 				sprintf(atcmd_output2, " - %s  %02.02f%%", item_db.create_item_link( id ).c_str(), (float)droprate / 100);
 				strcat(atcmd_output, atcmd_output2);
 				if (++j % 3 == 0) {
@@ -8725,6 +8859,13 @@ ACMD_FUNC(whodrops)
 #endif
 				if (pc_isvip(sd)) // Display item rate increase for VIP
 					dropchance += (dropchance * battle_config.vip_drop_increase) / 100;
+
+#ifdef Pandas_Database_MobItem_FixedRatio
+				// 若严格固定掉率, 那么无视上面的等级惩罚、VIP掉率加成等计算
+				if (mobdrop_strict_droprate(id->nameid, id->mob[j].id))
+					dropchance = id->mob[j].chance;
+#endif // Pandas_Database_MobItem_FixedRatio
+
 				sprintf(atcmd_output, "- %s (%d): %02.02f%%", mob->jname.c_str(), id->mob[j].id, dropchance/100.);
 				clif_displaymessage(fd, atcmd_output);
 			}
@@ -9078,7 +9219,13 @@ ACMD_FUNC(mapflag) {
 		clif_displaymessage(sd->fd,msg_txt(sd,1311)); // Enabled Mapflags in this map:
 		clif_displaymessage(sd->fd,"----------------------------------");
 		for( i = MF_MIN; i < MF_MAX; i++ ){
-			union u_mapflag_args args = {};
+			pds_mapflag_args args = {};
+
+#ifdef Pandas_MapFlag_NoCapture
+			if (i == MF_NOCAPTURE) {
+				continue;
+			}
+#endif // Pandas_MapFlag_NoCapture
 
 			if( map_getmapflag_name(static_cast<e_mapflag>(i), flag_name) && map_getmapflag_sub( sd->m, static_cast<e_mapflag>(i), &args ) ){
 				clif_displaymessage(sd->fd, flag_name);
@@ -9107,6 +9254,14 @@ ACMD_FUNC(mapflag) {
 												MF_BATTLEGROUND,
 												MF_SKILL_DAMAGE,
 												MF_SKILL_DURATION };
+
+#ifdef Pandas_Mapflags
+			for (const auto& it : mapflag_config) {
+				if (it.second.block_atcmd) {
+					disabled_mf.insert(disabled_mf.begin(), it.first);
+				}
+			}
+#endif // Pandas_Mapflags
 
 			if (flag > 0 && util::vector_exists(disabled_mf, mapflag)) {
 				sprintf(atcmd_output,"[ @mapflag ] %s flag cannot be enabled as it requires unique values.", flag_name);
@@ -10591,6 +10746,11 @@ ACMD_FUNC(fontcolor)
 	return 0;
 }
 
+#ifndef Pandas_Message_Reorganize
+// 使用 langtype 指令并不是非常完美的语言切换解决方案
+// 因为他只能替代一部分的服务端回显信息, 客户端部分要做到完美支持多语言也非常麻烦
+// 熊猫模拟器暂时将该指令移除掉, 避免使用该指令带来一些小白玩家的疑惑
+// 若您觉得该指令有用, 欢迎在 Github 中提交 Issue 进行讨论 [Sola丶小克]
 ACMD_FUNC(langtype)
 {
 	char langstr[8];
@@ -10625,6 +10785,7 @@ ACMD_FUNC(langtype)
 	}
 	return -1;
 }
+#endif // Pandas_Message_Reorganize
 
 ACMD_FUNC(vip) {
 #ifdef VIP_ENABLE
@@ -10941,14 +11102,14 @@ ACMD_FUNC(clonestat) {
 	}
 	else {
 		uint8 i;
-		int16 max_status[PARAM_MAX] = {};
+		pec_int16 max_status[PARAM_MAX] = {};
 
 		pc_resetstate(sd);
 		if (pc_has_permission(sd, PC_PERM_BYPASS_STAT_ONCLONE)) {
 			for (i = PARAM_STR; i < PARAM_MAX; i++) {
 				if (i >= PARAM_POW && !pc_is_trait_job(sd->class_))
 					continue;
-				max_status[i] = SHRT_MAX;
+				max_status[i] = PEC_SHRT_MAX;
 			}
 		} else {
 			for (i = PARAM_STR; i < PARAM_MAX; i++) {
@@ -11466,6 +11627,276 @@ ACMD_FUNC(macrochecker){
 
 #include <custom/atcommand.inc>
 
+#ifdef Pandas_AtCommand_RecallMap
+/* ===========================================================
+ * 指令: recallmap
+ * 描述: 召唤当前(或指定)地图的玩家来到身边
+ * 用法: @recallmap {mapname}
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(recallmap) {
+	map_session_data* pl_sd = nullptr;
+	struct s_mapiterator* iter = nullptr;
+	int count = 0;
+	char mapname[MAP_NAME_LENGTH_EXT] = { 0 };
+	unsigned short mapindex = 0;
+
+	nullpo_retr(-1, sd);
+
+	// 若使用指令时没有携带任何参数, 那么认为需要召唤 GM 所在地图的玩家
+	if (message == nullptr || message[0] == '\0') {
+		mapindex = sd->mapindex;
+	}
+
+	// 若携带了一个参数且成功被 sscanf 匹配, 那么修改需要召唤的玩家地图
+	if (sscanf(message, "%15s[^\n]", mapname) == 1) {
+		mapindex = mapindex_name2id(mapname);
+		if (mapindex == 0)
+		{
+			sprintf(atcmd_output, msg_txt(sd, 1157), mapname); // Unknown map '%s'.
+			clif_displaymessage(fd, atcmd_output);
+			return -1;
+		}
+	}
+
+	if (sd->m >= 0 && map_getmapflag(sd->m, MF_NOWARPTO) && !pc_has_permission(sd, PC_PERM_WARP_ANYWHERE)) {
+		clif_displaymessage(fd, msg_txt(sd, 1032)); // You are not authorized to warp someone to your current map.
+		return -1;
+	}
+
+	iter = mapit_getallusers();
+	for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter))
+	{
+		if (sd->status.account_id != pl_sd->status.account_id && pc_get_group_level(sd) >= pc_get_group_level(pl_sd))
+		{
+			if (map_getmapdata(pl_sd->m)->index != mapindex)
+				continue;
+			if (pl_sd->m == sd->m && pl_sd->x == sd->x && pl_sd->y == sd->y)
+				continue; // Don't waste time warping the character to the same place.
+			if (pl_sd->m >= 0 && map_getmapflag(pl_sd->m, MF_NOWARP) && !pc_has_permission(sd, PC_PERM_WARP_ANYWHERE))
+				count++;
+			else {
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+				pc_mark_multitransfer(pl_sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
+				if (pc_setpos(pl_sd, sd->mapindex, sd->x, sd->y, CLR_RESPAWN) == SETPOS_AUTOTRADE) {
+					count++;
+				}
+			}
+		}
+	}
+	mapit_free(iter);
+
+	clif_displaymessage(fd, msg_txt_cn(sd, 1)); // 已召唤指定地图的全部玩家!
+	if (count) {
+		sprintf(atcmd_output, msg_txt(sd, 1033), count); // Because you are not authorized to warp from some maps, %d player(s) have not been recalled.
+		clif_displaymessage(fd, atcmd_output);
+	}
+
+	return 0;
+}
+#endif // Pandas_AtCommand_RecallMap
+
+#ifdef Pandas_AtCommand_Crashtest
+/* ===========================================================
+ * 指令: crashtest
+ * 描述: 执行崩溃测试, 在比较严格的环境上故意触发地图服务器崩溃
+ * 用法: @crashtest
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(crashtest) {
+	map_session_data* pl_sd = nullptr;
+	struct s_mapiterator* iter = nullptr;
+	int count = 0;
+
+	iter = mapit_getallusers();
+	for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter)) {
+		count++;
+	}
+	mapit_free(iter);
+
+	// 若当前服务器只有一个人在线, 那么触发地图服务器崩溃
+	if (count <= 1) {
+		ShowWarning("Map-Server will trigger an crash for testing the crashrpt system.\n");
+
+		int* crashint = nullptr;
+		// 2015年08月17日是 rAthenaCN 第一个版本的发布日期
+		// 在迭代到 v1.8.0 版本后开源, 并更名为 Pandas 熊猫模拟器并重写相关功能
+		*crashint = 20150817;
+	} else {
+		if (sd) {
+			// Currently we have %d online player. For safety reasons, we does not trigger a crash.
+			char mes[CHAT_SIZE_MAX] = { 0 };
+			sprintf(mes, msg_txt_cn(sd, 2), count);
+			clif_displaymessage(fd, mes);
+		}
+	}
+
+	return 0;
+}
+#endif // Pandas_AtCommand_Crashtest
+
+#ifdef Pandas_AtCommand_Title
+/* ===========================================================
+ * 指令: title
+ * 描述: 给角色设置一个指定的称号ID
+ * 用法: @title <称号ID>
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(title) {
+	nullpo_retr(-1, sd);
+
+#if PACKETVER < 20150513
+	clif_displaymessage(fd, msg_txt_cn(sd, 16));		// 很抱歉, 您的客户端版本低于 20150513, 无法使用该指令.
+	return -1;
+#else
+	int32 input_title_id = 0;
+
+	if (!message || !*message || sscanf(message, "%11d", &input_title_id) < 1) {
+		clif_displaymessage(fd, msg_txt_cn(sd, 12));	// 使用方法: @title <称号ID, 若设为 0 则取消称号>
+		clif_displaymessage(fd, msg_txt_cn(sd, 13));	// 称号ID与称号的对照表位于客户端: data\luafiles514\lua files\datainfo\titletable.lub
+		return -1;
+	}
+
+	if (input_title_id < 0)
+		input_title_id = 0;
+
+	uint32 title_id = static_cast<uint32>(input_title_id);
+
+	npc_change_title_event(sd, title_id, 2);
+	clif_displaymessage(fd, msg_txt_cn(sd, title_id ? 14 : 15));
+
+	return 0;
+#endif
+}
+#endif // Pandas_AtCommand_Title
+
+#ifdef Pandas_AtCommand_Suspend
+/* ===========================================================
+ * 指令: suspend
+ * 描述: 使角色进入离线挂机模式, 维持当前的全部状态 (朝向, 站立与否)
+ * 用法: @suspend
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(suspend) {
+	nullpo_retr(-1, sd);
+
+	if (pc_isdead(sd)) {
+		clif_displaymessage(fd, msg_txt_cn(sd, 81)); // You cannot enter suspend mode when dead.
+		return -1;
+	}
+
+	if (map_flag_vs2(sd->m)) {
+		clif_displaymessage(fd, msg_txt_cn(sd, 82)); // You cannot enter suspend mode on this map.
+		return -1;
+	}
+
+	suspend_active(sd, SUSPEND_MODE_OFFLINE);
+	return 0;
+}
+#endif // Pandas_AtCommand_Suspend
+
+#ifdef Pandas_AtCommand_AFK
+/* ===========================================================
+ * 指令: afk
+ * 描述: 使角色进入离开模式, 角色将会坐到地上并自动使用 AFK 头饰
+ * 用法: @afk
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(afk) {
+	nullpo_retr(-1, sd);
+
+	if (pc_isdead(sd)) {
+		clif_displaymessage(fd, msg_txt_cn(sd, 83)); // You cannot enter afk mode when dead.
+		return -1;
+	}
+
+	if (map_flag_vs2(sd->m)) {
+		clif_displaymessage(fd, msg_txt_cn(sd, 84)); // You cannot enter afk mode on this map.
+		return -1;
+	}
+
+	suspend_active(sd, SUSPEND_MODE_AFK);
+	return 0;
+}
+#endif // Pandas_AtCommand_AFK
+
+#ifdef Pandas_AtCommand_Aura
+/* ===========================================================
+ * 指令: aura
+ * 描述: 激活指定的光环组合
+ * 用法: @aura
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(aura) {
+	int32 input_aura_id = 0;
+
+	if (!message || !*message || sscanf(message, "%11d", &input_aura_id) < 1) {
+		clif_displaymessage(fd, msg_txt_cn(sd, 101));	// 使用方法: @aura <光环编号, 若设为 0 则取消光环>
+		clif_displaymessage(fd, msg_txt_cn(sd, 102));	// 光环编号定义在 db/aura_db.yml 的光环组合数据库中, 更多信息请查看数据库顶部的注释.
+		return -1;
+	}
+
+	if (input_aura_id < 0)
+		input_aura_id = 0;
+
+	uint32 aura_id = static_cast<uint32>(input_aura_id);
+
+	if (aura_id && !aura_search(aura_id)) {
+		clif_displaymessage(fd, msg_txt_cn(sd, 105));	// 很抱歉, 指定的光环编号无效, 请检查后重新输入.
+		return -1;
+	}
+
+	aura_make_effective(sd, aura_id);
+	clif_displaymessage(fd, msg_txt_cn(sd, aura_id ? 103 : 104));
+
+	return 0;
+}
+#endif // Pandas_AtCommand_Aura
+
+#ifdef Pandas_AtCommand_ReloadLaphineDB
+/* ===========================================================
+ * 指令: reloadlaphinedb
+ * 描述: 重新加载 Laphine 数据库 (laphine_*.yml)
+ * 用法: @reloadlaphinedb
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(reloadlaphinedb) {
+	laphine_synthesis_db.reload();
+	laphine_upgrade_db.reload();
+	clif_displaymessage(fd, msg_txt_cn(sd, 142)); // Laphine database has been reloaded.
+
+	return 0;
+}
+#endif // Pandas_AtCommand_ReloadLaphineDB
+
+#ifdef Pandas_AtCommand_ReloadAuraDB
+/* ===========================================================
+ * 指令: reloadauradb
+ * 描述: 重新加载光环数据库 (aura_db.yml)
+ * 用法: @reloadauradb
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(reloadauradb) {
+	aura_reload();
+
+	struct block_list* bl = nullptr;
+	struct s_mapiterator* iter = mapit_geteachiddb();
+
+	for (bl = (struct block_list*)mapit_first(iter); mapit_exists(iter); bl = (struct block_list*)mapit_next(iter)) {
+		aura_effects_refill(bl);
+		aura_refresh_client(bl);
+	}
+
+	mapit_free(iter);
+
+	clif_displaymessage(fd, msg_txt_cn(sd, 106)); // Aura database has been reloaded.
+	return 0;
+}
+#endif // Pandas_AtCommand_ReloadAuraDB
+
+// PYHELP - ATCMD - INSERT POINT - <Section 2>
+
 /**
  * Fills the reference of available commands in atcommand DBMap
  **/
@@ -11480,6 +11911,31 @@ void atcommand_basecommands(void) {
 	 * TODO: List all commands that causing crash
 	 **/
 	AtCommandInfo atcommand_base[] = {
+#ifdef Pandas_AtCommand_RecallMap
+		ACMD_DEF(recallmap),			// 召唤当前(或指定)地图的玩家来到身边 [Sola丶小克]
+#endif // Pandas_AtCommand_RecallMap
+#ifdef Pandas_AtCommand_Crashtest
+		ACMD_DEF(crashtest),			// 执行崩溃测试, 在比较严格的环境上故意触发地图服务器崩溃 [Sola丶小克]
+#endif // Pandas_AtCommand_Crashtest
+#ifdef Pandas_AtCommand_Title
+		ACMD_DEF(title),				// 给角色设置一个指定的称号ID [Sola丶小克]
+#endif // Pandas_AtCommand_Title
+#ifdef Pandas_AtCommand_Suspend
+		ACMD_DEF(suspend),				// 使角色进入离线挂机模式 [Sola丶小克]
+#endif // Pandas_AtCommand_Suspend
+#ifdef Pandas_AtCommand_AFK
+		ACMD_DEF(afk),					// 使角色进入离开模式 [Sola丶小克]
+#endif // Pandas_AtCommand_AFK
+#ifdef Pandas_AtCommand_Aura
+		ACMD_DEF(aura),					// 激活指定的光环组合 [Sola丶小克]
+#endif // Pandas_AtCommand_Aura
+#ifdef Pandas_AtCommand_ReloadLaphineDB
+		ACMD_DEF(reloadlaphinedb),		// 重新加载 Laphine 数据库 [Sola丶小克]
+#endif // Pandas_AtCommand_ReloadLaphineDB
+#ifdef Pandas_AtCommand_ReloadAuraDB
+		ACMD_DEF(reloadauradb),			// 重新加载光环数据库 [Sola丶小克]
+#endif // Pandas_AtCommand_ReloadAuraDB
+		// PYHELP - ATCMD - INSERT POINT - <Section 3>
 #include <custom/atcommand_def.inc>
 		ACMD_DEF(mapmove),
 		ACMD_DEF(where),
@@ -11768,7 +12224,9 @@ void atcommand_basecommands(void) {
 		ACMD_DEF(join),
 		ACMD_DEFR(channel,ATCMD_NOSCRIPT),
 		ACMD_DEF(fontcolor),
+#ifndef Pandas_Message_Reorganize
 		ACMD_DEF(langtype),
+#endif // Pandas_Message_Reorganize
 		ACMD_DEF(vip),
 		ACMD_DEF(showrate),
 		ACMD_DEF(fullstrip),
@@ -11908,6 +12366,33 @@ static void atcommand_get_suggestions(map_session_data* sd, const char *name, bo
 	dbi_destroy(atcommand_iter);
 }
 
+#ifdef Pandas_BattleConfig_AtCmd_No_Permission
+static bool atcommand_noperm_halt(int32 fd, map_session_data* sd, const char* command, int32 fromtype, bool is_atcommand)
+{
+	nullpo_retr(false, sd);
+
+	if (fd < 0 || fromtype != 1)
+		return false;
+
+	AtCommandInfo* info = get_atcommandinfo_byname(atcommand_alias_db.checkAlias(command + 1));
+
+	if (info == nullptr)
+		return false;
+
+	if ((is_atcommand && info->at_groups[sd->group->index] == 0) ||
+		(!is_atcommand && info->char_groups[sd->group->index] == 0)) {
+		if (battle_config.atcmd_no_permission == 1) {
+			clif_displaymessage(fd, msg_txt_cn(sd, 0));
+			return true;
+		}
+		if (battle_config.atcmd_no_permission == 2)
+			return true;
+	}
+
+	return false;
+}
+#endif // Pandas_BattleConfig_AtCmd_No_Permission
+
 /**
  * Executes an at-command
  * @param fd
@@ -11981,6 +12466,11 @@ bool is_atcommand(const int32 fd, map_session_data* sd, const char* message, int
 				if (n < 1)
 					return false; // No command found. Display as normal message.
 
+#ifdef Pandas_BattleConfig_AtCmd_No_Permission
+				if (atcommand_noperm_halt(fd, sd, command, type, is_atcommand))
+					return true;
+#endif // Pandas_BattleConfig_AtCmd_No_Permission
+
 				info = get_atcommandinfo_byname(atcommand_alias_db.checkAlias(command + 1));
 				if (!info || info->char_groups[sd->group->index] == 0)  // If we can't use or doesn't exist: don't even display the command failed message
 					return false;
@@ -11993,6 +12483,11 @@ bool is_atcommand(const int32 fd, map_session_data* sd, const char* message, int
 
 		ssd = map_nick2sd(charname,true);
 		if (ssd == nullptr) {
+#ifdef Pandas_BattleConfig_AtCmd_No_Permission
+			if (atcommand_noperm_halt(fd, sd, command, type, is_atcommand))
+				return true;
+#endif // Pandas_BattleConfig_AtCmd_No_Permission
+
 			sprintf(output, msg_txt(sd,1389), command); // %s failed. Player not found.
 			clif_displaymessage(fd, output);
 			return true;
@@ -12062,6 +12557,11 @@ bool is_atcommand(const int32 fd, map_session_data* sd, const char* message, int
 			&& ((is_atcommand && sd && sd->state.autotrade) || (ssd && ssd->state.autotrade)))
 			return true;
 	}
+
+#ifdef Pandas_BattleConfig_AtCmd_No_Permission
+	if (atcommand_noperm_halt(fd, sd, command, type, is_atcommand))
+		return true;
+#endif // Pandas_BattleConfig_AtCmd_No_Permission
 
 	// type == 1 : player invoked
 	if (type == 1) {

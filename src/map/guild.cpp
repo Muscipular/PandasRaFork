@@ -29,6 +29,7 @@
 #include "mob.hpp"
 #include "npc.hpp"
 #include "pc.hpp"
+#include "script.hpp"
 #include "storage.hpp"
 #include "trade.hpp"
 
@@ -709,6 +710,13 @@ bool guild_create( map_session_data& sd, const char* name ){
 		return false;
 	}
 
+#ifdef Pandas_NpcFilter_GUILDCREATE
+	pc_setregstr(&sd, add_str("@create_guild_name$"), name);
+	if (npc_script_filter(&sd, NPCF_GUILDCREATE)) {
+		return false;
+	}
+#endif // Pandas_NpcFilter_GUILDCREATE
+
 	struct guild_member m = {};
 
 	guild_makemember( m, sd );
@@ -1057,6 +1065,23 @@ bool guild_reply_invite( map_session_data& sd, int32 guild_id, int32 flag ){
 		return true;
 	}
 
+#ifdef Pandas_NpcFilter_GUILDJOIN
+	if (tsd) {
+		pc_setreg(&sd, add_str("@join_guild_id"), guild_id);
+		pc_setreg(&sd, add_str("@join_guild_aid"), tsd->status.account_id);
+		if (npc_script_filter(&sd, NPCF_GUILDJOIN)) {
+			sd.guild_invite = 0;
+			sd.guild_invite_account = 0;
+
+			if (tsd != nullptr) {
+				clif_guild_inviteack(*tsd, 1);
+			}
+
+			return false;
+		}
+	}
+#endif // Pandas_NpcFilter_GUILDJOIN
+
 	struct guild_member m = {};
 
 	guild_makemember( m, sd );
@@ -1133,6 +1158,13 @@ int32 guild_member_added(int32 guild_id,uint32 account_id,uint32 char_id,int32 f
 	sd->guild = g;
 	//Packets which were sent in the previous 'guild_sent' implementation.
 	clif_guild_belonginfo( *sd );
+
+#ifdef Pandas_Fix_GuildEmblem_Update
+	// 当玩家加入一个有图标的公会时,
+	// 能立刻让自己可以看见自己的公会图标 [Sola丶小克]
+	clif_guild_emblem(*sd, g->guild);
+#endif // Pandas_Fix_GuildEmblem_Update
+
 	clif_guild_notice( *sd );
 
 	// Send emblem update to self and people around
@@ -1177,6 +1209,16 @@ bool guild_leave( map_session_data& sd, int32 guild_id, uint32 account_id, uint3
 	if( sd.status.account_id != account_id || sd.status.char_id != char_id || sd.status.guild_id != guild_id || map_flag_gvg2( sd.m ) ){
 		return false;
 	}
+
+#ifdef Pandas_NpcFilter_GUILDLEAVE
+	pc_setreg(&sd, add_str("@left_guild_id"), sd.guild->guild.guild_id);
+	pc_setregstr(&sd, add_str("@left_guild_name$"), sd.guild->guild.name);
+	pc_setreg(&sd, add_str("@left_guild_kick"), 0);
+	pc_setreg(&sd, add_str("@left_guild_aid"), sd.status.account_id);
+	if (npc_script_filter(&sd, NPCF_GUILDLEAVE)) {
+		return false;
+	}
+#endif // Pandas_NpcFilter_GUILDLEAVE
 
 	guild_trade_bound_cancel(sd);
 
@@ -1224,6 +1266,18 @@ bool guild_expulsion( map_session_data& sd, int32 guild_id, uint32 account_id, u
 	if( i < 0 ){
 		return false;
 	}
+
+#ifdef Pandas_NpcFilter_GUILDLEAVE
+	if (g) {
+		pc_setreg(&sd, add_str("@left_guild_id"), g->guild.guild_id);
+		pc_setregstr(&sd, add_str("@left_guild_name$"), g->guild.name);
+		pc_setreg(&sd, add_str("@left_guild_kick"), 1);
+		pc_setreg(&sd, add_str("@left_guild_aid"), g->guild.member[i].account_id);
+		if (npc_script_filter(&sd, NPCF_GUILDLEAVE)) {
+			return false;
+		}
+	}
+#endif // Pandas_NpcFilter_GUILDLEAVE
 
 	// Can't expel the guild leader
 	if( strcmp( g->guild.member[i].name, g->guild.master ) == 0 ){

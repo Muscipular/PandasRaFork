@@ -231,9 +231,15 @@ int8 buyingstore_create( map_session_data* sd, int32 zenylimit, unsigned char re
 
 	Sql_EscapeString( mmysql_handle, message_sql, sd->message );
 
+#ifndef Pandas_Struct_Autotrade_Extend
 	if( Sql_Query( mmysql_handle, "INSERT INTO `%s`(`id`, `account_id`, `char_id`, `sex`, `map`, `x`, `y`, `title`, `limit`, `autotrade`, `body_direction`, `head_direction`, `sit`) "
 		"VALUES( %d, %d, %d, '%c', '%s', %d, %d, '%s', %d, %d, '%d', '%d', '%d' );",
 		buyingstores_table, sd->buyer_id, sd->status.account_id, sd->status.char_id, sd->status.sex == 0 ? 'F' : 'M', map_getmapdata(sd->m)->name, sd->x, sd->y, message_sql, sd->buyingstore.zenylimit, sd->state.autotrade, at ? at->dir : sd->ud.dir, at ? at->head_dir : sd->head_dir, at ? at->sit : pc_issit(sd) ) != SQL_SUCCESS ){
+#else
+	if( Sql_Query( mmysql_handle, "INSERT INTO `%s`(`id`, `account_id`, `char_id`, `sex`, `map`, `x`, `y`, `title`, `limit`, `autotrade`, `body_direction`, `head_direction`, `sit`) "
+		"VALUES( %d, %d, %d, '%c', '%s', %d, %d, '%s', %d, %d, '%d', '%d', '%d' );",
+		buyingstores_table, sd->buyer_id, sd->status.account_id, sd->status.char_id, sd->status.sex == 0 ? 'F' : 'M', map_getmapdata(sd->m)->name, sd->x, sd->y, message_sql, sd->buyingstore.zenylimit, sd->state.autotrade & ~AUTOTRADE_BUYINGSTORE, at ? at->dir : sd->ud.dir, at ? at->head_dir : sd->head_dir, at ? at->sit : pc_issit(sd) ) != SQL_SUCCESS ){
+#endif // Pandas_Struct_Autotrade_Extend
 		Sql_ShowDebug(mmysql_handle);
 	}
 
@@ -615,6 +621,9 @@ void buyingstore_reopen( map_session_data* sd ){
 		}
 
 		sd->state.autotrade = 1;
+#ifdef Pandas_Struct_Autotrade_Extend
+		sd->state.autotrade |= AUTOTRADE_BUYINGSTORE;
+#endif // Pandas_Struct_Autotrade_Extend
 
 		// Make sure abort all NPCs
 		npc_event_dequeue(sd);
@@ -662,7 +671,12 @@ void do_init_buyingstore_autotrade( void ) {
 		if (Sql_Query(mmysql_handle,
 			"SELECT `id`, `account_id`, `char_id`, `sex`, `title`, `limit`, `body_direction`, `head_direction`, `sit` "
 			"FROM `%s` "
+		#ifndef Pandas_Struct_Autotrade_Extend
 			"WHERE `autotrade` = 1 AND `limit` > 0 AND (SELECT COUNT(`buyingstore_id`) FROM `%s` WHERE `buyingstore_id` = `id`) > 0 "
+		#else
+			// 兼容旧版本曾写入 5 的离线收购数据；新建记录会剥离 AUTOTRADE_BUYINGSTORE 位。
+			"WHERE `autotrade` in (1,5) AND `limit` > 0 AND (SELECT COUNT(`buyingstore_id`) FROM `%s` WHERE `buyingstore_id` = `id`) > 0 "
+		#endif // Pandas_Struct_Autotrade_Extend
 			"ORDER BY `id`;",
 			buyingstores_table, buyingstore_items_table ) != SQL_SUCCESS )
 		{
@@ -693,6 +707,19 @@ void do_init_buyingstore_autotrade( void ) {
 				Sql_GetData(mmysql_handle, 8, &data, nullptr); at->sit = atoi(data);
 				at->count = 0;
 
+#ifdef Pandas_Player_Suspend_System
+				// 账号已在线则跳过，避免角色已经被挂起系统拉上线导致冲突。
+				if (map_id2sd(at->account_id) != nullptr) {
+					aFree(at);
+					continue;
+				}
+
+				if (chrif_search(at->account_id) != nullptr) {
+					aFree(at);
+					continue;
+				}
+#endif // Pandas_Player_Suspend_System
+
 				if (battle_config.feature_autotrade_direction >= 0)
 					at->dir = battle_config.feature_autotrade_direction;
 				if (battle_config.feature_autotrade_head_direction >= 0)
@@ -704,13 +731,23 @@ void do_init_buyingstore_autotrade( void ) {
 				CREATE(at->sd, map_session_data, 1); // TODO: Dont use Memory Manager allocation anymore and rely on the C++ container
 				new (at->sd) map_session_data();
 				pc_setnewpc(at->sd, at->account_id, at->char_id, 0, gettick(), at->sex, 0);
+				#ifndef Pandas_Struct_Autotrade_Extend
 				at->sd->state.autotrade = 1|4;
+				#else
+				at->sd->state.autotrade = AUTOTRADE_ENABLED | AUTOTRADE_BUYINGSTORE;
+				#endif // Pandas_Struct_Autotrade_Extend
 				if (battle_config.autotrade_monsterignore)
 					at->sd->state.block_action |= PCBLOCK_IMMUNE;
 				else
 					at->sd->state.block_action &= ~PCBLOCK_IMMUNE;
 				chrif_authreq(at->sd, true);
 				uidb_put(buyingstore_autotrader_db, at->char_id, at);
+
+#ifdef Pandas_Struct_Map_Session_Data_Autotrade_Configure
+				at->sd->pandas.at_dir = at->dir;
+				at->sd->pandas.at_head_dir = at->head_dir;
+				at->sd->pandas.at_sit = at->sit;
+#endif // Pandas_Struct_Map_Session_Data_Autotrade_Configure
 			}
 			Sql_FreeResult(mmysql_handle);
 			
@@ -765,6 +802,19 @@ void do_init_buyingstore_autotrade( void ) {
 		Sql_ShowDebug(mmysql_handle);
 	}
 }
+
+#ifdef Pandas_Fix_When_Relogin_Then_Clear_Autotrade_Store
+void buyingstore_autotrader_cleardb(map_session_data* sd)
+{
+	nullpo_retv(sd);
+
+	if (Sql_Query(mmysql_handle,
+		"DELETE FROM `%s` WHERE `account_id` = %d;",
+		buyingstores_table, sd->status.account_id) != SQL_SUCCESS) {
+		Sql_ShowDebug(mmysql_handle);
+	}
+}
+#endif // Pandas_Fix_When_Relogin_Then_Clear_Autotrade_Store
 
 /**
  * Remove an autotrader's data

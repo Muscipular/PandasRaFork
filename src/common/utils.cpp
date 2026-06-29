@@ -86,6 +86,10 @@ void ShowDump(const void* buffer, size_t length)
 
 static char* checkpath(char *path, const char *srcpath)
 {	// just make sure the char*path is not const
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!path || !srcpath)
+		return path;
+#endif // Pandas_Crashfix_FunctionParams_Verify
 	char *p=path;
 	if(nullptr!=path && nullptr!=srcpath)
 	while(*srcpath) {
@@ -183,6 +187,7 @@ int32 check_filepath(const char* filepath)
 {
 	struct stat s;
 
+#ifndef Pandas_Support_UTF8BOM_Files
 	if (stat(filepath, &s) == 0) {
 		if (s.st_mode&S_IFDIR)
 			return 1;
@@ -191,6 +196,24 @@ int32 check_filepath(const char* filepath)
 		else
 			return 3;
 	}
+#else
+	std::string strFilepath(filepath);
+
+	// 在 Linux 环境下并且终端编码为 UTF8 的情况下,
+	// 将需要检查的文件路径直接转码成 utf8 编码再进行读取, 否则会找不到文件
+	if (PandasUtf8::systemEncoding == PandasUtf8::PANDAS_ENCODING_UTF8) {
+		strFilepath = PandasUtf8::consoleConvert(filepath);
+	}
+
+	if (stat(strFilepath.c_str(), &s) == 0) {
+		if (s.st_mode & S_IFDIR)
+			return 1;
+		else if (s.st_mode & S_IFREG)
+			return 2;
+		else
+			return 3;
+	}
+#endif // Pandas_Support_UTF8BOM_Files
 
 	return 0;
 }

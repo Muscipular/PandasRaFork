@@ -157,6 +157,13 @@ int32 party_create( map_session_data& sd, char *name, int32 item, int32 item2 ){
 		return -2;
 	}
 
+#ifdef Pandas_NpcFilter_PARTYCREATE
+	pc_setregstr(&sd, add_str("@create_party_name$"), name);
+	if (npc_script_filter(&sd, NPCF_PARTYCREATE)) {
+		return 0;
+	}
+#endif // Pandas_NpcFilter_PARTYCREATE
+
 	sd.party_creating = true;
 	party_fill_member( leader, sd, 1 );
 	intif_create_party(&leader,name,item,item2);
@@ -584,6 +591,20 @@ bool party_reply_invite( map_session_data& sd, int32 party_id, int32 flag ){
 		return false;
 	}
 
+#ifdef Pandas_NpcFilter_PARTYJOIN
+	map_session_data* pre_tsd = map_id2sd( sd.party_invite_account );
+	if (flag == 1 && pre_tsd) {
+		pc_setreg(&sd, add_str("@join_party_id"), party_id);
+		pc_setreg(&sd, add_str("@join_party_aid"), pre_tsd->status.account_id);
+		if (npc_script_filter(&sd, NPCF_PARTYJOIN)) {
+			sd.party_invite = 0;
+			sd.party_invite_account = 0;
+			clif_party_invite_reply(*pre_tsd, sd.status.name, PARTY_REPLY_REJECTED);
+			return false;
+		}
+	}
+#endif // Pandas_NpcFilter_PARTYJOIN
+
 	// accepted and allowed
 	if( flag == 1 && !sd.party_creating && !sd.party_joining ) {
 		struct party_data* party = party_search( party_id );
@@ -725,6 +746,18 @@ bool party_removemember( map_session_data& sd, uint32 account_id, const char* na
 	if( i == MAX_PARTY )
 		return false; // no such char in party
 
+#ifdef Pandas_NpcFilter_PARTYLEAVE
+	if (p) {
+		pc_setreg(&sd, add_str("@left_party_id"), p->party.party_id);
+		pc_setregstr(&sd, add_str("@left_party_name$"), p->party.name);
+		pc_setreg(&sd, add_str("@left_party_kick"), 1);
+		pc_setreg(&sd, add_str("@left_party_aid"), p->party.member[i].account_id);
+		if (npc_script_filter(&sd, NPCF_PARTYLEAVE)) {
+			return false;
+		}
+	}
+#endif // Pandas_NpcFilter_PARTYLEAVE
+
 	party_trade_bound_cancel(sd);
 	intif_party_leave(p->party.party_id,account_id,p->party.member[i].char_id,p->party.member[i].name,PARTY_MEMBER_WITHDRAW_EXPEL);
 
@@ -789,6 +822,18 @@ bool party_leave( map_session_data& sd, bool showMessage ){
 	if( i == MAX_PARTY ){
 		return false;
 	}
+
+#ifdef Pandas_NpcFilter_PARTYLEAVE
+	if (p) {
+		pc_setreg(&sd, add_str("@left_party_id"), p->party.party_id);
+		pc_setregstr(&sd, add_str("@left_party_name$"), p->party.name);
+		pc_setreg(&sd, add_str("@left_party_kick"), 0);
+		pc_setreg(&sd, add_str("@left_party_aid"), sd.status.account_id);
+		if (npc_script_filter(&sd, NPCF_PARTYLEAVE)) {
+			return false;
+		}
+	}
+#endif // Pandas_NpcFilter_PARTYLEAVE
 
 	party_trade_bound_cancel( sd );
 	intif_party_leave( p->party.party_id, sd.status.account_id, sd.status.char_id, sd.status.name, PARTY_MEMBER_WITHDRAW_LEAVE );
@@ -1002,6 +1047,9 @@ int32 party_changeleader(map_session_data *sd, map_session_data *tsd, struct par
 	// Update info.
 	intif_party_leaderchange(p->party.party_id,p->party.member[tmi].account_id,p->party.member[tmi].char_id);
 	clif_party_info( *p );
+#ifdef Pandas_Fix_Dungeon_Command_Status_Refresh
+	instance_refresh_status(p->instance_id);
+#endif // Pandas_Fix_Dungeon_Command_Status_Refresh
 
 	return 1;
 }

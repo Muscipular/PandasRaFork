@@ -23,6 +23,9 @@
 
 #include "achievement.hpp"
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "battleground.hpp"
 #include "chrif.hpp"
 #include "clif.hpp"
@@ -32,6 +35,9 @@
 #include "homunculus.hpp"
 #include "intif.hpp"
 #include "itemdb.hpp"
+#ifdef Pandas_Item_Properties
+#include "itemprops.hpp"
+#endif // Pandas_Item_Properties
 #include "log.hpp"
 #include "map.hpp"
 #include "mercenary.hpp"
@@ -361,6 +367,15 @@ int32 skill_get_range2(const block_list* bl, uint16 skill_id, uint16 skill_lv, b
 
 	if( !range && bl->type != BL_PC )
 		return 9; // Enable non players to use self skills on others. [Skotlex]
+
+#ifdef Pandas_Bonus2_bAddSkillRange
+	if (bl->type == BL_PC) {
+		TBL_PC *sd = (TBL_PC*)bl;
+		range += pc_addskillrange_bonus(sd, skill_id);
+		range = cap_value(range, 0, 14);
+	}
+#endif // Pandas_Bonus2_bAddSkillRange
+
 	return range;
 }
 
@@ -771,8 +786,26 @@ int32 skill_calc_heal(block_list *src, block_list *target, uint16 skill_id, uint
 	if ( sd && status_get_hplus(src) > 0 && skill_id != SOA_TALISMAN_OF_PROTECTION)
 		hp += hp * status_get_hplus(src) / 100;
 
+#ifdef Pandas_MapFlag_MaxHeal
+	// 限制治愈技能单次施法的最大治愈量
+	if( src && map_getmapflag( src->m, MF_MAXHEAL ) ){
+		int32 result = (heal) ? max(1, hp) : hp;
+		int32 val = map_getmapflag_param( src->m, MF_MAXHEAL, 1 );
+		return (val > 0) ? cap_value(result, 0, val) : result;
+	}
+#endif // Pandas_MapFlag_MaxHeal
+
 	return (heal) ? max(1, hp) : hp;
 #else
+
+#ifdef Pandas_MapFlag_MaxHeal
+	// 限制治愈技能单次施法的最大治愈量
+	if( src && map_getmapflag( src->m, MF_MAXHEAL ) ){
+		int32 val = map_getmapflag_param( src->m, MF_MAXHEAL, 1 );
+		return (val > 0) ? cap_value(hp, 0, val) : hp;
+	}
+#endif // Pandas_MapFlag_MaxHeal
+
 	return hp;
 #endif
 }
@@ -864,6 +897,13 @@ bool skill_isNotOk( uint16 skill_id, map_session_data& sd ){
 
 	if( sd.sc.getSCE(SC_ALL_RIDING) )
 		return true; //You can't use skills while in the new mounts (The client doesn't let you, this is to make cheat-safe)
+
+#ifdef Pandas_MapFlag_NoSkill2
+	if (map_getmapflag(sd.m, MF_NOSKILL2)) {
+		if ((map_getmapflag_param(sd.m, MF_NOSKILL2, 1) & BL_PC) == BL_PC)
+			return true;
+	}
+#endif // Pandas_MapFlag_NoSkill2
 
 	switch (skill_id) {
 		case AL_WARP:
@@ -991,6 +1031,13 @@ bool skill_isNotOk_hom(homun_data *hd, uint16 skill_id, uint16 skill_lv)
 {
 	nullpo_retr(true, hd);
 
+#ifdef Pandas_MapFlag_NoSkill2
+	if (map_getmapflag(hd->m, MF_NOSKILL2)) {
+		if ((map_getmapflag_param(hd->m, MF_NOSKILL2, 1) & BL_HOM) == BL_HOM)
+			return false;
+	}
+#endif // Pandas_MapFlag_NoSkill2
+
 	int8 spiritball = skill_get_spiritball(skill_id, skill_lv);
 	map_session_data* sd = hd->master;
 	status_change* sc = status_get_sc(hd);
@@ -1109,6 +1156,13 @@ bool skill_isNotOk_hom(homun_data *hd, uint16 skill_id, uint16 skill_lv)
  * @return true: Skill cannot be used, false: otherwise
  */
 bool skill_isNotOk_mercenary( uint16 skill_id, s_mercenary_data& md ){
+#ifdef Pandas_MapFlag_NoSkill2
+	if (map_getmapflag(md.m, MF_NOSKILL2)) {
+		if ((map_getmapflag_param(md.m, MF_NOSKILL2, 1) & BL_MER) == BL_MER)
+			return false;
+	}
+#endif // Pandas_MapFlag_NoSkill2
+
 	map_session_data* sd = md.master;
 
 	if (sd == nullptr)
@@ -2881,6 +2935,167 @@ int64 skill_attack (int32 attack_type, block_list* src, block_list *dsrc, block_
 
 	damage = dmg.damage + dmg.damage2;
 
+#ifdef Pandas_Bonus4_bStatusAddDamage
+	if (sd && src->type == BL_PC && tsc) {
+		for (auto& it : sd->status_damage_adjust) {
+			if (!tsc->getSCE(it.type))
+				continue;
+			if (!(((it.battle_flag) & dmg.flag) & BF_WEAPONMASK &&
+				((it.battle_flag) & dmg.flag) & BF_RANGEMASK &&
+				((it.battle_flag) & dmg.flag) & BF_SKILLMASK))
+				continue;
+			if (rnd() % 10000 < it.rate)
+				dmg.damage = rathena::util::safe_addition_cap(dmg.damage, (int64)it.val, INT64_MAX);
+		}
+		damage = dmg.damage + dmg.damage2;
+	}
+#endif // Pandas_Bonus4_bStatusAddDamage
+
+#ifdef Pandas_Bonus4_bStatusAddDamageRate
+	if (sd && src->type == BL_PC && tsc) {
+		int total_rate = 100;
+		for (auto& it : sd->status_damagerate_adjust) {
+			if (!tsc->getSCE(it.type))
+				continue;
+			if (!(((it.battle_flag) & dmg.flag) & BF_WEAPONMASK &&
+				((it.battle_flag) & dmg.flag) & BF_RANGEMASK &&
+				((it.battle_flag) & dmg.flag) & BF_SKILLMASK))
+				continue;
+			if (rnd() % 10000 < it.rate)
+				total_rate = rathena::util::safe_addition_cap(total_rate, it.val, INT_MAX);
+		}
+		if (total_rate != 100) {
+			total_rate = cap_value(total_rate, -100, INT_MAX);
+			dmg.damage = (int64)(dmg.damage / 100.0 * total_rate);
+		}
+		damage = dmg.damage + dmg.damage2;
+	}
+#endif // Pandas_Bonus4_bStatusAddDamageRate
+
+#ifdef Pandas_Bonus3_bFinalAddRace
+	if (sd && tstatus) {
+		int total_rate = 100;
+		for (auto& it : sd->finaladd_race[tstatus->race]) {
+			if (!it.damage_rate)
+				continue;
+			if (!(((it.battle_flag) & dmg.flag) & BF_WEAPONMASK &&
+				((it.battle_flag) & dmg.flag) & BF_RANGEMASK &&
+				((it.battle_flag) & dmg.flag) & BF_SKILLMASK))
+				continue;
+			total_rate = rathena::util::safe_addition_cap(total_rate, it.damage_rate, INT_MAX);
+		}
+		for (auto& it : sd->finaladd_race[RC_ALL]) {
+			if (!it.damage_rate)
+				continue;
+			if (!(((it.battle_flag) & dmg.flag) & BF_WEAPONMASK &&
+				((it.battle_flag) & dmg.flag) & BF_RANGEMASK &&
+				((it.battle_flag) & dmg.flag) & BF_SKILLMASK))
+				continue;
+			total_rate = rathena::util::safe_addition_cap(total_rate, it.damage_rate, INT_MAX);
+		}
+		if (total_rate != 100) {
+			total_rate = cap_value(total_rate, -100, INT_MAX);
+			dmg.damage = (int64)(dmg.damage / 100.0 * total_rate);
+		}
+		damage = dmg.damage + dmg.damage2;
+	}
+#endif // Pandas_Bonus3_bFinalAddRace
+
+#ifdef Pandas_Bonus3_bFinalAddClass
+	if (sd && tstatus) {
+		int total_rate = 100;
+		for (auto& it : sd->finaladd_class[tstatus->class_]) {
+			if (!it.damage_rate)
+				continue;
+			if (!(((it.battle_flag) & dmg.flag) & BF_WEAPONMASK &&
+				((it.battle_flag) & dmg.flag) & BF_RANGEMASK &&
+				((it.battle_flag) & dmg.flag) & BF_SKILLMASK))
+				continue;
+			total_rate = rathena::util::safe_addition_cap(total_rate, it.damage_rate, INT_MAX);
+		}
+		for (auto& it : sd->finaladd_class[CLASS_ALL]) {
+			if (!it.damage_rate)
+				continue;
+			if (!(((it.battle_flag) & dmg.flag) & BF_WEAPONMASK &&
+				((it.battle_flag) & dmg.flag) & BF_RANGEMASK &&
+				((it.battle_flag) & dmg.flag) & BF_SKILLMASK))
+				continue;
+			total_rate = rathena::util::safe_addition_cap(total_rate, it.damage_rate, INT_MAX);
+		}
+		if (total_rate != 100) {
+			total_rate = cap_value(total_rate, -100, INT_MAX);
+			dmg.damage = (int64)(dmg.damage / 100.0 * total_rate);
+		}
+		damage = dmg.damage + dmg.damage2;
+	}
+#endif // Pandas_Bonus3_bFinalAddClass
+
+#ifdef Pandas_NpcExpress_PCHARMED
+	if (src && bl && damage > 0) {
+		map_session_data* esd = nullptr;
+
+		if (bl->type != BL_PC) {
+			block_list* mbl = battle_get_master(bl);
+
+			if (mbl != nullptr && mbl->type == BL_PC)
+				esd = BL_CAST(BL_PC, mbl);
+		}
+
+		if (esd == nullptr && bl->type == BL_PC)
+			esd = BL_CAST(BL_PC, bl);
+
+		if (esd != nullptr) {
+			pc_setreg(esd, add_str("@harmed_target_type"), bl->type);
+			pc_setreg(esd, add_str("@harmed_target_gid"), bl->id);
+			pc_setreg(esd, add_str("@harmed_src_type"), src->type);
+			pc_setreg(esd, add_str("@harmed_src_gid"), src->id);
+			pc_setreg(esd, add_str("@harmed_src_mobid"), src->type == BL_MOB ? BL_CAST(BL_MOB, src)->mob_id : 0);
+			pc_setreg(esd, add_str("@harmed_damage_flag"), dmg.flag);
+			pc_setreg(esd, add_str("@harmed_damage_skillid"), skill_id);
+			pc_setreg(esd, add_str("@harmed_damage_skilllv"), skill_lv);
+			pc_setreg(esd, add_str("@harmed_damage_right"), dmg.damage);
+			pc_setreg(esd, add_str("@harmed_damage_left"), dmg.damage2);
+			npc_script_event(*esd, NPCX_PCHARMED);
+			dmg.damage = static_cast<int32>(cap_value(pc_readreg(esd, add_str("@harmed_damage_right")), INT_MIN, INT_MAX));
+			dmg.damage2 = static_cast<int32>(cap_value(pc_readreg(esd, add_str("@harmed_damage_left")), INT_MIN, INT_MAX));
+			damage = dmg.damage + dmg.damage2;
+		}
+	}
+#endif // Pandas_NpcExpress_PCHARMED
+
+#ifdef Pandas_NpcExpress_PCATTACK
+	if (src && bl && damage > 0) {
+		map_session_data* esd = nullptr;
+
+		if (src->type != BL_PC) {
+			block_list* mbl = battle_get_master(src);
+
+			if (mbl != nullptr && mbl->type == BL_PC)
+				esd = BL_CAST(BL_PC, mbl);
+		}
+
+		if (esd == nullptr && src->type == BL_PC)
+			esd = BL_CAST(BL_PC, src);
+
+		if (esd != nullptr) {
+			pc_setreg(esd, add_str("@attack_src_type"), src->type);
+			pc_setreg(esd, add_str("@attack_src_gid"), src->id);
+			pc_setreg(esd, add_str("@attack_target_type"), bl->type);
+			pc_setreg(esd, add_str("@attack_target_gid"), bl->id);
+			pc_setreg(esd, add_str("@attack_target_mobid"), bl->type == BL_MOB ? BL_CAST(BL_MOB, bl)->mob_id : 0);
+			pc_setreg(esd, add_str("@attack_damage_flag"), dmg.flag);
+			pc_setreg(esd, add_str("@attack_damage_skillid"), skill_id);
+			pc_setreg(esd, add_str("@attack_damage_skilllv"), skill_lv);
+			pc_setreg(esd, add_str("@attack_damage_right"), dmg.damage);
+			pc_setreg(esd, add_str("@attack_damage_left"), dmg.damage2);
+			npc_script_event(*esd, NPCX_PCATTACK);
+			dmg.damage = static_cast<int32>(cap_value(pc_readreg(esd, add_str("@attack_damage_right")), INT_MIN, INT_MAX));
+			dmg.damage2 = static_cast<int32>(cap_value(pc_readreg(esd, add_str("@attack_damage_left")), INT_MIN, INT_MAX));
+			damage = dmg.damage + dmg.damage2;
+		}
+	}
+#endif // Pandas_NpcExpress_PCATTACK
+
 	if ((dmg.flag & BF_MAGIC) && tsc && tsc->getSCE(SC_MAXPAIN)) {
 		auto * sce = tsc->getSCE(SC_MAXPAIN);
 		sce->val3 = (int32)damage;
@@ -4518,6 +4733,9 @@ int32 skill_castend_nodamage_id (block_list *src, block_list *bl, uint16 skill_i
 						continue;
 					if(map_getcell(src->m,src->x+dx[j],src->y+dy[j],CELL_CHKNOREACH))
 						dx[j] = dy[j] = 0;
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+					pc_mark_multitransfer(dstsd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 					if (!pc_setpos(dstsd, map_id2index(src->m), src->x+dx[j], src->y+dy[j], CLR_RESPAWN))
 						called++;
 				}
@@ -4608,6 +4826,12 @@ int32 skill_castend_nodamage_id (block_list *src, block_list *bl, uint16 skill_i
 			mob_log_damage(dstmd, src, 0); //Log interaction (counts as 'attacker' for the exp bonus)
 		mobskill_event(dstmd, src, tick, MSC_SKILLUSED|(skill_id<<16));
 	}
+#ifdef Pandas_BattleRecord
+	if (battle_check_target(src, bl, BCT_ENEMY) > 0) {
+		batrec_cause(src, bl, 0);
+		batrec_receive(bl, src, 0);
+	}
+#endif // Pandas_BattleRecord
 
 	if( sd && !(flag&1) )
 	{// ensure that the skill last-cast tick is recorded
@@ -5179,6 +5403,22 @@ TIMER_FUNC(skill_castend_id){
 #endif
 		}
 
+#ifdef Pandas_NpcEvent_USE_SKILL
+		if (sd && sd->type == BL_PC && ud && target && target->prev != nullptr) {
+			pc_setreg(sd, add_str("@useskill_id"), ud->skill_id);
+			pc_setreg(sd, add_str("@useskill_lv"), ud->skill_lv);
+			pc_setreg(sd, add_str("@useskill_pos_x"), -1);
+			pc_setreg(sd, add_str("@useskill_pos_y"), -1);
+			pc_setreg(sd, add_str("@useskill_target_gid"), ud->skilltarget);
+
+			// 下面几个参数是为了兼容其他模拟器或老版本事件而刻意赋值的
+			pc_setreg(sd, add_str("@useskill_x"), -1);
+			pc_setreg(sd, add_str("@useskill_y"), -1);
+			pc_setreg(sd, add_str("@useskill_target"), ud->skilltarget);
+			npc_script_event(*sd, NPCE_USE_SKILL);
+		}
+#endif // Pandas_NpcEvent_USE_SKILL
+
 		if (sd && ud->skill_id != SA_ABRACADABRA) // they just set the data so leave it as it is.[Inkfish]
 			sd->skillitem = sd->skillitemlv = sd->skillitem_keep_requirement = 0;
 
@@ -5365,6 +5605,22 @@ TIMER_FUNC(skill_castend_pos){
 
 		if (ud->skill_id != RA_CAMOUFLAGE)
 			status_change_end(src, SC_CAMOUFLAGE); // Applies to the first skill if active
+
+#ifdef Pandas_NpcEvent_USE_SKILL
+		if (sd && sd->type == BL_PC && ud) {
+			pc_setreg(sd, add_str("@useskill_id"), ud->skill_id);
+			pc_setreg(sd, add_str("@useskill_lv"), ud->skill_lv);
+			pc_setreg(sd, add_str("@useskill_pos_x"), ud->skillx);
+			pc_setreg(sd, add_str("@useskill_pos_y"), ud->skilly);
+			pc_setreg(sd, add_str("@useskill_target_gid"), 0);
+
+			// 下面几个参数是为了兼容其他模拟器或老版本事件而刻意赋值的
+			pc_setreg(sd, add_str("@useskill_x"), ud->skillx);
+			pc_setreg(sd, add_str("@useskill_y"), ud->skilly);
+			pc_setreg(sd, add_str("@useskill_target"), 0);
+			npc_script_event(*sd, NPCE_USE_SKILL);
+		}
+#endif // Pandas_NpcEvent_USE_SKILL
 
 		if( sd && sd->skillitem != AL_WARP ) // Warp-Portal thru items will clear data in skill_castend_map. [Inkfish]
 			sd->skillitem = sd->skillitemlv = sd->skillitem_keep_requirement = 0;
@@ -8310,7 +8566,19 @@ bool skill_check_condition_castbegin( map_session_data& sd, uint16 skill_id, uin
 			if( (skill_id == WZ_EARTHSPIKE && sc && sc->getSCE(SC_EARTHSCROLL) && rnd()%100 > sc->getSCE(SC_EARTHSCROLL)->val2) || sd.inventory_data[i]->flag.delay_consume & DELAYCONSUME_NOCONSUME ) // [marquis007]
 				; //Do not consume item.
 			else if( sd.inventory.u.items_inventory[i].expire_time == 0 )
+#ifndef Pandas_Item_Properties
 				pc_delitem(&sd,i,1,0,0,LOG_TYPE_CONSUME); // Rental usable items are not consumed until expiration
+#else
+			{
+				// 判断是否需要避免物品被玩家主动使用而消耗
+				// 若可以被玩家主动使用而消耗, 那么执行原有的道具删除流程
+				struct item_data *id = sd.inventory_data[i];
+
+				if (!ITEM_PROPERTIES_HASFLAG(id, special_mask, ITEM_PRO_AVOID_CONSUME_FOR_USE)) {
+					pc_delitem(&sd,i,1,0,0,LOG_TYPE_CONSUME); // Rental usable items are not consumed until expiration
+				}
+			}
+#endif // Pandas_Item_Properties
 		}
 		if(!sd.skillitem_keep_requirement)
 			return true;
@@ -9767,6 +10035,16 @@ struct s_skill_condition skill_get_requirement(map_session_data* sd, uint16 skil
 
 	std::shared_ptr<s_skill_db> skill = skill_db.find(skill_id);
 
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	int noreq_opt = 0;
+	for (auto& it : sd->skillnorequire) {
+		if (it.id != skill_id)
+			continue;
+		noreq_opt = it.val;
+		break;
+	}
+#endif // Pandas_Bonus2_bSkillNoRequire
+
 	req.hp = skill->require.hp[skill_lv - 1];
 	hp_rate = skill->require.hp_rate[skill_lv - 1];
 	if(hp_rate > 0)
@@ -9786,6 +10064,16 @@ struct s_skill_condition skill_get_requirement(map_session_data* sd, uint16 skil
 		req.sp += (status->max_sp * (-sp_rate))/100;
 	if( sd->dsprate != 100 )
 		req.sp = req.sp * sd->dsprate / 100;
+
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	if ((noreq_opt & SKILL_REQ_HPRATECOST))
+		req.hp = skill->require.hp[skill_lv - 1];
+	if ((noreq_opt & SKILL_REQ_SPRATECOST)) {
+		req.sp = skill->require.sp[skill_lv - 1];
+		if ((sd->skill_id_old == BD_ENCORE) && skill_id == sd->skill_id_dance)
+			req.sp /= 2;
+	}
+#endif // Pandas_Bonus2_bSkillNoRequire
 
 	for (auto &it : sd->skillusesprate) {
 		if (it.id == skill_id) {
@@ -9833,6 +10121,10 @@ struct s_skill_condition skill_get_requirement(map_session_data* sd, uint16 skil
 		req.ap += (status->ap * ap_rate) / 100;
 	else
 		req.ap += (status->max_ap * (-ap_rate)) / 100;
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	if ((noreq_opt & SKILL_REQ_APRATECOST))
+		req.ap = skill->require.ap[skill_lv - 1];
+#endif // Pandas_Bonus2_bSkillNoRequire
 
 	req.zeny = skill->require.zeny[skill_lv-1];
 
@@ -9952,6 +10244,18 @@ struct s_skill_condition skill_get_requirement(map_session_data* sd, uint16 skil
 							else if( --req.amount[i] < 1 )
 								req.amount[i] = 1; // Hocus Pocus always use at least 1 gem
 						}
+#ifdef Pandas_Bonus_bNoFieldGemStone
+						if (sd->special_state.nofieldgemstone) {
+							switch (skill_id) {
+							case SA_LANDPROTECTOR:
+							case SA_DELUGE:
+							case SA_VOLCANO:
+							case SA_VIOLENTGALE:
+								req.itemid[i] = req.amount[i] = 0;
+								break;
+							}
+						}
+#endif // Pandas_Bonus_bNoFieldGemStone
 					}
 				}
 				// Check requirement for Magic Gear Fuel
@@ -10115,6 +10419,49 @@ struct s_skill_condition skill_get_requirement(map_session_data* sd, uint16 skil
 		if (req_opt & SKILL_REQ_APRATECOST)
 			req.ap_rate = 0;
 	}
+
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	if (noreq_opt & SKILL_REQ_HPCOST)
+		req.hp = 0;
+	if (noreq_opt & SKILL_REQ_MAXHPTRIGGER)
+		req.mhp = 0;
+	if (noreq_opt & SKILL_REQ_SPCOST)
+		req.sp = 0;
+	if (noreq_opt & SKILL_REQ_HPRATECOST)
+		req.hp_rate = 0;
+	if (noreq_opt & SKILL_REQ_SPRATECOST)
+		req.sp_rate = 0;
+	if (noreq_opt & SKILL_REQ_ZENYCOST)
+		req.zeny = 0;
+	if (noreq_opt & SKILL_REQ_WEAPON)
+		req.weapon = 0;
+	if (noreq_opt & SKILL_REQ_AMMO) {
+		req.ammo = 0;
+		req.ammo_qty = 0;
+	}
+	if (noreq_opt & SKILL_REQ_STATE)
+		req.state = ST_NONE;
+	if (noreq_opt & SKILL_REQ_STATUS) {
+		req.status.clear();
+		req.status.shrink_to_fit();
+	}
+	if (noreq_opt & SKILL_REQ_SPIRITSPHERECOST)
+		req.spiritball = 0;
+	if (noreq_opt & SKILL_REQ_ITEMCOST) {
+		memset(req.itemid, 0, sizeof(req.itemid));
+		memset(req.amount, 0, sizeof(req.amount));
+	}
+	if (noreq_opt & SKILL_REQ_EQUIPMENT) {
+		req.eqItem.clear();
+		req.eqItem.shrink_to_fit();
+	}
+	if (noreq_opt & SKILL_REQ_APCOST)
+		req.ap = 0;
+	if (noreq_opt & SKILL_REQ_APRATECOST)
+		req.ap_rate = 0;
+	if (noreq_opt & SKILL_REQ_AMMO_COUNT)
+		req.ammo_qty = 0;
+#endif // Pandas_Bonus2_bSkillNoRequire
 
 	return req;
 }
@@ -10575,6 +10922,16 @@ void skill_identify(map_session_data *sd, int32 idx)
 	nullpo_retv(sd);
 
 	sd->state.workinprogress = WIP_DISABLE_NONE;
+
+#ifdef Pandas_NpcFilter_IDENTIFY
+	if (idx >= 0 && idx < MAX_INVENTORY) {
+		pc_setreg(sd, add_str("@identify_idx"), idx);
+		if (npc_script_filter(sd, NPCF_IDENTIFY))
+			return;
+		if (sd->inventory.u.items_inventory[idx].nameid == 0 || sd->inventory_data[idx] == nullptr)
+			return;
+	}
+#endif // Pandas_NpcFilter_IDENTIFY
 
 	if(idx >= 0 && idx < MAX_INVENTORY) {
 		if(sd->inventory.u.items_inventory[idx].nameid > 0 && sd->inventory.u.items_inventory[idx].identify == 0 ){
@@ -11821,9 +12178,15 @@ int32 skill_delunit(skill_unit* unit)
 			break;
 		case SC_MANHOLE: // Note : Removing the unit don't remove the status (official info)
 			if( group->val2 ) { // Someone Traped
-				status_change *tsc = status_get_sc( map_id2bl(group->val2));
-				if( tsc && tsc->getSCE(SC__MANHOLE) )
+				block_list* target = map_id2bl(group->val2);
+				status_change *tsc = status_get_sc(target);
+				if( tsc && tsc->getSCE(SC__MANHOLE) ) {
 					tsc->getSCE(SC__MANHOLE)->val4 = 0; // Remove the Unit ID
+#ifdef Pandas_BattleConfig_Remove_Manhole_With_Status
+					if (battle_config.remove_manhole_with_status)
+						status_change_end(target, SC__MANHOLE, INVALID_TIMER);
+#endif // Pandas_BattleConfig_Remove_Manhole_With_Status
+				}
 			}
 			break;
 	}
@@ -11937,7 +12300,11 @@ int32 skill_delunitgroup_(std::shared_ptr<s_skill_unit_group> group, const char*
 {
 	block_list* src;
 	struct unit_data *ud;
+#ifndef Pandas_CodeAnalysis_Suggestion
 	int16 i;
+#else
+	int32 i;
+#endif // Pandas_CodeAnalysis_Suggestion
 	int32 link_group_id;
 
 	if( group == nullptr ) {
@@ -12810,6 +13177,23 @@ int16 skill_can_produce_mix(map_session_data *sd, t_itemid nameid, int32 trigger
 		}
 	}
 
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	int noreq_opt = 0;
+	uint16 req_skill = skill_produce_db[i].req_skill;
+
+	if (req_skill == GC_RESEARCHNEWPOISON)
+		req_skill = GC_CREATENEWPOISON;
+
+	if (req_skill) {
+		for (auto& it : sd->skillnorequire) {
+			if (it.id != req_skill)
+				continue;
+			noreq_opt = it.val;
+			break;
+		}
+	}
+#endif // Pandas_Bonus2_bSkillNoRequire
+
 	// Check on player's inventory
 	for (j = 0; j < MAX_PRODUCE_RESOURCE; j++) {
 		t_itemid nameid_produce;
@@ -12825,8 +13209,13 @@ int16 skill_can_produce_mix(map_session_data *sd, t_itemid nameid, int32 trigger
 			for (idx = 0, amt = 0; idx < MAX_INVENTORY; idx++)
 				if (sd->inventory.u.items_inventory[idx].nameid == nameid_produce)
 					amt += sd->inventory.u.items_inventory[idx].amount;
+#ifndef Pandas_Bonus2_bSkillNoRequire
 			if (amt < qty * skill_produce_db[i].mat_amount[j])
 				return 0;
+#else
+			if (amt < qty * skill_produce_db[i].mat_amount[j] && !(noreq_opt & SKILL_REQ_PRODUCTMAT_COUNT))
+				return 0;
+#endif // Pandas_Bonus2_bSkillNoRequire
 		}
 	}
 	return i + 1;
@@ -12875,6 +13264,18 @@ bool skill_produce_mix(map_session_data *sd, uint16 skill_id, t_itemid nameid, i
 	if( skill_id == GC_RESEARCHNEWPOISON )
 		skill_id = GC_CREATENEWPOISON;
 
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	int noreq_opt = 0;
+	if (skill_id) {
+		for (auto& it : sd->skillnorequire) {
+			if (it.id != skill_id)
+				continue;
+			noreq_opt = it.val;
+			break;
+		}
+	}
+#endif // Pandas_Bonus2_bSkillNoRequire
+
 	slot[0] = slot1;
 	slot[1] = slot2;
 	slot[2] = slot3;
@@ -12905,6 +13306,10 @@ bool skill_produce_mix(map_session_data *sd, uint16 skill_id, t_itemid nameid, i
 			continue;
 		num++;
 		x = (skill_id == RK_RUNEMASTERY ? 1 : qty) * skill_produce_db[idx].mat_amount[i];
+#ifdef Pandas_Bonus2_bSkillNoRequire
+		if (noreq_opt & SKILL_REQ_PRODUCTMAT_COUNT)
+			continue;
+#endif // Pandas_Bonus2_bSkillNoRequire
 		do {
 			int32 y = 0;
 
@@ -13654,7 +14059,12 @@ void skill_magicdecoy( map_session_data& sd, t_itemid nameid ){
 	}
 
 	// Spawn Position
+#ifndef Pandas_Fix_MagicDecoy_Twice_Deduction_Of_Ore
+	// 上面的 if 条件已经扣减了一次原石, 下面无需重复再次扣减
+	// 因为作为技能消耗品, 但凡扣减道具总要判断返回值,
+	// 然而只有这个地方没判断, 根据经验判断, 因此应该是此处重复调用了.
 	pc_delitem(&sd,i,1,0,0,LOG_TYPE_CONSUME);
+#endif // Pandas_Fix_MagicDecoy_Twice_Deduction_Of_Ore
 	x = sd.sc.comet_x;
 	y = sd.sc.comet_y;
 	sd.sc.comet_x = 0;
@@ -15508,7 +15918,17 @@ uint64 SkillDatabase::parseBodyNode(const ryml::NodeRef& node) {
 				std::shared_ptr<item_data> item = item_db.search_aegisname( item_name.c_str() );
 
 				if (item == nullptr) {
+#ifndef Pandas_Fix_SkillDB_ItemCost_NoexistsItem_Crash
 					this->invalidWarning(it["Item"], "Requires ItemCost Item %s does not exist.\n", item_name.c_str());
+#else
+					// 指定的必须是一个 ryml::NodeRef 节点,
+					// 没必要进一步指定到他 ItemCost 里面具体的某个 Item 节点.
+					// 目前已知的问题时, 若指定到具体的某个 Item 节点, 那么会导致 Item 不存在时
+					// invalidWarning 内部调用 node.Mark() 时直接崩溃报错
+					// 例如:
+					// 在复兴后版本中移除 12392 道具, 将导致读取 2275 技能时解析到 RepairA 不存在而崩溃
+					this->invalidWarning(it, "Requires ItemCost Item %s does not exist.\n", item_name.c_str());
+#endif // Pandas_Fix_SkillDB_ItemCost_NoexistsItem_Crash
 					return 0;
 				}
 
@@ -15596,7 +16016,12 @@ uint64 SkillDatabase::parseBodyNode(const ryml::NodeRef& node) {
 
 			skill->unit_id = static_cast<uint16>(constant);
 		} else {
+#ifndef Pandas_UserExperience_Yaml_Error
 			this->invalidWarning(unitNode["Id"], "Unit requires an Id.\n");
+#else
+			// 上面都已经判断 Id 节点不存在了, 这里就不应该用 ["Id"] 啦
+			this->invalidWarning(unitNode, "Unit requires an Id.\n");
+#endif // Pandas_UserExperience_Yaml_Error
 			return 0;
 		}
 

@@ -37,6 +37,6 @@ void SkillSpiritDestruction::applyAdditionalEffects(block_list *src, block_list 
 	status_percent_damage(src, target, 0, -rate, false);
 }
 
-void SkillSpiritDestruction::modifyHitRate(int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
+void SkillSpiritDestruction::modifyHitRate(pec_int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
 	hit_rate += hit_rate * 20 / 100;
 }

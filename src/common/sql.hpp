@@ -16,6 +16,8 @@
 #include "cbasetypes.hpp"
 #include "strlib.hpp"
 
+#include <config/pandas.hpp>
+
 // Return codes
 #define SQL_ERROR -1
 #define SQL_SUCCESS 0
@@ -102,7 +104,16 @@ int32 Sql_GetColumnNames(Sql* self, const char* table, char* out_buf, size_t buf
 /// Changes the encoding of the connection.
 ///
 /// @return SQL_SUCCESS or SQL_ERROR
+#ifndef Pandas_SQL_Configure_Optimization
 int32 Sql_SetEncoding(Sql* self, const char* encoding);
+#else
+int32 Sql_SetEncoding(Sql* self, const char* encoding, const char* default_encoding = nullptr, const char* connect_name = nullptr);
+#endif // Pandas_SQL_Configure_Optimization
+
+
+#ifdef Pandas_Database_SQL_GetEncoding
+void Sql_GetEncoding(Sql* self, char* retv_encoding);
+#endif // Pandas_Database_SQL_GetEncoding
 
 
 

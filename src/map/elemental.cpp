@@ -18,6 +18,9 @@
 #include <common/utils.hpp>
 
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "clif.hpp"
 #include "intif.hpp"
 #include "itemdb.hpp"
@@ -265,6 +268,9 @@ int32 elemental_data_received(s_elemental *ele, bool flag) {
 		ed->regen.tick.sp = tick;
 
 		map_addiddb(ed);
+#ifdef Pandas_BattleRecord
+		batrec_new(ed);
+#endif // Pandas_BattleRecord
 		status_calc_elemental(ed,SCO_FIRST);
 		ed->last_spdrain_time = ed->last_thinktime = gettick();
 		ed->summon_timer = INVALID_TIMER;
@@ -446,7 +452,18 @@ void elemental_heal(s_elemental_data *ed, int32 hp, int32 sp) {
 		clif_elemental_updatestatus(*ed->master, SP_SP);
 }
 
+#ifndef Pandas_FuncDefine_UnitDead_With_ExtendInfo
 int32 elemental_dead(s_elemental_data *ed) {
+#else
+int32 elemental_dead(s_elemental_data *ed, block_list *src, uint16 skill_id) {
+#endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
+
+#ifdef Pandas_NpcExpress_UNIT_KILL
+	if (src && ed) {
+		npc_event_aide_unitkill(src, ed, skill_id);
+	}
+#endif // Pandas_NpcExpress_UNIT_KILL
+
 	elemental_delete(ed);
 	return 0;
 }
@@ -467,6 +484,13 @@ bool elemental_skillnotok( uint16 skill_id, s_elemental_data& ed ){
 	if( idx == 0 ){
 		return false;
 	}
+
+#ifdef Pandas_MapFlag_NoSkill2
+	if (map_getmapflag(ed.m, MF_NOSKILL2)) {
+		if ((map_getmapflag_param(ed.m, MF_NOSKILL2, 1) & BL_ELEM) == BL_ELEM)
+			return false;
+	}
+#endif // Pandas_MapFlag_NoSkill2
 
 	// Check if it's ok for master as well
 	if( ed.master != nullptr ){

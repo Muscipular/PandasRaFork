@@ -3310,6 +3310,9 @@ enum e_group_algorithm_type : uint8 {
 struct s_item_combo {
 	std::vector<t_itemid> nameid;
 	script_code *script;
+#ifdef Pandas_Struct_S_Item_Combo_With_Plaintext
+	std::string script_plaintext;
+#endif // Pandas_Struct_S_Item_Combo_With_Plaintext
 	uint16 id;
 
 	~s_item_combo() {
@@ -3349,6 +3352,9 @@ struct s_random_opt_data
 	uint16 id;
 	std::string name;
 	script_code *script;
+#ifdef Pandas_Struct_S_Random_Opt_Data_With_Plaintext
+	std::string script_plaintext;
+#endif // Pandas_Struct_S_Random_Opt_Data_With_Plaintext
 
 	~s_random_opt_data() {
 		if (script)
@@ -3528,6 +3534,35 @@ struct item_data
 		sc_type sc; ///< Use delay group if any instead using player's item_delay data [Cydh]
 	} delay;
 
+#ifdef Pandas_Struct_Item_Data_Pandas
+	struct s_pandas {
+#ifdef Pandas_Struct_Item_Data_Script_Plaintext
+		struct s_script_plaintext {
+			std::string script;
+			std::string equip_script;
+			std::string unequip_script;
+		} script_plaintext;
+#endif // Pandas_Struct_Item_Data_Script_Plaintext
+#ifdef Pandas_Struct_Item_Data_Taming_Mobid
+		// 使 item_data 可记录当前物品可捕捉的魔物编号 [Sola丶小克]
+		// 若 vector 为空则表示这不是宠物捕捉道具, 若非空则记录此道具支持捕捉的魔物编号
+		std::vector<uint32> taming_mobid;
+#endif // Pandas_Struct_Item_Data_Taming_Mobid
+#ifdef Pandas_Struct_Item_Data_Has_CallFunc
+		// 使 item_data 可记录此物品的使用脚本是否执行了 callfunc 指令 [Sola丶小克]
+		bool has_callfunc = false;
+#endif // Pandas_Struct_Item_Data_Has_CallFunc
+#ifdef Pandas_Struct_Item_Data_Properties
+		// 使 item_data 可记录此物品的特殊属性 [Sola丶小克]
+		struct {
+			uint32 special_mask = 0;
+			uint32 noview_mask = 0;
+			uint32 annouce_mask = 0;
+		} properties;
+#endif // Pandas_Struct_Item_Data_Properties
+	} pandas;
+#endif // Pandas_Struct_Item_Data_Pandas
+
 	~item_data() {
 		if (this->script){
 			script_free_code(this->script);
@@ -3543,6 +3578,10 @@ struct item_data
 			script_free_code(this->unequip_script);
 			this->unequip_script = nullptr;
 		}
+
+#ifdef Pandas_Struct_Item_Data_Taming_Mobid
+		this->pandas.taming_mobid.clear();
+#endif // Pandas_Struct_Item_Data_Taming_Mobid
 
 		this->combos.clear();
 	}

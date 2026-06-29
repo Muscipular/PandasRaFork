@@ -20,6 +20,7 @@
 #include <ryml_std.hpp>
 #include <ryml.hpp>
 
+#include <common/assistant.hpp>
 #include <common/cbasetypes.hpp>
 #include <common/core.hpp>
 #include <common/malloc.hpp>
@@ -162,7 +163,11 @@ bool process( const std::string& type, uint32 version, const std::vector<std::st
 	for( const std::string& path : paths ){
 		const std::string name_ext = name + ".yml";
 		const std::string from = path + name_ext;
+#ifndef Pandas_UserExperience_Yaml2Sql_SaveFile_Location
 		const std::string to = "sql-files/" + to_table + ".sql";
+#else
+		std::string to = "sql-files/" + to_table + ".sql";
+#endif // Pandas_UserExperience_Yaml2Sql_SaveFile_Location
 
 		if( fileExists( from ) ){
 #ifndef CONVERT_ALL
@@ -173,19 +178,42 @@ bool process( const std::string& type, uint32 version, const std::vector<std::st
 			ShowMessage("Found the file \"%s\", converting from yml to sql.\n", from.c_str());
 #endif
 
-			inNode.reset();
+#ifdef Pandas_UserExperience_Yaml2Sql_SaveFile_Location
+#ifdef RENEWAL
+			const std::string mode = "renewal";
+#else
+			const std::string mode = "pre-renewal";
+#endif // RENEWAL
 
-			try {
-				inNode = YAML::LoadFile(from);
-			} catch (YAML::Exception &e) {
-				ShowError("%s (Line %d: Column %d)\n", e.msg.c_str(), e.mark.line, e.mark.column);
-				if (!askConfirmation("Error found in \"%s\" while attempting to load.\nPress any key to continue.\n", from.c_str()))
-					continue;
+			if (!fileExists("src/config/pandas.hpp")) {
+				std::unordered_map<std::string, const char*> relocation;
+
+				relocation["item_db_re_equip"] = "03";
+				relocation["item_db_re_etc"] = "04";
+				relocation["item_db_re_usable"] = "05";
+				relocation["mob_db_re"] = "06";
+				relocation["mob_db2_re"] = "07";
+
+				relocation["item_db_equip"] = "03";
+				relocation["item_db_etc"] = "04";
+				relocation["item_db_usable"] = "05";
+				relocation["mob_db"] = "06";
+				relocation["mob_db2"] = "07";
+
+				if (relocation.find(to_table) != relocation.end()) {
+					to = "sql-files/main/creation/use_sql_db/" + mode + "/" + relocation[to_table] + "." + to_table + ".sql";
+				}
+
+				std::string current_path;
+				if (getExecuteFileDirectory(current_path)) {
+					std::string absolute_path = current_path + to;
+					standardizePathSep(absolute_path);
+					ensureDirectories(absolute_path);
+				}
 			}
+#endif // Pandas_UserExperience_Yaml2Sql_SaveFile_Location
 
-			if (!inNode["Body"].IsDefined())
-				continue;
-
+#ifdef Pandas_UserExperience_Yaml2Sql_AskConfirmation_Order
 #ifndef CONVERT_ALL
 			if (fileExists(to)) {
 				if (!askConfirmation("The file \"%s\" already exists.\nDo you want to replace it? (Y/N)\n", to.c_str())) {
@@ -193,6 +221,35 @@ bool process( const std::string& type, uint32 version, const std::vector<std::st
 				}
 			}
 #endif
+#endif // Pandas_UserExperience_Yaml2Sql_AskConfirmation_Order
+
+			inNode.reset();
+
+			try {
+#ifdef Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
+				ShowStatus("Loading '" CL_WHITE "%s" CL_RESET "'..." CL_CLL "\r", from.c_str());
+#endif // Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
+				inNode = YAML::LoadFile(from);
+			} catch (YAML::Exception &e) {
+				ShowError("%s (Line %d: Column %d)\n", e.msg.c_str(), e.mark.line, e.mark.column);
+				if (!askConfirmation("Error found in \"%s\" while attempting to load.\nPress any key to continue.\n", from.c_str()))
+					continue;
+			}
+
+#ifndef Pandas_Fix_Yaml2Sql_NoBodyNode_Break
+			if (!inNode["Body"].IsDefined())
+				continue;
+#endif // Pandas_Fix_Yaml2Sql_NoBodyNode_Break
+
+#ifndef Pandas_UserExperience_Yaml2Sql_AskConfirmation_Order
+#ifndef CONVERT_ALL
+			if (fileExists(to)) {
+				if (!askConfirmation("The file \"%s\" already exists.\nDo you want to replace it? (Y/N)\n", to.c_str())) {
+					continue;
+				}
+			}
+#endif
+#endif // Pandas_UserExperience_Yaml2Sql_AskConfirmation_Order
 
 			outFile.open(to);
 
@@ -744,8 +801,15 @@ static bool item_db_yaml2sql(const std::string &file, const std::string &table) 
 
 		outFile << "REPLACE INTO `" + table + "` (" + column + ") VALUES (" + value + ");\n";
 		entries++;
+
+#ifdef Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
+		ShowStatus("Converting %" PRIdPTR " items in '" CL_WHITE "%s" CL_RESET "'" CL_CLL "\r", entries, file.c_str());
+#endif // Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
 	}
 
+#ifdef Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
+	ShowMessage(CL_CLL);
+#endif // Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
 	ShowStatus("Done converting '" CL_WHITE "%zu" CL_RESET "' items in '" CL_WHITE "%s" CL_RESET "'.\n", entries, file.c_str());
 
 	return true;
@@ -959,8 +1023,15 @@ static bool mob_db_yaml2sql(const std::string &file, const std::string &table) {
 
 		outFile << "REPLACE INTO `" + table + "` (" + column + ") VALUES (" + value + ");\n";
 		entries++;
+
+#ifdef Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
+		ShowStatus("Converting %" PRIdPTR " mobs in '" CL_WHITE "%s" CL_RESET "'" CL_CLL "\r", entries, file.c_str());
+#endif // Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
 	}
 
+#ifdef Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
+	ShowMessage(CL_CLL);
+#endif // Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
 	ShowStatus("Done converting '" CL_WHITE "%zu" CL_RESET "' mobs in '" CL_WHITE "%s" CL_RESET "'.\n", entries, file.c_str());
 
 	return true;

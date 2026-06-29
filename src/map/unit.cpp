@@ -18,6 +18,9 @@
 
 #include "achievement.hpp"
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "battleground.hpp"
 #include "channel.hpp"
 #include "chat.hpp"
@@ -261,6 +264,11 @@ int32 unit_walktoxy_sub(block_list *bl)
 		return 0;
 
 	walkpath_data wpd = { 0 };
+
+#ifdef Pandas_Fix_Same_Coordinate_Move_Logic
+	if (bl && bl->x == ud->to_x && bl->y == ud->to_y)
+		return 0;
+#endif // Pandas_Fix_Same_Coordinate_Move_Logic
 
 	if( !path_search(&wpd,bl->m,bl->x,bl->y,ud->to_x,ud->to_y,ud->state.walk_easy,CELL_CHKNOPASS) )
 		return 0;
@@ -2088,6 +2096,13 @@ int32 unit_skilluse_id2(block_list *src, int32 target_id, uint16 skill_id, uint1
 	if(status_isdead(*src))
 		return 0; // Do not continue source is dead
 
+#ifdef Pandas_MapFlag_NoSkill2
+	if (src->type == BL_NPC && map_getmapflag(src->m, MF_NOSKILL2)) {
+		if ((map_getmapflag_param(src->m, MF_NOSKILL2, 1) & BL_NPC) == BL_NPC)
+			return 0;
+	}
+#endif // Pandas_MapFlag_NoSkill2
+
 	sd = BL_CAST(BL_PC, src);
 	ud = unit_bl2ud(src);
 
@@ -2619,6 +2634,13 @@ int32 unit_skilluse_pos2( block_list *src, int16 skill_x, int16 skill_y, uint16 
 	if(status_isdead(*src))
 		return 0;
 
+#ifdef Pandas_MapFlag_NoSkill2
+	if (src->type == BL_NPC && map_getmapflag(src->m, MF_NOSKILL2)) {
+		if ((map_getmapflag_param(src->m, MF_NOSKILL2, 1) & BL_NPC) == BL_NPC)
+			return 0;
+	}
+#endif // Pandas_MapFlag_NoSkill2
+
 	sd = BL_CAST(BL_PC, src);
 	ud = unit_bl2ud(src);
 
@@ -2901,12 +2923,28 @@ int32 unit_unattackable(block_list *bl)
  */
 int32 unit_attack(block_list *src,int32 target_id,int32 continuous)
 {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	nullpo_ret(src);
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	block_list *target;
 	int32 range;
 
 	unit_data* ud = unit_bl2ud(src);
 	if (ud == nullptr)
 		return USW_NONE;
+
+#ifdef Pandas_MapFlag_NoAttack
+	if (map_getmapflag(src->m, MF_NOATTACK))
+		return USW_FIXPOS;
+#endif // Pandas_MapFlag_NoAttack
+
+#ifdef Pandas_MapFlag_NoAttack2
+	if (map_getmapflag(src->m, MF_NOATTACK2)) {
+		if ((map_getmapflag_param(src->m, MF_NOATTACK2, 1) & src->type) == src->type)
+			return USW_FIXPOS;
+	}
+#endif // Pandas_MapFlag_NoAttack2
 
 	mob_data* md = BL_CAST(BL_MOB, src);
 
@@ -3479,6 +3517,11 @@ void unit_dataset(block_list *bl)
 	nullpo_retv(ud = unit_bl2ud(bl));
 
 	memset( ud, 0, sizeof( struct unit_data) );
+#ifdef Pandas_Struct_Unit_CommonData
+	s_unit_common_data* ucd = status_get_ucd(bl);
+	if (ucd != nullptr)
+		*ucd = {};
+#endif // Pandas_Struct_Unit_CommonData
 	ud->bl             = bl;
 	ud->walktimer      = INVALID_TIMER;
 	ud->skilltimer     = INVALID_TIMER;
@@ -3917,6 +3960,20 @@ int32 unit_free(block_list *bl, clr_type clrtype)
 	struct unit_data *ud = unit_bl2ud( bl );
 
 	nullpo_ret(ud);
+#ifdef Pandas_BattleRecord
+	batrec_free(bl);
+#endif // Pandas_BattleRecord
+
+#ifdef Pandas_Aura_Mechanism
+	struct s_unit_common_data* ucd = nullptr;
+	if ((ucd = status_get_ucd(bl)) != nullptr) {
+		for (auto &it : ucd->aura.effects) {
+			if (it->replay_tid == INVALID_TIMER) continue;
+			delete_timer(it->replay_tid, aura_effects_timer);
+			it->replay_tid = INVALID_TIMER;
+		}
+	}
+#endif // Pandas_Aura_Mechanism
 
 	FreeBlockLock freeLock;
 
@@ -4008,6 +4065,16 @@ int32 unit_free(block_list *bl, clr_type clrtype)
 
 				sd->npc_id_dynamic.clear();
 			}
+
+#ifdef Pandas_ScriptEngine_MutliStackBackup
+			while (!sd->previous_st.empty()) {
+				struct mutli_state val = sd->previous_st.back();
+				sd->previous_st.pop_back();
+				if (val.bk_st != nullptr) {
+					script_free_state(val.bk_st);
+				}
+			}
+#endif // Pandas_ScriptEngine_MutliStackBackup
 
 			sd->combos.clear();
 
@@ -4129,6 +4196,13 @@ int32 unit_free(block_list *bl, clr_type clrtype)
 
 			if( md->tomb_nid )
 				mvptomb_destroy(md);
+
+#ifdef Pandas_Struct_Mob_Data_Special_SetUnitData
+			if (md->pandas.special_setunitdata) {
+				delete md->pandas.special_setunitdata;
+				md->pandas.special_setunitdata = nullptr;
+			}
+#endif // Pandas_Struct_Mob_Data_Special_SetUnitData
 			break;
 		}
 		case BL_HOM:

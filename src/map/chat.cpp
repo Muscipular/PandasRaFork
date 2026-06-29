@@ -18,6 +18,7 @@
 #include "clif.hpp"
 #include "map.hpp"
 #include "npc.hpp" // npc_event_do()
+#include "script.hpp" // script_config
 #include "pc.hpp"
 #include "pc_groups.hpp"
 
@@ -161,6 +162,17 @@ int32 chat_joinchat(map_session_data* sd, int32 chatid, const char* pass)
 		clif_joinchatfail( *sd, ENTERROOM_KICKED );
 		return 0;
 	}
+
+#ifdef Pandas_NpcFilter_ENTERCHAT
+	if (cd->owner->type == BL_NPC) {
+		npc_data* nd = BL_CAST(BL_NPC, cd->owner);
+		char eventname[EVENT_NAME_LENGTH] = { 0 };
+
+		safesnprintf(eventname, ARRAYLENGTH(eventname), "%s::%s", nd->exname, script_config.enterchat_filter_name);
+		if (npc_script_filter(sd, eventname))
+			return 0;
+	}
+#endif // Pandas_NpcFilter_ENTERCHAT
 
 	unit_stop_walking( sd, USW_FIXPOS );
 	cd->usersd[cd->users] = sd;

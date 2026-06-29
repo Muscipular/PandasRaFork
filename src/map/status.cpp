@@ -20,12 +20,18 @@
 #include <common/utils.hpp>
 
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "battleground.hpp"
 #include "clif.hpp"
 #include "elemental.hpp"
 #include "guild.hpp"
 #include "homunculus.hpp"
 #include "itemdb.hpp"
+#ifdef Pandas_Item_Amulet_System
+#include "itemamulet.hpp"
+#endif // Pandas_Item_Amulet_System
 #include "map.hpp"
 #include "mercenary.hpp"
 #include "mob.hpp"
@@ -58,6 +64,7 @@ struct s_delay_status {
 	int32 val2;
 	int32 val3;
 	int32 val4;
+	int32 rate;
 	int32 tick;
 	uint8 flag;
 };
@@ -71,43 +78,46 @@ uint32 current_equip_combo_pos; /// For combo items we need to save the position
 int32 current_equip_card_id; /// To prevent card-stacking (from jA) [Skotlex]
 // We need it for new cards 15 Feb 2005, to check if the combo cards are insrerted into the CURRENT weapon only to avoid cards exploits
 int16 current_equip_opt_index; /// Contains random option index of an equipped item. [Secret]
+#ifdef Pandas_NpcExpress_STATCALC
+bool running_npc_stat_calc_event; /// Indicate if OnPCStatCalcEvent is running.
+#endif // Pandas_NpcExpress_STATCALC
 
 uint16 SCDisabled[SC_MAX]; ///< List of disabled SC on map zones. [Cydh]
 
-static uint16 status_calc_str(block_list *,status_change *,int32);
-static uint16 status_calc_agi(block_list *,status_change *,int32);
-static uint16 status_calc_vit(block_list *,status_change *,int32);
-static uint16 status_calc_int(block_list *,status_change *,int32);
-static uint16 status_calc_dex(block_list *,status_change *,int32);
-static uint16 status_calc_luk(block_list *,status_change *,int32);
-static uint16 status_calc_pow(block_list *, status_change *, int32);
-static uint16 status_calc_sta(block_list *, status_change *, int32);
-static uint16 status_calc_wis(block_list *, status_change *, int32);
-static uint16 status_calc_spl(block_list *, status_change *, int32);
-static uint16 status_calc_con(block_list *, status_change *, int32);
-static uint16 status_calc_crt(block_list *, status_change *, int32);
+static pec_uint16 status_calc_str(block_list *,status_change *,int32);
+static pec_uint16 status_calc_agi(block_list *,status_change *,int32);
+static pec_uint16 status_calc_vit(block_list *,status_change *,int32);
+static pec_uint16 status_calc_int(block_list *,status_change *,int32);
+static pec_uint16 status_calc_dex(block_list *,status_change *,int32);
+static pec_uint16 status_calc_luk(block_list *,status_change *,int32);
+static pec_uint16 status_calc_pow(block_list *, status_change *, int32);
+static pec_uint16 status_calc_sta(block_list *, status_change *, int32);
+static pec_uint16 status_calc_wis(block_list *, status_change *, int32);
+static pec_uint16 status_calc_spl(block_list *, status_change *, int32);
+static pec_uint16 status_calc_con(block_list *, status_change *, int32);
+static pec_uint16 status_calc_crt(block_list *, status_change *, int32);
 static int32 status_calc_batk(block_list *, status_change *, int32);
-static uint16 status_calc_watk(block_list *,status_change *,int32);
-static int16 status_calc_hit(block_list *,status_change *,int32);
-static int16 status_calc_critical(block_list *,status_change *,int32);
-static int16 status_calc_flee(block_list *,status_change *,int32);
-static int16 status_calc_flee2(block_list *,status_change *,int32);
-static defType status_calc_def(block_list *bl, status_change *sc, int32);
-static int16 status_calc_def2(block_list *,status_change *,int32);
-static defType status_calc_mdef(block_list *bl, status_change *sc, int32);
-static int16 status_calc_mdef2(block_list *,status_change *,int32);
-static uint16 status_calc_speed(block_list *,status_change *,int32);
-static int16 status_calc_aspd_rate(block_list *,status_change *,int32);
+static pec_uint16 status_calc_watk(block_list *,status_change *,int32);
+static pec_int16 status_calc_hit(block_list *,status_change *,int32);
+static pec_int16 status_calc_critical(block_list *,status_change *,int32);
+static pec_int16 status_calc_flee(block_list *,status_change *,int32);
+static pec_int16 status_calc_flee2(block_list *,status_change *,int32);
+static pec_defType status_calc_def(block_list *bl, status_change *sc, int32);
+static pec_int16 status_calc_def2(block_list *,status_change *,int32);
+static pec_defType status_calc_mdef(block_list *bl, status_change *sc, int32);
+static pec_int16 status_calc_mdef2(block_list *,status_change *,int32);
+static pec_uint16 status_calc_speed(block_list *,status_change *,int32);
+static pec_int16 status_calc_aspd_rate(block_list *,status_change *,int32);
 #ifdef RENEWAL_ASPD
 static int16 status_calc_aspd(block_list *bl, status_change *sc, bool fixed);
 #endif
 static int16 status_calc_fix_aspd(block_list *bl, status_change *sc, int32);
-static int16 status_calc_patk(block_list *, status_change *, int32);
-static int16 status_calc_smatk(block_list *, status_change *, int32);
-static int16 status_calc_res(block_list *, status_change *, int32);
-static int16 status_calc_mres(block_list *, status_change *, int32);
-static int16 status_calc_hplus(block_list *, status_change *, int32);
-static int16 status_calc_crate(block_list *, status_change *, int32);
+static pec_int16 status_calc_patk(block_list *, status_change *, int32);
+static pec_int16 status_calc_smatk(block_list *, status_change *, int32);
+static pec_int16 status_calc_res(block_list *, status_change *, int32);
+static pec_int16 status_calc_mres(block_list *, status_change *, int32);
+static pec_int16 status_calc_hplus(block_list *, status_change *, int32);
+static pec_int16 status_calc_crate(block_list *, status_change *, int32);
 static uint32 status_calc_maxhp(block_list *bl, uint64 maxhp);
 static uint32 status_calc_maxsp(block_list *bl, uint64 maxsp);
 static uint32 status_calc_maxap(block_list *bl, uint64 maxap);
@@ -121,7 +131,7 @@ static uint32 status_calc_maxhp_pc( map_session_data& sd, uint32 vit );
 static uint32 status_calc_maxsp_pc( map_session_data& sd, uint32 int_ );
 static uint32 status_calc_maxap_pc( map_session_data& sd );
 static int32 status_get_sc_interval(enum sc_type type);
-static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_type type, int32 val1, int32 val2, int32 val3, int32 val4, int32 tick, uint8 flag);
+static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_type type, int32 rate, int32 val1, int32 val2, int32 val3, int32 val4, int32 tick, uint8 flag);
 
 static bool status_change_isDisabledOnMap_(sc_type type, bool mapIsVS, bool mapIsPVP, bool mapIsGVG, bool mapIsBG, uint32 mapZone, bool mapIsTE);
 #define status_change_isDisabledOnMap(type, m) ( status_change_isDisabledOnMap_((type), mapdata_flag_vs2((m)), m->getMapFlag(MF_PVP) != 0, mapdata_flag_gvg2_no_te((m)), m->getMapFlag(MF_BATTLEGROUND) != 0, (m->zone << 3) != 0, mapdata_flag_gvg2_te((m))) )
@@ -1185,6 +1195,9 @@ status_change::status_change(){
 #ifndef RENEWAL
 	this->sg_counter = 0;
 #endif
+#ifdef Pandas_Struct_Status_Change_Cloak_Reverting
+	this->cloak_reverting = 0;
+#endif // Pandas_Struct_Status_Change_Cloak_Reverting
 	this->data = {};
 	this->lastStatus = { SC_NONE, nullptr };
 }
@@ -1338,7 +1351,11 @@ int32 status_set_maxhp(block_list *bl, uint32 maxhp, int32 flag)
 	if (maxhp == status->max_hp)
 		return 0;
 
+#ifndef Pandas_Fix_Potential_Arithmetic_Overflow
 	heal = maxhp - status->max_hp;
+#else
+	heal = (int32)maxhp - (int32)status->max_hp;
+#endif // Pandas_Fix_Potential_Arithmetic_Overflow
 	status->max_hp = maxhp;
 
 	if (heal > 0)
@@ -1629,6 +1646,12 @@ int32 status_damage(block_list *src,block_list *target,int64 dhp, int64 dsp, int
 	status->hp-= hp;
 	status->sp-= sp;
 	status->ap-= ap;
+#ifdef Pandas_BattleRecord
+	if (src != nullptr && target != nullptr) {
+		batrec_cause(src, target, hp);
+		batrec_receive(target, src, hp);
+	}
+#endif // Pandas_BattleRecord
 
 	// Coma
 	if (flag&16) {
@@ -1690,11 +1713,19 @@ int32 status_damage(block_list *src,block_list *target,int64 dhp, int64 dsp, int
 	* &4: Delete object from memory. (One time spawn mobs)
 	**/
 	switch (target->type) {
+#ifndef Pandas_FuncDefine_UnitDead_With_ExtendInfo
 		case BL_PC:  flag = pc_dead((TBL_PC*)target,src); break;
 		case BL_MOB: flag = mob_dead((TBL_MOB*)target, src, flag&4?3:0); break;
 		case BL_HOM: flag = hom_dead((TBL_HOM*)target); break;
 		case BL_MER: flag = mercenary_dead((TBL_MER*)target); break;
 		case BL_ELEM: flag = elemental_dead((TBL_ELEM*)target); break;
+#else
+		case BL_PC:  flag = pc_dead((TBL_PC*)target, src, skill_id); break;
+		case BL_MOB: flag = mob_dead((TBL_MOB*)target, src, flag&4?3:0, skill_id); break;
+		case BL_HOM: flag = hom_dead((TBL_HOM*)target, src, skill_id); break;
+		case BL_MER: flag = mercenary_dead((TBL_MER*)target, src, skill_id); break;
+		case BL_ELEM: flag = elemental_dead((TBL_ELEM*)target, src, skill_id); break;
+#endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
 		default:	// Unhandled case, do nothing to object.
 			flag = 0;
 			break;
@@ -1755,6 +1786,27 @@ int32 status_damage(block_list *src,block_list *target,int64 dhp, int64 dsp, int
 
 		return (int32)(hp+sp+ap);
 	}
+
+#ifdef Pandas_Bonus3_bRebirthWithHeal
+	if (target && target->type == BL_PC) {
+		TBL_PC* tsd = BL_CAST(BL_PC, target);
+
+		if (tsd && rnd() % 10000 < tsd->bonus.rebirth_rate
+#ifdef Pandas_MapFlag_NoToken
+			&& tsd->m >= 0 && !map_getmapflag(tsd->m, MF_NOTOKEN)
+#endif // Pandas_MapFlag_NoToken
+		) {
+			if (tsd->special_state.restart_full_recover) {
+				status_revive(target, 100, 100);
+			}
+			else {
+				status_revive(target, tsd->bonus.rebirth_heal_percent_hp, tsd->bonus.rebirth_heal_percent_sp);
+			}
+			clif_skill_nodamage(target, *target, ALL_RESURRECTION, 1, 1);
+			return (int32)(hp + sp + ap);
+		}
+	}
+#endif // Pandas_Bonus3_bRebirthWithHeal
 
 	status_change_clear(target,0);
 
@@ -2421,7 +2473,7 @@ int32 status_base_amotion_pc(map_session_data* sd, struct status_data* status)
  * @param status: Object status
  * @return base attack
  */
-uint16 status_base_atk(const block_list *bl, const struct status_data *status, int32 level)
+pec_uint16 status_base_atk(const block_list *bl, const struct status_data *status, int32 level)
 {
 	int32 flag = 0, str, dex, dstr;
 
@@ -2492,7 +2544,7 @@ uint16 status_base_atk(const block_list *bl, const struct status_data *status, i
 			break;
 	}
 
-	return cap_value(str, 0, USHRT_MAX);
+	return cap_value(str, 0, PEC_USHRT_MAX);
 }
 
 #ifdef RENEWAL
@@ -2508,10 +2560,10 @@ uint32 status_weapon_atk( const weapon_atk& wa ){
 #endif
 
 #ifndef RENEWAL
-uint16 status_base_matk_min( const status_data* status ) {
+pec_uint16 status_base_matk_min( const status_data* status ) {
 	return status->int_ + (status->int_ / 7) * (status->int_ / 7);
 }
-uint16 status_base_matk_max( const status_data* status ) {
+pec_uint16 status_base_matk_max( const status_data* status ) {
 	return status->int_ + (status->int_ / 5) * (status->int_ / 5);
 }
 #else
@@ -2519,7 +2571,7 @@ uint16 status_base_matk_max( const status_data* status ) {
 * Calculates minimum attack variance 80% from db's ATK1 for non BL_PC
 * status->batk (base attack) will be added in battle_calc_base_damage
 */
-uint16 status_base_atk_min( const block_list* bl, const status_data* status, int32 level )
+pec_uint16 status_base_atk_min( const block_list* bl, const status_data* status, int32 level )
 {
 	switch (bl->type) {
 		case BL_PET:
@@ -2538,7 +2590,7 @@ uint16 status_base_atk_min( const block_list* bl, const status_data* status, int
 * Calculates maximum attack variance 120% from db's ATK1 for non BL_PC
 * status->batk (base attack) will be added in battle_calc_base_damage
 */
-uint16 status_base_atk_max( const block_list* bl, const status_data* status, int32 level )
+pec_uint16 status_base_atk_max( const block_list* bl, const status_data* status, int32 level )
 {
 	switch (bl->type) {
 		case BL_PET:
@@ -2556,7 +2608,7 @@ uint16 status_base_atk_max( const block_list* bl, const status_data* status, int
 /*
 * Calculates minimum magic attack
 */
-uint16 status_base_matk_min( const block_list* bl, const status_data* status, int32 level )
+pec_uint16 status_base_matk_min( const block_list* bl, const status_data* status, int32 level )
 {
 	switch (bl->type) {
 		case BL_PET:
@@ -2575,7 +2627,7 @@ uint16 status_base_matk_min( const block_list* bl, const status_data* status, in
 /*
 * Calculates maximum magic attack
 */
-uint16 status_base_matk_max( const block_list* bl, const status_data* status, int32 level )
+pec_uint16 status_base_matk_max( const block_list* bl, const status_data* status, int32 level )
 {
 	switch (bl->type) {
 		case BL_PET:
@@ -2618,34 +2670,34 @@ void status_calc_misc(block_list *bl, struct status_data *status, int32 level)
 	if (bl->type == BL_HOM) {
 		// Def2
 		stat = status_get_homvit(bl) + status_get_homagi(bl) / 2;
-		status->def2 = cap_value(stat, 0, SHRT_MAX);
+		status->def2 = cap_value(stat, 0, PEC_SHRT_MAX);
 		// Mdef2
 		stat = (status_get_homvit(bl) + status_get_homint(bl)) / 2;
-		status->mdef2 = cap_value(stat, 0, SHRT_MAX);
+		status->mdef2 = cap_value(stat, 0, PEC_SHRT_MAX);
 		// Def
 		stat = status->def;
 		stat += status_get_homvit(bl) + level / 2;
-		status->def = cap_value(stat, 0, SHRT_MAX);
+		status->def = cap_value(stat, 0, PEC_SHRT_MAX);
 		// Mdef
 		stat = (int32)(((float)status_get_homvit(bl) + level) / 4 + (float)status_get_homint(bl) / 2);
-		status->mdef = cap_value(stat, 0, SHRT_MAX);
+		status->mdef = cap_value(stat, 0, PEC_SHRT_MAX);
 		// Hit
 		stat = level + status->dex + 150;
-		status->hit = cap_value(stat, 1, SHRT_MAX);
+		status->hit = cap_value(stat, 1, PEC_SHRT_MAX);
 		// Flee
 		stat = level + status_get_homagi(bl);
-		status->flee = cap_value(stat, 1, SHRT_MAX);
+		status->flee = cap_value(stat, 1, PEC_SHRT_MAX);
 	} else {
 		// Hit
 		stat = status->hit;
 		stat += level + status->dex + (bl->type == BL_PC ? status->luk / 3 + 175 : 150); //base level + ( every 1 dex = +1 hit ) + (every 3 luk = +1 hit) + 175
 		stat += 2 * status->con;
-		status->hit = cap_value(stat, 1, SHRT_MAX);
+		status->hit = cap_value(stat, 1, PEC_SHRT_MAX);
 		// Flee
 		stat = status->flee;
 		stat += level + status->agi + (bl->type == BL_MER ? 0 : bl->type == BL_PC ? status->luk / 5 : 0) + 100; //base level + ( every 1 agi = +1 flee ) + (every 5 luk = +1 flee) + 100
 		stat += 2 * status->con;
-		status->flee = cap_value(stat, 1, SHRT_MAX);
+		status->flee = cap_value(stat, 1, PEC_SHRT_MAX);
 		// Def2
 		if (bl->type == BL_MER)
 			stat = (int32)(status->vit + ((float)level / 10) + ((float)status->vit / 5));
@@ -2653,7 +2705,7 @@ void status_calc_misc(block_list *bl, struct status_data *status, int32 level)
 			stat = status->def2;
 			stat += (int32)(((float)level + status->vit) / 2 + (bl->type == BL_PC ? ((float)status->agi / 5) : 0)); //base level + (every 2 vit = +1 def) + (every 5 agi = +1 def)
 		}
-		status->def2 = cap_value(stat, 0, SHRT_MAX);
+		status->def2 = cap_value(stat, 0, PEC_SHRT_MAX);
 		// Mdef2
 		if (bl->type == BL_MER)
 			stat = (int32)(((float)level / 10) + ((float)status->int_ / 5));
@@ -2661,31 +2713,31 @@ void status_calc_misc(block_list *bl, struct status_data *status, int32 level)
 			stat = status->mdef2;
 			stat += (int32)(bl->type == BL_PC ? (status->int_ + ((float)level / 4) + ((float)(status->dex + status->vit) / 5)) : ((float)(status->int_ + level) / 4)); //(every 4 base level = +1 mdef) + (every 1 int32 = +1 mdef) + (every 5 dex = +1 mdef) + (every 5 vit = +1 mdef)
 		}
-		status->mdef2 = cap_value(stat, 0, SHRT_MAX);
+		status->mdef2 = cap_value(stat, 0, PEC_SHRT_MAX);
 		// PAtk
 		stat = status->patk;
 		stat += status->pow / 3 + status->con / 5;
-		status->patk = cap_value(stat, 0, SHRT_MAX);
+		status->patk = cap_value(stat, 0, PEC_SHRT_MAX);
 		// SMatk
 		stat = status->smatk;
 		stat += status->spl / 3 + status->con / 5;
-		status->smatk = cap_value(stat, 0, SHRT_MAX);
+		status->smatk = cap_value(stat, 0, PEC_SHRT_MAX);
 		// Res
 		stat = status->res;
 		stat += status->sta + status->sta / 3 * 5;
-		status->res = cap_value(stat, 0, SHRT_MAX);
+		status->res = cap_value(stat, 0, PEC_SHRT_MAX);
 		// Mres
 		stat = status->mres;
 		stat += status->wis + status->wis / 3 * 5;
-		status->mres = cap_value(stat, 0, SHRT_MAX);
+		status->mres = cap_value(stat, 0, PEC_SHRT_MAX);
 		// HPlus
 		stat = status->hplus;
 		stat += status->crt;
-		status->hplus = cap_value(stat, 0, SHRT_MAX);
+		status->hplus = cap_value(stat, 0, PEC_SHRT_MAX);
 		// CRate
 		stat = status->crate;
 		stat += status->crt / 3;
-		status->crate = cap_value(stat, 0, SHRT_MAX);
+		status->crate = cap_value(stat, 0, PEC_SHRT_MAX);
 	}
 
 	// ATK
@@ -2704,19 +2756,19 @@ void status_calc_misc(block_list *bl, struct status_data *status, int32 level)
 	// Hit
 	stat = status->hit;
 	stat += level + status->dex;
-	status->hit = cap_value(stat, 1, SHRT_MAX);
+	status->hit = cap_value(stat, 1, PEC_SHRT_MAX);
 	// Flee
 	stat = status->flee;
 	stat += level + status->agi;
-	status->flee = cap_value(stat, 1, SHRT_MAX);
+	status->flee = cap_value(stat, 1, PEC_SHRT_MAX);
 	// Def2
 	stat = status->def2;
 	stat += status->vit;
-	status->def2 = cap_value(stat, 0, SHRT_MAX);
+	status->def2 = cap_value(stat, 0, PEC_SHRT_MAX);
 	// Mdef2
 	stat = status->mdef2;
 	stat += status->int_ + (status->vit / 2);
-	status->mdef2 = cap_value(stat, 0, SHRT_MAX);
+	status->mdef2 = cap_value(stat, 0, PEC_SHRT_MAX);
 #endif
 
 	//Critical
@@ -2728,14 +2780,14 @@ void status_calc_misc(block_list *bl, struct status_data *status, int32 level)
 #else
 		stat += 10 + (status->luk*10/3); // (every 1 luk = +0.3 critical)
 #endif
-		status->cri = cap_value(stat, 1, SHRT_MAX);
+		status->cri = cap_value(stat, 1, PEC_SHRT_MAX);
 	} else
 		status->cri = 0;
 
 	if (bl->type&battle_config.enable_perfect_flee) {
 		stat = status->flee2;
 		stat += status->luk + 10; // (every 10 luk = +1 perfect flee)
-		status->flee2 = cap_value(stat, 0, SHRT_MAX);
+		status->flee2 = cap_value(stat, 0, PEC_SHRT_MAX);
 	} else
 		status->flee2 = 0;
 
@@ -2745,7 +2797,7 @@ void status_calc_misc(block_list *bl, struct status_data *status, int32 level)
 		switch (bl->type) {
 			case BL_MOB:
 				if(battle_config.mob_critical_rate != 100)
-					status->cri = cap_value(status->cri*battle_config.mob_critical_rate/100,1,SHRT_MAX);
+					status->cri = cap_value(status->cri*battle_config.mob_critical_rate/100,1,PEC_SHRT_MAX);
 				if(!status->cri && battle_config.mob_critical_rate)
 					status->cri = 10;
 				break;
@@ -2754,7 +2806,7 @@ void status_calc_misc(block_list *bl, struct status_data *status, int32 level)
 				break;
 			default:
 				if(battle_config.critical_rate != 100)
-					status->cri = cap_value(status->cri*battle_config.critical_rate/100,1,SHRT_MAX);
+					status->cri = cap_value(status->cri*battle_config.critical_rate/100,1,PEC_SHRT_MAX);
 				if (!status->cri && battle_config.critical_rate)
 					status->cri = 10;
 		}
@@ -2763,6 +2815,41 @@ void status_calc_misc(block_list *bl, struct status_data *status, int32 level)
 	if(bl->type&BL_REGEN)
 		status_calc_regen(bl, status, status_get_regen_data(bl));
 }
+
+#ifdef Pandas_MapFlag_MaxASPD
+static int16 nopc_maxaspd(block_list& bl) {
+	if (bl.m < 0)
+		return MAX_ASPD_NOPC;
+
+	if (map_getmapflag(bl.m, MF_MAXASPD)) {
+		int32 val = map_getmapflag_param(bl.m, MF_MAXASPD, 1);
+		if (val > 0)
+			return max(MAX_ASPD_NOPC, (AMOTION_ZERO_ASPD - val * AMOTION_INTERVAL) * AMOTION_DIVIDER_NOPC);
+	}
+
+	return MAX_ASPD_NOPC;
+}
+
+static void mob_recalc_maxaspd(block_list& bl, status_data* b_status) {
+	if (bl.type != BL_MOB || b_status == nullptr)
+		return;
+
+	mob_data* md = BL_CAST(BL_MOB, &bl);
+	status_change* sc = status_get_sc(&bl);
+	if (md == nullptr || sc == nullptr)
+		return;
+
+	status_data* status = &md->status;
+	int32 amotion = b_status->amotion;
+	status->aspd_rate = status_calc_aspd_rate(&bl, sc, b_status->aspd_rate);
+	amotion = amotion * status->aspd_rate / 1000;
+	amotion = status_calc_fix_aspd(&bl, sc, amotion);
+	status->amotion = cap_value(amotion, nopc_maxaspd(bl) / AMOTION_DIVIDER_NOPC, MIN_ASPD / AMOTION_DIVIDER_NOPC);
+
+	int32 temp = b_status->adelay * min(status->aspd_rate, 1000) / 1000;
+	status->adelay = cap_value(temp, AMOTION_DIVIDER_NOPC * status->amotion, MIN_ASPD);
+}
+#endif // Pandas_MapFlag_MaxASPD
 
 /**
  * Calculates the initial status for the given mob
@@ -2814,8 +2901,13 @@ int32 status_calc_mob_(mob_data* md, uint8 opt)
 			aFree(md->base_status);
 			md->base_status = nullptr;
 		}
-		if (opt&SCO_FIRST)
+		if (opt&SCO_FIRST) {
 			memcpy(&md->status, &md->db->status, sizeof(struct status_data));
+#ifdef Pandas_MapFlag_MaxASPD
+			if (md->db)
+				mob_recalc_maxaspd(*md, &md->db->status);
+#endif // Pandas_MapFlag_MaxASPD
+		}
 		return 0;
 	}
 	if (!md->base_status)
@@ -3053,6 +3145,11 @@ int32 status_calc_mob_(mob_data* md, uint8 opt)
 
 	if (opt&SCO_FIRST) // Initial battle status
 		memcpy(&md->status, status, sizeof(struct status_data));
+
+#ifdef Pandas_MapFlag_MaxASPD
+	if (md->db)
+		mob_recalc_maxaspd(*md, &md->db->status);
+#endif // Pandas_MapFlag_MaxASPD
 
 	return 1;
 }
@@ -3549,6 +3646,17 @@ static uint32 status_calc_maxhp_pc( map_session_data& sd, uint32 vit ){
 		dmax = 1.0;
 	}
 
+#ifdef Pandas_Extreme_Computing
+	if (battle_config.hp_rate != 100)
+		dmax = (uint32)(battle_config.hp_rate * (dmax / 100.));
+	if (sd.status.base_level < 100)
+		dmax = cap_value(dmax, 1, (uint32)battle_config.max_hp_lv99);
+	else if (sd.status.base_level < 151)
+		dmax = cap_value(dmax, 1, (uint32)battle_config.max_hp_lv150);
+	else
+		dmax = cap_value(dmax, 1, (uint32)battle_config.max_hp);
+#endif // Pandas_Extreme_Computing
+
 	return cap_value( static_cast<uint32>( dmax ), 1, std::numeric_limits<uint32>::max() );
 }
 
@@ -3599,6 +3707,12 @@ static uint32 status_calc_maxsp_pc( map_session_data& sd, uint32 int_ ){
 	if( dmax < 1.0 ){
 		dmax = 1.0;
 	}
+
+#ifdef Pandas_Extreme_Computing
+	if (battle_config.sp_rate != 100)
+		dmax = (uint32)(battle_config.sp_rate * (dmax / 100.));
+	dmax = cap_value(dmax, 1, (uint32)battle_config.max_sp);
+#endif // Pandas_Extreme_Computing
 
 	return cap_value( static_cast<uint32>( dmax ), 1, std::numeric_limits<uint32>::max() );
 }
@@ -3654,13 +3768,22 @@ bool status_calc_weight(map_session_data *sd, enum e_status_calc_weight_opt flag
 {
 	int32 b_weight, b_max_weight, skill, i;
 	status_change *sc;
+#ifdef Pandas_Extreme_Computing
+	int add_max_weight = 0;
+#endif // Pandas_Extreme_Computing
 
 	nullpo_retr(false, sd);
 
 	sc = &sd->sc;
 	b_max_weight = sd->max_weight; // Store max weight for later comparison
 	b_weight = sd->weight; // Store current weight for later comparison
+#ifndef Pandas_Extreme_Computing
 	sd->max_weight = job_db.get_maxWeight(pc_mapid2jobid(sd->class_, sd->status.sex)) + sd->status.str * 300; // Recalculate max weight
+#else
+	// 客户端能展现最大的负重数值是 0x7FFFFFFF (2147483647)
+	// 由于解除了 str 的上限, 这里可能会爆掉, 因此额外做一些防止溢出的规避措施
+	sd->max_weight = cap_value(job_db.get_maxWeight(pc_mapid2jobid(sd->class_, sd->status.sex)) + sd->status.str * 300, 0, PEC_MAX_WEIGHT);
+#endif // Pandas_Extreme_Computing
 
 	if (flag&CALCWT_ITEM) {
 		sd->weight = 0; // Reset current weight
@@ -3672,6 +3795,7 @@ bool status_calc_weight(map_session_data *sd, enum e_status_calc_weight_opt flag
 		}
 	}
 
+#ifndef Pandas_Extreme_Computing
 	if (flag&CALCWT_MAXBONUS) {
 		// Skill/Status bonus weight increases
 		sd->max_weight += sd->add_max_weight; // From bAddMaxWeight
@@ -3688,6 +3812,28 @@ bool status_calc_weight(map_session_data *sd, enum e_status_calc_weight_opt flag
 		if (pc_ismadogear(sd))
 			sd->max_weight += 15000;
 	}
+#else
+	if (flag&CALCWT_MAXBONUS) {
+		// Skill/Status bonus weight increases
+		add_max_weight += sd->add_max_weight; // From bAddMaxWeight
+		if ((skill = pc_checkskill(sd, MC_INCCARRY)) > 0)
+			add_max_weight += 2000 * skill;
+		if (pc_isriding(sd) && pc_checkskill(sd, KN_RIDING) > 0)
+			add_max_weight += 10000;
+		else if (pc_isridingdragon(sd))
+			add_max_weight += 5000 + 2000 * pc_checkskill(sd, RK_DRAGONTRAINING);
+		// 计算 SC_KNOWLEDGE 时需要依赖叠加至今的 max_weight, 赋值一下
+		sd->max_weight = cap_value(sd->max_weight + add_max_weight, 0, PEC_MAX_WEIGHT);
+		add_max_weight = 0;
+		if (sc->getSCE(SC_KNOWLEDGE))
+			add_max_weight += sd->max_weight * sc->getSCE(SC_KNOWLEDGE)->val1 / 10;
+		if ((skill = pc_checkskill(sd, ALL_INCCARRY)) > 0)
+			add_max_weight += 2000 * skill;
+		if (pc_ismadogear(sd))
+			add_max_weight += 15000;
+		sd->max_weight = cap_value(sd->max_weight + add_max_weight, 0, PEC_MAX_WEIGHT);
+	}
+#endif // Pandas_Extreme_Computing
 
 	// Update the client if the new weight calculations don't match
 	if (b_weight != sd->weight)
@@ -3880,6 +4026,47 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 	sd->percent_hp_regen.clear();
 	sd->percent_sp_regen.clear();
 
+#ifdef Pandas_Bonus2_bAddSkillRange
+	// 若 addskillrange 中存在被调整过攻击距离的技能,
+	// 那么在重置之前先将技能编号保存下来
+	std::vector<uint16> skillid_list;
+	if (sd->addskillrange.size()) {
+		for (auto& it : sd->addskillrange) {
+			skillid_list.push_back(it.id);
+		}
+	}
+
+	// 然后进行重置操作
+	sd->addskillrange.clear();
+
+	// 最后刷新客户端关于这些技能的攻击距离信息
+	for (auto& it : skillid_list) {
+		clif_skillinfo(*sd, it);
+	}
+#endif // Pandas_Bonus2_bAddSkillRange
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	sd->skillnorequire.clear();
+#endif // Pandas_Bonus2_bSkillNoRequire
+#ifdef Pandas_Bonus4_bStatusAddDamage
+	sd->status_damage_adjust.clear();
+#endif // Pandas_Bonus4_bStatusAddDamage
+#ifdef Pandas_Bonus4_bStatusAddDamageRate
+	sd->status_damagerate_adjust.clear();
+#endif // Pandas_Bonus4_bStatusAddDamageRate
+#ifdef Pandas_Bonus3_bFinalAddRace
+	for (auto& it : sd->finaladd_race) {
+		it.clear();
+	}
+#endif // Pandas_Bonus3_bFinalAddRace
+#ifdef Pandas_Bonus3_bFinalAddClass
+	for (auto& it : sd->finaladd_class) {
+		it.clear();
+	}
+#endif // Pandas_Bonus3_bFinalAddClass
+
+#ifdef Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
+	sd->pandas.multi_catch_target_class.clear();
+#endif // Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
 	// Zero up structures...
 	memset(&sd->def_set_race, 0, sizeof(sd->def_set_race)
 		+ sizeof(sd->mdef_set_race)
@@ -3900,6 +4087,12 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 		pet_delautobonus(*sd, sd->pd->autobonus2, true);
 		pet_delautobonus(*sd, sd->pd->autobonus3, true);
 	}
+
+#ifdef Pandas_NpcExpress_STATCALC
+	running_npc_stat_calc_event = true;
+	npc_script_event(*sd, NPCE_STATCALC);
+	running_npc_stat_calc_event = false;
+#endif // Pandas_NpcExpress_STATCALC
 
 	// Parse equipment
 	for (i = 0; i < EQI_MAX; i++) {
@@ -4289,29 +4482,29 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 
 	// Bonuses from cards and equipment as well as base stat, remember to avoid overflows.
 	i = base_status->str + sd->status.str + sd->indexed_bonus.param_bonus[PARAM_STR] + sd->indexed_bonus.param_equip[PARAM_STR];
-	base_status->str = cap_value(i,0,USHRT_MAX);
+	base_status->str = cap_value(i,0,PEC_USHRT_MAX);
 	i = base_status->agi + sd->status.agi + sd->indexed_bonus.param_bonus[PARAM_AGI] + sd->indexed_bonus.param_equip[PARAM_AGI];
-	base_status->agi = cap_value(i,0,USHRT_MAX);
+	base_status->agi = cap_value(i,0,PEC_USHRT_MAX);
 	i = base_status->vit + sd->status.vit + sd->indexed_bonus.param_bonus[PARAM_VIT] + sd->indexed_bonus.param_equip[PARAM_VIT];
-	base_status->vit = cap_value(i,0,USHRT_MAX);
+	base_status->vit = cap_value(i,0,PEC_USHRT_MAX);
 	i = base_status->int_+ sd->status.int_+ sd->indexed_bonus.param_bonus[PARAM_INT] + sd->indexed_bonus.param_equip[PARAM_INT];
-	base_status->int_ = cap_value(i,0,USHRT_MAX);
+	base_status->int_ = cap_value(i,0,PEC_USHRT_MAX);
 	i = base_status->dex + sd->status.dex + sd->indexed_bonus.param_bonus[PARAM_DEX] + sd->indexed_bonus.param_equip[PARAM_DEX];
-	base_status->dex = cap_value(i,0,USHRT_MAX);
+	base_status->dex = cap_value(i,0,PEC_USHRT_MAX);
 	i = base_status->luk + sd->status.luk + sd->indexed_bonus.param_bonus[PARAM_LUK] + sd->indexed_bonus.param_equip[PARAM_LUK];
-	base_status->luk = cap_value(i,0,USHRT_MAX);
+	base_status->luk = cap_value(i,0,PEC_USHRT_MAX);
 	i = base_status->pow + sd->status.pow + sd->indexed_bonus.param_bonus[PARAM_POW] + sd->indexed_bonus.param_equip[PARAM_POW];
-	base_status->pow = cap_value(i, 0, USHRT_MAX);
+	base_status->pow = cap_value(i, 0, PEC_USHRT_MAX);
 	i = base_status->sta + sd->status.sta + sd->indexed_bonus.param_bonus[PARAM_STA] + sd->indexed_bonus.param_equip[PARAM_STA];
-	base_status->sta = cap_value(i, 0, USHRT_MAX);
+	base_status->sta = cap_value(i, 0, PEC_USHRT_MAX);
 	i = base_status->wis + sd->status.wis + sd->indexed_bonus.param_bonus[PARAM_WIS] + sd->indexed_bonus.param_equip[PARAM_WIS];
-	base_status->wis = cap_value(i, 0, USHRT_MAX);
+	base_status->wis = cap_value(i, 0, PEC_USHRT_MAX);
 	i = base_status->spl + sd->status.spl + sd->indexed_bonus.param_bonus[PARAM_SPL] + sd->indexed_bonus.param_equip[PARAM_SPL];
-	base_status->spl = cap_value(i, 0, USHRT_MAX);
+	base_status->spl = cap_value(i, 0, PEC_USHRT_MAX);
 	i = base_status->con + sd->status.con + sd->indexed_bonus.param_bonus[PARAM_CON] + sd->indexed_bonus.param_equip[PARAM_CON];
-	base_status->con = cap_value(i, 0, USHRT_MAX);
+	base_status->con = cap_value(i, 0, PEC_USHRT_MAX);
 	i = base_status->crt + sd->status.crt + sd->indexed_bonus.param_bonus[PARAM_CRT] + sd->indexed_bonus.param_equip[PARAM_CRT];
-	base_status->crt = cap_value(i, 0, USHRT_MAX);
+	base_status->crt = cap_value(i, 0, PEC_USHRT_MAX);
 
 	if (sd->special_state.no_walk_delay) {
 		if (sc->getSCE(SC_ENDURE)) {
@@ -4352,6 +4545,8 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 // ----- HP MAX CALCULATION -----
 	base_status->max_hp = sd->status.max_hp = status_calc_maxhp_pc( *sd, base_status->vit );
 
+#ifndef Pandas_Extreme_Computing
+	// 此处逻辑已经被转入到 status_calc_maxhpsp_pc 函数中实现, 此处无需重复进行
 	if(battle_config.hp_rate != 100)
 		base_status->max_hp = (uint32)(battle_config.hp_rate * (base_status->max_hp/100.));
 
@@ -4361,14 +4556,18 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 		base_status->max_hp = cap_value(base_status->max_hp,1,(uint32)battle_config.max_hp_lv150);
 	else
 		base_status->max_hp = cap_value(base_status->max_hp,1,(uint32)battle_config.max_hp);
+#endif // Pandas_Extreme_Computing
 
 // ----- SP MAX CALCULATION -----
 	base_status->max_sp = sd->status.max_sp = status_calc_maxsp_pc( *sd, base_status->int_ );
 
+#ifndef Pandas_Extreme_Computing
+	// 此处逻辑已经被转入到 status_calc_maxhpsp_pc 函数中实现, 此处无需重复进行
 	if(battle_config.sp_rate != 100)
 		base_status->max_sp = (uint32)(battle_config.sp_rate * (base_status->max_sp/100.));
 
 	base_status->max_sp = cap_value(base_status->max_sp,1,(uint32)battle_config.max_sp);
+#endif // Pandas_Extreme_Computing
 
 // ----- AP MAX CALCULATION -----
 	base_status->max_ap = sd->status.max_ap = status_calc_maxap_pc( *sd );
@@ -4436,7 +4635,7 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 	if(sd->critical_rate < 0)
 		sd->critical_rate = 0;
 	if(sd->critical_rate != 100)
-		base_status->cri = cap_value(base_status->cri * sd->critical_rate/100,SHRT_MIN,SHRT_MAX);
+		base_status->cri = cap_value(base_status->cri * sd->critical_rate/100,PEC_SHRT_MIN,PEC_SHRT_MAX);
 	if (pc_checkskill(sd, SU_POWEROFLIFE) > 0)
 		base_status->cri += 200;
 
@@ -4577,7 +4776,7 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 		sd->def_rate = 0;
 	if(sd->def_rate != 100) {
 		i = base_status->def * sd->def_rate/100;
-		base_status->def = cap_value(i, DEFTYPE_MIN, DEFTYPE_MAX);
+		base_status->def = cap_value(i, PEC_DEFTYPE_MIN, PEC_DEFTYPE_MAX);
 	}
 
 	if(pc_ismadogear(sd) && pc_checkskill(sd, NC_MAINFRAME) > 0)
@@ -4597,7 +4796,7 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 		sd->mdef_rate = 0;
 	if(sd->mdef_rate != 100) {
 		i =  base_status->mdef * sd->mdef_rate/100;
-		base_status->mdef = cap_value(i, DEFTYPE_MIN, DEFTYPE_MAX);
+		base_status->mdef = cap_value(i, PEC_DEFTYPE_MIN, PEC_DEFTYPE_MAX);
 	}
 
 #ifndef RENEWAL
@@ -4963,7 +5162,16 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 			sd->bonus.long_attack_atk_rate += i;
 		}
 	}
+#ifdef Pandas_Item_Amulet_System
+	amulet_status_calc(sd, opt);
+#endif // Pandas_Item_Amulet_System
 	status_cpy(&sd->battle_status, base_status);
+
+#ifdef Pandas_Bonus2_bAddSkillRange
+	for (auto& it : sd->addskillrange) {
+		clif_skillinfo(*sd, it.id);
+	}
+#endif // Pandas_Bonus2_bAddSkillRange
 
 // ----- CLIENT-SIDE REFRESH -----
 	if(!sd->prev) {
@@ -5097,6 +5305,9 @@ int32 status_calc_homunculus_(homun_data *hd, uint8 opt)
 #endif
 
 	status->amotion = cap_value(amotion, MAX_ASPD_NOPC/AMOTION_DIVIDER_NOPC, MIN_ASPD/AMOTION_DIVIDER_NOPC);
+#ifdef Pandas_MapFlag_MaxASPD
+	status->amotion = cap_value(amotion, nopc_maxaspd(*hd)/AMOTION_DIVIDER_NOPC, MIN_ASPD/AMOTION_DIVIDER_NOPC);
+#endif // Pandas_MapFlag_MaxASPD
 	status->adelay = AMOTION_DIVIDER_NOPC * status->amotion; //It seems adelay = amotion for Homunculus.
 
 	status->max_hp = hom.max_hp;
@@ -5267,11 +5478,21 @@ void status_calc_regen(block_list *bl, struct status_data *status, struct regen_
 	status_change *sc;
 	int32 val, skill, reg_flag;
 
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!bl || !status || !regen)
+		return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	if( !(bl->type&BL_REGEN) || !regen )
 		return;
 
 	sd = BL_CAST(BL_PC,bl);
 	sc = status_get_sc(bl);
+
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if ((bl->type&BL_PC) && !sd)
+		return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
 
 	val = (status->vit/5) + max(1, status->max_hp/200);
 
@@ -5300,6 +5521,9 @@ void status_calc_regen(block_list *bl, struct status_data *status, struct regen_
 		// Only players have skill/sitting skill regen for now.
 		sregen = regen->sregen;
 
+#ifdef Pandas_Crashfix_Prevent_NullPointer
+		if (sregen) {
+#endif // Pandas_Crashfix_Prevent_NullPointer
 		val = 0;
 		if( (skill=pc_checkskill(sd,SM_RECOVERY)) > 0 )
 			val += skill*5 + skill*status->max_hp/500;
@@ -5321,9 +5545,15 @@ void status_calc_regen(block_list *bl, struct status_data *status, struct regen_
 
 		sregen->sp = cap_value(val, 0, SHRT_MAX);
 
+#ifdef Pandas_Crashfix_Prevent_NullPointer
+		}
+#endif // Pandas_Crashfix_Prevent_NullPointer
 		// Skill-related recovery (only when sit)
 		sregen = regen->ssregen;
 
+#ifdef Pandas_Crashfix_Prevent_NullPointer
+		if (sregen) {
+#endif // Pandas_Crashfix_Prevent_NullPointer
 		val = 0;
 		if( (skill=pc_checkskill(sd,MO_SPIRITSRECOVERY)) > 0 )
 			val += skill*4 + skill*status->max_hp/500;
@@ -5341,6 +5571,10 @@ void status_calc_regen(block_list *bl, struct status_data *status, struct regen_
 		if( (skill=pc_checkskill(sd,MO_SPIRITSRECOVERY)) > 0 )
 			val += skill*2 + skill*status->max_sp/500;
 		sregen->sp = cap_value(val, 0, SHRT_MAX);
+
+#ifdef Pandas_Crashfix_Prevent_NullPointer
+		}
+#endif // Pandas_Crashfix_Prevent_NullPointer
 	}
 
 	if( bl->type == BL_HOM ) {
@@ -6199,6 +6433,8 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 		if( bl.type == BL_PC ) {
 			status->max_hp = status_calc_maxhp_pc( *sd, status->vit );
 
+#ifndef Pandas_Extreme_Computing
+			// 此处逻辑已经被转入到 status_calc_maxhpsp_pc 函数中实现, 此处无需重复进行
 			if(battle_config.hp_rate != 100)
 				status->max_hp = (uint32)(battle_config.hp_rate * (status->max_hp/100.));
 
@@ -6208,6 +6444,7 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 				status->max_hp = umin(status->max_hp,(uint32)battle_config.max_hp_lv150);
 			else
 				status->max_hp = umin(status->max_hp,(uint32)battle_config.max_hp);
+#endif // Pandas_Extreme_Computing
 		}
 		else
 			status->max_hp = status_calc_maxhp(&bl, b_status->max_hp);
@@ -6222,10 +6459,13 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 		if( bl.type == BL_PC ) {
 			status->max_sp = status_calc_maxsp_pc( *sd, status->int_ );
 
+#ifndef Pandas_Extreme_Computing
+			// 此处逻辑已经被转入到 status_calc_maxhpsp_pc 函数中实现, 此处无需重复进行
 			if(battle_config.sp_rate != 100)
 				status->max_sp = (uint32)(battle_config.sp_rate * (status->max_sp/100.));
 
 			status->max_sp = umin(status->max_sp,(uint32)battle_config.max_sp);
+#endif // Pandas_Extreme_Computing
 		}
 		else
 			status->max_sp = status_calc_maxsp(&bl, b_status->max_sp);
@@ -6277,8 +6517,8 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 			matk_max += 3 * sd->soulball;
 		}
 
-		status->matk_min = static_cast<uint16>( cap_value(matk_min,0,USHRT_MAX) );
-		status->matk_max = static_cast<uint16>( cap_value(matk_max,0,USHRT_MAX) );
+		status->matk_min = static_cast<pec_uint16>( cap_value(matk_min,0,PEC_USHRT_MAX) );
+		status->matk_max = static_cast<pec_uint16>( cap_value(matk_max,0,PEC_USHRT_MAX) );
 #else
 		// MATK = StatusMATK + WeaponMATK + ExtraMATK
 		int32 lv = status_get_lv(&bl);
@@ -6362,8 +6602,8 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 			matk_max = matk_max * sd->matk_rate / 100;
 		}
 
-		status->matk_min = static_cast<uint16>( cap_value(matk_min,0,USHRT_MAX) );
-		status->matk_max = static_cast<uint16>( cap_value(matk_max,0,USHRT_MAX) );
+		status->matk_min = static_cast<pec_uint16>( cap_value(matk_min,0,PEC_USHRT_MAX) );
+		status->matk_max = static_cast<pec_uint16>( cap_value(matk_max,0,PEC_USHRT_MAX) );
 #endif
 	}
 
@@ -6384,6 +6624,9 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 
 			amotion = status_calc_fix_aspd(&bl, sc, amotion);
 			status->amotion = cap_value(amotion, MAX_ASPD_NOPC/AMOTION_DIVIDER_NOPC, MIN_ASPD/AMOTION_DIVIDER_NOPC);
+#ifdef Pandas_MapFlag_MaxASPD
+			status->amotion = cap_value(amotion, nopc_maxaspd(bl)/AMOTION_DIVIDER_NOPC, MIN_ASPD/AMOTION_DIVIDER_NOPC);
+#endif // Pandas_MapFlag_MaxASPD
 
 			status->adelay = AMOTION_DIVIDER_NOPC * status->amotion;
 		} else if ( bl.type == BL_PC ) {
@@ -6422,6 +6665,9 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 
 			amotion = status_calc_fix_aspd(&bl, sc, amotion);
 			status->amotion = cap_value(amotion, MAX_ASPD_NOPC/AMOTION_DIVIDER_NOPC, MIN_ASPD/AMOTION_DIVIDER_NOPC);
+#ifdef Pandas_MapFlag_MaxASPD
+			status->amotion = cap_value(amotion, nopc_maxaspd(bl)/AMOTION_DIVIDER_NOPC, MIN_ASPD/AMOTION_DIVIDER_NOPC);
+#endif // Pandas_MapFlag_MaxASPD
 
 			// FIXME: Officially, adelay only considers a few buffs and is not affected by ASPD debuffs at all
 			// The only way to make monsters slower is to increase their amotion above their adelay
@@ -6514,6 +6760,70 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 		status_calc_regen_rate(&bl, status_get_regen_data(&bl), sc);
 }
 
+#ifdef Pandas_Persistent_SetUnitData_For_Monster_StatusData
+void restore_special_unitdata_for_mob(mob_data* md, status_data* status, status_data* previous_status, uint8 type) {
+	if (md == nullptr || status == nullptr || previous_status == nullptr)
+		return;
+	if (md->type != BL_MOB)
+		return;
+	if (previous_status->max_hp == 0)
+		return;
+	if (!battle_config.mob_setunitdata_persistence)
+		return;
+	if (md->pandas.special_setunitdata == nullptr || md->pandas.special_setunitdata->empty())
+		return;
+
+	for (const auto& it : *md->pandas.special_setunitdata) {
+		if (type & 1) {
+			switch (it.first) {
+				case UMOB_ATKMIN:
+				case UMOB_ATKMAX:
+				case UMOB_MATKMIN:
+				case UMOB_MATKMAX:
+					break;
+				default:
+					continue;
+			}
+		}
+
+		switch (it.first) {
+			case UMOB_SIZE: status->size = previous_status->size; break;
+			case UMOB_MAXHP: status->max_hp = previous_status->max_hp; status->hp = previous_status->hp; break;
+			case UMOB_HP: status->hp = previous_status->hp; break;
+			case UMOB_SPEED: status->speed = previous_status->speed; break;
+			case UMOB_MODE: status->mode = previous_status->mode; break;
+			case UMOB_STR: status->str = previous_status->str; break;
+			case UMOB_AGI: status->agi = previous_status->agi; break;
+			case UMOB_VIT: status->vit = previous_status->vit; break;
+			case UMOB_INT: status->int_ = previous_status->int_; break;
+			case UMOB_DEX: status->dex = previous_status->dex; break;
+			case UMOB_LUK: status->luk = previous_status->luk; break;
+			case UMOB_ATKRANGE: status->rhw.range = previous_status->rhw.range; break;
+			case UMOB_ATKMIN: status->rhw.atk = previous_status->rhw.atk; break;
+			case UMOB_ATKMAX: status->rhw.atk2 = previous_status->rhw.atk2; break;
+			case UMOB_MATKMIN: status->matk_min = previous_status->matk_min; break;
+			case UMOB_MATKMAX: status->matk_max = previous_status->matk_max; break;
+			case UMOB_DEF: status->def = previous_status->def; break;
+			case UMOB_MDEF: status->mdef = previous_status->mdef; break;
+			case UMOB_HIT: status->hit = previous_status->hit; break;
+			case UMOB_FLEE: status->flee = previous_status->flee; break;
+			case UMOB_PDODGE: status->flee2 = previous_status->flee2; break;
+			case UMOB_CRIT: status->cri = previous_status->cri; break;
+			case UMOB_RACE: status->race = previous_status->race; break;
+			case UMOB_ELETYPE: status->def_ele = previous_status->def_ele; break;
+			case UMOB_ELELEVEL: status->ele_lv = previous_status->ele_lv; break;
+			case UMOB_AMOTION: status->amotion = previous_status->amotion; break;
+			case UMOB_ADELAY: status->adelay = previous_status->adelay; break;
+			case UMOB_DMOTION: status->dmotion = previous_status->dmotion; break;
+			case UMOB_RES: status->res = previous_status->res; break;
+			case UMOB_MRES: status->mres = previous_status->mres; break;
+			default:
+				break;
+		}
+	}
+}
+#endif // Pandas_Persistent_SetUnitData_For_Monster_StatusData
+
 /**
  * Recalculates parts of an objects status according to specified flags
  * Also sends updates to the client when necessary
@@ -6546,6 +6856,21 @@ void status_calc_bl_(block_list* bl, std::bitset<SCB_MAX> flag, uint8 opt)
 	// Remember previous values
 	memcpy(&b_status, status, sizeof(b_status));
 
+#ifdef Pandas_Persistent_SetUnitData_For_Monster_StatusData
+	status_data previous_b_status = {};
+	bool backed_up = false;
+
+	if (bl->type == BL_MOB) {
+		mob_data* md = BL_CAST(BL_MOB, bl);
+		status_data* base_status = status_get_base_status(bl);
+
+		if (md != nullptr && base_status != nullptr && md->pandas.special_setunitdata != nullptr && !md->pandas.special_setunitdata->empty()) {
+			memcpy(&previous_b_status, base_status, sizeof(status_data));
+			backed_up = true;
+		}
+	}
+#endif // Pandas_Persistent_SetUnitData_For_Monster_StatusData
+
 	if( flag[SCB_BASE] ) { // Calculate the object's base status too
 		switch( bl->type ) {
 		case BL_PC:  status_calc_pc_(BL_CAST(BL_PC,bl), opt);          break;
@@ -6558,6 +6883,18 @@ void status_calc_bl_(block_list* bl, std::bitset<SCB_MAX> flag, uint8 opt)
 		}
 	}
 
+#ifdef Pandas_Persistent_SetUnitData_For_Monster_StatusData
+	if (flag[SCB_BASE] && bl->type == BL_MOB && backed_up) {
+		mob_data* md = BL_CAST(BL_MOB, bl);
+
+		if (md != nullptr && md->base_status == nullptr && md->pandas.special_setunitdata != nullptr && !md->pandas.special_setunitdata->empty()) {
+			md->base_status = static_cast<status_data*>(aCalloc(1, sizeof(status_data)));
+			memcpy(md->base_status, &md->db->status, sizeof(status_data));
+			restore_special_unitdata_for_mob(md, md->base_status, &previous_b_status, 0);
+		}
+	}
+#endif // Pandas_Persistent_SetUnitData_For_Monster_StatusData
+
 	if( bl->type == BL_PET )
 		return; // Pets are not affected by statuses
 
@@ -6565,6 +6902,15 @@ void status_calc_bl_(block_list* bl, std::bitset<SCB_MAX> flag, uint8 opt)
 		return; // Assume there will be no statuses active
 
 	status_calc_bl_main(*bl, flag);
+
+#ifdef Pandas_Persistent_SetUnitData_For_Monster_StatusData
+	if (bl->type == BL_MOB && backed_up) {
+		mob_data* md = BL_CAST(BL_MOB, bl);
+
+		if (md != nullptr && md->pandas.special_setunitdata != nullptr && !md->pandas.special_setunitdata->empty())
+			restore_special_unitdata_for_mob(md, &md->status, &previous_b_status, 1);
+	}
+#endif // Pandas_Persistent_SetUnitData_For_Monster_StatusData
 
 	if (opt&SCO_FIRST && bl->type == BL_HOM)
 		return; // Client update handled by caller
@@ -6728,8 +7074,13 @@ void status_calc_bl_(block_list* bl, std::bitset<SCB_MAX> flag, uint8 opt)
 	} else if( bl->type == BL_ELEM ) {
 		TBL_ELEM* ed = BL_CAST(BL_ELEM, bl);
 
+#ifndef Pandas_Crashfix_Prevent_NullPointer
 		if (!ed->master)
 			return;
+#else
+		if (!ed || !ed->master)
+			return;
+#endif // Pandas_Crashfix_Prevent_NullPointer
 
 		if( b_status.max_hp != status->max_hp )
 			clif_elemental_updatestatus(*ed->master, SP_MAXHP);
@@ -6749,14 +7100,14 @@ void status_calc_bl_(block_list* bl, std::bitset<SCB_MAX> flag, uint8 opt)
  * @param str: Initial str
  * @return modified str with cap_value(str,0,USHRT_MAX)
  */
-static uint16 status_calc_str(block_list *bl, status_change *sc, int32 str)
+static pec_uint16 status_calc_str(block_list *bl, status_change *sc, int32 str)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(str,0,USHRT_MAX);
+		return cap_value(str,0,PEC_USHRT_MAX);
 
 	if(sc->getSCE(SC_HARMONIZE)) {
 		str -= sc->getSCE(SC_HARMONIZE)->val2;
-		return (uint16)cap_value(str,0,USHRT_MAX);
+		return (pec_uint16)cap_value(str,0,PEC_USHRT_MAX);
 	}
 	if(sc->getSCE(SC_INCALLSTATUS))
 		str += sc->getSCE(SC_INCALLSTATUS)->val1;
@@ -6814,7 +7165,7 @@ static uint16 status_calc_str(block_list *bl, status_change *sc, int32 str)
 		str -= sc->getSCE(SC_ALL_STAT_DOWN)->val2;
 
 	//TODO: Stat points should be able to be decreased below 0
-	return (uint16)cap_value(str,0,USHRT_MAX);
+	return (pec_uint16)cap_value(str,0,PEC_USHRT_MAX);
 }
 
 /**
@@ -6824,14 +7175,14 @@ static uint16 status_calc_str(block_list *bl, status_change *sc, int32 str)
  * @param agi: Initial agi
  * @return modified agi with cap_value(agi,0,USHRT_MAX)
  */
-static uint16 status_calc_agi(block_list *bl, status_change *sc, int32 agi)
+static pec_uint16 status_calc_agi(block_list *bl, status_change *sc, int32 agi)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(agi,0,USHRT_MAX);
+		return cap_value(agi,0,PEC_USHRT_MAX);
 
 	if(sc->getSCE(SC_HARMONIZE)) {
 		agi -= sc->getSCE(SC_HARMONIZE)->val2;
-		return (uint16)cap_value(agi,0,USHRT_MAX);
+		return (pec_uint16)cap_value(agi,0,PEC_USHRT_MAX);
 	}
 	if(sc->getSCE(SC_CONCENTRATE) && !sc->getSCE(SC_QUAGMIRE))
 		agi += (agi-sc->getSCE(SC_CONCENTRATE)->val3)*sc->getSCE(SC_CONCENTRATE)->val2/100;
@@ -6887,7 +7238,7 @@ static uint16 status_calc_agi(block_list *bl, status_change *sc, int32 agi)
 		agi -= sc->getSCE(SC_ALL_STAT_DOWN)->val2;
 
 	//TODO: Stat points should be able to be decreased below 0
-	return (uint16)cap_value(agi,0,USHRT_MAX);
+	return (pec_uint16)cap_value(agi,0,PEC_USHRT_MAX);
 }
 
 /**
@@ -6897,14 +7248,14 @@ static uint16 status_calc_agi(block_list *bl, status_change *sc, int32 agi)
  * @param vit: Initial vit
  * @return modified vit with cap_value(vit,0,USHRT_MAX)
  */
-static uint16 status_calc_vit(block_list *bl, status_change *sc, int32 vit)
+static pec_uint16 status_calc_vit(block_list *bl, status_change *sc, int32 vit)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(vit,0,USHRT_MAX);
+		return cap_value(vit,0,PEC_USHRT_MAX);
 
 	if(sc->getSCE(SC_HARMONIZE)) {
 		vit -= sc->getSCE(SC_HARMONIZE)->val2;
-		return (uint16)cap_value(vit,0,USHRT_MAX);
+		return (pec_uint16)cap_value(vit,0,PEC_USHRT_MAX);
 	}
 	if(sc->getSCE(SC_INCALLSTATUS))
 		vit += sc->getSCE(SC_INCALLSTATUS)->val1;
@@ -6948,7 +7299,7 @@ static uint16 status_calc_vit(block_list *bl, status_change *sc, int32 vit)
 		vit -= sc->getSCE(SC_ALL_STAT_DOWN)->val2;
 
 	//TODO: Stat points should be able to be decreased below 0
-	return (uint16)cap_value(vit,0,USHRT_MAX);
+	return (pec_uint16)cap_value(vit,0,PEC_USHRT_MAX);
 }
 
 /**
@@ -6958,14 +7309,14 @@ static uint16 status_calc_vit(block_list *bl, status_change *sc, int32 vit)
  * @param int_: Initial int32
  * @return modified int32 with cap_value(int_,0,USHRT_MAX)
  */
-static uint16 status_calc_int(block_list *bl, status_change *sc, int32 int_)
+static pec_uint16 status_calc_int(block_list *bl, status_change *sc, int32 int_)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(int_,0,USHRT_MAX);
+		return cap_value(int_,0,PEC_USHRT_MAX);
 
 	if(sc->getSCE(SC_HARMONIZE)) {
 		int_ -= sc->getSCE(SC_HARMONIZE)->val2;
-		return (uint16)cap_value(int_,0,USHRT_MAX);
+		return (pec_uint16)cap_value(int_,0,PEC_USHRT_MAX);
 	}
 	if(sc->getSCE(SC_INCALLSTATUS))
 		int_ += sc->getSCE(SC_INCALLSTATUS)->val1;
@@ -7026,7 +7377,7 @@ static uint16 status_calc_int(block_list *bl, status_change *sc, int32 int_)
 		int_ -= sc->getSCE(SC_ALL_STAT_DOWN)->val2;
 
 	//TODO: Stat points should be able to be decreased below 0
-	return (uint16)cap_value(int_,0,USHRT_MAX);
+	return (pec_uint16)cap_value(int_,0,PEC_USHRT_MAX);
 }
 
 /**
@@ -7036,14 +7387,14 @@ static uint16 status_calc_int(block_list *bl, status_change *sc, int32 int_)
  * @param dex: Initial dex
  * @return modified dex with cap_value(dex,0,USHRT_MAX)
  */
-static uint16 status_calc_dex(block_list *bl, status_change *sc, int32 dex)
+static pec_uint16 status_calc_dex(block_list *bl, status_change *sc, int32 dex)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(dex,0,USHRT_MAX);
+		return cap_value(dex,0,PEC_USHRT_MAX);
 
 	if(sc->getSCE(SC_HARMONIZE)) {
 		dex -= sc->getSCE(SC_HARMONIZE)->val2;
-		return (uint16)cap_value(dex,0,USHRT_MAX);
+		return (pec_uint16)cap_value(dex,0,PEC_USHRT_MAX);
 	}
 	if(sc->getSCE(SC_CONCENTRATE) && !sc->getSCE(SC_QUAGMIRE))
 		dex += (dex-sc->getSCE(SC_CONCENTRATE)->val4)*sc->getSCE(SC_CONCENTRATE)->val2/100;
@@ -7101,7 +7452,7 @@ static uint16 status_calc_dex(block_list *bl, status_change *sc, int32 dex)
 		dex -= sc->getSCE(SC_ALL_STAT_DOWN)->val2;
 
 	//TODO: Stat points should be able to be decreased below 0
-	return (uint16)cap_value(dex,0,USHRT_MAX);
+	return (pec_uint16)cap_value(dex,0,PEC_USHRT_MAX);
 }
 
 /**
@@ -7111,14 +7462,14 @@ static uint16 status_calc_dex(block_list *bl, status_change *sc, int32 dex)
  * @param luk: Initial luk
  * @return modified luk with cap_value(luk,0,USHRT_MAX)
  */
-static uint16 status_calc_luk(block_list *bl, status_change *sc, int32 luk)
+static pec_uint16 status_calc_luk(block_list *bl, status_change *sc, int32 luk)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(luk,0,USHRT_MAX);
+		return cap_value(luk,0,PEC_USHRT_MAX);
 
 	if(sc->getSCE(SC_HARMONIZE)) {
 		luk -= sc->getSCE(SC_HARMONIZE)->val2;
-		return (uint16)cap_value(luk,0,USHRT_MAX);
+		return (pec_uint16)cap_value(luk,0,PEC_USHRT_MAX);
 	}
 	if(sc->getSCE(SC_CURSE))
 		return 0;
@@ -7162,7 +7513,7 @@ static uint16 status_calc_luk(block_list *bl, status_change *sc, int32 luk)
 		luk -= sc->getSCE(SC_ALL_STAT_DOWN)->val2;
 
 	//TODO: Stat points should be able to be decreased below 0
-	return (uint16)cap_value(luk,0,USHRT_MAX);
+	return (pec_uint16)cap_value(luk,0,PEC_USHRT_MAX);
 }
 
 /**
@@ -7172,17 +7523,17 @@ static uint16 status_calc_luk(block_list *bl, status_change *sc, int32 luk)
 * @param pow: Initial pow
 * @return modified pow with cap_value(pow,0,USHRT_MAX)
 */
-static uint16 status_calc_pow(block_list *bl, status_change *sc, int32 pow)
+static pec_uint16 status_calc_pow(block_list *bl, status_change *sc, int32 pow)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(pow, 0, USHRT_MAX);
+		return cap_value(pow, 0, PEC_USHRT_MAX);
 
 	if (sc->getSCE(SC_BENEDICTUM))
 		pow += sc->getSCE(SC_BENEDICTUM)->val2;
 	if (sc->getSCE(SC_MARINE_FESTIVAL) != nullptr)
 		pow += sc->getSCE(SC_MARINE_FESTIVAL)->val2;
 
-	return (uint16)cap_value(pow, 0, USHRT_MAX);
+	return (pec_uint16)cap_value(pow, 0, PEC_USHRT_MAX);
 }
 
 /**
@@ -7192,17 +7543,17 @@ static uint16 status_calc_pow(block_list *bl, status_change *sc, int32 pow)
 * @param sta: Initial sta
 * @return modified sta with cap_value(sta,0,USHRT_MAX)
 */
-static uint16 status_calc_sta(block_list *bl, status_change *sc, int32 sta)
+static pec_uint16 status_calc_sta(block_list *bl, status_change *sc, int32 sta)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(sta, 0, USHRT_MAX);
+		return cap_value(sta, 0, PEC_USHRT_MAX);
 
 	if (sc->getSCE(SC_RELIGIO))
 		sta += sc->getSCE(SC_RELIGIO)->val2;
 	if (sc->getSCE(SC_SANDY_FESTIVAL) != nullptr)
 		sta += sc->getSCE(SC_SANDY_FESTIVAL)->val2;
 
-	return (uint16)cap_value(sta, 0, USHRT_MAX);
+	return (pec_uint16)cap_value(sta, 0, PEC_USHRT_MAX);
 }
 
 /**
@@ -7212,17 +7563,17 @@ static uint16 status_calc_sta(block_list *bl, status_change *sc, int32 sta)
 * @param wis: Initial wis
 * @return modified wis with cap_value(wis,0,USHRT_MAX)
 */
-static uint16 status_calc_wis(block_list *bl, status_change *sc, int32 wis)
+static pec_uint16 status_calc_wis(block_list *bl, status_change *sc, int32 wis)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(wis, 0, USHRT_MAX);
+		return cap_value(wis, 0, PEC_USHRT_MAX);
 
 	if (sc->getSCE(SC_RELIGIO))
 		wis += sc->getSCE(SC_RELIGIO)->val2;
 	if (sc->getSCE(SC_SANDY_FESTIVAL) != nullptr)
 		wis += sc->getSCE(SC_SANDY_FESTIVAL)->val2;
 
-	return (uint16)cap_value(wis, 0, USHRT_MAX);
+	return (pec_uint16)cap_value(wis, 0, PEC_USHRT_MAX);
 }
 
 /**
@@ -7232,17 +7583,17 @@ static uint16 status_calc_wis(block_list *bl, status_change *sc, int32 wis)
 * @param spl: Initial spl
 * @return modified spl with cap_value(spl,0,USHRT_MAX)
 */
-static uint16 status_calc_spl(block_list *bl, status_change *sc, int32 spl)
+static pec_uint16 status_calc_spl(block_list *bl, status_change *sc, int32 spl)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(spl, 0, USHRT_MAX);
+		return cap_value(spl, 0, PEC_USHRT_MAX);
 
 	if (sc->getSCE(SC_RELIGIO))
 		spl += sc->getSCE(SC_RELIGIO)->val2;
 	if (sc->getSCE(SC_SANDY_FESTIVAL) != nullptr)
 		spl += sc->getSCE(SC_SANDY_FESTIVAL)->val2;
 
-	return (uint16)cap_value(spl, 0, USHRT_MAX);
+	return (pec_uint16)cap_value(spl, 0, PEC_USHRT_MAX);
 }
 
 /**
@@ -7252,17 +7603,17 @@ static uint16 status_calc_spl(block_list *bl, status_change *sc, int32 spl)
 * @param con: Initial con
 * @return modified con with cap_value(con,0,USHRT_MAX)
 */
-static uint16 status_calc_con(block_list *bl, status_change *sc, int32 con)
+static pec_uint16 status_calc_con(block_list *bl, status_change *sc, int32 con)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(con, 0, USHRT_MAX);
+		return cap_value(con, 0, PEC_USHRT_MAX);
 
 	if (sc->getSCE(SC_BENEDICTUM))
 		con += sc->getSCE(SC_BENEDICTUM)->val2;
 	if (sc->getSCE(SC_MARINE_FESTIVAL) != nullptr)
 		con += sc->getSCE(SC_MARINE_FESTIVAL)->val2;
 
-	return (uint16)cap_value(con, 0, USHRT_MAX);
+	return (pec_uint16)cap_value(con, 0, PEC_USHRT_MAX);
 }
 
 /**
@@ -7272,17 +7623,17 @@ static uint16 status_calc_con(block_list *bl, status_change *sc, int32 con)
 * @param crt: Initial crt
 * @return modified crt with cap_value(crt,0,USHRT_MAX)
 */
-static uint16 status_calc_crt(block_list *bl, status_change *sc, int32 crt)
+static pec_uint16 status_calc_crt(block_list *bl, status_change *sc, int32 crt)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(crt, 0, USHRT_MAX);
+		return cap_value(crt, 0, PEC_USHRT_MAX);
 
 	if (sc->getSCE(SC_BENEDICTUM))
 		crt += sc->getSCE(SC_BENEDICTUM)->val2;
 	if (sc->getSCE(SC_MARINE_FESTIVAL) != nullptr)
 		crt += sc->getSCE(SC_MARINE_FESTIVAL)->val2;
 
-	return (uint16)cap_value(crt, 0, USHRT_MAX);
+	return (pec_uint16)cap_value(crt, 0, PEC_USHRT_MAX);
 }
 
 /**
@@ -7336,10 +7687,10 @@ static int32 status_calc_batk(block_list *bl, status_change *sc, int32 batk)
  * @param watk: Initial watk
  * @return modified watk with cap_value(watk,0,USHRT_MAX)
  */
-static uint16 status_calc_watk(block_list *bl, status_change *sc, int32 watk)
+static pec_uint16 status_calc_watk(block_list *bl, status_change *sc, int32 watk)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(watk,0,USHRT_MAX);
+		return cap_value(watk,0,PEC_USHRT_MAX);
 
 #ifndef RENEWAL
 	if(sc->getSCE(SC_DRUMBATTLE))
@@ -7418,7 +7769,7 @@ static uint16 status_calc_watk(block_list *bl, status_change *sc, int32 watk)
 	if (sc->getSCE(SC_GUARD_STANCE))
 		watk -= sc->getSCE(SC_GUARD_STANCE)->val3;
 
-	return (uint16)cap_value(watk,0,USHRT_MAX);
+	return (pec_uint16)cap_value(watk,0,PEC_USHRT_MAX);
 }
 
 /**
@@ -7428,14 +7779,14 @@ static uint16 status_calc_watk(block_list *bl, status_change *sc, int32 watk)
  * @param matk: Initial matk
  * @return modified matk with cap_value(matk,0,USHRT_MAX)
  */
-uint16 status_calc_pseudobuff_matk( map_session_data* sd, status_change *sc, int32 matk ){
+pec_uint16 status_calc_pseudobuff_matk( map_session_data* sd, status_change *sc, int32 matk ){
 	// Flat MATK bonus from skills without sc
 	if (uint16 skill_lv = pc_checkskill(sd, NV_TRANSCENDENCE); skill_lv > 0) {
 		matk += 15 * skill_lv + (skill_lv > 4 ? 25 : 0);
 	}
 
 	if (sc == nullptr || sc->empty())
-		return static_cast<uint16>( cap_value(matk,0,USHRT_MAX) );
+		return static_cast<pec_uint16>( cap_value(matk,0,PEC_USHRT_MAX) );
 
 	struct status_change_entry* sce;
 
@@ -7476,7 +7827,7 @@ uint16 status_calc_pseudobuff_matk( map_session_data* sd, status_change *sc, int
 	if (sc->getSCE(SC_CLIMAX_DES_HU))
 		matk += 100;
 
-	return static_cast<uint16>( cap_value(matk,0,USHRT_MAX) );
+	return static_cast<pec_uint16>( cap_value(matk,0,PEC_USHRT_MAX) );
 }
 
 /**
@@ -7485,13 +7836,13 @@ uint16 status_calc_pseudobuff_matk( map_session_data* sd, status_change *sc, int
  * @param matk: Initial matk
  * @return modified matk with cap_value(matk,0,USHRT_MAX)
  */
-uint16 status_calc_consumablematk( status_change *sc, int32 matk ){
+pec_uint16 status_calc_consumablematk( status_change *sc, int32 matk ){
 	if (sc == nullptr || sc->empty())
-		return static_cast<uint16>( cap_value(matk,0,USHRT_MAX) );
+		return static_cast<pec_uint16>( cap_value(matk,0, PEC_USHRT_MAX) );
 
 	// struct status_change_entry* sce;
 
-	return static_cast<uint16>( cap_value(matk,0,USHRT_MAX) );
+	return static_cast<pec_uint16>( cap_value(matk,0, PEC_USHRT_MAX) );
 }
 
 /**
@@ -7501,10 +7852,10 @@ uint16 status_calc_consumablematk( status_change *sc, int32 matk ){
  * @param critical: Initial critical
  * @return modified critical with cap_value(critical,10,USHRT_MAX)
  */
-static int16 status_calc_critical(block_list *bl, status_change *sc, int32 critical)
+static pec_int16 status_calc_critical(block_list *bl, status_change *sc, int32 critical)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(critical,10,SHRT_MAX);
+		return cap_value(critical,10,PEC_SHRT_MAX);
 
 	if (sc->getSCE(SC_EXPLOSIONSPIRITS))
 		critical += sc->getSCE(SC_EXPLOSIONSPIRITS)->val2;
@@ -7531,7 +7882,7 @@ static int16 status_calc_critical(block_list *bl, status_change *sc, int32 criti
 	if (sc->getSCE(SC_INTENSIVE_AIM))
 		critical += 300;
 
-	return (int16)cap_value(critical,10,SHRT_MAX);
+	return (pec_int16)cap_value(critical,10,PEC_SHRT_MAX);
 }
 
 /**
@@ -7541,10 +7892,10 @@ static int16 status_calc_critical(block_list *bl, status_change *sc, int32 criti
  * @param hit: Initial hit
  * @return modified hit with cap_value(hit,1,USHRT_MAX)
  */
-static int16 status_calc_hit(block_list *bl, status_change *sc, int32 hit)
+static pec_int16 status_calc_hit(block_list *bl, status_change *sc, int32 hit)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(hit,1,SHRT_MAX);
+		return cap_value(hit,1,PEC_SHRT_MAX);
 
 	if(sc->getSCE(SC_INCHIT))
 		hit += sc->getSCE(SC_INCHIT)->val1;
@@ -7599,7 +7950,7 @@ static int16 status_calc_hit(block_list *bl, status_change *sc, int32 hit)
 	if (sc->getSCE(SC_INTENSIVE_AIM))
 		hit += 250;
 
-	return (int16)cap_value(hit,1,SHRT_MAX);
+	return (pec_int16)cap_value(hit,1,PEC_SHRT_MAX);
 }
 
 /**
@@ -7609,7 +7960,7 @@ static int16 status_calc_hit(block_list *bl, status_change *sc, int32 hit)
  * @param flee: Initial flee
  * @return modified flee with cap_value(flee,1,USHRT_MAX)
  */
-static int16 status_calc_flee(block_list *bl, status_change *sc, int32 flee)
+static pec_int16 status_calc_flee(block_list *bl, status_change *sc, int32 flee)
 {
 	if( bl->type == BL_PC ) {
 		struct map_data *mapdata = map_getmapdata(bl->m);
@@ -7621,7 +7972,7 @@ static int16 status_calc_flee(block_list *bl, status_change *sc, int32 flee)
 	}
 
 	if(sc == nullptr || sc->empty())
-		return cap_value(flee,1,SHRT_MAX);
+		return cap_value(flee,1,PEC_SHRT_MAX);
 	if (sc->getSCE(SC_POISON_MIST))
 		return 0;
 	if(sc->getSCE(SC_OVERED_BOOST)) //Should be final and unmodifiable by any means
@@ -7711,7 +8062,7 @@ static int16 status_calc_flee(block_list *bl, status_change *sc, int32 flee)
 	if (sc->getSCE(SC_GROOMING))
 		flee += sc->getSCE(SC_GROOMING)->val2;
 
-	return (int16)cap_value(flee,1,SHRT_MAX);
+	return (pec_int16)cap_value(flee,1,PEC_SHRT_MAX);
 }
 
 /**
@@ -7721,10 +8072,10 @@ static int16 status_calc_flee(block_list *bl, status_change *sc, int32 flee)
  * @param flee2: Initial flee2
  * @return modified flee2 with cap_value(flee2,10,USHRT_MAX)
  */
-static int16 status_calc_flee2(block_list *bl, status_change *sc, int32 flee2)
+static pec_int16 status_calc_flee2(block_list *bl, status_change *sc, int32 flee2)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(flee2,10,SHRT_MAX);
+		return cap_value(flee2,10,PEC_SHRT_MAX);
 
 	if(sc->getSCE(SC_WHISTLE))
 		flee2 += sc->getSCE(SC_WHISTLE)->val3;
@@ -7735,7 +8086,7 @@ static int16 status_calc_flee2(block_list *bl, status_change *sc, int32 flee2)
 	if (sc->getSCE(SC_DORAM_FLEE2))
 		flee2 += sc->getSCE(SC_DORAM_FLEE2)->val1;
 
-	return (int16)cap_value(flee2,10,SHRT_MAX);
+	return (pec_int16)cap_value(flee2,10,PEC_SHRT_MAX);
 }
 
 /**
@@ -7745,10 +8096,10 @@ static int16 status_calc_flee2(block_list *bl, status_change *sc, int32 flee2)
  * @param def: Initial def
  * @return modified def with cap_value(def,DEFTYPE_MIN,DEFTYPE_MAX)
  */
-static defType status_calc_def(block_list *bl, status_change *sc, int32 def)
+static pec_defType status_calc_def(block_list *bl, status_change *sc, int32 def)
 {
 	if(sc == nullptr || sc->empty())
-		return (defType)cap_value(def,DEFTYPE_MIN,DEFTYPE_MAX);
+		return (pec_defType)cap_value(def,PEC_DEFTYPE_MIN,PEC_DEFTYPE_MAX);
 
 	if(sc->getSCE(SC_BERSERK))
 		return 0;
@@ -7844,7 +8195,7 @@ static defType status_calc_def(block_list *bl, status_change *sc, int32 def)
 	if (sc->getSCE(SC_ATTACK_STANCE))
 		def -= sc->getSCE(SC_ATTACK_STANCE)->val2;
 
-	return (defType)cap_value(def,DEFTYPE_MIN,DEFTYPE_MAX);
+	return (pec_defType)cap_value(def,PEC_DEFTYPE_MIN,PEC_DEFTYPE_MAX);
 }
 
 /**
@@ -7854,13 +8205,13 @@ static defType status_calc_def(block_list *bl, status_change *sc, int32 def)
  * @param def2: Initial def2
  * @return modified def2 with cap_value(def2,SHRT_MIN,SHRT_MAX)
  */
-static int16 status_calc_def2(block_list *bl, status_change *sc, int32 def2)
+static pec_int16 status_calc_def2(block_list *bl, status_change *sc, int32 def2)
 {
 	if(sc == nullptr || sc->empty())
 #ifdef RENEWAL
-		return (int16)cap_value(def2,SHRT_MIN,SHRT_MAX);
+		return (pec_int16)cap_value(def2,PEC_SHRT_MIN,PEC_SHRT_MAX);
 #else
-		return (int16)cap_value(def2,1,SHRT_MAX);
+		return (pec_int16)cap_value(def2,1,PEC_SHRT_MAX);
 #endif
 
 	if(sc->getSCE(SC_BERSERK))
@@ -7907,9 +8258,9 @@ static int16 status_calc_def2(block_list *bl, status_change *sc, int32 def2)
 		def2 -= def2 * 5 * sc->getSCE(SC_CAMOUFLAGE)->val3 / 100;
 
 #ifdef RENEWAL
-	return (int16)cap_value(def2,SHRT_MIN,SHRT_MAX);
+	return (pec_int16)cap_value(def2,PEC_SHRT_MIN,PEC_SHRT_MAX);
 #else
-	return (int16)cap_value(def2,1,SHRT_MAX);
+	return (pec_int16)cap_value(def2,1,PEC_SHRT_MAX);
 #endif
 }
 
@@ -7920,10 +8271,10 @@ static int16 status_calc_def2(block_list *bl, status_change *sc, int32 def2)
  * @param mdef: Initial mdef
  * @return modified mdef with cap_value(mdef,DEFTYPE_MIN,DEFTYPE_MAX)
  */
-static defType status_calc_mdef(block_list *bl, status_change *sc, int32 mdef)
+static pec_defType status_calc_mdef(block_list *bl, status_change *sc, int32 mdef)
 {
 	if(sc == nullptr || sc->empty())
-		return (defType)cap_value(mdef,DEFTYPE_MIN,DEFTYPE_MAX);
+		return (pec_defType)cap_value(mdef,PEC_DEFTYPE_MIN,PEC_DEFTYPE_MAX);
 
 	if(sc->getSCE(SC_BERSERK))
 		return 0;
@@ -7968,7 +8319,7 @@ static defType status_calc_mdef(block_list *bl, status_change *sc, int32 mdef)
 	if (sc->getSCE(SC_CLIMAX_CRYIMP))
 		mdef += 100;
 
-	return (defType)cap_value(mdef,DEFTYPE_MIN,DEFTYPE_MAX);
+	return (pec_defType)cap_value(mdef,PEC_DEFTYPE_MIN,PEC_DEFTYPE_MAX);
 }
 
 /**
@@ -7978,13 +8329,13 @@ static defType status_calc_mdef(block_list *bl, status_change *sc, int32 mdef)
  * @param mdef2: Initial mdef2
  * @return modified mdef2 with cap_value(mdef2,SHRT_MIN,SHRT_MAX)
  */
-static int16 status_calc_mdef2(block_list *bl, status_change *sc, int32 mdef2)
+static pec_int16 status_calc_mdef2(block_list *bl, status_change *sc, int32 mdef2)
 {
 	if(sc == nullptr || sc->empty())
 #ifdef RENEWAL
-		return (int16)cap_value(mdef2,SHRT_MIN,SHRT_MAX);
+		return (pec_int16)cap_value(mdef2,PEC_SHRT_MIN,PEC_SHRT_MAX);
 #else
-		return (int16)cap_value(mdef2,1,SHRT_MAX);
+		return (pec_int16)cap_value(mdef2,1,PEC_SHRT_MAX);
 #endif
 
 	if(sc->getSCE(SC_BERSERK))
@@ -8002,9 +8353,9 @@ static int16 status_calc_mdef2(block_list *bl, status_change *sc, int32 mdef2)
 		mdef2 -= mdef2 * (14 * sc->getSCE(SC_ANALYZE)->val1) / 100;
 
 #ifdef RENEWAL
-	return (int16)cap_value(mdef2,SHRT_MIN,SHRT_MAX);
+	return (pec_int16)cap_value(mdef2,PEC_SHRT_MIN,PEC_SHRT_MAX);
 #else
-	return (int16)cap_value(mdef2,1,SHRT_MAX);
+	return (pec_int16)cap_value(mdef2,1,PEC_SHRT_MAX);
 #endif
 }
 
@@ -8015,13 +8366,13 @@ static int16 status_calc_mdef2(block_list *bl, status_change *sc, int32 mdef2)
  * @param speed: Initial speed
  * @return modified speed with cap_value(speed,10,USHRT_MAX)
  */
-static uint16 status_calc_speed(block_list *bl, status_change *sc, int32 speed)
+static pec_uint16 status_calc_speed(block_list *bl, status_change *sc, int32 speed)
 {
 	TBL_PC* sd = BL_CAST(BL_PC, bl);
 	int32 speed_rate = 100;
 
 	if (sc == nullptr || (sd && sd->state.permanent_speed))
-		return (uint16)cap_value(speed, MIN_WALK_SPEED, MAX_WALK_SPEED);
+		return (pec_uint16)cap_value(speed, MIN_WALK_SPEED, MAX_WALK_SPEED);
 
 	if (sd && pc_ismadogear(sd)) { // Mado speed is not affected by other statuses
 		int32 val = 0;
@@ -8034,7 +8385,7 @@ static uint16 status_calc_speed(block_list *bl, status_change *sc, int32 speed)
 			val -= 25;
 		speed += speed * val / 100;
 
-		return (uint16)cap_value(speed, MIN_WALK_SPEED, MAX_WALK_SPEED);
+		return (pec_uint16)cap_value(speed, MIN_WALK_SPEED, MAX_WALK_SPEED);
 	}
 
 	if( sd && sd->ud.skilltimer != INVALID_TIMER && (pc_checkskill(sd,SA_FREECAST) > 0 || sd->ud.skill_id == LG_EXEEDBREAK) ) {
@@ -8221,7 +8572,7 @@ static uint16 status_calc_speed(block_list *bl, status_change *sc, int32 speed)
 	if( sc->getSCE(SC_WALKSPEED) && sc->getSCE(SC_WALKSPEED)->val1 > 0 ) // ChangeSpeed
 		speed = speed * 100 / sc->getSCE(SC_WALKSPEED)->val1;
 
-	return (uint16)cap_value(speed, MIN_WALK_SPEED, MAX_WALK_SPEED);
+	return (pec_uint16)cap_value(speed, MIN_WALK_SPEED, MAX_WALK_SPEED);
 }
 
 #ifdef RENEWAL_ASPD
@@ -8403,12 +8754,12 @@ static int16 status_calc_fix_aspd(block_list *bl, status_change *sc, int32 aspd)
  * @param aspd_rate: Object's current ASPD
  * @return modified aspd_rate
  */
-static int16 status_calc_aspd_rate(block_list *bl, status_change *sc, int32 aspd_rate)
+static pec_int16 status_calc_aspd_rate(block_list *bl, status_change *sc, int32 aspd_rate)
 {
 	int32 i;
 
 	if(sc == nullptr || sc->empty())
-		return cap_value(aspd_rate,0,SHRT_MAX);
+		return cap_value(aspd_rate,0,PEC_SHRT_MAX);
 
 	int32 max = 0;
 	if (sc->getSCE(SC_STAR_COMFORT))
@@ -8535,7 +8886,7 @@ static int16 status_calc_aspd_rate(block_list *bl, status_change *sc, int32 aspd
 	if (sc->getSCE(SC_STARSTANCE))
 		aspd_rate -= 10 * sc->getSCE(SC_STARSTANCE)->val2;
 
-	return (int16)cap_value(aspd_rate,0,SHRT_MAX);
+	return (pec_int16)cap_value(aspd_rate,0,PEC_SHRT_MAX);
 }
 
 /**
@@ -8545,10 +8896,10 @@ static int16 status_calc_aspd_rate(block_list *bl, status_change *sc, int32 aspd
 * @param patk: Initial patk
 * @return modified patk with cap_value(patk,0,USHRT_MAX)
 */
-static int16 status_calc_patk(block_list *bl, status_change *sc, int32 patk)
+static pec_int16 status_calc_patk(block_list *bl, status_change *sc, int32 patk)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(patk, 0, SHRT_MAX);
+		return cap_value(patk, 0, PEC_SHRT_MAX);
 
 	if (sc->getSCE(SC_POWERFUL_FAITH))
 		patk += sc->getSCE(SC_POWERFUL_FAITH)->val3;
@@ -8574,7 +8925,7 @@ static int16 status_calc_patk(block_list *bl, status_change *sc, int32 patk)
 	if (sc->getSCE(SC_OVERCOMING_CRISIS))
 		patk += sc->getSCE(SC_OVERCOMING_CRISIS)->val2;
 
-	return (int16)cap_value(patk, 0, SHRT_MAX);
+	return (pec_int16)cap_value(patk, 0, PEC_SHRT_MAX);
 }
 
 /**
@@ -8584,10 +8935,10 @@ static int16 status_calc_patk(block_list *bl, status_change *sc, int32 patk)
 * @param smatk: Initial smatk
 * @return modified smatk with cap_value(smatk,0,USHRT_MAX)
 */
-static int16 status_calc_smatk(block_list *bl, status_change *sc, int32 smatk)
+static pec_int16 status_calc_smatk(block_list *bl, status_change *sc, int32 smatk)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(smatk, 0, SHRT_MAX);
+		return cap_value(smatk, 0, PEC_SHRT_MAX);
 
 	if (sc->getSCE(SC_COMPETENTIA))
 		smatk += sc->getSCE(SC_COMPETENTIA)->val2;
@@ -8611,7 +8962,7 @@ static int16 status_calc_smatk(block_list *bl, status_change *sc, int32 smatk)
 	if (sc->getSCE(SC_OVERCOMING_CRISIS))
 		smatk += sc->getSCE(SC_OVERCOMING_CRISIS)->val2;
 
-	return (int16)cap_value(smatk, 0, SHRT_MAX);
+	return (pec_int16)cap_value(smatk, 0, PEC_SHRT_MAX);
 }
 
 /**
@@ -8621,10 +8972,10 @@ static int16 status_calc_smatk(block_list *bl, status_change *sc, int32 smatk)
 * @param res: Initial res
 * @return modified res with cap_value(res,0,USHRT_MAX)
 */
-static int16 status_calc_res(block_list *bl, status_change *sc, int32 res)
+static pec_int16 status_calc_res(block_list *bl, status_change *sc, int32 res)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(res, 0, SHRT_MAX);
+		return cap_value(res, 0, PEC_SHRT_MAX);
 
 	if (sc->getSCE(SC_FIRM_FAITH))
 		res += sc->getSCE(SC_FIRM_FAITH)->val3;
@@ -8641,7 +8992,7 @@ static int16 status_calc_res(block_list *bl, status_change *sc, int32 res)
 	if (sc->getSCE(SC_TOXIN_OF_MANDARA))
 		res -= sc->getSCE(SC_TOXIN_OF_MANDARA)->val2;
 
-	return (int16)cap_value(res, 0, SHRT_MAX);
+	return (pec_int16)cap_value(res, 0, PEC_SHRT_MAX);
 }
 
 /**
@@ -8651,10 +9002,10 @@ static int16 status_calc_res(block_list *bl, status_change *sc, int32 res)
 * @param mres: Initial mres
 * @return modified mres with cap_value(mres,0,USHRT_MAX)
 */
-static int16 status_calc_mres(block_list *bl, status_change *sc, int32 mres)
+static pec_int16 status_calc_mres(block_list *bl, status_change *sc, int32 mres)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(mres, 0, SHRT_MAX);
+		return cap_value(mres, 0, PEC_SHRT_MAX);
 
 	if (sc->getSCE(SC_GOLDENE_TONE))
 		mres += sc->getSCE(SC_GOLDENE_TONE)->val2;
@@ -8663,7 +9014,7 @@ static int16 status_calc_mres(block_list *bl, status_change *sc, int32 mres)
 	if (sc->getSCE(SC_GEF_NOCTURN))
 		mres -= sc->getSCE(SC_GEF_NOCTURN)->val2;
 
-	return (int16)cap_value(mres, 0, SHRT_MAX);
+	return (pec_int16)cap_value(mres, 0, PEC_SHRT_MAX);
 }
 
 /**
@@ -8673,15 +9024,15 @@ static int16 status_calc_mres(block_list *bl, status_change *sc, int32 mres)
 * @param hplus: Initial hplus
 * @return modified hplus with cap_value(hplus,0,USHRT_MAX)
 */
-static int16 status_calc_hplus(block_list *bl, status_change *sc, int32 hplus)
+static pec_int16 status_calc_hplus(block_list *bl, status_change *sc, int32 hplus)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(hplus, 0, SHRT_MAX);
+		return cap_value(hplus, 0, PEC_SHRT_MAX);
 
 	if (sc->getSCE(SC_TEMPORARY_COMMUNION) != nullptr)
 		hplus += sc->getSCE(SC_TEMPORARY_COMMUNION)->val2;
 
-	return (int16)cap_value(hplus, 0, SHRT_MAX);
+	return (pec_int16)cap_value(hplus, 0, PEC_SHRT_MAX);
 }
 
 /**
@@ -8691,15 +9042,15 @@ static int16 status_calc_hplus(block_list *bl, status_change *sc, int32 hplus)
 * @param crate: Initial crate
 * @return modified crate with cap_value(crate,0,USHRT_MAX)
 */
-static int16 status_calc_crate(block_list *bl, status_change *sc, int32 crate)
+static pec_int16 status_calc_crate(block_list *bl, status_change *sc, int32 crate)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(crate, 0, SHRT_MAX);
+		return cap_value(crate, 0, PEC_SHRT_MAX);
 
 	if (sc->getSCE(SC_PRE_ACIES))
 		crate += sc->getSCE(SC_PRE_ACIES)->val2;
 
-	return (int16)cap_value(crate, 0, SHRT_MAX);
+	return (pec_int16)cap_value(crate, 0, PEC_SHRT_MAX);
 }
 
 /**
@@ -9083,7 +9434,7 @@ const status_data* status_get_base_status(const block_list* bl){
  * @param bl: Object whose defense to get [PC|MOB|HOM|MER|ELEM]
  * @return defense with cap_value(def, DEFTYPE_MIN, DEFTYPE_MAX)
  */
-defType status_get_def( const block_list* bl )
+pec_defType status_get_def( const block_list* bl )
 {
 	const unit_data* ud;
 	const status_data* status = status_get_status_data(*bl);
@@ -9093,7 +9444,7 @@ defType status_get_def( const block_list* bl )
 	if (ud && ud->skilltimer != INVALID_TIMER)
 		def -= def * skill_get_castdef(ud->skill_id)/100;
 
-	return cap_value(def, DEFTYPE_MIN, DEFTYPE_MAX);
+	return cap_value(def, PEC_DEFTYPE_MIN, PEC_DEFTYPE_MAX);
 }
 
 /**
@@ -9212,6 +9563,11 @@ int32 status_get_guild_id(const block_list* bl)
 int32 status_get_emblem_id(const block_list* bl)
 {
 	nullpo_ret(bl);
+#ifdef Pandas_MapFlag_HideGuildInfo
+	// 若当前地图有 hideguildinfo 标记, 不返回角色公会的图标编号.
+	if (bl->m != -1 && map_getmapflag(bl->m, MF_HIDEGUILDINFO))
+		return 0;
+#endif // Pandas_MapFlag_HideGuildInfo
 	switch (bl->type) {
 		case BL_PC:
 			return static_cast<const map_session_data*>(bl)->guild_emblem_id;
@@ -9561,6 +9917,65 @@ status_change* status_get_sc(block_list* bl){
 const status_change* status_get_sc(const block_list* bl){
 	return status_get_sc(const_cast<block_list*>(bl));
 }
+
+#ifdef Pandas_Struct_Unit_CommonData
+s_unit_common_data* status_get_ucd(block_list* bl)
+{
+	if( bl )
+	switch (bl->type) {
+		case BL_PC: return &reinterpret_cast<map_session_data*>(bl)->ucd;
+		case BL_MOB: return &reinterpret_cast<mob_data*>(bl)->ucd;
+		case BL_NPC: return &reinterpret_cast<npc_data*>(bl)->ucd;
+		case BL_HOM: return &reinterpret_cast<homun_data*>(bl)->ucd;
+		case BL_MER: return &reinterpret_cast<s_mercenary_data*>(bl)->ucd;
+		case BL_PET: return &reinterpret_cast<pet_data*>(bl)->ucd;
+		case BL_ELEM: return &reinterpret_cast<s_elemental_data*>(bl)->ucd;
+	}
+	return nullptr;
+}
+#endif // Pandas_Struct_Unit_CommonData
+
+#ifdef Pandas_Helper_Common_Function
+bool status_ishiding(struct block_list* bl, struct block_list* observer_bl) {
+	if (bl == nullptr)
+		return false;
+
+	status_change* sc = status_get_sc(bl);
+
+	if (sc == nullptr)
+		return false;
+
+	int option = sc->option;
+
+	if (bl->type == BL_NPC && observer_bl != nullptr && observer_bl->type == BL_PC
+#ifdef Pandas_Fix_Cloak_Status_Baffling
+		&& !sc->cloak_reverting
+#endif // Pandas_Fix_Cloak_Status_Baffling
+	) {
+		npc_data* nd = reinterpret_cast<npc_data*>(bl);
+		map_session_data* sd = reinterpret_cast<map_session_data*>(observer_bl);
+
+		if (npc_is_cloaked(nd, sd))
+			option |= OPTION_CLOAK;
+		else
+			option &= ~OPTION_CLOAK;
+	}
+
+	return (option & (OPTION_HIDE | OPTION_CLOAK | OPTION_CHASEWALK)) != 0;
+}
+
+bool status_isinvisible(struct block_list* bl) {
+	if (bl == nullptr)
+		return false;
+
+	status_change* sc = status_get_sc(bl);
+
+	if (sc == nullptr)
+		return false;
+
+	return (sc->option & OPTION_INVISIBLE) != 0;
+}
+#endif // Pandas_Helper_Common_Function
 
 
 /*========================================== [Playtester]
@@ -10127,7 +10542,7 @@ TIMER_FUNC(status_change_start_timer) {
 		bl = map_id2bl(entry->bl_id);
 
 	if (bl != nullptr && !status_isdead(*bl))
-		status_change_start_post_delay(src, bl, entry->type, entry->val1, entry->val2, entry->val3, entry->val4, entry->tick, entry->flag);
+		status_change_start_post_delay(src, bl, entry->type, entry->rate, entry->val1, entry->val2, entry->val3, entry->val4, entry->tick, entry->flag);
 
 	delay_status.erase(index);
 
@@ -10233,6 +10648,30 @@ bool status_change_start(block_list* src, block_list* bl, sc_type type, int32 ra
 
 	int32 tick = (int32)duration;
 
+#ifdef Pandas_NpcFilter_SC_START
+	if (map_session_data* sd = BL_CAST(BL_PC, bl); sd != nullptr && sd->type == BL_PC) {
+		pc_setreg(sd, add_str("@about2start_sc_id"), static_cast<int64>(type));
+		pc_setreg(sd, add_str("@about2start_sc_rate"), rate);
+		pc_setreg(sd, add_str("@about2start_sc_tick"), tick);
+		pc_setreg(sd, add_str("@about2start_sc_val1"), val1);
+		pc_setreg(sd, add_str("@about2start_sc_val2"), val2);
+		pc_setreg(sd, add_str("@about2start_sc_val3"), val3);
+		pc_setreg(sd, add_str("@about2start_sc_val4"), val4);
+
+		if (npc_script_filter(sd, NPCF_SC_START))
+			return false;
+
+		rate = static_cast<int32>(cap_value(pc_readreg(sd, add_str("@about2start_sc_rate")), 0, INT_MAX));
+		tick = static_cast<int32>(cap_value(pc_readreg(sd, add_str("@about2start_sc_tick")), -1, INT_MAX));
+		val1 = static_cast<int32>(cap_value(pc_readreg(sd, add_str("@about2start_sc_val1")), INT_MIN, INT_MAX));
+		val2 = static_cast<int32>(cap_value(pc_readreg(sd, add_str("@about2start_sc_val2")), INT_MIN, INT_MAX));
+		val3 = static_cast<int32>(cap_value(pc_readreg(sd, add_str("@about2start_sc_val3")), INT_MIN, INT_MAX));
+		val4 = static_cast<int32>(cap_value(pc_readreg(sd, add_str("@about2start_sc_val4")), INT_MIN, INT_MAX));
+
+		if (!rate || !tick)
+			return false;
+	}
+#endif // Pandas_NpcFilter_SC_START
 	// Type-specific checks that need to happen before the delay
 	switch (type) {
 		case SC_STONE:
@@ -10268,7 +10707,7 @@ bool status_change_start(block_list* src, block_list* bl, sc_type type, int32 ra
 	// If there is no delay, we proceed immediately
 	// Otherwise, we store the status change data in a struct and set up a timer for after the delay
 	if (delay <= 0)
-		return status_change_start_post_delay(src, bl, type, val1, val2, val3, val4, tick, flag);
+		return status_change_start_post_delay(src, bl, type, rate, val1, val2, val3, val4, tick, flag);
 
 	std::shared_ptr<s_delay_status> entry = std::make_shared<s_delay_status>();
 
@@ -10279,6 +10718,7 @@ bool status_change_start(block_list* src, block_list* bl, sc_type type, int32 ra
 	entry->val2 = val2;
 	entry->val3 = val3;
 	entry->val4 = val4;
+	entry->rate = rate;
 #ifdef RENEWAL
 	// In renewal, the delay is substracted from the duration
 	entry->tick = std::max<int32>(1, tick - delay);
@@ -10307,7 +10747,7 @@ bool status_change_start(block_list* src, block_list* bl, sc_type type, int32 ra
  * @param flag: Value which determines what parts to calculate. See e_status_change_start_flags
  * @return Whether the status change was resisted (false) or applied (true)
  */
-static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_type type, int32 val1, int32 val2, int32 val3, int32 val4, int32 tick, uint8 flag)
+static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_type type, int32 rate, int32 val1, int32 val2, int32 val3, int32 val4, int32 tick, uint8 flag)
 {
 	map_session_data* sd = BL_CAST(BL_PC, bl);
 	status_change* sc = status_get_sc(bl);
@@ -12092,6 +12532,11 @@ static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_t
 			}
 			break;
 		case SC_GLOOMYDAY_SK:
+#ifdef Pandas_Crashfix_Divide_by_Zero
+			// 极端情况下可能会造成除数为零的情况, 曾经有人崩溃后上报过 [Sola丶小克]
+			if (((sd ? pc_checkskill(sd, WM_LESSON) * 5 : 0) + val1 * 10) == 0)
+				break;
+#endif // Pandas_Crashfix_Divide_by_Zero
 			// Random number between [15 ~ (Voice Lesson Skill Level x 5) + (Skill Level x 10)] %.
 			val2 = 15 + rnd()%( (sd?pc_checkskill(sd, WM_LESSON)*5:0) + val1*10 );
 			break;
@@ -13167,13 +13612,18 @@ static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_t
 
 	// On Aegis, when turning on a status change, first goes the option packet, then the sc packet.
 	if (!disable_opt_flag && (opt_flag[SCF_SENDOPTION] || opt_flag[SCF_ONTOUCH] || opt_flag[SCF_UNITMOVE] || opt_flag[SCF_NONPLAYER] || opt_flag[SCF_SENDLOOK])) {
+#ifndef Pandas_Aura_Mechanism
 		clif_changeoption(bl);
+#endif // Pandas_Aura_Mechanism
 		if(sd && opt_flag[SCF_SENDLOOK]) {
 			clif_changelook(bl,LOOK_BASE,vd->look[LOOK_BASE]);
 			clif_changelook(bl,LOOK_WEAPON,0);
 			clif_changelook(bl,LOOK_SHIELD,0);
 			clif_changelook(bl,LOOK_CLOTHES_COLOR,vd->look[LOOK_CLOTHES_COLOR]);
 		}
+#ifdef Pandas_Aura_Mechanism
+		clif_changeoption(bl);
+#endif // Pandas_Aura_Mechanism
 	}
 
 	if (calc_flag[SCB_DYE]) { // Reset DYE color
@@ -13271,7 +13721,30 @@ static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_t
 				mob_data* boss_md = map_id2boss( sce->val1 );
 
 				if( boss_md == nullptr ){
+#ifndef Pandas_ScriptCommand_BossMonster
 					return false;
+#else
+					// 若跟踪的 BOSS 游戏单位编号已经不存在, 那么跟踪下一个存活的 BOSS
+					// 备注: 临时召唤的 BOSS 才会出现这样的情况, 脚本里写死的自然重生 BOSS 就算死亡, 游戏单位编号也还在
+					mob_data* next_boss_md = map_getmob_boss(sd->m, true);
+
+					if (next_boss_md && boss_md != next_boss_md) {
+						boss_md = next_boss_md;
+						sce->val1 = boss_md->id;
+
+						// 若新跟踪的 BOSS 处于存活状态, 那么重新告诉玩家我们探测到了新的 BOSS
+						if (boss_md->spawn_timer == INVALID_TIMER) {
+							sce->val2 = 0;
+							clif_bossmapinfo(*sd, boss_md, BOSS_INFO_ALIVE_WITHMSG);
+							break;
+						}
+					} else {
+						sce->val2 = 1;
+						clif_bossmapinfo_clear(sd);
+						sce->val4 = 0;
+						break;
+					}
+#endif // Pandas_ScriptCommand_BossMonster
 				}
 
 				// Not on same map anymore
@@ -13352,6 +13825,20 @@ static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_t
 
 	if( opt_flag[SCF_ONTOUCH] && sd && !sd->npc_ontouch_.empty() )
 		npc_touchnext_areanpc(sd,false); // Run OnTouch_ on next char in range
+
+#ifdef Pandas_NpcExpress_SC_START
+	if (sd && sd->type == BL_PC) {
+		pc_setreg(sd, add_str("@startedsc"), (int64)type);			// 为了兼容SEA和CSEA
+		pc_setreg(sd, add_str("@started_sc_id"), (int64)type);
+		pc_setreg(sd, add_str("@started_sc_rate"), rate);
+		pc_setreg(sd, add_str("@started_sc_tick"), tick);
+		pc_setreg(sd, add_str("@started_sc_val1"), val1);
+		pc_setreg(sd, add_str("@started_sc_val2"), val2);
+		pc_setreg(sd, add_str("@started_sc_val3"), val3);
+		pc_setreg(sd, add_str("@started_sc_val4"), val4);
+		npc_script_event(*sd, NPCX_SC_START);
+	}
+#endif // Pandas_NpcExpress_SC_START
 
 	return true;
 }
@@ -14089,7 +14576,9 @@ int32 status_change_end( block_list* bl, enum sc_type type, int32 tid ){
 	if( opt_flag[SCF_NONPLAYER] ) // bugreport:681
 		clif_changeoption2( *bl );
 	else if (!disable_opt_flag && (opt_flag[SCF_SENDOPTION] || opt_flag[SCF_ONTOUCH] || opt_flag[SCF_UNITMOVE] || opt_flag[SCF_NONPLAYER] || opt_flag[SCF_SENDLOOK])) {
+#ifndef Pandas_Aura_Mechanism
 		clif_changeoption(bl);
+#endif // Pandas_Aura_Mechanism
 		if (sd && opt_flag[SCF_SENDLOOK]) {
 			clif_changelook(bl,LOOK_BASE,sd->vd.look[LOOK_BASE]);
 			sd->update_look( LOOK_WEAPON );
@@ -14099,6 +14588,9 @@ int32 status_change_end( block_list* bl, enum sc_type type, int32 tid ){
 			clif_changelook(bl,LOOK_CLOTHES_COLOR,cap_value(sd->status.clothes_color,0,battle_config.max_cloth_color));
 			clif_changelook( bl, LOOK_BODY2, sd->status.body );
 		}
+#ifdef Pandas_Aura_Mechanism
+		clif_changeoption(bl);
+#endif // Pandas_Aura_Mechanism
 	}
 	if (calc_flag.any()) {
 #ifndef RENEWAL
@@ -14119,6 +14611,14 @@ int32 status_change_end( block_list* bl, enum sc_type type, int32 tid ){
 	// Needed to be here to make sure OPT1_STONEWAIT has been cleared from the target (only on natural expiration of the stone wait timer)
 	if (type == SC_STONEWAIT && tid != INVALID_TIMER)
 		status_change_start(bl, bl, SC_STONE, 100, val1, val2, 0, 0, val3, SCSTART_NOAVOID);
+
+#ifdef Pandas_NpcExpress_SC_END
+	if (sd && sd->type == BL_PC) {
+		pc_setreg(sd, add_str("@endedsc"), (int64)type);			// 为了兼容SEA和CSEA
+		pc_setreg(sd, add_str("@ended_sc_id"), (int64)type);
+		npc_script_event(*sd, NPCX_SC_END);
+	}
+#endif // Pandas_NpcExpress_SC_END
 
 	return 1;
 }
@@ -14390,8 +14890,31 @@ TIMER_FUNC(status_change_timer){
 			mob_data* boss_md = map_id2boss( sce->val1 );
 
 			if( boss_md == nullptr ){
+#ifndef Pandas_ScriptCommand_BossMonster
 				sce->val4 = 0;
 				break;
+#else
+				// 若跟踪的 BOSS 游戏单位编号已经不存在, 那么跟踪下一个存活的 BOSS
+				// 备注: 临时召唤的 BOSS 才会出现这样的情况, 脚本里写死的自然重生 BOSS 就算死亡, 游戏单位编号也还在
+				mob_data* next_boss_md = map_getmob_boss(sd->m, true);
+
+				if (next_boss_md && boss_md != next_boss_md) {
+					boss_md = next_boss_md;
+					sce->val1 = boss_md->id;
+
+					// 若新跟踪的 BOSS 处于存活状态, 那么重新告诉玩家我们探测到了新的 BOSS
+					if (boss_md->spawn_timer == INVALID_TIMER) {
+						sce->val2 = 0;
+						clif_bossmapinfo(*sd, boss_md, BOSS_INFO_ALIVE_WITHMSG);
+						break;
+					}
+				} else {
+					sce->val2 = 1;
+					clif_bossmapinfo_clear(sd);
+					sce->val4 = 0;
+					break;
+				}
+#endif // Pandas_ScriptCommand_BossMonster
 			}
 
 			// Not on same map anymore
@@ -14407,6 +14930,23 @@ TIMER_FUNC(status_change_timer){
 				sce->val2 = 1;
 				clif_bossmapinfo( *sd, boss_md, BOSS_INFO_DEAD );
 			}
+#ifdef Pandas_ScriptCommand_BossMonster
+			// 若之前跟踪的 BOSS 已经死亡并等待重生, 那么跟踪下一个存活的 BOSS
+			if (sce->val2) {
+				mob_data* next_boss_md = map_getmob_boss(sd->m, true);
+
+				if (next_boss_md && boss_md != next_boss_md) {
+					boss_md = next_boss_md;
+					sce->val1 = boss_md->id;
+
+					// 若新跟踪的 BOSS 处于存活状态, 那么重新告诉玩家我们探测到了新的 BOSS
+					if (boss_md->spawn_timer == INVALID_TIMER) {
+						sce->val2 = 0;
+						clif_bossmapinfo(*sd, boss_md, BOSS_INFO_ALIVE_WITHMSG);
+					}
+				}
+			}
+#endif // Pandas_ScriptCommand_BossMonster
 		}
 		break;
 

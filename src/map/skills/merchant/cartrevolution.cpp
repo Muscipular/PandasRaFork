@@ -17,7 +17,7 @@ void SkillCartRevolution::calculateSkillRatio(const Damage *wd, const block_list
 		base_skillratio += 100; // Max damage for non players.
 }
 
-void SkillCartRevolution::modifyHitRate(int16 &hit_rate, const block_list *src, const block_list *target, uint16 skill_lv) const {
+void SkillCartRevolution::modifyHitRate(pec_int16&hit_rate, const block_list *src, const block_list *target, uint16 skill_lv) const {
 	const map_session_data *sd = BL_CAST(BL_PC, src);
 
 	if (sd && pc_checkskill(sd, GN_REMODELING_CART))

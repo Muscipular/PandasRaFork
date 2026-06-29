@@ -26,8 +26,22 @@
 #include "cbasetypes.hpp"
 #include "malloc.hpp"
 #include "mmo.hpp"
+#include "performance.hpp"
 #include "showmsg.hpp"
 #include "strlib.hpp"
+#include "assistant.hpp"
+
+#ifdef Pandas_Support_Future_Execution
+#include "future.hpp"
+#endif // Pandas_Support_Future_Execution
+
+#ifdef Pandas_Console_Translate
+#include "translate.hpp"
+#endif // Pandas_Console_Translate
+
+#ifdef Pandas_Setup_Console_Output_Codepage
+#include "utf8.hpp"
+#endif // Pandas_Setup_Console_Output_Codepage
 
 #ifndef DEPRECATED_COMPILER_SUPPORT
 	#if defined( _MSC_VER ) && _MSC_VER < 1914
@@ -293,9 +307,12 @@ const char *get_git_hash (void) {
  *  ASCII By CalciumKid 1/12/2011
  *--------------------------------------*/
 static void display_title(void) {
+#ifndef Pandas_Show_Version
 	const char* svn = get_svn_revision();
 	const char* git = get_git_hash();
+#endif // Pandas_Show_Version
 
+#ifndef Pandas_Show_Logo
 	ShowMessage("\n");
 	ShowMessage("" CL_PASS "     " CL_BOLD "                                                                 " CL_PASS"" CL_CLL "" CL_NORMAL "\n");
 	ShowMessage("" CL_PASS "       " CL_BT_WHITE "            rAthena Development Team presents                  " CL_PASS "" CL_CLL "" CL_NORMAL "\n");
@@ -308,10 +325,67 @@ static void display_title(void) {
 	ShowMessage("" CL_PASS "       " CL_GREEN "              http://rathena.org/board/                        " CL_PASS "" CL_CLL "" CL_NORMAL "\n");
 	ShowMessage("" CL_PASS "     " CL_BOLD "                                                                 " CL_PASS "" CL_CLL "" CL_NORMAL "\n");
 
+#else
+	ShowMessage("\n");
+	ShowMessage("" CL_BG_RED "     " CL_BOLD "                                                                      " CL_BT_WHITE "" CL_CLL "" CL_NORMAL "\n");
+	ShowMessage("" CL_BG_RED "     " CL_BT_WHITE "                       Pandas Dev Team Presents                   " CL_BT_WHITE "" CL_CLL "" CL_NORMAL "\n");
+	ShowMessage("" CL_BG_RED "     " CL_BT_WHITE "                ____                    _                         " CL_BT_WHITE "" CL_CLL "" CL_NORMAL "\n");
+	ShowMessage("" CL_BG_RED "     " CL_BT_WHITE "               |  _ \\  __ _  _ __    __| |  __ _  ___            " CL_BT_WHITE "" CL_CLL "" CL_NORMAL "\n");
+	ShowMessage("" CL_BG_RED "     " CL_BT_WHITE "               | |_) |/ _` || '_ \\  / _` | / _` |/ __|           " CL_BT_WHITE "" CL_CLL "" CL_NORMAL "\n");
+	ShowMessage("" CL_BG_RED "     " CL_BT_WHITE "               |  __/| (_| || | | || (_| || (_| |\\__ \\          " CL_BT_WHITE "" CL_CLL "" CL_NORMAL "\n");
+	ShowMessage("" CL_BG_RED "     " CL_BT_WHITE "               |_|    \\__,_||_| |_| \\__,_| \\__,_||___/         " CL_BT_WHITE "" CL_CLL "" CL_NORMAL "\n");
+	ShowMessage("" CL_BG_RED "     " CL_BT_WHITE "                                                                  " CL_BT_WHITE "" CL_CLL "" CL_NORMAL "\n");
+	ShowMessage("" CL_BG_RED "     " CL_GREEN "                          https://pandas.ws/                         " CL_BT_WHITE "" CL_CLL "" CL_NORMAL "\n");
+	ShowMessage("" CL_BG_RED "     " CL_BOLD "                                                                      " CL_BT_WHITE "" CL_CLL "" CL_NORMAL "\n");
+	ShowMessage("" CL_BG_RED "     " CL_BT_WHITE "          Pandas is only for learning and research purposes.      " CL_BT_WHITE "" CL_CLL "" CL_NORMAL "\n");
+	ShowMessage("" CL_BG_RED "     " CL_BT_WHITE "                 Please don't use it for commercial.              " CL_BT_WHITE "" CL_CLL "" CL_NORMAL "\n");
+	ShowMessage("" CL_BG_RED "     " CL_BOLD "                                                                      " CL_BT_WHITE "" CL_CLL "" CL_NORMAL "\n");
+	ShowMessage("\n");
+#endif // Pandas_Show_Logo
+
+#ifndef Pandas_Show_Version
 	if( svn[0] != UNKNOWN_VERSION )
 		ShowInfo("SVN Revision: '" CL_WHITE "%s" CL_RESET "'\n", svn);
 	else if( git[0] != UNKNOWN_VERSION )
 		ShowInfo("Git Hash: '" CL_WHITE "%s" CL_RESET "'\n", git);
+#else
+#ifdef RENEWAL
+	const char* work_mode = "Renewal";
+#else
+	const char* work_mode = "Pre-Renewal";
+#endif // RENEWAL
+#ifdef _DEBUG
+	const char* compile_mode = "Debug";
+#else
+	const char* compile_mode = "Release";
+#endif // _DEBUG
+	// 在程序启动时显示熊猫模拟器的版本号
+	if (isCommercialVersion()) {
+		std::string community_ver = formatVersion(Pandas_Version, true, true, 0);
+		ShowInfo("Welcome to Pandas Pro: " CL_GREEN "%s" CL_RESET " (Build on community version %s)\n", getPandasVersion().c_str(), community_ver.c_str());
+	}
+	else {
+		ShowInfo("Welcome to Pandas Community: " CL_GREEN "%s" CL_RESET "\n", getPandasVersion().c_str());
+	}
+	ShowInfo("Compile for Client PACKETVER: " CL_WHITE "%d" CL_RESET " | Mode: %s | %s\n", PACKETVER, work_mode, compile_mode);
+	// 若宏定义开关指定了源码的版本号和分支, 那么也一起打印出来
+	std::string branch(GIT_BRANCH), hash(GIT_HASH);
+	if (branch.length() > 0 && hash.length() > 0) {
+		ShowInfo("Compiled from Git Hash: " CL_WHITE "'%s'" CL_RESET " at " CL_WHITE "'%s'" CL_RESET " branch.\n", hash.substr(0, 7).c_str(), branch.c_str());
+	}
+#endif // Pandas_Show_Version
+
+#ifdef Pandas_Console_Translate
+	translate_status();
+#endif // Pandas_Console_Translate
+
+#ifdef Pandas_Disclaimer
+	ShowInfo("This program is completely free! You don't need to pay for it.\n");
+#endif // Pandas_Disclaimer
+
+#ifdef Pandas_Deploy_Import_Directories
+	deployImportDirectories();
+#endif // Pandas_Deploy_Import_Directories
 }
 
 // Warning if executed as superuser (root)
@@ -338,6 +412,18 @@ int32 Core::start( int32 argc, char **argv ){
 
 	this->set_status( e_core_status::CORE_INITIALIZING );
 
+#ifdef Pandas_Crashfix_VisualStudio_UnorderedMap_AVX512
+	isaAvailableHotfix();
+#endif // Pandas_Crashfix_VisualStudio_UnorderedMap_AVX512
+
+#ifdef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
+	performance_create_and_start("core_init");
+#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
+
+#ifdef Pandas_Setup_Console_Output_Codepage
+	PandasUtf8::setupConsoleOutputCP();
+#endif // Pandas_Setup_Console_Output_Codepage
+
 	{// initialize program arguments
 		char *p1;
 		if((p1 = strrchr(argv[0], '/')) != nullptr ||  (p1 = strrchr(argv[0], '\\')) != nullptr ){
@@ -355,6 +441,9 @@ int32 Core::start( int32 argc, char **argv ){
 	}
 
 	malloc_init();// needed for Show* in display_title() [FlavioJS]
+#ifdef Pandas_Console_Translate
+	do_init_translate();
+#endif // Pandas_Console_Translate
 	display_title();
 	usercheck();
 
@@ -376,6 +465,10 @@ int32 Core::start( int32 argc, char **argv ){
 	if( !this->initialize( argc, argv ) ){
 		return EXIT_FAILURE;
 	}
+
+#ifdef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
+	performance_destory("core_init");
+#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 
 	// If initialization did not trigger shutdown
 	if( this->m_status != e_core_status::STOPPING ){
@@ -407,6 +500,9 @@ int32 Core::start( int32 argc, char **argv ){
 	ers_final();
 #endif
 
+#ifdef Pandas_Console_Translate
+	do_final_translate();
+#endif // Pandas_Console_Translate
 	malloc_final();
 	this->set_status( e_core_status::CORE_FINALIZED );
 
@@ -430,6 +526,13 @@ void Core::handle_main( t_tick next ){
 #ifndef MINICORE
 	// By default we handle all socket packets
 	do_sockets( next );
+
+#ifdef Pandas_Support_Future_Execution
+	// 如果是地图服务器的话那么顺带需要执行异步任务
+	if (this->get_type() == e_core_type::MAP) {
+		do_future();
+	}
+#endif // Pandas_Support_Future_Execution
 #endif
 }
 

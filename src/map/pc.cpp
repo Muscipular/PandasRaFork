@@ -14,6 +14,7 @@
 #endif
 
 #include <common/cbasetypes.hpp>
+#include <common/assistant.hpp>
 #include <common/core.hpp> // get_svn_revision()
 #include <common/database.hpp>
 #include <common/ers.hpp>  // ers_destroy
@@ -32,6 +33,9 @@
 #include "achievement.hpp"
 #include "atcommand.hpp" // get_atcommand_level()
 #include "battle.hpp" // battle_config
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "battleground.hpp"
 #include "buyingstore.hpp"  // struct s_buyingstore
 #include "channel.hpp"
@@ -47,6 +51,12 @@
 #include "instance.hpp"
 #include "intif.hpp"
 #include "itemdb.hpp" // MAX_ITEMGROUP
+#ifdef Pandas_Item_Properties
+#include "itemprops.hpp"
+#endif // Pandas_Item_Properties
+#ifdef Pandas_Item_Amulet_System
+#include "itemamulet.hpp"
+#endif // Pandas_Item_Amulet_System
 #include "log.hpp"
 #include "map.hpp"
 #include "mercenary.hpp"
@@ -452,6 +462,15 @@ ReputationGroupDatabase reputationgroup_db;
 void pc_reputation_generate() {
 #ifdef MAP_GENERATOR
 	const std::string filePrefix = "generated/clientside/data/contentdata/";
+
+#ifdef Pandas_UserExperience_AutoCreate_Generated_Directory
+	makeDirectories(filePrefix);
+#endif // Pandas_UserExperience_AutoCreate_Generated_Directory
+
+#ifdef Pandas_UserExperience_MapServerGenerator_Output
+	ShowInfo("Writing reputation file...\n");
+#endif // Pandas_UserExperience_MapServerGenerator_Output
+
 	auto reputeInfo = nlohmann::json::object();
 	for (const auto& pair : reputation_db) {
 		auto id = pair.first;
@@ -490,6 +509,10 @@ void pc_reputation_generate() {
 	}
 
 	reputation_file.write((const char *)&bson[0], bson.size());
+
+#ifdef Pandas_UserExperience_MapServerGenerator_Output
+	ShowInfo("Writing reputation group file...\n");
+#endif // Pandas_UserExperience_MapServerGenerator_Output
 
 	auto reputeGroupInfo = nlohmann::json::object();
 	for (const auto& pair : reputationgroup_db) {
@@ -1345,6 +1368,15 @@ bool pc_can_trade_item( const map_session_data* sd, int32 index ) {
 	return false;
 }
 
+#ifdef Pandas_ScriptCommand_GetInventoryList
+bool pc_can_trade_item( const map_session_data* sd, struct item& item ) {
+	return (sd && item.expire_time == 0 &&
+		(item.bound == 0 || pc_can_give_bounded_items(sd)) &&
+		itemdb_cantrade(&item, pc_get_group_level(sd), pc_get_group_level(sd))
+		);
+}
+#endif // Pandas_ScriptCommand_GetInventoryList
+
 /*==========================================
  * Prepares character for saving.
  * @param sd
@@ -2184,6 +2216,9 @@ bool pc_authok(map_session_data *sd, uint32 login_id2, time_t expiration_time, i
 	sd->sc.option = sd->status.option; //This is the actual option used in battle.
 
 	unit_dataset(sd);
+#ifdef Pandas_BattleRecord
+	batrec_new(sd);
+#endif // Pandas_BattleRecord
 
 	sd->guild_x = -1;
 	sd->guild_y = -1;
@@ -2242,6 +2277,8 @@ bool pc_authok(map_session_data *sd, uint32 login_id2, time_t expiration_time, i
 	sd->die_counter=-1;
 
 	//display login notice
+	// 以下这行注释是为了方便 pyhelp_extracter.py 提取翻译文本使用的
+	// ShowInfo("'" CL_WHITE "%s" CL_RESET "' logged in. (AID/CID: '" CL_WHITE "%d/%d" CL_RESET "', IP: '" CL_WHITE "%d.%d.%d.%d" CL_RESET "', Group '" CL_WHITE "%d" CL_RESET "').\n", sd->status.name, sd->status.account_id, sd->status.char_id, CONVIP(ip), sd->group_id);
 	ShowInfo("'" CL_WHITE "%s" CL_RESET "' logged in."
 	         " (AID/CID: '" CL_WHITE "%d/%d" CL_RESET "',"
 	         " IP: '" CL_WHITE "%d.%d.%d.%d" CL_RESET "',"
@@ -2286,6 +2323,9 @@ bool pc_authok(map_session_data *sd, uint32 login_id2, time_t expiration_time, i
 	
 	sd->bonus_script.head = nullptr;
 	sd->bonus_script.count = 0;
+#ifdef Pandas_BonusScript_Unique_ID
+	sd->pandas.bonus_script_counter = 0;
+#endif // Pandas_BonusScript_Unique_ID
 
 	// Initialize BG queue
 	sd->bg_queue_id = 0;
@@ -2361,6 +2401,23 @@ void pc_reg_received(map_session_data *sd)
 	sd->change_level_3rd = static_cast<unsigned char>(pc_readglobalreg(sd, add_str(JOBCHANGE3RD_VAR)));
 	sd->change_level_4th = static_cast<unsigned char>(pc_readglobalreg(sd, add_str(JOBCHANGE4TH_VAR)));
 	sd->die_counter = static_cast<int32>(pc_readglobalreg(sd, add_str(PCDIECOUNTER_VAR)));
+#ifdef Pandas_BonusScript_Unique_ID
+	sd->pandas.bonus_script_counter = static_cast<uint32>(pc_readglobalreg(sd, add_str(BONUS_SCRIPT_COUNTER_VAR)));
+#endif // Pandas_BonusScript_Unique_ID
+
+#if defined(Pandas_Struct_Unit_CommonData_Aura) && defined(Pandas_Aura_Mechanism)
+	// 从角色的变量中读取当前角色设置启用的光环编号
+	sd->ucd.aura.id = static_cast<int32>(pc_readglobalreg(sd, add_str(AURA_VARIABLE)));
+	std::shared_ptr<s_aura> aura = aura_search(sd->ucd.aura.id);
+	if (aura != nullptr) {
+		// 若是一个有效的光环编号则将其特效组合放到生效列表
+		aura_effects_refill(sd);
+	} else {
+		// 若不是一个有效的光环编号, 则将相关变量和值重置为 0
+		sd->ucd.aura.id = 0;
+		pc_setglobalreg(sd, add_str(AURA_VARIABLE), 0);
+	}
+#endif // Pandas_Struct_Unit_CommonData_Aura && Pandas_Aura_Mechanism
 
 	sd->langtype = static_cast<int32>(pc_readaccountreg(sd, add_str(LANGTYPE_VAR)));
 	if (msg_checklangtype(sd->langtype,true) < 0)
@@ -2617,8 +2674,13 @@ void pc_calc_skilltree(map_session_data *sd)
 		uint16 skill_id = skill.second->nameid;
 		uint16 idx = skill_get_index(skill_id);
 
-		if( sd->status.skill[idx].flag != SKILL_FLAG_PLAGIARIZED && sd->status.skill[idx].flag != SKILL_FLAG_PERM_GRANTED ) //Don't touch these
+		if (sd->status.skill[idx].flag != SKILL_FLAG_PLAGIARIZED && sd->status.skill[idx].flag != SKILL_FLAG_PERM_GRANTED) { //Don't touch these
+#if PACKETVER_MAIN_NUM >= 20190807 || PACKETVER_RE_NUM >= 20190807 || PACKETVER_ZERO_NUM >= 20190918
+			if (sd->status.skill[idx].flag == SKILL_FLAG_TEMPORARY || sd->status.skill[idx].flag == SKILL_FLAG_PERMANENT)
+				clif_deleteskill(*sd, skill_id, true);
+#endif
 			sd->status.skill[idx].id = 0; //First clear skills.
+		}
 		/* permanent skills that must be re-checked */
 		if( sd->status.skill[idx].flag == SKILL_FLAG_PERM_GRANTED ) {
 			if (skill_id == 0) {
@@ -2731,6 +2793,10 @@ void pc_calc_skilltree(map_session_data *sd)
 
 			if (!fail) {
 				std::shared_ptr<s_skill_db> skill = skill_db.find(skid);
+#ifdef Pandas_Crashfix_Prevent_NullPointer
+				if (!skill)
+					continue;
+#endif // Pandas_Crashfix_Prevent_NullPointer
 
 				if (!sd->status.skill[sk_idx].lv && (
 					(skill->inf2[INF2_ISQUEST] && !battle_config.quest_skill_learn) ||
@@ -3283,6 +3349,89 @@ static void pc_bonus_addeff_onskill(std::vector<s_addeffectonskill> &effect, enu
 	effect.push_back(entry);
 }
 
+#if defined(Pandas_Bonus4_bStatusAddDamage) || defined(Pandas_Bonus4_bStatusAddDamageRate)
+static void pc_bonus_status_damage(std::vector<s_sc_damage>& dmgrule, enum sc_type sc, short rate, short battle_flag, int val)
+{
+	if (dmgrule.size() == MAX_PC_BONUS) {
+		ShowWarning("pc_bonus_status_damage: Reached max (%d) number of add status damage rule per character!\n", MAX_PC_BONUS);
+		return;
+	}
+
+	if (!rate)
+		return;
+
+	if (!(battle_flag & BF_RANGEMASK))
+		battle_flag |= BF_SHORT | BF_LONG;
+	if (!(battle_flag & BF_WEAPONMASK))
+		battle_flag |= BF_WEAPON;
+	if (!(battle_flag & BF_SKILLMASK)) {
+		if (battle_flag & (BF_MAGIC | BF_MISC))
+			battle_flag |= BF_SKILL;
+		if (battle_flag & BF_WEAPON)
+			battle_flag |= BF_NORMAL;
+	}
+
+	for (auto& it : dmgrule) {
+		if (it.type == sc && it.battle_flag == battle_flag) {
+			it.rate = cap_value(it.rate + rate, -10000, 10000);
+			it.val = rathena::util::safe_addition_cap(it.val, val, INT_MAX);
+			return;
+		}
+	}
+
+	struct s_sc_damage entry = {};
+
+	if (rate < -10000 || rate > 10000)
+		ShowWarning("pc_bonus_status_damage: bonus rate %d exceeds -10000~10000 range, capping.\n", rate);
+
+	entry.type = sc;
+	entry.rate = cap_value(rate, -10000, 10000);
+	entry.battle_flag = battle_flag;
+	entry.val = val;
+
+	dmgrule.push_back(entry);
+}
+#endif // defined(Pandas_Bonus4_bStatusAddDamage) || defined(Pandas_Bonus4_bStatusAddDamageRate)
+
+#if defined(Pandas_Bonus3_bFinalAddRace) || defined(Pandas_Bonus3_bFinalAddClass)
+static void pc_bonus_final_damage(std::vector<s_final_damage>& dmgrule, int8 type, short battle_flag, int damage_rate)
+{
+	if (!(battle_flag & BF_RANGEMASK))
+		battle_flag |= BF_SHORT | BF_LONG;
+	if (!(battle_flag & BF_WEAPONMASK))
+		battle_flag |= BF_WEAPON;
+	if (!(battle_flag & BF_SKILLMASK)) {
+		if (battle_flag & (BF_MAGIC | BF_MISC))
+			battle_flag |= BF_SKILL;
+		if (battle_flag & BF_WEAPON)
+			battle_flag |= BF_NORMAL;
+	}
+
+	for (auto& it : dmgrule) {
+		if (it.type == type && it.battle_flag == battle_flag) {
+			it.damage_rate = rathena::util::safe_addition_cap(it.damage_rate, damage_rate, INT_MAX);
+			return;
+		}
+	}
+
+	if (dmgrule.size() == MAX_PC_BONUS) {
+		ShowWarning("pc_bonus_final_damage: Reached max (%d) number of add final damage rule per character!\n", MAX_PC_BONUS);
+		return;
+	}
+
+	struct s_final_damage entry = {};
+
+	if (damage_rate < INT_MIN || damage_rate > INT_MAX)
+		ShowWarning("pc_bonus_final_damage: final damage adjust rate %d exceeds %d~%d range, capping.\n", INT_MIN, INT_MAX, damage_rate);
+
+	entry.type = type;
+	entry.damage_rate = cap_value(damage_rate, INT_MIN, INT_MAX);
+	entry.battle_flag = battle_flag;
+
+	dmgrule.push_back(entry);
+}
+#endif // defined(Pandas_Bonus3_bFinalAddRace) || defined(Pandas_Bonus3_bFinalAddClass)
+
 /**
  * Adjust/add drop rate modifier for player
  * @param drop: Player's sd->add_drop (struct s_add_drop)
@@ -3674,6 +3823,28 @@ static void pc_bonus_itembonus(std::vector<s_item_bonus> &bonus, uint16 id, int3
 	bonus.push_back(entry);
 }
 
+#ifdef Pandas_Bonus2_bSkillNoRequire
+static void pc_bonus_itembonus_swtich(std::vector<s_item_bonus>& bonus, uint16 id, int val, bool switch_on)
+{
+	for (auto& it : bonus) {
+		if (it.id != id)
+			continue;
+		if (switch_on)
+			it.val |= val;
+		else
+			it.val &= ~val;
+		return;
+	}
+
+	struct s_item_bonus entry = {};
+
+	entry.id = id;
+	if (switch_on)
+		entry.val |= val;
+	bonus.push_back(entry);
+}
+#endif // Pandas_Bonus2_bSkillNoRequire
+
 /**
  * Remove HP/SP to player when attacking
  * @param bonus: Bonus array
@@ -3752,28 +3923,28 @@ void pc_bonus(map_session_data *sd,int32 type,int32 val)
 		case SP_ATK1:
 			if (sd->state.lr_flag == LR_FLAG_NONE) {
 				bonus = status->rhw.atk + val;
-				status->rhw.atk = cap_value(bonus, 0, USHRT_MAX);
+				status->rhw.atk = cap_value(bonus, 0, PEC_USHRT_MAX);
 			}
 			else if (sd->state.lr_flag == LR_FLAG_WEAPON) {
 				bonus = status->lhw.atk + val;
-				status->lhw.atk =  cap_value(bonus, 0, USHRT_MAX);
+				status->lhw.atk =  cap_value(bonus, 0, PEC_USHRT_MAX);
 			}
 			break;
 		case SP_ATK2:
 			if (sd->state.lr_flag == LR_FLAG_NONE) {
 				bonus = status->rhw.atk2 + val;
-				status->rhw.atk2 = cap_value(bonus, 0, USHRT_MAX);
+				status->rhw.atk2 = cap_value(bonus, 0, PEC_USHRT_MAX);
 			}
 			else if (sd->state.lr_flag == LR_FLAG_WEAPON) {
 				bonus = status->lhw.atk2 + val;
-				status->lhw.atk2 =  cap_value(bonus, 0, USHRT_MAX);
+				status->lhw.atk2 =  cap_value(bonus, 0, PEC_USHRT_MAX);
 			}
 			break;
 		case SP_BASE_ATK:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 #ifdef RENEWAL
 				bonus = sd->bonus.eatk + val;
-				sd->bonus.eatk = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				sd->bonus.eatk = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 #else
 				status->batk += val;
 #endif
@@ -3783,25 +3954,25 @@ void pc_bonus(map_session_data *sd,int32 type,int32 val)
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->def + val;
 #ifdef RENEWAL
-				status->def = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->def = cap_value(bonus, PEC_DEFTYPE_MIN, PEC_DEFTYPE_MAX);
 #else
-				status->def = cap_value(bonus, CHAR_MIN, CHAR_MAX);
+				status->def = cap_value(bonus, PEC_DEFTYPE_MIN, PEC_DEFTYPE_MAX);
 #endif
 			}
 			break;
 		case SP_DEF2:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->def2 + val;
-				status->def2 = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->def2 = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_MDEF1:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->mdef + val;
 #ifdef RENEWAL
-				status->mdef = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->mdef = cap_value(bonus, PEC_DEFTYPE_MIN, PEC_DEFTYPE_MAX);
 #else
-				status->mdef = cap_value(bonus, CHAR_MIN, CHAR_MAX);
+				status->mdef = cap_value(bonus, PEC_DEFTYPE_MIN, PEC_DEFTYPE_MAX);
 #endif
 				if( sd->state.lr_flag == LR_FLAG_SHIELD ) {//Shield, used for royal guard
 					sd->bonus.shieldmdef += bonus;
@@ -3811,69 +3982,69 @@ void pc_bonus(map_session_data *sd,int32 type,int32 val)
 		case SP_MDEF2:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->mdef2 + val;
-				status->mdef2 = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->mdef2 = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_HIT:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->hit + val;
-				status->hit = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->hit = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			} else
 				sd->bonus.arrow_hit+=val;
 			break;
 		case SP_FLEE1:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->flee + val;
-				status->flee = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->flee = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_FLEE2:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->flee2 + val*10;
-				status->flee2 = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->flee2 = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_CRITICAL:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->cri + val*10;
-				status->cri = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->cri = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			} else
 				sd->bonus.arrow_cri += val*10;
 			break;
 		case SP_PATK:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->patk + val;
-				status->patk = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->patk = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_SMATK:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->smatk + val;
-				status->smatk = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->smatk = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_RES:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->res + val;
-				status->res = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->res = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_MRES:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->mres + val;
-				status->mres = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->mres = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_HPLUS:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->hplus + val;
-				status->hplus = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->hplus = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_CRATE:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->crate + val;
-				status->crate = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->crate = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_ATKELE:
@@ -4473,11 +4644,28 @@ void pc_bonus(map_session_data *sd,int32 type,int32 val)
 			if (sd->state.lr_flag != LR_FLAG_ARROW)
 				sd->bonus.itemsphealrate2 += val;
 			break;
+#ifdef Pandas_Bonus_bNoFieldGemStone
+		case SP_PANDAS_NOFIELDGEMSTONE:
+			if (sd->state.lr_flag != LR_FLAG_ARROW)
+				sd->special_state.nofieldgemstone = 1;
+			break;
+#endif // Pandas_Bonus_bNoFieldGemStone
+		// PYHELP - BONUS - INSERT POINT - <Section 6>
 		default:
+		#ifdef Pandas_NpcExpress_STATCALC
+			if (running_npc_stat_calc_event) {
+				ShowWarning("pc_bonus: unknown bonus type %d %d in OnPCStatCalcEvent!\n", type, val);
+			}
+			else
+		#endif // Pandas_NpcExpress_STATCALC
 			if (current_equip_combo_pos > 0) {
 				ShowWarning("pc_bonus: unknown bonus type %d %d in a combo with item #%u\n", type, val, sd->inventory_data[pc_checkequip( sd, current_equip_combo_pos )]->nameid);
 			}
+#ifndef Pandas_Crashfix_Prevent_NullPointer
 			else if (current_equip_card_id > 0 || current_equip_item_index > 0) {
+#else
+			else if (current_equip_card_id > 0 || (current_equip_item_index > 0 && sd->inventory_data[current_equip_item_index])) {
+#endif // Pandas_Crashfix_Prevent_NullPointer
 				ShowWarning("pc_bonus: unknown bonus type %d %d in item #%u\n", type, val, current_equip_card_id ? current_equip_card_id : sd->inventory_data[current_equip_item_index]->nameid);
 			}
 			else {
@@ -5139,11 +5327,58 @@ void pc_bonus2(map_session_data *sd,int32 type,int32 type2,int32 val)
 
 		pc_bonus_itembonus( sd->itemgroupsphealrate, type2, val, false );
 		break;
+#ifdef Pandas_Bonus2_bAddSkillRange
+	case SP_PANDAS_ADDSKILLRANGE: // bonus2 bAddSkillRange,sk,n;
+		if (sd->state.lr_flag == LR_FLAG_ARROW) {
+			break;
+		}
+
+		if (sd->addskillrange.size() == MAX_PC_BONUS) {
+			ShowWarning("pc_bonus2: SP_PANDAS_ADDSKILLRANGE: Reached max (%d) number of skills per character, bonus skill %d (%d) lost.\n", MAX_PC_BONUS, type2, val);
+			break;
+		}
+
+		pc_bonus_itembonus(sd->addskillrange, type2, val, false);
+		break;
+#endif // Pandas_Bonus2_bAddSkillRange
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	case SP_PANDAS_SKILLNOREQUIRE: // bonus2 bSkillNoRequire,sk,n;
+		if (sd->state.lr_flag == LR_FLAG_ARROW) {
+			break;
+		}
+
+		if (sd->skillnorequire.size() == MAX_PC_BONUS) {
+			ShowWarning("pc_bonus2: SP_PANDAS_ADDSKILLRANGE: Reached max (%d) number of skills per character, bonus skill %d (+%d%%) lost.\n", MAX_PC_BONUS, type2, val);
+			break;
+		}
+
+		pc_bonus_itembonus_swtich(sd->skillnorequire, type2, val, true);
+		break;
+#endif // Pandas_Bonus2_bSkillNoRequire
+#ifdef Pandas_Bonus2_bAbsorbDmgMaxHP
+	case SP_ABSORB_DMG_MAXHP: // bonus2 bAbsorbDmgMaxHP,n,x;
+		if (sd->state.lr_flag != LR_FLAG_ARROW) {
+			sd->bonus.absorb_dmg_trigger_hpratio = max(sd->bonus.absorb_dmg_trigger_hpratio, type2);
+			sd->bonus.absorb_dmg_cap_ratio = max(sd->bonus.absorb_dmg_cap_ratio, val);
+		}
+		break;
+#endif // Pandas_Bonus2_bAbsorbDmgMaxHP
+	// PYHELP - BONUS - INSERT POINT - <Section 7>
 	default:
+	#ifdef Pandas_NpcExpress_STATCALC
+		if (running_npc_stat_calc_event) {
+			ShowWarning("pc_bonus2: unknown bonus type %d %d %d in OnPCStatCalcEvent!\n", type, type2, val);
+		}
+		else
+	#endif // Pandas_NpcExpress_STATCALC
 		if (current_equip_combo_pos > 0) {
 			ShowWarning("pc_bonus2: unknown bonus type %d %d %d in a combo with item #%u\n", type, type2, val, sd->inventory_data[pc_checkequip( sd, current_equip_combo_pos )]->nameid);
 		} 
+#ifndef Pandas_Crashfix_Prevent_NullPointer
 		else if (current_equip_card_id > 0 || current_equip_item_index > 0) {
+#else
+		else if (current_equip_card_id > 0 || (current_equip_item_index > 0 && sd->inventory_data[current_equip_item_index])) {
+#endif // Pandas_Crashfix_Prevent_NullPointer
 			ShowWarning("pc_bonus2: unknown bonus type %d %d %d in item #%u\n", type, type2, val, current_equip_card_id ? current_equip_card_id : sd->inventory_data[current_equip_item_index]->nameid);
 		}
 		else {
@@ -5279,11 +5514,50 @@ void pc_bonus3(map_session_data *sd,int32 type,int32 type2,int32 type3,int32 val
 		sd->norecover_state_race[type2].rate = type3;
 		sd->norecover_state_race[type2].tick = val;
 		break;
+#ifdef Pandas_Bonus3_bRebirthWithHeal
+	case SP_PANDAS_REBIRTHWITHHEAL: // bonus3 bRebirthWithHeal,r,h,s;
+		if (sd->state.lr_flag != LR_FLAG_ARROW) {
+			sd->bonus.rebirth_rate += type2;
+			sd->bonus.rebirth_heal_percent_hp += type3;
+			sd->bonus.rebirth_heal_percent_sp += val;
+			sd->bonus.rebirth_rate = cap_value(sd->bonus.rebirth_rate, 0, 10000);
+			sd->bonus.rebirth_heal_percent_hp = cap_value(sd->bonus.rebirth_heal_percent_hp, 0, 100);
+			sd->bonus.rebirth_heal_percent_sp = cap_value(sd->bonus.rebirth_heal_percent_sp, 0, 100);
+		}
+		break;
+#endif // Pandas_Bonus3_bRebirthWithHeal
+#ifdef Pandas_Bonus3_bFinalAddRace
+	case SP_PANDAS_FINALADDRACE: // bonus3 bFinalAddRace,r,x,bf;
+		PC_BONUS_CHK_RACE(type2, SP_PANDAS_FINALADDRACE);
+		if (sd->state.lr_flag == LR_FLAG_ARROW)
+			break;
+		pc_bonus_final_damage(sd->finaladd_race[type2], type2, val, type3);
+		break;
+#endif // Pandas_Bonus3_bFinalAddRace
+#ifdef Pandas_Bonus3_bFinalAddClass
+	case SP_PANDAS_FINALADDCLASS: // bonus3 bFinalAddClass,c,x,bf;
+		PC_BONUS_CHK_CLASS(type2, SP_PANDAS_FINALADDCLASS);
+		if (sd->state.lr_flag == LR_FLAG_ARROW)
+			break;
+		pc_bonus_final_damage(sd->finaladd_class[type2], type2, val, type3);
+		break;
+#endif // Pandas_Bonus3_bFinalAddClass
+	// PYHELP - BONUS - INSERT POINT - <Section 8>
 	default:
+	#ifdef Pandas_NpcExpress_STATCALC
+		if (running_npc_stat_calc_event) {
+			ShowWarning("pc_bonus3: unknown bonus type %d %d %d %d in OnPCStatCalcEvent!\n", type, type2, type3, val);
+		}
+		else
+	#endif // Pandas_NpcExpress_STATCALC
 		if (current_equip_combo_pos > 0) {
 			ShowWarning("pc_bonus3: unknown bonus type %d %d %d %d in a combo with item #%u\n", type, type2, type3, val, sd->inventory_data[pc_checkequip( sd, current_equip_combo_pos )]->nameid);
 		}
+#ifndef Pandas_Crashfix_Prevent_NullPointer
 		else if (current_equip_card_id > 0 || current_equip_item_index > 0) {
+#else
+		else if (current_equip_card_id > 0 || (current_equip_item_index > 0 && sd->inventory_data[current_equip_item_index])) {
+#endif // Pandas_Crashfix_Prevent_NullPointer
 			ShowWarning("pc_bonus3: unknown bonus type %d %d %d %d in item #%u\n", type, type2, type3, val, current_equip_card_id ? current_equip_card_id : sd->inventory_data[current_equip_item_index]->nameid);
 		}
 		else {
@@ -5362,11 +5636,35 @@ void pc_bonus4(map_session_data *sd,int32 type,int32 type2,int32 type3,int32 typ
 		sd->mdef_set_race[type2].value = val;
 		break;
 
+#ifdef Pandas_Bonus4_bStatusAddDamage
+	case SP_PANDAS_STATUSADDDAMAGE: // bonus4 bStatusAddDamage,sc,n,r,bf;
+		if (sd->state.lr_flag != LR_FLAG_ARROW)
+			pc_bonus_status_damage(sd->status_damage_adjust, (sc_type)type2, type4, val, type3);
+		break;
+#endif // Pandas_Bonus4_bStatusAddDamage
+#ifdef Pandas_Bonus4_bStatusAddDamageRate
+	case SP_PANDAS_STATUSADDDAMAGERATE: // bonus4 bStatusAddDamageRate,sc,n,r,bf;
+		if (sd->state.lr_flag != LR_FLAG_ARROW)
+			pc_bonus_status_damage(sd->status_damagerate_adjust, (sc_type)type2, type4, val, type3);
+		break;
+#endif // Pandas_Bonus4_bStatusAddDamageRate
+
+	// PYHELP - BONUS - INSERT POINT - <Section 9>
 	default:
+	#ifdef Pandas_NpcExpress_STATCALC
+		if (running_npc_stat_calc_event) {
+			ShowWarning("pc_bonus4: unknown bonus type %d %d %d %d %d in OnPCStatCalcEvent!\n", type, type2, type3, type4, val);
+		}
+		else
+	#endif // Pandas_NpcExpress_STATCALC
 		if (current_equip_combo_pos > 0) {
 			ShowWarning("pc_bonus4: unknown bonus type %d %d %d %d %d in a combo with item #%u\n", type, type2, type3, type4, val, sd->inventory_data[pc_checkequip( sd, current_equip_combo_pos )]->nameid);
 		}
+#ifndef Pandas_Crashfix_Prevent_NullPointer
 		else if (current_equip_card_id > 0 || current_equip_item_index > 0) {
+#else
+		else if (current_equip_card_id > 0 || (current_equip_item_index > 0 && sd->inventory_data[current_equip_item_index])) {
+#endif // Pandas_Crashfix_Prevent_NullPointer
 			ShowWarning("pc_bonus4: unknown bonus type %d %d %d %d %d in item #%u\n", type, type2, type3, type4, val, current_equip_card_id ? current_equip_card_id : sd->inventory_data[current_equip_item_index]->nameid);
 		}
 		else {
@@ -5411,7 +5709,15 @@ void pc_bonus5(map_session_data *sd,int32 type,int32 type2,int32 type3,int32 typ
 			pc_bonus_addeff_onskill(sd->addeff_onskill, (sc_type)type3, type4, type2, type5, val);
 		break;
 
+	// PYHELP - BONUS - INSERT POINT - <Section 10>
+
 	default:
+	#ifdef Pandas_NpcExpress_STATCALC
+		if (running_npc_stat_calc_event) {
+			ShowWarning("pc_bonus5: unknown bonus type %d %d %d %d %d %d in OnPCStatCalcEvent!\n", type, type2, type3, type4, type5, val);
+		}
+		else
+	#endif // Pandas_NpcExpress_STATCALC
 		if (current_equip_combo_pos > 0) {
 			ShowWarning("pc_bonus5: unknown bonus type %d %d %d %d %d %d in a combo with item #%u\n", type, type2, type3, type4, type5, val, sd->inventory_data[pc_checkequip( sd, current_equip_combo_pos )]->nameid);
 		}
@@ -5617,8 +5923,14 @@ int32 pc_insert_card(map_session_data* sd, int32 idx_card, int32 idx_equip)
 		return 0; // target item missing
 	if( sd->inventory.u.items_inventory[idx_card].nameid == 0 || sd->inventory.u.items_inventory[idx_card].amount < 1 )
 		return 0; // target card missing
+#ifndef Pandas_Shadowgear_Support_Card
 	if( item_eq->type != IT_WEAPON && item_eq->type != IT_ARMOR )
 		return 0; // only weapons and armor are allowed
+#else
+	// 此处进行调整使之能够允许影子装备插卡
+	if( item_eq->type != IT_WEAPON && item_eq->type != IT_ARMOR && item_eq->type != IT_SHADOWGEAR )
+		return 0; // only weapons, armor and shadowgears are allowed
+#endif // Pandas_Shadowgear_Support_Card
 	if( item_card->type != IT_CARD )
 		return 0; // must be a card
 	if( sd->inventory.u.items_inventory[idx_equip].identify == 0 )
@@ -5641,6 +5953,15 @@ int32 pc_insert_card(map_session_data* sd, int32 idx_card, int32 idx_equip)
 	// remember the card id to insert
 	nameid = sd->inventory.u.items_inventory[idx_card].nameid;
 
+#ifdef Pandas_NpcFilter_INSERT_CARD
+	pc_setreg(sd, add_str("@insert_equip_idx"), idx_equip);
+	pc_setreg(sd, add_str("@insert_card_idx"), idx_card);
+	pc_setreg(sd, add_str("@insert_card_id"), nameid);
+	pc_setreg(sd, add_str("@insert_card_slot"), i);
+	if (npc_script_filter(sd, NPCF_INSERT_CARD))
+		return 0;
+#endif // Pandas_NpcFilter_INSERT_CARD
+
 	if( pc_delitem(sd,idx_card,1,1,0,LOG_TYPE_OTHER) == 1 )
 	{// failed
 		clif_insert_card( *sd, idx_equip, idx_card, true );
@@ -5651,6 +5972,14 @@ int32 pc_insert_card(map_session_data* sd, int32 idx_card, int32 idx_equip)
 		sd->inventory.u.items_inventory[idx_equip].card[i] = nameid;
 		log_pick_pc(sd, LOG_TYPE_OTHER,  1, &sd->inventory.u.items_inventory[idx_equip]);
 		clif_insert_card( *sd, idx_equip, idx_card, false );
+
+#ifdef Pandas_NpcEvent_INSERT_CARD
+		pc_setreg(sd, add_str("@insert_equip_idx"), idx_equip);
+		pc_setreg(sd, add_str("@insert_card_idx"), idx_card);
+		pc_setreg(sd, add_str("@insert_card_id"), nameid);
+		pc_setreg(sd, add_str("@insert_card_slot"), i);
+		npc_script_event(*sd, NPCE_INSERT_CARD);
+#endif // Pandas_NpcEvent_INSERT_CARD
 	}
 
 	return 0;
@@ -5769,10 +6098,18 @@ char pc_checkadditem( const map_session_data* sd, t_itemid nameid, int32 amount 
  * @param sd
  * @return Number of empty slots
  *------------------------------------------*/
+#ifndef Pandas_FuncExtend_Increase_Inventory
 uint8 pc_inventoryblank( const map_session_data* sd )
+#else
+uint16 pc_inventoryblank( const map_session_data* sd )
+#endif // Pandas_FuncExtend_Increase_Inventory
 {
 	uint16 i;
+#ifndef Pandas_FuncExtend_Increase_Inventory
 	uint8 b;
+#else
+	uint16 b;
+#endif // Pandas_FuncExtend_Increase_Inventory
 
 	nullpo_ret(sd);
 
@@ -6003,6 +6340,10 @@ enum e_additem_result pc_additem(map_session_data *sd,struct item *item,int32 am
 
 	id = itemdb_search(item->nameid);
 
+#ifdef Pandas_Item_Amulet_System
+	bool is_first_amulet = amulet_is_firstone(sd, item, amount);
+#endif // Pandas_Item_Amulet_System
+
 	if( id->stack.inventory && amount > id->stack.amount )
 	{// item stack limitation
 		return ADDITEM_STACKLIMIT;
@@ -6066,6 +6407,10 @@ enum e_additem_result pc_additem(map_session_data *sd,struct item *item,int32 am
 
 	log_pick_pc(sd, log_type, amount, &sd->inventory.u.items_inventory[i]);
 
+#ifdef Pandas_Item_Amulet_System
+	amulet_apply_additem(sd, i, is_first_amulet);
+#endif // Pandas_Item_Amulet_System
+
 	sd->weight += w;
 	clif_updatestatus(*sd,SP_WEIGHT);
 	//Auto-equip
@@ -6107,6 +6452,16 @@ char pc_delitem(map_session_data *sd,int32 n,int32 amount,int32 type, int16 reas
 	if(n < 0 || sd->inventory.u.items_inventory[n].nameid == 0 || amount <= 0 || sd->inventory.u.items_inventory[n].amount<amount || sd->inventory_data[n] == nullptr)
 		return 1;
 
+#ifdef Pandas_Item_Properties
+	// 避免物品被作为发动技能的必要道具而消耗
+	if (ITEM_PROPERTIES_HASFLAG(sd->inventory_data[n], special_mask, ITEM_PRO_AVOID_CONSUME_FOR_SKILL) && reason == 1)
+		return 0;
+#endif // Pandas_Item_Properties
+
+#ifdef Pandas_Item_Amulet_System
+	bool is_last_amulet = amulet_is_lastone(sd, n, amount);
+#endif // Pandas_Item_Amulet_System
+
 	log_pick_pc(sd, log_type, -amount, &sd->inventory.u.items_inventory[n]);
 
 	sd->inventory.u.items_inventory[n].amount -= amount;
@@ -6114,9 +6469,19 @@ char pc_delitem(map_session_data *sd,int32 n,int32 amount,int32 type, int16 reas
 	if( sd->inventory.u.items_inventory[n].amount <= 0 ){
 		if(sd->inventory.u.items_inventory[n].equip)
 			pc_unequipitem(sd,n,2|(!(type&4) ? 1 : 0));
+#ifdef Pandas_Item_Amulet_System
+		// 在这里必须触发一下"卸装脚本", 再往下的话物品数据会被清零
+		amulet_apply_delitem(sd, n, is_last_amulet);
+#endif // Pandas_Item_Amulet_System
 		memset(&sd->inventory.u.items_inventory[n],0,sizeof(sd->inventory.u.items_inventory[0]));
 		sd->inventory_data[n] = nullptr;
 	}
+#ifdef Pandas_Item_Amulet_System
+	else {
+		// 在这里同类护身符还没被全部清理干净, 需要触发一下"使用脚本"
+		amulet_apply_delitem(sd, n, is_last_amulet);
+	}
+#endif // Pandas_Item_Amulet_System
 	if(!(type&1))
 		clif_delitem( *sd, n, amount, reason );
 	if(!(type&2))
@@ -6166,6 +6531,14 @@ bool pc_dropitem(map_session_data *sd,int32 n,int32 amount)
 		clif_displaymessage (sd->fd, msg_txt(sd,263));
 		return false;
 	}
+
+#ifdef Pandas_NpcFilter_DROPITEM
+	pc_setreg(sd, add_str("@drop_idx"), n);
+	pc_setreg(sd, add_str("@drop_itemid"), sd->inventory.u.items_inventory[n].nameid);
+	pc_setreg(sd, add_str("@drop_amount"), amount);
+	if (npc_script_filter(sd, NPCF_DROPITEM))
+		return false;
+#endif // Pandas_NpcFilter_DROPITEM
 
 	// Bypass drop restriction in map_addflooritem because we've already checked it above
 	if (!map_addflooritem(&sd->inventory.u.items_inventory[n], amount, sd->m, sd->x, sd->y, 0, 0, 0, 2|4, 0,
@@ -6461,6 +6834,26 @@ int32 pc_useitem(map_session_data *sd,int32 n)
 	if (sd->state.mail_writing)
 		return 0;
 
+#ifdef Pandas_MapFlag_NoUseItem
+	if (map_getmapflag(sd->m, MF_NOUSEITEM)) {
+		clif_messagecolor(sd, color_table[COLOR_RED], msg_txt_cn(sd, 11), false, SELF); // This map prohibit use the consumable items!
+		return 0;
+	}
+#endif // Pandas_MapFlag_NoUseItem
+
+#ifdef Pandas_NpcFilter_USE_ITEM
+	if (sd && sd->inventory_data[n]) {
+		item = sd->inventory.u.items_inventory[n];
+		if (item.nameid != 0 && item.amount > 0) {
+			pc_setreg(sd, add_str("@useitem_idx"), n);
+			pc_setreg(sd, add_str("@useitem_nameid"), item.nameid);
+			pc_setreg(sd, add_str("@useitem_pos"), n);
+			if (npc_script_filter(sd, NPCF_USE_ITEM))
+				return 0;
+		}
+	}
+#endif // Pandas_NpcFilter_USE_ITEM
+
 	if (sd->npc_id) {
 		if (sd->progressbar.npc_id) {
 			clif_progressbar_abort(sd);
@@ -6491,10 +6884,17 @@ int32 pc_useitem(map_session_data *sd,int32 n)
 
 	/* Items with delayed consume are not meant to work while in mounts except reins of mount(12622) */
 	if( id->flag.delay_consume > 0 ) {
+#ifndef Pandas_BattleConfig_CashMounting_UseitemLimit
 		if( nameid != ITEMID_REINS_OF_MOUNT && sd->sc.getSCE(SC_ALL_RIDING) )
 			return 0;
 		else if( pc_issit(sd) )
 			return 0;
+#else
+		// 若启用了自定义扩展的高级选项，那么这里只需要判断是否坐下就好.
+		// 至于是否坐骑时候禁止使用，在下面会有 cashmount_useitem_limit 选项负责判定 [Sola丶小克]
+		if (pc_issit(sd))
+			return 0;
+#endif // Pandas_BattleConfig_CashMounting_UseitemLimit
 	}
 	//Since most delay-consume items involve using a "skill-type" target cursor,
 	//perform a skill-use check before going through. [Skotlex]
@@ -6506,6 +6906,42 @@ int32 pc_useitem(map_session_data *sd,int32 n)
 	if( id->delay.duration > 0 && !pc_has_permission(sd,PC_PERM_ITEM_UNCONDITIONAL) && pc_itemcd_check(sd, id, tick, n))
 		return 0;
 
+#ifdef Pandas_BattleConfig_CashMounting_UseitemLimit
+	// 使用道具时先判定是否乘坐了“商城坐骑”,
+	// 如果是那么再根据 cashmount_useitem_limit 设置决定是否拒绝 [Sola丶小克]
+	// 若使用的是“坐骑用缰绳”的话, 那么无条件允许使用
+	if (sd && nameid != ITEMID_REINS_OF_MOUNT && sd->sc.getSCE(SC_ALL_RIDING)) {
+		bool isblocked = false;
+		switch (id->type) {
+			case IT_HEALING: {
+				isblocked = (battle_config.cashmount_useitem_limit & 1) == 1;
+				break;
+			}
+			case IT_USABLE: {
+				isblocked = (battle_config.cashmount_useitem_limit & 2) == 2;
+				// IT_DELAYCONSUME 实际上在载入时会被设置为 IT_USABLE,
+				// 所以这里要在 IT_USABLE 中进行对 IT_DELAYCONSUME 类型物品的判定
+				isblocked = id->flag.delay_consume && (battle_config.cashmount_useitem_limit & 64) == 64;
+				break;
+			}
+			case IT_CARD: {
+				isblocked = (battle_config.cashmount_useitem_limit & 16) == 16;
+				break;
+			}
+			case IT_CASH: {
+				isblocked = (battle_config.cashmount_useitem_limit & 256) == 256;
+				break;
+			}
+		}
+		if (isblocked) {
+			char message[128] = { 0 };
+			safesnprintf(message, sizeof(message), msg_txt_cn(sd, 3), id->ename.c_str()); // 很抱歉, 当您坐上“商城坐骑”时, 无法使用: %s
+			clif_displaymessage(sd->fd, message);
+			return 0;
+		}
+	}
+#endif // Pandas_BattleConfig_CashMounting_UseitemLimit
+
 	/* on restricted maps the item is consumed but the effect is not used */
 	if (!pc_has_permission(sd,PC_PERM_ITEM_UNCONDITIONAL) && itemdb_isNoEquip(id,sd->m)) {
 		clif_msg( *sd, MSI_IMPOSSIBLE_USEITEM_AREA ); // This item cannot be used within this area
@@ -6516,7 +6952,11 @@ int32 pc_useitem(map_session_data *sd,int32 n)
 		return 0;/* regardless, effect is not run */
 	}
 
-	if (pet_db_search(id->nameid, PET_CATCH) != nullptr && map_getmapflag(sd->m, MF_NOPETCAPTURE)) {
+	if ((pet_db_search(id->nameid, PET_CATCH) != nullptr
+#ifdef Pandas_MapFlag_NoCapture
+		|| id->pandas.taming_mobid.size()
+#endif // Pandas_MapFlag_NoCapture
+		) && map_getmapflag(sd->m, MF_NOPETCAPTURE)) {
 		clif_displaymessage(sd->fd, msg_txt(sd, 669)); // You can't catch any pet on this map.
 		return 0;
 	}
@@ -6533,7 +6973,18 @@ int32 pc_useitem(map_session_data *sd,int32 n)
 		if( item.expire_time == 0 && nameid != ITEMID_REINS_OF_MOUNT )
 		{
 			clif_useitemack(sd, n, amount - 1, true);
+#ifdef Pandas_Item_Properties
+			// 判断是否需要避免物品被玩家主动使用而消耗
+			// 若可以被玩家主动使用而消耗, 那么执行原有的道具删除流程
+			if (ITEM_PROPERTIES_HASFLAG(id, special_mask, ITEM_PRO_AVOID_CONSUME_FOR_USE)) {
+				clif_useitemack(sd, n, 0, false);
+			}
+			else {
+#endif // Pandas_Item_Properties
 			pc_delitem(sd, n, 1, 1, 0, LOG_TYPE_CONSUME); // Rental Usable Items are not deleted until expiration
+#ifdef Pandas_Item_Properties
+			}
+#endif // Pandas_Item_Properties
 		}
 		else
 			clif_useitemack(sd, n, 0, false);
@@ -6572,6 +7023,16 @@ int32 pc_useitem(map_session_data *sd,int32 n)
 	}
 
 	potion_flag = 0;
+
+#ifdef Pandas_NpcEvent_USE_ITEM
+	if (sd && id) {
+		pc_setreg(sd, add_str("@useitem_idx"), n);
+		pc_setreg(sd, add_str("@useitem_nameid"), id->nameid);
+		pc_setreg(sd, add_str("@useitem_pos"), n);
+		npc_script_event(*sd, NPCE_USE_ITEM);
+	}
+#endif // Pandas_NpcEvent_USE_ITEM
+
 	return 1;
 }
 
@@ -6701,6 +7162,16 @@ void pc_putitemtocart(map_session_data *sd,int32 idx,int32 amount)
 		return;
 	}
 
+#ifdef Pandas_NpcFilter_CART_ADD
+	pc_setreg(sd, add_str("@storeitem_nameid"), item_data->nameid);
+	pc_setreg(sd, add_str("@storeitem_amount"), amount);
+	pc_setreg(sd, add_str("@storeitem_idx"), idx);
+	if (npc_script_filter(sd, NPCF_CART_ADD)) {
+		clif_delitem(*sd, idx, 0, 0);
+		return;
+	}
+#endif // Pandas_NpcFilter_CART_ADD
+
 	enum e_additem_result flag = pc_cart_additem(sd,item_data,amount,LOG_TYPE_NONE);
 
 	if (flag == ADDITEM_SUCCESS)
@@ -6748,6 +7219,16 @@ bool pc_getitemfromcart(map_session_data *sd,int32 idx,int32 amount)
 
 	if (item_data->nameid == 0 || amount < 1 || item_data->amount < amount || sd->state.vending || sd->state.prevend)
 		return false;
+
+#ifdef Pandas_NpcFilter_CART_DEL
+	pc_setreg(sd, add_str("@removeitem_nameid"), item_data->nameid);
+	pc_setreg(sd, add_str("@removeitem_amount"), amount);
+	pc_setreg(sd, add_str("@removeitem_idx"), idx);
+	if (npc_script_filter(sd, NPCF_CART_DEL)) {
+		clif_cart_delitem(*sd, idx, 0);
+		return true;
+	}
+#endif // Pandas_NpcFilter_CART_DEL
 
 	enum e_additem_result flag = pc_additem(sd, item_data, amount, LOG_TYPE_NONE);
 
@@ -6839,7 +7320,11 @@ bool pc_steal_item(map_session_data *sd,block_list *bl, uint16 skill_lv)
 	}
 
 	// base skill success chance (percentual)
+#ifndef Pandas_Fix_StealItem_Formula_Overflow
 	rate = (sd_status->dex - md_status->dex)/2 + skill_lv*6 + 4;
+#else
+	rate = (static_cast<double>(sd_status->dex) - static_cast<double>(md_status->dex)) / 2 + skill_lv * 6 + 4;
+#endif // Pandas_Fix_StealItem_Formula_Overflow
 	rate += sd->bonus.add_steal_rate;
 
 	if( rate < 1
@@ -6884,6 +7369,9 @@ bool pc_steal_item(map_session_data *sd,block_list *bl, uint16 skill_lv)
 	tmp_item.nameid = itemid;
 	tmp_item.amount = 1;
 	tmp_item.identify = itemdb_isidentified(itemid);
+#ifdef Pandas_BattleConfig_Force_Identified
+	tmp_item.identify = (battle_config.force_identified & 8 ? 1 : tmp_item.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 	if( battle_config.skill_steal_random_options ){
 		mob_setdropitem_option( tmp_item, drop );
 	}
@@ -6903,6 +7391,21 @@ bool pc_steal_item(map_session_data *sd,block_list *bl, uint16 skill_lv)
 	//Logs items, Stolen from mobs [Lupus]
 	log_pick_mob(md, LOG_TYPE_STEAL, -1, &tmp_item);
 
+#ifdef Pandas_Item_Special_Annouce
+	bool is_special_announced = false;
+	struct item_data* dd = itemdb_search(itemid);
+
+	if (ITEM_PROPERTIES_HASFLAG(dd, annouce_mask, ITEM_ANNOUCE_STEAL_TO_INVENTORY)) {
+		char message[128] = { 0 };
+		sprintf(message, msg_txt(sd, 542), sd->status.name[0] ? sd->status.name : "GM", md->db->jname.c_str(), dd->ename.c_str(), (float)drop->rate / 100);
+		intif_broadcast(message, strlen(message) + 1, BC_DEFAULT);
+		is_special_announced = true;
+	}
+
+	// 若道具已经遵守 item_properties.yml 的配置被执行了公告,
+	// 那么就无需再次执行 battle_config.rare_drop_announce 指定的根据掉率进行的公告策略
+	if (!is_special_announced)
+#endif // Pandas_Item_Special_Annouce
 	//A Rare Steal Global Announce by Lupus
 	if(drop->rate <= battle_config.rare_drop_announce) {
 		struct item_data *i_data;
@@ -6914,6 +7417,24 @@ bool pc_steal_item(map_session_data *sd,block_list *bl, uint16 skill_lv)
 	}
 	return true;
 }
+
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+void pc_mark_multitransfer(block_list* bl)
+{
+	if (bl == nullptr || bl->type != BL_PC)
+		return;
+
+	pc_mark_multitransfer(static_cast<map_session_data*>(bl));
+}
+
+void pc_mark_multitransfer(map_session_data* sd)
+{
+	if (sd == nullptr)
+		return;
+
+	sd->pandas.multitransfer = true;
+}
+#endif // Pandas_Support_Transfer_Autotrade_Player
 
 /*==========================================
  * Set's a player position.
@@ -6931,13 +7452,38 @@ enum e_setpos pc_setpos(map_session_data* sd, uint16 mapindex, int32 x, int32 y,
 {
 	nullpo_retr(SETPOS_OK,sd);
 
+#ifdef Pandas_Crashfix_PC_Setpos_With_Invaild_Player
+	if (sd->type != BL_PC || sd->id != sd->status.account_id)
+		return SETPOS_OK;
+#endif // Pandas_Crashfix_PC_Setpos_With_Invaild_Player
+
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+	bool multitransfer = sd->pandas.multitransfer;
+	sd->pandas.multitransfer = false;
+#endif // Pandas_Support_Transfer_Autotrade_Player
+
 	if( !mapindex || !mapindex_id2name(mapindex) ) {
 		ShowDebug("pc_setpos: Passed mapindex(%d) is invalid!\n", mapindex);
 		return SETPOS_MAPINDEX;
 	}
 
+#ifndef Pandas_Support_Transfer_Autotrade_Player
 	if ( sd->state.autotrade && (sd->vender_id || sd->buyer_id) ) // Player with autotrade just causes clif glitch! @ FIXME
 		return SETPOS_AUTOTRADE;
+#else
+	// 离线挂店 + 开设了出售或采购摊位 + 多人召唤 = 放弃被召唤
+	if (sd->state.autotrade && (sd->vender_id || sd->buyer_id) && multitransfer)
+		return SETPOS_AUTOTRADE;
+#endif // Pandas_Support_Transfer_Autotrade_Player
+
+#ifdef Pandas_BattleConfig_Multiplayer_Recall_Behavior
+	// 开设了出售摊位 + 设为不能被召唤 + 多人召唤 = 放弃被召唤
+	if (sd->vender_id && (battle_config.multiplayer_recall_behavior & 1) == 1 && multitransfer)
+		return SETPOS_AUTOTRADE;
+	// 开设了采购摊位 + 设为不能被召唤 + 多人召唤 = 放弃被召唤
+	if (sd->buyer_id && (battle_config.multiplayer_recall_behavior & 2) == 2 && multitransfer)
+		return SETPOS_AUTOTRADE;
+#endif // Pandas_BattleConfig_Multiplayer_Recall_Behavior
 
 	if( battle_config.revive_onwarp && pc_isdead(sd) ) { //Revive dead people before warping them
 		pc_setstand(sd, true);
@@ -7119,6 +7665,26 @@ enum e_setpos pc_setpos(map_session_data* sd, uint16 mapindex, int32 x, int32 y,
 	} else if(sd->state.active) //Tag player for rewarping after map-loading is done. [Skotlex]
 		sd->state.rewarp = 1;
 
+#ifdef Pandas_NpcExpress_ENTERMAP
+	if (sd && sd->state.changemap && !sd->state.connect_new) {
+		if (sd->m != 0) {
+			pc_setreg(sd, add_str("@frommap_id"), sd->m);
+			pc_setreg(sd, add_str("@frommap_x"), sd->x);
+			pc_setreg(sd, add_str("@frommap_y"), sd->y);
+			pc_setregstr(sd, add_str("@frommap_name$"), map[sd->m].name);
+		} else {
+			pc_setreg(sd, add_str("@frommap_id"), 0);
+			pc_setreg(sd, add_str("@frommap_x"), 0);
+			pc_setreg(sd, add_str("@frommap_y"), 0);
+			pc_setregstr(sd, add_str("@frommap_name$"), "");
+		}
+		pc_setreg(sd, add_str("@tomap_id"), m);
+		pc_setreg(sd, add_str("@tomap_x"), x);
+		pc_setreg(sd, add_str("@tomap_y"), y);
+		pc_setregstr(sd, add_str("@tomap_name$"), map[m].name);
+		npc_script_event(*sd, NPCX_ENTERMAP);
+	}
+#endif // Pandas_NpcExpress_ENTERMAP
 	sd->mapindex = mapindex;
 	sd->m = m;
 	sd->x = sd->ud.to_x = x;
@@ -7170,6 +7736,28 @@ enum e_setpos pc_setpos(map_session_data* sd, uint16 mapindex, int32 x, int32 y,
 		sd->ed->y = sd->ed->ud.to_y = y;
 		sd->ed->ud.dir = sd->ud.dir;
 	}
+
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+	if (!sd->state.connect_new && sd->state.autotrade) {
+		sd->pandas.skip_loadendack_npc_event_dequeue = true;
+		clif_parse_LoadEndAck(sd->fd, sd);
+		sd->pandas.skip_loadendack_npc_event_dequeue = false;
+
+		if (pc_autotrade_suspend(sd)) {
+			suspend_recall_postfix(sd);
+		} else {
+			pc_setdir(sd, sd->pandas.at_dir, sd->pandas.at_head_dir);
+			clif_changed_dir(*sd, AREA_WOS);
+			if (sd->pandas.at_sit) {
+				pc_setsit(sd);
+				skill_sit(sd, true);
+				clif_sitting(*sd);
+			}
+		}
+
+		chrif_save(sd, CSAVE_AUTOTRADE);
+	}
+#endif // Pandas_Support_Transfer_Autotrade_Player
 
 	pc_cell_basilica(sd);
 
@@ -8433,10 +9021,17 @@ void pc_gainexp_disp(map_session_data *sd, t_exp base_exp, t_exp next_base_exp, 
 
 	nullpo_retv(sd);
 
+#ifndef Pandas_Fix_GainExp_Display_Overflow
 	sprintf(output, msg_txt(sd,743), // Experience %s Base:%ld (%0.2f%%) Job:%ld (%0.2f%%)
 		(lost) ? msg_txt(sd,742) : msg_txt(sd,741),
 		(long)base_exp * (lost ? -1 : 1), (base_exp / (float)next_base_exp * 100 * (lost ? -1 : 1)),
 		(long)job_exp * (lost ? -1 : 1), (job_exp / (float)next_job_exp * 100 * (lost ? -1 : 1)));
+#else
+	sprintf(output, msg_txt_cn(sd, 19), // Experience %s Base:%llu (%0.2f%%) Job:%llu (%0.2f%%)
+		(lost) ? msg_txt(sd,742) : msg_txt(sd,741),
+		base_exp * (lost ? -1 : 1), (base_exp / (float)next_base_exp * 100 * (lost ? -1 : 1)),
+		job_exp * (lost ? -1 : 1), (job_exp / (float)next_job_exp * 100 * (lost ? -1 : 1)));
+#endif // Pandas_Fix_GainExp_Display_Overflow
 	clif_messagecolor(sd, color_table[COLOR_LIGHT_GREEN], output, false, SELF);
 }
 
@@ -9568,6 +10163,26 @@ int32 pc_resethate(map_session_data* sd)
 	return 0;
 }
 
+#ifdef Pandas_Bonus2_bAddSkillRange
+int32 pc_addskillrange_bonus(map_session_data* sd, uint16 skill_id)
+{
+	int32 bonus = 0;
+
+	nullpo_ret(sd);
+
+	skill_id = skill_dummy2skill_id(skill_id);
+
+	for (auto& it : sd->addskillrange) {
+		if (it.id == skill_id) {
+			bonus += it.val;
+			break;
+		}
+	}
+
+	return bonus;
+}
+#endif // Pandas_Bonus2_bAddSkillRange
+
 int32 pc_skillatk_bonus(map_session_data *sd, uint16 skill_id)
 {
 	int32 bonus = 0;
@@ -9738,11 +10353,19 @@ void pc_close_npc(map_session_data *sd,int32 flag)
 				add_timer(gettick()+500,pc_close_npc_timer,sd->id,flag);
 				return;
 			}
+#ifndef Pandas_ScriptCommand_SelfDeletion
 			sd->st->state = ((flag==1 && sd->st->mes_active)?CLOSE:END);
+#else
+			// 若启用了 selfdeletion 指令则以位运算方式判断 flag 是否带 1
+			sd->st->state = (((flag & 1) == 1 && sd->st->mes_active) ? CLOSE : END);
+#endif // Pandas_ScriptCommand_SelfDeletion
 			sd->st->mes_active = 0;
 		}
 		sd->state.menu_or_input = 0;
 		sd->npc_menu = 0;
+#ifdef Pandas_Fix_Prompt_Cancel_Combine_Close_Error
+		sd->npc_menu_npcid = 0;
+#endif // Pandas_Fix_Prompt_Cancel_Combine_Close_Error
 		sd->npc_shopid = 0;
 #ifdef SECURE_NPCTIMEOUT
 		if( sd->npc_idle_timer != INVALID_TIMER ){
@@ -9754,6 +10377,12 @@ void pc_close_npc(map_session_data *sd,int32 flag)
 			if (sd->st->state == CLOSE) {
 				clif_scriptclose( *sd, sd->npc_id );
 				clif_cutin( *sd, "", 255); // Force to end cutin [Haydrich]
+#ifdef Pandas_ScriptCommand_SelfDeletion
+				// 若启用了 selfdeletion 指令则以位运算方式判断 flag 是否带 4
+				// 如果没有携带 4 的话, 再执行 clif_scriptclear 清理角色当前正在进行的对话框内容
+				if ((flag & 4) != 4)
+					clif_scriptclear(*sd, sd->npc_id);
+#endif // Pandas_ScriptCommand_SelfDeletion
 				sd->st->state = END; // Force to end now
 			}
 			if (sd->st->state == END) { // free attached scripts that are waiting
@@ -9768,7 +10397,11 @@ void pc_close_npc(map_session_data *sd,int32 flag)
 /*==========================================
  * Invoked when a player has negative current hp
  *------------------------------------------*/
+#ifndef Pandas_FuncDefine_UnitDead_With_ExtendInfo
 int32 pc_dead(map_session_data *sd,block_list *src)
+#else
+int32 pc_dead(map_session_data *sd,block_list *src, uint16 skill_id)
+#endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
 {
 	int32 i=0,k=0;
 	t_tick tick = gettick();
@@ -9978,6 +10611,12 @@ int32 pc_dead(map_session_data *sd,block_list *src)
 		}
 	}
 
+#ifdef Pandas_NpcExpress_UNIT_KILL
+	if (src && sd) {
+		npc_event_aide_unitkill(src, sd, skill_id);
+	}
+#endif // Pandas_NpcExpress_UNIT_KILL
+
 	if(battle_config.bone_drop==2
 		|| (battle_config.bone_drop==1 && mapdata->getMapFlag(MF_PVP)))
 	{
@@ -10165,11 +10804,22 @@ void pc_revive(map_session_data *sd,uint32 hp, uint32 sp, uint32 ap) {
 bool pc_revive_item(map_session_data *sd) {
 	nullpo_retr(false, sd);
 
+#ifdef Pandas_NpcFilter_USE_REVIVE_TOKEN
+	if (npc_script_filter(sd, NPCF_USE_REVIVE_TOKEN))
+		return false;
+#endif // Pandas_NpcFilter_USE_REVIVE_TOKEN
 	if (!pc_isdead(sd) || sd->respawn_tid != INVALID_TIMER)
 		return false;
 
 	if (sd->sc.getSCE(SC_HELLPOWER)) // Cannot resurrect while under the effect of SC_HELLPOWER.
 		return false;
+
+#ifdef Pandas_MapFlag_NoToken
+	if (sd && sd->m >= 0 && map_getmapflag(sd->m, MF_NOTOKEN)) {
+		clif_displaymessage(sd->fd, msg_txt_cn(sd, 17));	// 此地图禁止原地复活!
+		return false;
+	}
+#endif // Pandas_MapFlag_NoToken
 
 	int16 item_position = itemdb_group.item_exists_pc(sd, IG_TOKEN_OF_SIEGFRIED);
 	uint8 hp = 100, sp = 100;
@@ -10397,6 +11047,23 @@ int64 pc_readparam( const map_session_data* sd, int64 type )
 #endif
 		case SP_CRIT_DEF_RATE: val = sd->bonus.crit_def_rate; break;
 		case SP_ADD_ITEM_SPHEAL_RATE: val = sd->bonus.itemsphealrate2; break;
+#ifdef Pandas_ScriptConstants_CartWeight
+		case SP_CARTWEIGHT: val = sd->cart_weight; break;
+#endif // Pandas_ScriptConstants_CartWeight
+#ifdef Pandas_ScriptConstants_MaxCartWeight
+		case SP_MAXCARTWEIGHT: val = sd->cart_weight_max; break;
+#endif // Pandas_ScriptConstants_MaxCartWeight
+#ifdef Pandas_ScriptParams_ReadParam
+		case SP_STR_ALL:	val = sd->battle_status.str; break;
+		case SP_AGI_ALL:	val = sd->battle_status.agi; break;
+		case SP_VIT_ALL:	val = sd->battle_status.vit; break;
+		case SP_INT_ALL:	val = sd->battle_status.int_; break;
+		case SP_DEX_ALL:	val = sd->battle_status.dex; break;
+		case SP_LUK_ALL:	val = sd->battle_status.luk; break;
+#endif // Pandas_ScriptParams_ReadParam
+#ifdef Pandas_Bonus_bNoFieldGemStone
+		case SP_PANDAS_NOFIELDGEMSTONE: val = sd->special_state.nofieldgemstone; break;
+#endif // Pandas_Bonus_bNoFieldGemStone
 		default:
 			ShowError("pc_readparam: Attempt to read unknown parameter '%lld'.\n", type);
 			return -1;
@@ -10490,12 +11157,15 @@ bool pc_setparam(map_session_data *sd,int64 type,int64 val_tmp)
 		sd->battle_status.hp = cap_value(val, 1, (int32)sd->battle_status.max_hp);
 		break;
 	case SP_MAXHP:
+#ifndef Pandas_Extreme_Computing
+		// 此处的 sd->battle_status.max_hp 已经在 status_calc_maxhpsp_pc 函数中统一限制区间
 		if (sd->status.base_level < 100)
 			sd->battle_status.max_hp = cap_value(val, 1, battle_config.max_hp_lv99);
 		else if (sd->status.base_level < 151)
 			sd->battle_status.max_hp = cap_value(val, 1, battle_config.max_hp_lv150);
 		else
 			sd->battle_status.max_hp = cap_value(val, 1, battle_config.max_hp);
+#endif // Pandas_Extreme_Computing
 
 		if( sd->battle_status.max_hp < sd->battle_status.hp )
 		{
@@ -10507,7 +11177,10 @@ bool pc_setparam(map_session_data *sd,int64 type,int64 val_tmp)
 		sd->battle_status.sp = cap_value(val, 0, (int32)sd->battle_status.max_sp);
 		break;
 	case SP_MAXSP:
+#ifndef Pandas_Extreme_Computing
+		// 此处的 sd->battle_status.max_sp 已经在 status_calc_maxhpsp_pc 函数中统一限制区间
 		sd->battle_status.max_sp = cap_value(val, 1, battle_config.max_sp);
+#endif // Pandas_Extreme_Computing
 
 		if( sd->battle_status.max_sp < sd->battle_status.sp )
 		{
@@ -11278,6 +11951,12 @@ bool pc_setcart(map_session_data *sd,int32 type) {
 				return 0;
 			status_change_end(sd,SC_PUSH_CART);
 			clif_clearcart(sd->fd);
+#ifdef Pandas_ScriptConstants_CartWeight
+			sd->cart_weight = 0;
+#endif // Pandas_ScriptConstants_CartWeight
+#ifdef Pandas_ScriptConstants_MaxCartWeight
+			sd->cart_weight_max = 0;
+#endif // Pandas_ScriptConstants_MaxCartWeight
 			break;
 		default:/* everything else is an allowed ID so we can move on */
 			if( !sd->sc.getSCE(SC_PUSH_CART) ) { /* first time, so fill cart data */
@@ -11415,6 +12094,10 @@ char* pc_readregstr( const map_session_data* sd, int64 reg )
  *------------------------------------------*/
 bool pc_setregstr(map_session_data* sd, int64 reg, const char* str)
 {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd || !str) return false;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	struct script_reg_str *p = nullptr;
 	uint32 index = script_getvaridx(reg);
 	DBData prev;
@@ -12012,7 +12695,11 @@ int32 pc_load_combo(map_session_data *sd) {
  * Equip item on player sd at req_pos from inventory index n
  * return: false - fail; true - success
  *------------------------------------------*/
+#ifndef Pandas_FuncParams_PC_EQUIPITEM
 bool pc_equipitem(map_session_data *sd,int16 n,int32 req_pos,bool equipswitch)
+#else
+bool pc_equipitem(map_session_data *sd,int16 n,int32 req_pos,bool equipswitch, bool swapping)
+#endif // Pandas_FuncParams_PC_EQUIPITEM
 {
 	int32 i, pos, flag = 0, iflag;
 	struct item_data *id;
@@ -12080,10 +12767,44 @@ bool pc_equipitem(map_session_data *sd,int16 n,int32 req_pos,bool equipswitch)
 
 	equip_index = equipswitch ? sd->equip_switch_index : sd->equip_index;
 
+#ifdef Pandas_BattleConfig_CashMounting_UseitemLimit
+	// 使用道具时先判定是否乘坐了“商城坐骑”,
+	// 如果是那么再根据 cashmount_useitem_limit 设置决定是否拒绝 [Sola丶小克]
+	if (sd && !sd->sc.empty() && sd->sc.getSCE(SC_ALL_RIDING)) {
+		bool isblocked = false;
+		switch (id->type) {
+			case IT_ARMOR: {
+				isblocked = (battle_config.cashmount_useitem_limit & 4) == 4;
+				break;
+			}
+			case IT_WEAPON: {
+				isblocked = (battle_config.cashmount_useitem_limit & 8) == 8;
+				break;
+			}
+			case IT_AMMO: {
+				isblocked = (battle_config.cashmount_useitem_limit & 32) == 32;
+				break;
+			}
+			case IT_SHADOWGEAR: {
+				isblocked = (battle_config.cashmount_useitem_limit & 128) == 128;
+				break;
+			}
+		}
+		if (isblocked) {
+			char message[128] = { 0 };
+			safesnprintf(message, sizeof(message), msg_txt_cn(sd, 3), id->ename.c_str()); // 很抱歉, 当您坐上“商城坐骑”时, 无法使用: %s
+			clif_displaymessage(sd->fd, message);
+			return true;
+		}
+	}
+#endif // Pandas_BattleConfig_CashMounting_UseitemLimit
+
+#ifndef Pandas_FuncLogic_PC_EQUIPITEM_BOUND_OPPORTUNITY
 	if ( !equipswitch && id->flag.bindOnEquip && !sd->inventory.u.items_inventory[n].bound) {
 		sd->inventory.u.items_inventory[n].bound = (char)battle_config.default_bind_on_equip;
 		clif_notify_bindOnEquip( *sd, n );
 	}
+#endif // Pandas_FuncLogic_PC_EQUIPITEM_BOUND_OPPORTUNITY
 
 	if(pos == EQP_ACC) { //Accessories should only go in one of the two.
 		pos = req_pos&EQP_ACC;
@@ -12131,6 +12852,28 @@ bool pc_equipitem(map_session_data *sd,int16 n,int32 req_pos,bool equipswitch)
 		else
 			flag = id->range != sd->inventory_data[i]->range;
 	}
+
+#ifdef Pandas_NpcFilter_EQUIP
+	if (!equipswitch) {
+		pc_setreg(sd, add_str("@equip_idx"), n);
+		pc_setreg(sd, add_str("@equip_pos"), n);
+		pc_setreg(sd, add_str("@equip_swapping"), swapping ? 1 : 0);
+
+		if (npc_script_filter(sd, NPCF_EQUIP) && !swapping)
+			return false;
+
+		// 如果道具在脚本进行 Filter 处理期间被删了, 那么也终止后续流程
+		if (sd->inventory.u.items_inventory[n].nameid == 0 || sd->inventory_data[n] == nullptr)
+			return false;
+	}
+#endif // Pandas_NpcFilter_EQUIP
+
+#ifdef Pandas_FuncLogic_PC_EQUIPITEM_BOUND_OPPORTUNITY
+	if ( !equipswitch && id->flag.bindOnEquip && !sd->inventory.u.items_inventory[n].bound) {
+		sd->inventory.u.items_inventory[n].bound = (char)battle_config.default_bind_on_equip;
+		clif_notify_bindOnEquip( *sd, n );
+	}
+#endif // Pandas_FuncLogic_PC_EQUIPITEM_BOUND_OPPORTUNITY
 
 	if( equipswitch ){
 		for( i = 0; i < EQI_MAX; i++ ){
@@ -12283,6 +13026,15 @@ bool pc_equipitem(map_session_data *sd,int16 n,int32 req_pos,bool equipswitch)
 	}
 	sd->npc_item_flag = iflag;
 
+#ifdef Pandas_NpcEvent_EQUIP
+	if (!equipswitch) {
+		pc_setreg(sd, add_str("@equip_idx"), (int)n);
+		pc_setreg(sd, add_str("@equip_pos"), (int)n);	// 为兼容脚本而添加
+		pc_setreg(sd, add_str("@equip_swapping"), swapping ? 1 : 0);
+		npc_script_event(*sd, NPCE_EQUIP);
+	}
+#endif // Pandas_NpcEvent_EQUIP
+
 	return true;
 }
 
@@ -12419,6 +13171,19 @@ bool pc_unequipitem(map_session_data *sd, int32 n, int32 flag) {
 	if (battle_config.battle_log)
 		ShowInfo("unequip %d %x:%x\n",n,pc_equippoint(sd,n),pos);
 
+#ifdef Pandas_NpcFilter_UNEQUIP
+	pc_setreg(sd, add_str("@unequip_idx"), n);
+	pc_setreg(sd, add_str("@unequip_pos"), n);
+	pc_setreg(sd, add_str("@unequip_swapping"), (flag & 16 ? 1 : 0));
+	pc_setreg(sd, add_str("@unequip_force"), (flag & 2 ? 1 : 0));
+
+	if (npc_script_filter(sd, NPCF_UNEQUIP) && !(flag & 16))
+		return false;
+
+	// 如果道具在脚本进行 Filter 处理期间被删了, 那么也终止后续流程
+	if (sd->inventory.u.items_inventory[n].nameid == 0 || sd->inventory_data[n] == nullptr)
+		return false;
+#endif // Pandas_NpcFilter_UNEQUIP
 	for(i = 0; i < EQI_MAX; i++) {
 		if (pos & equip_bitmask[i])
 			sd->equip_index[i] = -1;
@@ -12494,6 +13259,14 @@ bool pc_unequipitem(map_session_data *sd, int32 n, int32 flag) {
 
 	pc_unequipitem_sub(sd, n, flag);
 
+#ifdef Pandas_NpcEvent_UNEQUIP
+	pc_setreg(sd, add_str("@unequip_idx"), (int)n);
+	pc_setreg(sd, add_str("@unequip_pos"), (int)n);	// 为兼容脚本而添加
+	pc_setreg(sd, add_str("@unequip_swapping"), (flag & 16 ? 1 : 0));	// flag & 16 是一个自定义标记, 表示本次脱下装备是由装备切换机制引发的
+	pc_setreg(sd, add_str("@unequip_force"), (flag & 2 ? 1 : 0));
+	npc_script_event(*sd, NPCE_UNEQUIP);
+#endif // Pandas_NpcEvent_UNEQUIP
+
 	return true;
 }
 
@@ -12509,7 +13282,11 @@ int32 pc_equipswitch( map_session_data* sd, int32 index ){
 		// Remove it from the equip switch
 		pc_equipswitch_remove( sd, index );
 
+#ifndef Pandas_FuncParams_PC_EQUIPITEM
 		pc_equipitem( sd, index, position );
+#else
+		pc_equipitem( sd, index, position, false, true );
+#endif // Pandas_FuncParams_PC_EQUIPITEM
 
 		return position;
 	}else{
@@ -12530,7 +13307,12 @@ int32 pc_equipswitch( map_session_data* sd, int32 index ){
 				unequipped_position |= unequip_item->equip;
 
 				// Unequip the item
+#if !defined(Pandas_NpcEvent_UNEQUIP) && !defined(Pandas_NpcFilter_UNEQUIP)
 				pc_unequipitem( sd, unequip_index, 0 );
+#else
+				// flag & 16 是一个自定义标记, 表示本次脱下装备是由装备切换机制引发的
+				pc_unequipitem( sd, unequip_index, 16 );
+#endif // !defined(Pandas_NpcEvent_UNEQUIP) && !defined(Pandas_NpcFilter_UNEQUIP)
 			}
 		}
 
@@ -12550,7 +13332,11 @@ int32 pc_equipswitch( map_session_data* sd, int32 index ){
 				pc_equipswitch_remove( sd, exchange_index );
 
 				// Equip the item at the destinated position
+#ifndef Pandas_FuncParams_PC_EQUIPITEM
 				pc_equipitem( sd, exchange_index, exchange_position );
+#else
+				pc_equipitem( sd, exchange_index, exchange_position, false, true );
+#endif // Pandas_FuncParams_PC_EQUIPITEM
 			}
 		}
 
@@ -13827,7 +14613,7 @@ uint64 JobDatabase::parseBodyNode(const ryml::NodeRef& node) {
 			int64 job_id;
 
 			if (!script_get_constant(job_name_constant.c_str(), &job_id)) {
-				this->invalidWarning(node["Job"], "Job %s does not exist.\n", job_name.c_str());
+				this->invalidWarning(jobit, "Job %s does not exist.\n", job_name.c_str());
 				return 0;
 			}
 
@@ -14017,10 +14803,17 @@ uint64 JobDatabase::parseBodyNode(const ryml::NodeRef& node) {
 						continue;
 					}
 
+#ifndef Pandas_Extreme_Computing
 					uint16 max;
 
 					if (!this->asUInt16(statNode, stat.c_str(), max))
 						return 0;
+#else
+					pec_ushort max = 0;
+
+					if (!this->asUInt32(statNode, stat.c_str(), max))
+						return 0;
+#endif // Pandas_Extreme_Computing
 
 					job->max_param[constant] = max;
 				}
@@ -14335,7 +15128,7 @@ void JobDatabase::loadingFinished() {
 		uint64 class_ = pc_jobid2mapid( job_id );
 
 		// Set normal status limits
-		uint16 max = battle_config.max_parameter;
+		pec_ushort max = battle_config.max_parameter;
 
 		do{
 			// Always check babies first
@@ -14799,6 +15592,24 @@ void pc_scdata_received(map_session_data *sd) {
 
 	sd->state.pc_loaded = true;
 
+#ifdef Pandas_Fix_When_Relogin_Then_Clear_Autotrade_Store
+	if (sd->state.pc_loaded && !sd->state.autotrade) {
+		vending_autotrader_cleardb(sd);
+		buyingstore_autotrader_cleardb(sd);
+	}
+#endif // Pandas_Fix_When_Relogin_Then_Clear_Autotrade_Store
+
+#ifdef Pandas_Player_Suspend_System
+	if (sd->state.pc_loaded && sd->state.autotrade) {
+		// 走到这里说明已经完成了背包、仓库、手推车的道具信息以及 sc_data 数据的加载。
+		if (pc_autotrade_suspend(sd)) {
+			clif_parse_LoadEndAck(sd->fd, sd);
+			suspend_recall_postfix(sd);
+			return;
+		}
+	}
+#endif // Pandas_Player_Suspend_System
+
 	if (sd->state.connect_new == 0 && sd->fd) { // Character already loaded map! Gotta trigger LoadEndAck manually.
 		sd->state.connect_new = 1;
 		clif_parse_LoadEndAck(sd->fd, sd);
@@ -14811,6 +15622,17 @@ void pc_scdata_received(map_session_data *sd) {
 
 	if (sd->sc.getSCE(SC_SOULENERGY))
 		sd->soulball = sd->sc.getSCE(SC_SOULENERGY)->val1;
+
+#ifdef Pandas_Fix_Autotrade_HeadView_Missing
+	if (sd->state.pc_loaded && sd->state.autotrade) {
+		// 修正离线挂店的角色在服务器重启自动上线后, 头饰外观会暂时丢失的问题
+		// 将原先位于 intif.cpp -> intif_parse_StorageReceived 函数中自动开店的处理逻辑移动到这里来
+		if (sd->state.autotrade & AUTOTRADE_VENDING || sd->state.autotrade & AUTOTRADE_BUYINGSTORE) {
+			clif_parse_LoadEndAck(sd->fd, sd);
+			sd->autotrade_tid = add_timer(gettick() + battle_config.feature_autotrade_open_delay, pc_autotrade_timer, sd->id, 0);
+		}
+	}
+#endif // Pandas_Fix_Autotrade_HeadView_Missing
 }
 
 /**
@@ -14848,6 +15670,17 @@ TIMER_FUNC(pc_expiration_timer){
 	return 0;
 }
 
+#ifdef Pandas_Struct_Autotrade_Extend
+bool pc_autotrade_suspend(map_session_data* sd) {
+	if (!sd || !sd->state.autotrade)
+		return false;
+
+	return (sd->state.autotrade & AUTOTRADE_OFFLINE) ||
+		(sd->state.autotrade & AUTOTRADE_AFK) ||
+		(sd->state.autotrade & AUTOTRADE_NORMAL);
+}
+#endif // Pandas_Struct_Autotrade_Extend
+
 TIMER_FUNC(pc_autotrade_timer){
 	map_session_data *sd = map_id2sd(id);
 
@@ -14856,13 +15689,24 @@ TIMER_FUNC(pc_autotrade_timer){
 
 	sd->autotrade_tid = INVALID_TIMER;
 
+#ifndef Pandas_Struct_Autotrade_Extend
 	if (sd->state.autotrade&2)
 		vending_reopen(*sd);
 	if (sd->state.autotrade&4)
 		buyingstore_reopen(sd);
+#else
+	if (sd->state.autotrade & AUTOTRADE_VENDING)
+		vending_reopen(*sd);
+	if (sd->state.autotrade & AUTOTRADE_BUYINGSTORE)
+		buyingstore_reopen(sd);
+#endif // Pandas_Struct_Autotrade_Extend
 
 	if (!sd->vender_id && !sd->buyer_id) {
+#ifndef Pandas_Struct_Autotrade_Extend
 		sd->state.autotrade = 0;
+#else
+		sd->state.autotrade = AUTOTRADE_DISABLED;
+#endif // Pandas_Struct_Autotrade_Extend
 		map_quit(sd);
 	}
 
@@ -14985,6 +15829,7 @@ void pc_crimson_marker_clear(map_session_data *sd) {
 * @param sd: Player
 **/
 void pc_show_version(map_session_data *sd) {
+#ifndef Pandas_UserExperience_AtCommand_Version
 	const char* svn = get_svn_revision();
 	char buf[CHAT_SIZE_MAX];
 
@@ -14998,6 +15843,42 @@ void pc_show_version(map_session_data *sd) {
 			sprintf(buf,"%s",msg_txt(sd,1296)); //Cannot determine SVN/Git version.
 	}
 	clif_displaymessage(sd->fd,buf);
+#else
+#ifdef CRASHRPT_APPID
+	std::string appid(CRASHRPT_APPID);
+#else
+	std::string appid;
+#endif // CRASHRPT_APPID
+	std::string gitbranch(GIT_BRANCH);
+	std::string githash(GIT_HASH);
+	char mes[CHAT_SIZE_MAX] = { 0 };
+	char compile[CHAT_SIZE_MAX] = { 0 };
+	char mode[CHAT_SIZE_MAX] = { 0 };
+
+#ifdef PRERE
+	strcpy(mode, msg_txt_cn(sd, 89));	// Pre-Renewal
+#else
+	strcpy(mode, msg_txt_cn(sd, 90));	// Renewal
+#endif // PRERE
+	if (appid.length())
+		strcpy(compile, msg_txt_cn(sd, 86));	// Official Compilation
+	else
+		strcpy(compile, msg_txt_cn(sd, 87));	// Unofficial Compilation
+	if (gitbranch.empty())
+		gitbranch = msg_txt_cn(sd, 91);			// Null
+	if (githash.empty())
+		githash = msg_txt_cn(sd, 91);			// Null
+	if (isCommercialVersion()) {
+		std::string community_ver = formatVersion(Pandas_Version, true, true, 0);
+		sprintf(mes, msg_txt_cn(sd, 92), getPandasVersion().c_str(), community_ver.c_str(), compile);
+	}
+	else {
+		sprintf(mes, msg_txt_cn(sd, 85), getPandasVersion().c_str(), compile);
+	}
+	clif_displaymessage(sd->fd, mes);
+	sprintf(mes, msg_txt_cn(sd, 88), mode, PACKETVER, gitbranch.c_str(), githash.c_str());
+	clif_displaymessage(sd->fd, mes);
+#endif // Pandas_UserExperience_AtCommand_Version
 }
 
 /**
@@ -15047,7 +15928,11 @@ void pc_bonus_script(map_session_data *sd) {
  * @return New created entry pointer or nullptr if failed or nullptr if duplicate fail
  * @author [Cydh]
  **/
+#ifndef Pandas_BonusScript_Unique_ID
 struct s_bonus_script_entry *pc_bonus_script_add(map_session_data *sd, const char *script_str, t_tick dur, enum efst_type icon, uint16 flag, uint8 type) {
+#else
+struct s_bonus_script_entry *pc_bonus_script_add(map_session_data *sd, const char *script_str, t_tick dur, enum efst_type icon, uint16 flag, uint8 type, uint64 bonus_id) {
+#endif // Pandas_BonusScript_Unique_ID
 	struct script_code *script = nullptr;
 	struct linkdb_node *node = nullptr;
 	struct s_bonus_script_entry *entry = nullptr;
@@ -15092,6 +15977,9 @@ struct s_bonus_script_entry *pc_bonus_script_add(map_session_data *sd, const cha
 	entry->tick = dur; // Use duration first, on run change to expire time
 	entry->type = type;
 	entry->script = script;
+#ifdef Pandas_BonusScript_Unique_ID
+	entry->bonus_id = (!bonus_id ? pc_bonus_script_generate_unique_id(sd) : bonus_id);
+#endif // Pandas_BonusScript_Unique_ID
 	sd->bonus_script.count++;
 	return entry;
 }
@@ -15206,6 +16094,89 @@ void pc_bonus_script_clear(map_session_data *sd, uint32 flag) {
 		status_calc_pc(sd,SCO_NONE);
 }
 
+#ifdef Pandas_BonusScript_Unique_ID
+uint64 pc_bonus_script_generate_unique_id(map_session_data* sd) {
+	nullpo_ret(sd);
+
+	uint64 bonus_script_unique_id = ((uint64)sd->status.char_id << 32) | sd->pandas.bonus_script_counter++;
+	pc_setglobalreg(sd, add_str(BONUS_SCRIPT_COUNTER_VAR), sd->pandas.bonus_script_counter);
+	return bonus_script_unique_id;
+}
+#endif // Pandas_BonusScript_Unique_ID
+
+#ifdef Pandas_ScriptCommand_BonusScriptRemove
+//************************************
+// Method:      pc_bonus_script_remove
+// Description: 移除指定的 bonus_script 效果脚本
+// Access:      public
+// Parameter:   map_session_data * sd
+// Parameter:   uint64 bonus_id
+// Returns:     bool
+// Author:      Sola丶小克(CairoLee)  2021/04/05 17:37
+//************************************
+bool pc_bonus_script_remove(map_session_data* sd, uint64 bonus_id) {
+	struct linkdb_node* node = nullptr;
+	struct s_bonus_script_entry* entry = nullptr;
+	uint16 count = 0;
+
+	if (!sd)
+		return false;
+
+	if ((node = sd->bonus_script.head)) {
+		while (node) {
+			struct linkdb_node* next = node->next;
+			entry = (struct s_bonus_script_entry*)node->data;
+			if (bonus_id == entry->bonus_id) {
+				linkdb_erase(&sd->bonus_script.head, (void*)((intptr_t)entry));
+				pc_bonus_script_free_entry(sd, entry);
+				count++;
+			}
+			node = next;
+		}
+	}
+
+	pc_bonus_script_check_final(sd);
+
+	if (count) {
+		status_calc_pc(sd, SCO_NONE);
+	}
+
+	return (count > 0);
+}
+#endif // Pandas_ScriptCommand_BonusScriptRemove
+
+#ifdef Pandas_ScriptCommand_BonusScriptExists
+//************************************
+// Method:      pc_bonus_script_exists
+// Description: 判断指定的 bonus_script 效果脚本是否已存在 (或者说: 已激活)
+// Access:      public
+// Parameter:   map_session_data * sd
+// Parameter:   uint64 bonus_id
+// Returns:     bool
+// Author:      Sola丶小克(CairoLee)  2021/04/05 17:39
+//************************************
+bool pc_bonus_script_exists(map_session_data* sd, uint64 bonus_id) {
+	struct linkdb_node* node = nullptr;
+	struct s_bonus_script_entry* entry = nullptr;
+
+	if (!sd)
+		return false;
+
+	if ((node = sd->bonus_script.head)) {
+		while (node) {
+			struct linkdb_node* next = node->next;
+			entry = (struct s_bonus_script_entry*)node->data;
+			if (bonus_id == entry->bonus_id) {
+				return true;
+			}
+			node = next;
+		}
+	}
+
+	return false;
+}
+#endif // Pandas_ScriptCommand_BonusScriptExists
+
 /** [Cydh]
  * Gives/removes SC_BASILICA when player steps in/out the cell with 'cell_basilica'
  * @param sd: Target player
@@ -15231,7 +16202,7 @@ void pc_cell_basilica(map_session_data *sd) {
  * @param param: Max parameter to check
  * @return max_param
  */
-uint16 pc_maxparameter( const map_session_data* sd, e_params param ) {
+pec_uint16 pc_maxparameter( const map_session_data* sd, e_params param ) {
 	nullpo_retr(0, sd);
 
 	std::shared_ptr<s_job_info> job = job_db.find(pc_mapid2jobid(sd->class_,sd->status.sex));
@@ -15251,10 +16222,32 @@ uint16 pc_maxparameter( const map_session_data* sd, e_params param ) {
 int16 pc_maxaspd( const map_session_data* sd ) {
 	nullpo_ret(sd);
 
-	return (( sd->class_&JOBL_THIRD) ? battle_config.max_third_aspd : (
+	int32 aspd = (( sd->class_&JOBL_THIRD) ? battle_config.max_third_aspd : (
 			((sd->class_&MAPID_SECONDMASK) == MAPID_KAGEROUOBORO || (sd->class_&MAPID_SECONDMASK) == MAPID_REBELLION) ? battle_config.max_extended_aspd : (
 			(sd->class_&MAPID_FIRSTMASK) == MAPID_SUMMONER) ? battle_config.max_summoner_aspd : 
 			battle_config.max_aspd ));
+
+#ifdef Pandas_BattleConfig_MaxAspdForGVG
+	if (map_flag_gvg(sd->m) && battle_config.max_aspd_for_gvg > 0)
+		return static_cast<int16>(max(aspd, battle_config.max_aspd_for_gvg));
+#endif // Pandas_BattleConfig_MaxAspdForGVG
+
+#ifdef Pandas_BattleConfig_MaxAspdForPVP
+	if (map_flag_vs(sd->m) && battle_config.max_aspd_for_pvp > 0)
+		aspd = max(aspd, battle_config.max_aspd_for_pvp);
+#endif // Pandas_BattleConfig_MaxAspdForPVP
+
+#ifdef Pandas_MapFlag_MaxASPD
+	if (map_getmapflag(sd->m, MF_MAXASPD)) {
+		int32 val = map_getmapflag_param(sd->m, MF_MAXASPD, 1);
+		if (val > 0) {
+			val = (AMOTION_ZERO_ASPD - val * AMOTION_INTERVAL) * AMOTION_DIVIDER_PC;
+			aspd = max(aspd, val);
+		}
+	}
+#endif // Pandas_MapFlag_MaxASPD
+
+	return static_cast<int16>(aspd);
 }
 
 /**

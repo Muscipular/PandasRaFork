@@ -20,6 +20,9 @@
 
 #include "achievement.hpp"
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "chrif.hpp"
 #include "clif.hpp"
 #include "intif.hpp"
@@ -714,6 +717,13 @@ int32 pet_attackskill(pet_data *pd, int32 target_id)
 	if (DIFF_TICK(pd->ud.canact_tick, gettick()) > 0)
 		return 0;
 
+#ifdef Pandas_MapFlag_NoSkill2
+	if (pd && map_getmapflag(pd->m, MF_NOSKILL2)) {
+		if ((map_getmapflag_param(pd->m, MF_NOSKILL2, 1) & BL_PET) == BL_PET)
+			return 0;
+	}
+#endif // Pandas_MapFlag_NoSkill2
+
 	if (rnd_chance((pd->a_skill->rate +pd->pet.intimate*pd->a_skill->bonusrate/1000), 100)) { // Skotlex: Use pet's skill
 		int32 inf;
 		block_list *bl;
@@ -960,6 +970,9 @@ bool pet_return_egg( map_session_data *sd, pet_data *pd ){
  
 	sd->inventory.u.items_inventory[i].attribute = 0;
 	sd->inventory.dirty = true;
+#ifdef Pandas_Fix_Storage_DirtyFlag_Override
+	sd->inventory.dirty_when_saving = true;
+#endif // Pandas_Fix_Storage_DirtyFlag_Override
 	pd->pet.incubate = 1;
 #if PACKETVER >= 20180704
 	clif_inventorylist(sd);
@@ -1037,6 +1050,9 @@ bool pet_data_init(map_session_data *sd, struct s_pet *pet)
 	pd->y = pd->ud.to_y;
 
 	map_addiddb(pd);
+#ifdef Pandas_BattleRecord
+	batrec_new(pd);
+#endif // Pandas_BattleRecord
 	status_calc_pet(pd,SCO_FIRST);
 
 	pd->last_thinktime = gettick();
@@ -1299,6 +1315,19 @@ void pet_catch_process_end( map_session_data& sd, int32 target_id ){
 		case PET_CATCH_UNIVERSAL_ALL:
 			// No checks, catch anything.
 			break;
+
+#ifdef Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
+		case PET_CATCH_MULTI_TARGET:
+			// PET_CATCH_MULTI_TARGET is used for universal lures with a specific mob whitelist.
+			if( !md || !util::vector_exists( sd.pandas.multi_catch_target_class, md->mob_id ) ){
+				clif_pet_roulette( sd, false );
+				pet_catchprocesses.erase( sd.status.char_id );
+				sd.pandas.multi_catch_target_class.clear();
+
+				return;
+			}
+			break;
+#endif // Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
 	}
 
 	if( battle_config.pet_distance_check && distance_bl( &sd, md ) > battle_config.pet_distance_check ){
@@ -2157,6 +2186,13 @@ TIMER_FUNC(pet_skill_support_timer){
 		return 1;
 
 	pd = sd->pd;
+
+#ifdef Pandas_MapFlag_NoSkill2
+	if (pd && map_getmapflag(pd->m, MF_NOSKILL2)) {
+		if ((map_getmapflag_param(pd->m, MF_NOSKILL2, 1) & BL_PET) == BL_PET)
+			return 1;
+	}
+#endif // Pandas_MapFlag_NoSkill2
 
 	if(pd->s_skill->timer != tid) {
 		ShowError("pet_skill_support_timer %d != %d\n",pd->s_skill->timer,tid);

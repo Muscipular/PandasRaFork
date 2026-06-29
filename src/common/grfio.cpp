@@ -527,7 +527,11 @@ static bool isFullEncrypt(const char* fname)
 static int32 grfio_entryread(const char* grfname, int32 gentry)
 {
 	long grf_size;
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char grf_header[0x2e];
+	#else
+	unsigned char grf_header[0x2e] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	int32 entry,entrys,ofs,grf_version;
 	unsigned char *grf_filelist;
 
@@ -669,9 +673,15 @@ static int32 grfio_entryread(const char* grfname, int32 gentry)
 
 static bool grfio_parse_restable_row(const char* row)
 {
+	#ifndef Pandas_Crashfix_Variable_Init
 	char w1[256], w2[256];
 	char src[512], dst[512];
 	char local[512];
+	#else
+	char w1[256] = { 0 }, w2[256] = { 0 };
+	char src[512] = { 0 }, dst[512] = { 0 };
+	char local[512] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	FILELIST* entry;
 
 	if( sscanf(row, "%255[^#\r\n]#%255[^#\r\n]#", w1, w2) != 2 )
@@ -819,7 +829,11 @@ void grfio_init(const char* fname)
 		char line[1024];
 		while( fgets(line, sizeof(line), data_conf) )
 		{
+	#ifndef Pandas_Crashfix_Variable_Init
 			char w1[1024], w2[1024];
+	#else
+			char w1[1024] = { 0 }, w2[1024] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 
 			if( line[0] == '/' && line[1] == '/' )
 				continue; // skip comments

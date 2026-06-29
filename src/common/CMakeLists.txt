@@ -51,17 +51,24 @@ endif()
 
 set( COMMON_ALL_HEADERS
 	"${CMAKE_CURRENT_BINARY_DIR}/version.hpp"
+	"${COMMON_SOURCE_DIR}/assistant.hpp"
 	"${COMMON_SOURCE_DIR}/cbasetypes.hpp"
 	"${COMMON_SOURCE_DIR}/mmo.hpp"
+	"${COMMON_SOURCE_DIR}/processmutex.hpp"
 	)
 
-add_library(minicore)
+add_library(minicore STATIC)
 
 target_sources(minicore PRIVATE
 	"${COMMON_SOURCE_DIR}/core.cpp"
 	"${COMMON_SOURCE_DIR}/malloc.cpp"
+	"${COMMON_SOURCE_DIR}/performance.cpp"
+	"${COMMON_SOURCE_DIR}/processmutex.cpp"
 	"${COMMON_SOURCE_DIR}/showmsg.cpp"
 	"${COMMON_SOURCE_DIR}/strlib.cpp"
+	"${COMMON_SOURCE_DIR}/assistant.cpp"
+	"${COMMON_SOURCE_DIR}/translate.cpp"
+	"${COMMON_SOURCE_DIR}/utf8.cpp"
 	${LIBCONFIG_SOURCES} # needed by showmsg.cpp
 	${COMMON_ADDITIONALL_CPP} # needed by Windows
 )
@@ -69,11 +76,15 @@ target_sources(minicore PRIVATE
 target_include_directories(minicore PUBLIC
 	${COMMON_SOURCE_DIR}
 	${LIBCONFIG_INCLUDE_DIRS}
+	${YAML_INCLUDE_DIRS}
+	${utfcpp_INCLUDE_DIRS}
+	${uchardet_INCLUDE_DIRS}
 	${COMMON_ADDITIONALL_HPP} # needed by Windows
 )
 
 set_target_properties( minicore PROPERTIES COMPILE_FLAGS "${GLOBAL_DEFINITIONS}" )
 target_compile_definitions(minicore PRIVATE "-DMINICORE" ${LIBCONFIG_DEFINITIONS})
+target_link_libraries(minicore PUBLIC yaml-cpp ryml libuchardet)
 
 #
 # common_base
@@ -93,15 +104,21 @@ set( COMMON_BASE_HEADERS
 	"${COMMON_SOURCE_DIR}/mapindex.hpp"
 	"${COMMON_SOURCE_DIR}/md5calc.hpp"
 	"${COMMON_SOURCE_DIR}/nullpo.hpp"
+	"${COMMON_SOURCE_DIR}/performance.hpp"
 	"${COMMON_SOURCE_DIR}/random.hpp"
 	"${COMMON_SOURCE_DIR}/showmsg.hpp"
 	"${COMMON_SOURCE_DIR}/socket.hpp"
 	"${COMMON_SOURCE_DIR}/strlib.hpp"
 	"${COMMON_SOURCE_DIR}/timer.hpp"
+	"${COMMON_SOURCE_DIR}/translate.hpp"
+	"${COMMON_SOURCE_DIR}/utf8.hpp"
+	"${COMMON_SOURCE_DIR}/utf8_defines.hpp"
 	"${COMMON_SOURCE_DIR}/utils.hpp"
 	"${COMMON_SOURCE_DIR}/msg_conf.hpp"
 	"${COMMON_SOURCE_DIR}/cli.hpp"
 	"${COMMON_SOURCE_DIR}/utilities.hpp"
+	"${COMMON_SOURCE_DIR}/future.hpp"
+	"${COMMON_SOURCE_DIR}/jobqueue.hpp"
 	${LIBCONFIG_HEADERS} # needed by conf.hpp/showmsg.hpp
 	${COMMON_ADDITIONALL_HPP} # needed by Windows
 	CACHE INTERNAL "common_base headers" )
@@ -117,32 +134,40 @@ set( COMMON_BASE_SOURCES
 	"${COMMON_SOURCE_DIR}/mapindex.cpp"
 	"${COMMON_SOURCE_DIR}/md5calc.cpp"
 	"${COMMON_SOURCE_DIR}/nullpo.cpp"
+	"${COMMON_SOURCE_DIR}/performance.cpp"
+	"${COMMON_SOURCE_DIR}/processmutex.cpp"
 	"${COMMON_SOURCE_DIR}/random.cpp"
 	"${COMMON_SOURCE_DIR}/showmsg.cpp"
 	"${COMMON_SOURCE_DIR}/socket.cpp"
 	"${COMMON_SOURCE_DIR}/strlib.cpp"
 	"${COMMON_SOURCE_DIR}/timer.cpp"
+	"${COMMON_SOURCE_DIR}/translate.cpp"
+	"${COMMON_SOURCE_DIR}/utf8.cpp"
 	"${COMMON_SOURCE_DIR}/utils.cpp"
 	"${COMMON_SOURCE_DIR}/msg_conf.cpp"
 	"${COMMON_SOURCE_DIR}/cli.cpp"
 	"${COMMON_SOURCE_DIR}/utilities.cpp"
+	"${COMMON_SOURCE_DIR}/future.cpp"
+	"${COMMON_SOURCE_DIR}/assistant.cpp"
 	${LIBCONFIG_SOURCES} # needed by conf.cpp/showmsg.cpp
 	${COMMON_ADDITIONALL_CPP} # needed by Windows
 	CACHE INTERNAL "common_base sources" )
 set( COMMON_BASE_INCLUDE_DIRS
 	${LIBCONFIG_INCLUDE_DIRS}
 	${YAML_INCLUDE_DIRS}
+	${utfcpp_INCLUDE_DIRS}
+	${uchardet_INCLUDE_DIRS}
 	CACHE INTERNAL "common_base include dirs" )
 set( COMMON_BASE_DEFINITIONS
 	${LIBCONFIG_DEFINITIONS}
 	CACHE INTERNAL "common_base definitions" )
-set( LIBRARIES ${GLOBAL_LIBRARIES} ${ZLIB_LIBRARIES} yaml-cpp ryml )
+set( LIBRARIES ${GLOBAL_LIBRARIES} ${ZLIB_LIBRARIES} yaml-cpp ryml libuchardet )
 set( INCLUDE_DIRS ${GLOBAL_INCLUDE_DIRS} ${RA_INCLUDE_DIRS} ${YAML_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${COMMON_BASE_INCLUDE_DIRS} )
 set( DEFINITIONS "${GLOBAL_DEFINITIONS} ${COMMON_BASE_DEFINITIONS}" )
 set( SOURCE_FILES ${COMMON_BASE_HEADERS} ${COMMON_BASE_SOURCES} )
 source_group( common FILES ${COMMON_BASE_HEADERS} ${COMMON_BASE_SOURCES} )
 
-add_library( common_base ${SOURCE_FILES} )
+add_library( common_base STATIC ${SOURCE_FILES} )
 #message( STATUS "common_base LIBRARIES=${LIBRARIES}, DEFINITIONS=${DEFINITIONS}")
 target_link_libraries( common_base ${LIBRARIES} )
 set_target_properties( common_base PROPERTIES COMPILE_FLAGS "${DEFINITIONS}" )
@@ -176,7 +201,7 @@ set( DEFINITIONS "${GLOBAL_DEFINITIONS}" )
 set( SOURCE_FILES ${COMMON_HEADERS} ${COMMON_SOURCES} )
 source_group( common FILES ${COMMON_HEADERS} ${COMMON_SOURCES} )
 
-add_library( common ${SOURCE_FILES} )
+add_library( common STATIC ${SOURCE_FILES} )
 #message( STATUS "common LIBRARIES=${LIBRARIES}, DEPENDENCIES=${DEPENDENCIES} DEFINITIONS=${DEFINITIONS}")
 add_dependencies( common ${DEPENDENCIES} )
 target_link_libraries( common ${LIBRARIES} ${DEPENDENCIES} )

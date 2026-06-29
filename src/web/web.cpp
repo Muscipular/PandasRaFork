@@ -4,8 +4,10 @@
 #include "web.hpp"
 
 #include <chrono>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <mutex>
 #include <string>
 #include <thread>
 
@@ -42,6 +44,9 @@ static char* msg_table[WEB_MAX_MSG];	/// Web Server messages_conf
 
 struct Web_Config web_config {};
 struct Inter_Config inter_config {};
+#ifdef Pandas_WebServer_ApplyMutex_For_Logger
+std::mutex g_logger_lock;
+#endif // Pandas_WebServer_ApplyMutex_For_Logger
 std::shared_ptr<httplib::Server> http_server;
 
 std::string login_server_ip = "127.0.0.1";
@@ -49,24 +54,36 @@ uint16 login_server_port = 3306;
 std::string login_server_id = "ragnarok";
 std::string login_server_pw = "";
 std::string login_server_db = "ragnarok";
+#ifdef Pandas_SQL_Configure_Optimization
+char login_codepage[32] = "";
+#endif // Pandas_SQL_Configure_Optimization
 
 std::string char_server_ip = "127.0.0.1";
 uint16  char_server_port = 3306;
 std::string char_server_id = "ragnarok";
 std::string char_server_pw = "";
 std::string char_server_db = "ragnarok";
+#ifdef Pandas_SQL_Configure_Optimization
+char char_codepage[32] = "";
+#endif // Pandas_SQL_Configure_Optimization
 
 std::string map_server_ip = "127.0.0.1";
 uint16 map_server_port = 3306;
 std::string map_server_id = "ragnarok";
 std::string map_server_pw = "";
 std::string map_server_db = "ragnarok";
+#ifdef Pandas_SQL_Configure_Optimization
+char map_codepage[32] = "";
+#endif // Pandas_SQL_Configure_Optimization
 
 std::string web_server_ip = "127.0.0.1";
 uint16 web_server_port = 3306;
 std::string web_server_id = "ragnarok";
 std::string web_server_pw = "";
 std::string web_server_db = "ragnarok";
+#ifdef Pandas_SQL_Configure_Optimization
+char web_codepage[32] = "";
+#endif // Pandas_SQL_Configure_Optimization
 
 std::string default_codepage = "";
 
@@ -84,6 +101,11 @@ char party_table[32] = "party";
 char partybookings_table[32] = "party_bookings";
 char guild_db_table[32] = "guild";
 char char_db_table[32] = "char";
+
+#ifdef Pandas_WebServer_Database_EncodingAdaptive
+char web_connection_encoding[32] = { 0 };
+char character_codepage[32] = { 0 };
+#endif // Pandas_WebServer_Database_EncodingAdaptive
 
 int32 parse_console(const char * buf) {
 	return 1;
@@ -131,6 +153,11 @@ bool web_config_read(const char* cfgName, bool normal) {
 				web_config.web_port = (uint16)atoi(w2);
 		}
 
+#ifdef Pandas_WebServer_Database_EncodingAdaptive
+		if (!strcmpi(w1, "character_codepage"))
+			safestrncpy(character_codepage, w2, sizeof(character_codepage) - 1);
+		else
+#endif // Pandas_WebServer_Database_EncodingAdaptive
 		if (!strcmpi(w1, "timestamp_format"))
 			safestrncpy(timestamp_format, w2, 20);
 		else if (!strcmpi(w1, "db_path"))
@@ -256,6 +283,16 @@ int32 inter_config_read(const char* cfgName)
 			web_server_db = w2;
 		else if(!strcmpi(w1,"default_codepage"))
 			default_codepage = w2;
+#ifdef Pandas_SQL_Configure_Optimization
+		else if(!strcmpi(w1,"login_codepage"))
+			safestrncpy(login_codepage, w2, sizeof(login_codepage));
+		else if(!strcmpi(w1,"char_codepage"))
+			safestrncpy(char_codepage, w2, sizeof(char_codepage));
+		else if(!strcmpi(w1,"map_codepage"))
+			safestrncpy(map_codepage, w2, sizeof(map_codepage));
+		else if(!strcmpi(w1,"web_codepage"))
+			safestrncpy(web_codepage, w2, sizeof(web_codepage));
+#endif // Pandas_SQL_Configure_Optimization
 		else if (!strcmpi(w1, "user_configs"))
 			safestrncpy(user_configs_table, w2, sizeof(user_configs_table));
 		else if (!strcmpi(w1, "char_configs"))
@@ -287,7 +324,7 @@ int32 inter_config_read(const char* cfgName)
 
 void web_set_defaults() {
 	web_config.web_ip = "0.0.0.0";
-	web_config.web_port = 8888;
+	web_config.web_port = 3000;
 	web_config.print_req_res = false;
 	safestrncpy(web_config.webconf_name, "conf/web_athena.conf", sizeof(web_config.webconf_name));
 	safestrncpy(web_config.msgconf_name, "conf/msg_conf/web_msg.conf", sizeof(web_config.msgconf_name));
@@ -315,10 +352,15 @@ int32 web_sql_init(void) {
 	}
 	ShowStatus("Connect success! (Login Server Connection)\n");
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if (!default_codepage.empty()) {
 		if (SQL_ERROR == Sql_SetEncoding(login_handle, default_codepage.c_str()))
 			Sql_ShowDebug(login_handle);
 	}
+#else
+	if (SQL_ERROR == Sql_SetEncoding(login_handle, login_codepage, default_codepage.c_str(), "Login-Server"))
+		Sql_ShowDebug(login_handle);
+#endif // Pandas_SQL_Configure_Optimization
 
 	char_handle = Sql_Malloc();
 	ShowInfo("Connecting to the Char DB server.....\n");
@@ -332,10 +374,15 @@ int32 web_sql_init(void) {
 	}
 	ShowStatus("Connect success! (Char Server Connection)\n");
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if (!default_codepage.empty()) {
 		if (SQL_ERROR == Sql_SetEncoding(char_handle, default_codepage.c_str()))
 			Sql_ShowDebug(char_handle);
 	}
+#else
+	if (SQL_ERROR == Sql_SetEncoding(char_handle, char_codepage, default_codepage.c_str(), "Char-Server"))
+		Sql_ShowDebug(char_handle);
+#endif // Pandas_SQL_Configure_Optimization
 
 	map_handle = Sql_Malloc();
 	ShowInfo("Connecting to the Map DB server.....\n");
@@ -349,10 +396,15 @@ int32 web_sql_init(void) {
 	}
 	ShowStatus("Connect success! (Map Server Connection)\n");
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if (!default_codepage.empty()) {
 		if (SQL_ERROR == Sql_SetEncoding(map_handle, default_codepage.c_str()))
 			Sql_ShowDebug(map_handle);
 	}
+#else
+	if (SQL_ERROR == Sql_SetEncoding(map_handle, map_codepage, default_codepage.c_str(), "Map-Server"))
+		Sql_ShowDebug(map_handle);
+#endif // Pandas_SQL_Configure_Optimization
 
 	web_handle = Sql_Malloc();
 	ShowInfo("Connecting to the Web DB server.....\n");
@@ -366,11 +418,20 @@ int32 web_sql_init(void) {
 	}
 	ShowStatus("Connect success! (Web Server Connection)\n");
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if (!default_codepage.empty()) {
 		if (SQL_ERROR == Sql_SetEncoding(web_handle, default_codepage.c_str()))
 			Sql_ShowDebug(web_handle);
 	}
+#else
+	if (SQL_ERROR == Sql_SetEncoding(web_handle, web_codepage, default_codepage.c_str(), "Web-Server"))
+		Sql_ShowDebug(web_handle);
+#endif // Pandas_SQL_Configure_Optimization
 
+#ifdef Pandas_WebServer_Database_EncodingAdaptive
+	// 读取最终生效的 WEB 接口数据库服务器连接编码
+	Sql_GetEncoding(web_handle, web_connection_encoding);
+#endif // Pandas_WebServer_Database_EncodingAdaptive
 
 	return 0;
 }
@@ -398,6 +459,9 @@ int32 web_sql_close(void)
  *  dealloc..., function called at exit of the web-server
  */
 void WebServer::finalize(){
+#ifdef Pandas_UserExperience_Linux_Ctrl_C_WarpLine
+	printf("\n");
+#endif // Pandas_UserExperience_Linux_Ctrl_C_WarpLine
 	ShowStatus("Terminating...\n");
 #ifdef WEB_SERVER_ENABLE
 	http_server->stop();
@@ -432,25 +496,39 @@ void display_helpscreen(bool do_exit)
 
 // called just before sending repsonse
 void logger(const Request & req, const Response & res) {
+#ifdef Pandas_WebServer_ApplyMutex_For_Logger
+	std::lock_guard<std::mutex> locker(g_logger_lock);
+#endif // Pandas_WebServer_ApplyMutex_For_Logger
 	// make this a config
 	if (web_config.print_req_res) {
+#ifdef Pandas_WebServer_Logger_Improved_Presentation
+		ShowDebug("--- Request Information Begin ---------------------------------------\n");
+#endif // Pandas_WebServer_Logger_Improved_Presentation
 		ShowDebug("Incoming Headers are:\n");
 		for (const auto & header : req.headers) {
-			ShowDebug("\t%s: %s\n", header.first.c_str(), header.second.c_str());
+			ShowDebug("\t%s: %s\n", U2ACE(header.first).c_str(), U2ACE(header.second).c_str());
 		}
 		ShowDebug("Incoming Pages are:\n");
 		for (const auto & file : req.files) {
-			ShowDebug("\t%s: %s\n", file.first.c_str(), file.second.content.c_str());
+			ShowDebug("\t%s: %s\n", U2ACE(file.first).c_str(), U2ACE(file.second.content).c_str());
 		}
 		ShowDebug("Outgoing Headers are:\n");
 		for (const auto & header : res.headers) {
-			ShowDebug("\t%s: %s\n", header.first.c_str(), header.second.c_str());
+			ShowDebug("\t%s: %s\n", U2ACE(header.first).c_str(), U2ACE(header.second).c_str());
 		}
 		ShowDebug("Response status is: %d\n", res.status);
 		// since the body may be binary, might not print entire body (has null character).
-		ShowDebug("Body is:\n%s\n", res.body.c_str());
+		ShowDebug("Body is:\n%s\n", U2ACE(res.body).c_str());
+#ifdef Pandas_WebServer_Logger_Improved_Presentation
+		ShowDebug("--- Request Information End -----------------------------------------\n");
+#endif // Pandas_WebServer_Logger_Improved_Presentation
 	}
 	ShowInfo("%s [%s %s] %d\n", req.remote_addr.c_str(), req.method.c_str(), req.path.c_str(), res.status);
+#ifdef Pandas_WebServer_Logger_Improved_Presentation
+	if (web_config.print_req_res) {
+		printf("\n\n");
+	}
+#endif // Pandas_WebServer_Logger_Improved_Presentation
 }
 
 
@@ -520,7 +598,9 @@ bool WebServer::initialize( int32 argc, char* argv[] ){
 		return false;
 	}
 
+#ifndef Pandas_Cleanup_Useless_Message
 	ShowStatus("The web-server is " CL_GREEN "ready" CL_RESET " (Server is listening on the port %u).\n\n", web_config.web_port);
+#endif // Pandas_Cleanup_Useless_Message
 	return true;
 #endif
 }

@@ -42,6 +42,10 @@ class MapServer : public Core{
 };
 }
 
+#ifdef Pandas_InterConfig_HideServerIpAddress
+extern int32 pandas_inter_hide_server_ipaddress;
+#endif // Pandas_InterConfig_HideServerIpAddress
+
 struct chat_data;
 struct homun_data;
 struct mob_data;
@@ -56,6 +60,11 @@ struct Channel;
 struct map_data *map_getmapdata(int16 m);
 #define msg_config_read(cfgName,isnew) map_msg_config_read(cfgName,isnew)
 #define msg_txt(sd,msg_number) map_msg_txt(sd,msg_number)
+#ifdef Pandas_Message_Conf
+	#define msg_txt_cn(sd,msg_number) map_msg_txt(sd,msg_number + ALL_EXTEND_FIRST_MSG)
+#else
+	#define msg_txt_cn(sd,msg_number) disabled_msg_txt(msg_number + ALL_EXTEND_FIRST_MSG)
+#endif // Pandas_Message_Conf
 #define do_final_msg() map_do_final_msg()
 int32 map_msg_config_read(const char *cfgName,int32 lang);
 const char* map_msg_txt(const map_session_data* sd,int32 msg_number);
@@ -64,6 +73,9 @@ void map_msg_reload(void);
 
 #define MAX_NPC_PER_MAP 512
 #define AREA_SIZE battle_config.area_size
+#ifdef Pandas_BattleConfig_Dead_Area_Size
+#define AREA_DEAD_SIZE battle_config.dead_area_size
+#endif // Pandas_BattleConfig_Dead_Area_Size
 #ifndef DAMAGELOG_SIZE 
 	#define DAMAGELOG_SIZE 20
 #endif
@@ -589,7 +601,53 @@ enum _sp {
 	SP_MAGIC_SUBDEF_ELE, SP_REDUCE_DAMAGE_RETURN, SP_ADD_ITEM_SPHEAL_RATE, SP_ADD_ITEMGROUP_SPHEAL_RATE, // 2098-2101
 	SP_WEAPON_SUBSIZE, SP_ABSORB_DMG_MAXHP2, // 2102-2103
 	SP_SP_IGNORE_RES_RACE_RATE, SP_SP_IGNORE_MRES_RACE_RATE, SP_EMATK_HIDDEN, SP_SKILL_RATIO, // 2104-2107
-	SP_NON_CRIT_ATK_RATE //2108
+	SP_NON_CRIT_ATK_RATE, //2108
+
+#ifdef Pandas_ScriptParams_ReadParam
+	SP_EXTEND_UNUSED = 3100,
+	SP_STR_ALL, SP_AGI_ALL, SP_VIT_ALL, SP_INT_ALL, SP_DEX_ALL, SP_LUK_ALL,	// 3101-3106
+#endif // Pandas_ScriptParams_ReadParam
+
+#ifdef Pandas_Bonuses
+	SP_PANDAS_EXTEND_BONUS_START = 3500,
+#ifdef Pandas_Bonus_bNoFieldGemStone
+	SP_PANDAS_NOFIELDGEMSTONE,	// 调整器名称: bNoFieldGemStone / 说明: 使火, 水, 风, 地四大元素领域技能无需消耗魔力矿石
+#endif // Pandas_Bonus_bNoFieldGemStone
+#ifdef Pandas_Bonus3_bRebirthWithHeal
+	SP_PANDAS_REBIRTHWITHHEAL,	// 调整器名称: bRebirthWithHeal / 说明: 当玩家死亡时有 r/100% 的机率复活并恢复 h% 的 HP 和 s% 的 SP
+#endif // Pandas_Bonus3_bRebirthWithHeal
+#ifdef Pandas_Bonus2_bAddSkillRange
+	SP_PANDAS_ADDSKILLRANGE,	// 调整器名称: bAddSkillRange / 说明: 增加 sk 技能 n 格攻击距离
+#endif // Pandas_Bonus2_bAddSkillRange
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	SP_PANDAS_SKILLNOREQUIRE,	// 调整器名称: bSkillNoRequire / 说明: 解除 sk 技能中由 n 指定的前置施法条件限制
+#endif // Pandas_Bonus2_bSkillNoRequire
+#ifdef Pandas_Bonus4_bStatusAddDamage
+	SP_PANDAS_STATUSADDDAMAGE,	// 调整器名称: bStatusAddDamage / 说明: 攻击拥有 sc 状态的目标时, 使用 bf 攻击有 r/100% 的概率使伤害增加 n
+#endif // Pandas_Bonus4_bStatusAddDamage
+#ifdef Pandas_Bonus4_bStatusAddDamageRate
+	SP_PANDAS_STATUSADDDAMAGERATE,	// 调整器名称: bStatusAddDamageRate / 说明: 攻击拥有 sc 状态的目标时, 使用 bf 攻击有 r/100% 的概率使伤害增加 n%
+#endif // Pandas_Bonus4_bStatusAddDamageRate
+#ifdef Pandas_Bonus3_bFinalAddRace
+	SP_PANDAS_FINALADDRACE,	// 调整器名称: bFinalAddRace / 说明: 使用 bf 攻击 r 种族的目标时增加 x% 的伤害 (在最终伤害上全段修正)
+#endif // Pandas_Bonus3_bFinalAddRace
+#ifdef Pandas_Bonus3_bFinalAddClass
+	SP_PANDAS_FINALADDCLASS,	// 调整器名称: bFinalAddClass / 说明: 使用 bf 攻击时 c 类型目标时增加 x% 的伤害 (在最终伤害上全段修正)
+#endif // Pandas_Bonus3_bFinalAddClass
+	// PYHELP - BONUS - INSERT POINT - <Section 2>
+	SP_PANDAS_EXTEND_BONUS_END,
+#endif // Pandas_Bonuses
+
+#ifdef Pandas_ScriptConstants
+	SP_PANDAS_EXTEND_CONSTANTS_START = 3600,
+#ifdef Pandas_ScriptConstants_CartWeight
+	SP_CARTWEIGHT,
+#endif // Pandas_ScriptConstants_CartWeight
+#ifdef Pandas_ScriptConstants_MaxCartWeight
+	SP_MAXCARTWEIGHT,
+#endif // Pandas_ScriptConstants_MaxCartWeight
+	SP_PANDAS_EXTEND_CONSTANTS_END,
+#endif // Pandas_ScriptConstants
 };
 
 enum _look {
@@ -689,6 +747,76 @@ enum e_mapflag : int16 {
 	MF_NORENEWALEXPPENALTY,
 	MF_NORENEWALDROPPENALTY,
 	MF_NOPETCAPTURE,
+#ifdef Pandas_MapFlag_MobInfo
+	MF_MOBINFO,
+#endif // Pandas_MapFlag_MobInfo
+#ifdef Pandas_MapFlag_NoAutoLoot
+	MF_NOAUTOLOOT,
+#endif // Pandas_MapFlag_NoAutoLoot
+#ifdef Pandas_MapFlag_NoToken
+	MF_NOTOKEN,
+#endif // Pandas_MapFlag_NoToken
+#ifdef Pandas_MapFlag_HideGuildInfo
+	MF_HIDEGUILDINFO,
+#endif // Pandas_MapFlag_HideGuildInfo
+#ifdef Pandas_MapFlag_HidePartyInfo
+	MF_HIDEPARTYINFO,
+#endif // Pandas_MapFlag_HidePartyInfo
+#ifdef Pandas_MapFlag_NoMail
+	MF_NOMAIL,
+#endif // Pandas_MapFlag_NoMail
+#ifdef Pandas_MapFlag_NoPet
+	MF_NOPET,
+#endif // Pandas_MapFlag_NoPet
+#ifdef Pandas_MapFlag_NoHomun
+	MF_NOHOMUN,
+#endif // Pandas_MapFlag_NoHomun
+#ifdef Pandas_MapFlag_NoMerc
+	MF_NOMERC,
+#endif // Pandas_MapFlag_NoMerc
+#ifdef Pandas_MapFlag_MobDroprate
+	MF_MOBDROPRATE,
+#endif // Pandas_MapFlag_MobDroprate
+#ifdef Pandas_MapFlag_MvpDroprate
+	MF_MVPDROPRATE,
+#endif // Pandas_MapFlag_MvpDroprate
+#ifdef Pandas_MapFlag_MaxHeal
+	MF_MAXHEAL,
+#endif // Pandas_MapFlag_MaxHeal
+#ifdef Pandas_MapFlag_MaxDmg_Skill
+	MF_MAXDMG_SKILL,
+#endif // Pandas_MapFlag_MaxDmg_Skill
+#ifdef Pandas_MapFlag_MaxDmg_Normal
+	MF_MAXDMG_NORMAL,
+#endif // Pandas_MapFlag_MaxDmg_Normal
+#ifdef Pandas_MapFlag_NoSkill2
+	MF_NOSKILL2,
+#endif // Pandas_MapFlag_NoSkill2
+#ifdef Pandas_MapFlag_NoCapture
+	MF_NOCAPTURE,
+#endif // Pandas_MapFlag_NoCapture
+#ifdef Pandas_MapFlag_NoAura
+	MF_NOAURA,
+#endif // Pandas_MapFlag_NoAura
+#ifdef Pandas_MapFlag_MaxASPD
+	MF_MAXASPD,
+#endif // Pandas_MapFlag_MaxASPD
+#ifdef Pandas_MapFlag_NoSlave
+	MF_NOSLAVE,
+#endif // Pandas_MapFlag_NoSlave
+#ifdef Pandas_MapFlag_NoUseItem
+	MF_NOUSEITEM,
+#endif // Pandas_MapFlag_NoUseItem
+#ifdef Pandas_MapFlag_HideDamage
+	MF_HIDEDAMAGE,
+#endif // Pandas_MapFlag_HideDamage
+#ifdef Pandas_MapFlag_NoAttack
+	MF_NOATTACK,
+#endif // Pandas_MapFlag_NoAttack
+#ifdef Pandas_MapFlag_NoAttack2
+	MF_NOATTACK2,
+#endif // Pandas_MapFlag_NoAttack2
+	// PYHELP - MAPFLAG - INSERT POINT - <Section 2>
 	MF_NOBUYINGSTORE,
 	MF_NODYNAMICNPC,
 	MF_NOBANK,
@@ -735,14 +863,45 @@ struct s_drop_list {
 	enum e_nightmare_drop_type drop_type;
 };
 
+#ifdef Pandas_Mapflags
+struct s_mapflag_item_args {
+	int def_val;
+	int min;
+	int max;
+	const char* unit = nullptr;
+};
+
+struct s_mapflag_item {
+	const char* name;
+	bool turn_off_default;
+	bool block_atcmd;
+	std::vector<s_mapflag_item_args> args;
+};
+
+extern std::unordered_map<e_mapflag, s_mapflag_item> mapflag_config;
+#endif // Pandas_Mapflags
+
 /// Union for mapflag values
+#ifndef Pandas_Mapflags
 union u_mapflag_args {
+#else
+struct u_mapflag_args {
+#endif // Pandas_Mapflags
 	struct point nosave;
 	struct s_drop_list nightmaredrop;
 	struct s_skill_damage skill_damage;
 	struct s_skill_duration skill_duration;
+#ifdef Pandas_Mapflags
+	std::vector<int32> input;
+#endif // Pandas_Mapflags
 	int32 flag_val;
 };
+
+#ifndef Pandas_Mapflags
+typedef union u_mapflag_args pds_mapflag_args;
+#else
+typedef struct u_mapflag_args pds_mapflag_args;
+#endif // Pandas_Mapflags
 
 // used by map_setcell()
 enum cell_t{
@@ -842,6 +1001,9 @@ struct map_data {
 
 	npc_data *npc[MAX_NPC_PER_MAP];
 	struct spawn_data *moblist[MAX_MOB_LIST_PER_MAP]; // [Wizputer]
+#ifdef Pandas_Struct_Map_Data_Mob_Spawns
+	std::vector<struct spawn_data *> mobspawns;
+#endif // Pandas_Struct_Map_Data_Mob_Spawns
 	int32 mob_delete_timer;	// Timer ID for map_removemobs_timer [Skotlex]
 	t_tick last_macrocheck;
 
@@ -854,6 +1016,10 @@ struct map_data {
 
 	/* ShowEvent Data Cache */
 	std::vector<int32> qi_npc;
+
+#ifdef Pandas_Mapflags
+	std::unordered_map<e_mapflag, std::vector<int>> mapflag_values;
+#endif // Pandas_Mapflags
 
 	/* speeds up clif_updatestatus processing by causing hpmeter to run only when someone with the permission can view it */
 	uint16 hpmeter_visible;
@@ -1210,6 +1376,9 @@ int32 map_setipport(uint16 map, uint32 ip, uint16 port);
 int32 map_eraseipport(uint16 map, uint32 ip, uint16 port);
 int32 map_eraseallipport(void);
 void map_addiddb(block_list *);
+#ifdef Pandas_BattleRecord
+void map_mobiddb(block_list* bl, int32 new_blockid);
+#endif // Pandas_BattleRecord
 void map_deliddb(block_list *bl);
 void map_foreachpc(int32 (*func)(map_session_data* sd, va_list args), ...);
 void map_foreachmob(int32 (*func)(mob_data* md, va_list args), ...);
@@ -1217,8 +1386,15 @@ void map_foreachnpc(int32 (*func)(npc_data* nd, va_list args), ...);
 void map_foreachregen(int32 (*func)(block_list* bl, va_list args), ...);
 void map_foreachiddb(int32 (*func)(block_list* bl, va_list args), ...);
 map_session_data * map_nick2sd(const char* nick, bool allow_partial);
+#ifndef Pandas_FuncDefine_Mob_Getmob_Boss
 mob_data * map_getmob_boss(int16 m);
+#else
+mob_data * map_getmob_boss(int16 m, bool alive_first = false);
+#endif // Pandas_FuncDefine_Mob_Getmob_Boss
 mob_data * map_id2boss(int32 id);
+#ifdef Pandas_ScriptCommand_GetBossInfo
+DBMap* get_bossid_db();
+#endif // Pandas_ScriptCommand_GetBossInfo
 
 // reload config file looking only for npcs
 void map_reloadnpc(bool clear);
@@ -1266,13 +1442,13 @@ void map_removemobs(int16 m); // [Wizputer]
 void map_addmap2db(struct map_data *m);
 void map_removemapdb(struct map_data *m);
 
-void map_skill_damage_add(map_data* m, uint16 skill_id, union u_mapflag_args *args);
+void map_skill_damage_add(map_data* m, uint16 skill_id, pds_mapflag_args *args);
 void map_skill_duration_add(map_data* mapd, uint16 skill_id, uint16 per);
 
 enum e_mapflag map_getmapflag_by_name(const char* name);
 bool map_getmapflag_name(enum e_mapflag mapflag, char* output);
-int32 map_getmapflag_sub(int16 m, enum e_mapflag mapflag, union u_mapflag_args *args);
-bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, union u_mapflag_args *args);
+int32 map_getmapflag_sub(int16 m, enum e_mapflag mapflag, pds_mapflag_args *args);
+bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, pds_mapflag_args *args);
 #define map_getmapflag(m, mapflag) map_getmapflag_sub(m, mapflag, nullptr)
 #define map_setmapflag(m, mapflag, status) map_setmapflag_sub(m, mapflag, status, nullptr)
 
@@ -1282,6 +1458,7 @@ bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, union u_ma
 #define CHK_CLASS(class_) ((class_) > CLASS_NONE && (class_) < CLASS_MAX) /// Check valid Class
 
 //Other languages supported
+#ifndef Pandas_Message_Reorganize
 extern const char*MSG_CONF_NAME_RUS;
 extern const char*MSG_CONF_NAME_SPN;
 extern const char*MSG_CONF_NAME_GRM;
@@ -1291,6 +1468,10 @@ extern const char*MSG_CONF_NAME_IDN;
 extern const char*MSG_CONF_NAME_FRN;
 extern const char*MSG_CONF_NAME_POR;
 extern const char*MSG_CONF_NAME_THA;
+#else
+extern const char* MSG_CONF_NAME_CHS;	// 简体中文
+extern const char* MSG_CONF_NAME_CHT;	// 繁体中文
+#endif // Pandas_Message_Reorganize
 
 //Useful typedefs from jA [Skotlex]
 typedef map_session_data TBL_PC;
@@ -1338,6 +1519,20 @@ extern char market_table[32];
 extern char partybookings_table[32];
 extern char roulette_table[32];
 extern char guild_storage_log_table[32];
+#ifdef Pandas_Player_Suspend_System
+extern char suspend_table[32];
+#endif // Pandas_Player_Suspend_System
+#ifdef Pandas_Support_Specify_PacketKeys
+// 用来保存 map_athena.conf 中设定封包混淆密钥 [Sola丶小克]
+// 备注: 该变量真正的声明定义, 位于 map.cpp 中
+extern uint32 clif_cryptKey_custom[3];
+#endif // Pandas_Support_Specify_PacketKeys
+
+#ifdef Pandas_Mapflags
+int map_getmapflag_param(int16 m, enum e_mapflag mapflag, size_t index);
+void map_setmapflag_param(int16 m, enum e_mapflag mapflag, size_t index, int value);
+void map_setmapflag_param(int16 m, enum e_mapflag mapflag, const std::vector<int>& values);
+#endif // Pandas_Mapflags
 
 void do_shutdown(void);
 

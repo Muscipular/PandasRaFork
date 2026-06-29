@@ -142,7 +142,11 @@ int32 chmapif_send_fame_list(int32 fd){
  * @param fame: number of points
  */
 void chmapif_update_fame_list(int32 type, int32 index, int32 fame) {
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[8];
+	#else
+	unsigned char buf[8] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf,0) = 0x2b22;
 	WBUFB(buf,2) = type;
 	WBUFB(buf,3) = index;
@@ -155,7 +159,11 @@ void chmapif_update_fame_list(int32 type, int32 index, int32 fame) {
  * @param users: number of players on this char-serv
  */
 void chmapif_sendall_playercount(int32 users){
+	#ifndef Pandas_Crashfix_Variable_Init
 	uint8 buf[6];
+	#else
+	uint8 buf[6] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	// send number of players to all map-servers
 	WBUFW(buf,0) = 0x2b00;
 	WBUFL(buf,2) = users;
@@ -262,6 +270,8 @@ int32 chmapif_parse_getmapname(int32 fd, int32 id){
 	mapbuf = RFIFOP(fd,4);
 	RFIFOSKIP(fd,RFIFOW(fd,2));
 
+	// 以下这行注释是为了方便 pyhelp_extracter.py 提取翻译文本使用的
+	// ShowStatus("Map-Server %d connected: %" PRIuPTR " maps, from IP %d.%d.%d.%d port %d.\n", id, map_server[id].maps.size(), CONVIP(map_server[id].ip), map_server[id].port);
 	ShowStatus("Map-Server %d connected: %" PRIuPTR " maps, from IP %d.%d.%d.%d port %d.\n",
 				id, map_server[id].maps.size(), CONVIP(map_server[id].ip), map_server[id].port);
 	ShowStatus("Map-server %d loading complete.\n", id);
@@ -465,14 +475,26 @@ void chmapif_charselres(int32 fd, uint32 aid, uint8 res){
  * @return : 0 not enough data received, 1 success
  */
 int32 chmapif_parse_authok(int32 fd){
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	if( RFIFOREST(fd) < 18 )
+#else
+	if( RFIFOREST(fd) < 18 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH )
+#endif // Pandas_Extract_SSOPacket_MacAddress
 		return 0;
 	else{
 		uint32 account_id = RFIFOL(fd,2);
 		uint32 login_id1 = RFIFOL(fd,6);
 		uint32 login_id2 = RFIFOL(fd,10);
 		uint32 ip = RFIFOL(fd,14);
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 		RFIFOSKIP(fd,18);
+#else
+		char macaddress[MACADDRESS_LENGTH] = { 0 };
+		char lanaddress[IP4ADDRESS_LENGTH] = { 0 };
+		safestrncpy(macaddress, RFIFOCP(fd,18), MACADDRESS_LENGTH);
+		safestrncpy(lanaddress, RFIFOCP(fd,18 + MACADDRESS_LENGTH), IP4ADDRESS_LENGTH);
+		RFIFOSKIP(fd,18 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 		if( !global_core->is_running() ){
 			chmapif_charselres(fd,account_id,0);
@@ -486,6 +508,12 @@ int32 chmapif_parse_authok(int32 fd){
 			node->login_id2 = login_id2;
 			//node->sex = 0;
 			node->ip = ntohl(ip);
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+			safestrncpy(node->mac_address, macaddress, MACADDRESS_LENGTH);
+			safestrncpy(node->lan_address, lanaddress, IP4ADDRESS_LENGTH);
+			safestrncpy(session[fd]->mac_address, node->mac_address, MACADDRESS_LENGTH);
+			safestrncpy(session[fd]->lan_address, node->lan_address, IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 			//node->expiration_time = 0; // unlimited/unknown time by default (not display in map-server)
 			//node->gmlevel = 0;
 
@@ -607,7 +635,11 @@ void chmapif_changemapserv_ack(int32 fd, bool nok){
  * @return : 0 not enough data received, 1 success
  */
 int32 chmapif_parse_reqchangemapserv(int32 fd){
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	if( RFIFOREST( fd ) < ( 37 + MAP_NAME_LENGTH_EXT ) ){
+#else
+	if( RFIFOREST( fd ) < ( 37 + MAP_NAME_LENGTH_EXT + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH ) ){
+#endif // Pandas_Extract_SSOPacket_MacAddress
 		return 0;
 	}
 	else {
@@ -654,6 +686,10 @@ int32 chmapif_parse_reqchangemapserv(int32 fd){
 			node->ip = ntohl( RFIFOL( fd, offset + 11 ) );
 			node->group_id = RFIFOL( fd, offset + 15 );
 			node->changing_mapservers = 1;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+			safestrncpy(node->mac_address, RFIFOCP(fd, offset + 19), MACADDRESS_LENGTH);
+			safestrncpy(node->lan_address, RFIFOCP(fd, offset + 19 + MACADDRESS_LENGTH), IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 			char_get_authdb()[node->account_id] = node;
 
@@ -672,7 +708,11 @@ int32 chmapif_parse_reqchangemapserv(int32 fd){
 		} else { //Reply with nak
 			chmapif_changemapserv_ack(fd,1);
 		}
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 		RFIFOSKIP( fd, 37 + MAP_NAME_LENGTH_EXT );
+#else
+		RFIFOSKIP( fd, 37 + MAP_NAME_LENGTH_EXT + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH );
+#endif // Pandas_Extract_SSOPacket_MacAddress
 	}
 	return 1;
 }
@@ -858,7 +898,11 @@ int32 chmapif_parse_fwlog_changestatus(int32 fd){
  * @param partner_id2: char id2 divorced
  */
 void chmapif_send_ackdivorce(int32 partner_id1, int32 partner_id2){
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[11];
+	#else
+	unsigned char buf[11] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf,0) = 0x2b12;
 	WBUFL(buf,2) = partner_id1;
 	WBUFL(buf,6) = partner_id2;
@@ -1032,6 +1076,9 @@ int32 chmapif_parse_reqauth(int32 fd, int32 id){
 
 		if( global_core->is_running() && autotrade && cd ){
 			uint16 mmo_charstatus_len = sizeof(struct mmo_charstatus) + 25;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+			mmo_charstatus_len += MACADDRESS_LENGTH + IP4ADDRESS_LENGTH;
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 			WFIFOHEAD(fd,mmo_charstatus_len);
 			WFIFOW(fd,0) = 0x2afd;
@@ -1042,7 +1089,13 @@ int32 chmapif_parse_reqauth(int32 fd, int32 id){
 			WFIFOL(fd,16) = 0;
 			WFIFOL(fd,20) = 0;
 			WFIFOB(fd,24) = 0;
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 			memcpy( WFIFOP( fd, 25 ), cd.get(), sizeof(struct mmo_charstatus));
+#else
+			safestrncpy(WFIFOCP(fd, 25), "", MACADDRESS_LENGTH);
+			safestrncpy(WFIFOCP(fd, 25 + MACADDRESS_LENGTH), "", IP4ADDRESS_LENGTH);
+			memcpy( WFIFOP( fd, 25 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH ), cd.get(), sizeof(struct mmo_charstatus));
+#endif // Pandas_Extract_SSOPacket_MacAddress
 			WFIFOSET(fd, WFIFOW(fd,2));
 
 			char_set_char_online(id, char_id, account_id);
@@ -1059,6 +1112,9 @@ int32 chmapif_parse_reqauth(int32 fd, int32 id){
 			)
 		{// auth ok
 			uint16 mmo_charstatus_len = sizeof(struct mmo_charstatus) + 25;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+			mmo_charstatus_len += MACADDRESS_LENGTH + IP4ADDRESS_LENGTH;
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 			WFIFOHEAD(fd,mmo_charstatus_len);
 			WFIFOW(fd,0) = 0x2afd;
@@ -1069,7 +1125,13 @@ int32 chmapif_parse_reqauth(int32 fd, int32 id){
 			WFIFOL(fd,16) = (uint32)node->expiration_time; // FIXME: will wrap to negative after "19-Jan-2038, 03:14:07 AM GMT"
 			WFIFOL(fd,20) = node->group_id;
 			WFIFOB(fd,24) = node->changing_mapservers;
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 			memcpy( WFIFOP( fd, 25 ), cd.get(), sizeof( struct mmo_charstatus ) );
+#else
+			safestrncpy(WFIFOCP(fd, 25), node->mac_address, MACADDRESS_LENGTH);
+			safestrncpy(WFIFOCP(fd, 25 + MACADDRESS_LENGTH), node->lan_address, IP4ADDRESS_LENGTH);
+			memcpy( WFIFOP( fd, 25 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH ), cd.get(), sizeof( struct mmo_charstatus ) );
+#endif // Pandas_Extract_SSOPacket_MacAddress
 			WFIFOSET(fd, WFIFOW(fd,2));
 
 			// only use the auth once and mark user online
@@ -1233,7 +1295,11 @@ int32 chmapif_parse_reqcharban(int32 fd){
 
 			// condition applies; send to all map-servers to disconnect the player
 			if( unban_time > now ) {
+	#ifndef Pandas_Crashfix_Variable_Init
 					unsigned char buf[11];
+	#else
+					unsigned char buf[11] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 					WBUFW(buf,0) = 0x2b14;
 					WBUFL(buf,2) = t_cid;
 					WBUFB(buf,6) = 2;
@@ -1284,6 +1350,7 @@ int32 chmapif_bonus_script_get(int32 fd) {
 
 		RFIFOSKIP(fd,6);
 
+#ifndef Pandas_BonusScript_Unique_ID
 		if (SQL_ERROR == stmt.Prepare(
 			"SELECT `script`, `tick`, `flag`, `type`, `icon` FROM `%s` WHERE `char_id` = '%d' LIMIT %d",
 			schema_config.bonus_script_db, cid, MAX_PC_BONUS_SCRIPT) ||
@@ -1294,6 +1361,19 @@ int32 chmapif_bonus_script_get(int32 fd) {
 			SQL_ERROR == stmt.BindColumn(3, SQLDT_UINT8,  &tmp_bsdata.type) ||
 			SQL_ERROR == stmt.BindColumn(4, SQLDT_INT16,  &tmp_bsdata.icon)
 			)
+#else
+		if (SQL_ERROR == stmt.Prepare(
+			"SELECT `script`, `tick`, `flag`, `type`, `icon`, `id` FROM `%s` WHERE `char_id` = '%d' LIMIT %d",
+			schema_config.bonus_script_db, cid, MAX_PC_BONUS_SCRIPT) ||
+			SQL_ERROR == stmt.Execute() ||
+			SQL_ERROR == stmt.BindColumn(0, SQLDT_STRING, &tmp_bsdata.script_str, sizeof(tmp_bsdata.script_str)) ||
+			SQL_ERROR == stmt.BindColumn(1, SQLDT_INT64, &tmp_bsdata.tick) ||
+			SQL_ERROR == stmt.BindColumn(2, SQLDT_UINT16, &tmp_bsdata.flag) ||
+			SQL_ERROR == stmt.BindColumn(3, SQLDT_UINT8,  &tmp_bsdata.type) ||
+			SQL_ERROR == stmt.BindColumn(4, SQLDT_INT16,  &tmp_bsdata.icon) ||
+			SQL_ERROR == stmt.BindColumn(5, SQLDT_UINT64, &tmp_bsdata.bonus_id)
+			)
+#endif // Pandas_BonusScript_Unique_ID
 		{
 			SqlStmt_ShowDebug(stmt);
 			return 1;
@@ -1319,6 +1399,9 @@ int32 chmapif_bonus_script_get(int32 fd) {
 				bsdata.flag = tmp_bsdata.flag;
 				bsdata.type = tmp_bsdata.type;
 				bsdata.icon = tmp_bsdata.icon;
+#ifdef Pandas_BonusScript_Unique_ID
+				bsdata.bonus_id = tmp_bsdata.bonus_id;
+#endif // Pandas_BonusScript_Unique_ID
 				memcpy(WFIFOP(fd, 9 + i * sizeof(struct bonus_script_data)), &bsdata, sizeof(struct bonus_script_data));
 			}
 
@@ -1358,13 +1441,21 @@ int32 chmapif_bonus_script_save(int32 fd) {
 			uint8 i;
 
 			StringBuf_Init(&buf);
+#ifndef Pandas_BonusScript_Unique_ID
 			StringBuf_Printf(&buf, "INSERT INTO `%s` (`char_id`, `script`, `tick`, `flag`, `type`, `icon`) VALUES ", schema_config.bonus_script_db);
+#else
+			StringBuf_Printf(&buf, "INSERT INTO `%s` (`char_id`, `script`, `tick`, `flag`, `type`, `icon`, `id`) VALUES ", schema_config.bonus_script_db);
+#endif // Pandas_BonusScript_Unique_ID
 			for (i = 0; i < count; ++i) {
 				memcpy(&bsdata, RFIFOP(fd, 9 + i*sizeof(struct bonus_script_data)), sizeof(struct bonus_script_data));
 				Sql_EscapeString(sql_handle, esc_script, bsdata.script_str);
 				if (i > 0)
 					StringBuf_AppendStr(&buf,", ");
+#ifndef Pandas_BonusScript_Unique_ID
 				StringBuf_Printf(&buf, "('%d','%s','%" PRtf "','%d','%d','%d')", cid, esc_script, bsdata.tick, bsdata.flag, bsdata.type, bsdata.icon);
+#else
+				StringBuf_Printf(&buf, "('%d','%s','%" PRtf "','%d','%d','%d','%" PRIu64 "')", cid, esc_script, bsdata.tick, bsdata.flag, bsdata.type, bsdata.icon, bsdata.bonus_id);
+#endif // Pandas_BonusScript_Unique_ID
 			}
 			if (SQL_ERROR == Sql_QueryStr(sql_handle,StringBuf_Value(&buf)))
 				Sql_ShowDebug(sql_handle);

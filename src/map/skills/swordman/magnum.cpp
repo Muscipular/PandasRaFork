@@ -24,7 +24,7 @@ void SkillMagnumBreak::calculateSkillRatio(const Damage *wd, const block_list *s
 		base_skillratio += 10 * skill_lv;
 }
 
-void SkillMagnumBreak::modifyHitRate(int16 &hit_rate, const block_list *src, const block_list *target, uint16 skill_lv) const
+void SkillMagnumBreak::modifyHitRate(pec_int16&hit_rate, const block_list *src, const block_list *target, uint16 skill_lv) const
 {
 	hit_rate += hit_rate * 10 * skill_lv / 100;
 }

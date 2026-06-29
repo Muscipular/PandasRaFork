@@ -13,12 +13,17 @@ target_sources(tools INTERFACE
 	"${COMMON_SOURCE_DIR}/des.cpp"
 	"${COMMON_SOURCE_DIR}/grfio.cpp"
 	"${COMMON_SOURCE_DIR}/nullpo.cpp"
+	"${COMMON_SOURCE_DIR}/utilities.cpp"
 	"${COMMON_SOURCE_DIR}/database.cpp"
 )
 
 target_compile_definitions(tools INTERFACE
 	"MINICORE"
 )
+
+if( MSVC )
+	target_compile_options(tools INTERFACE /utf-8)
+endif()
 
 target_link_libraries(tools INTERFACE
 	${GLOBAL_LIBRARIES}
@@ -33,6 +38,10 @@ message( STATUS "Creating target mapcache" )
 add_executable(mapcache)
 target_link_libraries(mapcache PRIVATE tools)
 target_sources(mapcache PRIVATE "mapcache.cpp")
+if( WIN32 )
+	target_sources(mapcache PRIVATE "mapcache.rc")
+endif()
+PANDAS_COPY_RUNTIME_DLLS( mapcache )
 
 
 # csv2yaml
@@ -40,18 +49,30 @@ message( STATUS "Creating target csv2yaml" )
 add_executable(csv2yaml)
 target_link_libraries(csv2yaml PRIVATE tools)
 target_sources(csv2yaml PRIVATE "csv2yaml.cpp")
+if( WIN32 )
+	target_sources(csv2yaml PRIVATE "csv2yaml.rc")
+endif()
+PANDAS_COPY_RUNTIME_DLLS( csv2yaml )
 
 # yaml2sql
 message( STATUS "Creating target yaml2sql" )
 add_executable(yaml2sql)
 target_link_libraries(yaml2sql PRIVATE tools)
 target_sources(yaml2sql PRIVATE "yaml2sql.cpp")
+if( WIN32 )
+	target_sources(yaml2sql PRIVATE "yaml2sql.rc")
+endif()
+PANDAS_COPY_RUNTIME_DLLS( yaml2sql )
 
 # yamlupgrade
 message( STATUS "Creating target yamlupgrade" )
 add_executable(yamlupgrade)
 target_link_libraries(yamlupgrade PRIVATE tools)
 target_sources(yamlupgrade PRIVATE "yamlupgrade.cpp")
+if( WIN32 )
+	target_sources(yamlupgrade PRIVATE "yamlupgrade.rc")
+endif()
+PANDAS_COPY_RUNTIME_DLLS( yamlupgrade )
 
 set( TARGET_LIST ${TARGET_LIST} mapcache csv2yaml yaml2sql yamlupgrade  CACHE INTERNAL "" )
 

@@ -23,6 +23,6 @@ void SkillPierce::calculateSkillRatio(const Damage* wd, const block_list* src, c
 		base_skillratio *= 2;
 }
 
-void SkillPierce::modifyHitRate(int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
+void SkillPierce::modifyHitRate(pec_int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
 	hit_rate += hit_rate * 5 * skill_lv / 100;
 }

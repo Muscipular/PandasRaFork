@@ -50,7 +50,11 @@ int32 logchrif_sendallwos(int32 sfd, uint8* buf, size_t len) {
  * @return 0
  */
 TIMER_FUNC(logchrif_sync_ip_addresses){
+	#ifndef Pandas_Crashfix_Variable_Init
 	uint8 buf[2];
+	#else
+	uint8 buf[2] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	ShowInfo("IP Sync in progress...\n");
 	WBUFW(buf,0) = 0x2735;
 	logchrif_sendallwos(-1, buf, 2);
@@ -93,7 +97,11 @@ int32 logchrif_parse_reqauth(int32 fd, int32 id,char* ip){
 			//ShowStatus("Char-server '%s': authentication of the account %d accepted (ip: %s).\n", server[id].name, account_id, ip);
 
 			// send ack
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 			WFIFOHEAD(fd,21);
+#else
+			WFIFOHEAD(fd,21 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 			WFIFOW(fd,0) = 0x2713;
 			WFIFOL(fd,2) = account_id;
 			WFIFOL(fd,6) = login_id1;
@@ -102,13 +110,23 @@ int32 logchrif_parse_reqauth(int32 fd, int32 id,char* ip){
 			WFIFOB(fd,15) = 0;// ok
 			WFIFOL(fd,16) = request_id;
 			WFIFOB(fd,20) = node->clienttype;
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 			WFIFOSET(fd,21);
+#else
+			safestrncpy(WFIFOCP(fd, 21), node->mac_address, MACADDRESS_LENGTH);
+			safestrncpy(WFIFOCP(fd, 21 + MACADDRESS_LENGTH), node->lan_address, IP4ADDRESS_LENGTH);
+			WFIFOSET(fd,21 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 			// each auth entry can only be used once
 			login_remove_auth_node( account_id );
 		}else{// authentication not found
 			ShowStatus("Char-server '%s': authentication of the account %d REFUSED (ip: %s).\n", ch_server[id].name, account_id, ip);
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 			WFIFOHEAD(fd,21);
+#else
+			WFIFOHEAD(fd,21 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 			WFIFOW(fd,0) = 0x2713;
 			WFIFOL(fd,2) = account_id;
 			WFIFOL(fd,6) = login_id1;
@@ -117,7 +135,13 @@ int32 logchrif_parse_reqauth(int32 fd, int32 id,char* ip){
 			WFIFOB(fd,15) = 1;// auth failed
 			WFIFOL(fd,16) = request_id;
 			WFIFOB(fd,20) = 0;
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 			WFIFOSET(fd,21);
+#else
+			safestrncpy(WFIFOCP(fd, 21), "", MACADDRESS_LENGTH);
+			safestrncpy(WFIFOCP(fd, 21 + MACADDRESS_LENGTH), "", IP4ADDRESS_LENGTH);
+			WFIFOSET(fd,21 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 		}
 	}
 	return 1;
@@ -333,7 +357,11 @@ int32 logchrif_parse_requpdaccstate(int32 fd, int32 id, char* ip){
 
 			// notify other servers
 			if (state != 0){
+	#ifndef Pandas_Crashfix_Variable_Init
 				uint8 buf[11];
+	#else
+				uint8 buf[11] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 				WBUFW(buf,0) = 0x2731;
 				WBUFL(buf,2) = account_id;
 				WBUFB(buf,6) = 0; // 0: change of state, 1: ban
@@ -378,8 +406,13 @@ int32 logchrif_parse_reqbanacc(int32 fd, int32 id, char* ip){
 			else if( timestamp <= time(nullptr) || timestamp == 0 )
 				ShowNotice("Char-server '%s': Error of ban request (account: %d, new date unbans the account, ip: %s).\n", ch_server[id].name, account_id, ip);
 			else{
+	#ifndef Pandas_Crashfix_Variable_Init
 				uint8 buf[11];
 				char tmpstr[24];
+	#else
+				uint8 buf[11] = { 0 };
+				char tmpstr[24] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 				timestamp2string(tmpstr, sizeof(tmpstr), timestamp, login_config.date_format);
 				ShowNotice("Char-server '%s': Ban request (account: %d, new final date of banishment: %s, ip: %s).\n", ch_server[id].name, account_id, tmpstr, ip);
 
@@ -421,7 +454,11 @@ int32 logchrif_parse_reqchgsex(int32 fd, int32 id, char* ip){
 		else if( acc.sex == 'S' )
 			ShowNotice("Char-server '%s': Error of sex change - account to change is a Server account (account: %d, ip: %s).\n", ch_server[id].name, account_id, ip);
 		else{
+	#ifndef Pandas_Crashfix_Variable_Init
 			unsigned char buf[7];
+	#else
+			unsigned char buf[7] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 			char sex = ( acc.sex == 'M' ) ? 'F' : 'M'; //Change gender
 
 			ShowNotice("Char-server '%s': Sex change (account: %d, new sex %c, ip: %s).\n", ch_server[id].name, account_id, sex, ip);

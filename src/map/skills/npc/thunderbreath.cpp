@@ -31,6 +31,6 @@ void SkillThunderBreath::castendDamageId(block_list *src, block_list *target, ui
 	}
 }
 
-void SkillThunderBreath::modifyHitRate(int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
+void SkillThunderBreath::modifyHitRate(pec_int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
 	hit_rate *= 2;
 }

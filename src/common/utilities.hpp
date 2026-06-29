@@ -5,6 +5,7 @@
 #define UTILILITIES_HPP
 
 #include <algorithm>
+#include <cctype>
 #include <locale>
 #include <map>
 #include <memory>
@@ -125,6 +126,70 @@ template <typename K, typename V> V* umap_find(std::unordered_map<K, V>& map, K 
 	else
 		return nullptr;
 }
+
+#ifdef Pandas_Helper_Common_Function
+/**
+ * Find a key-value pair and return the key value as a const reference
+ * @param map: Unordered Map to search through
+ * @param key: Key wanted
+ * @return Key value on success or nullptr on failure
+ */
+template <typename K, typename V> const V* umap_find(const std::unordered_map<K, V>& map, K key) {
+	auto it = map.find(key);
+
+	if (it != map.end())
+		return &it->second;
+	else
+		return nullptr;
+}
+
+/**
+ * Return a lowercase copy of the input string-like object
+ * @param input: Input string
+ * @return Lowercase copy
+ */
+template <typename T> T tolower_copy(const T& input) {
+	T output = input;
+
+	std::transform(output.begin(), output.end(), output.begin(), [](unsigned char c) { return std::tolower(c); });
+
+	return output;
+}
+
+/**
+ * Return a trimmed copy of the input string-like object
+ * @param s: Input string
+ * @return Trimmed copy
+ */
+template <typename T> T trim_copy(const T& s) {
+	auto wsfront = std::find_if_not(s.begin(), s.end(), [](unsigned char c) { return std::isspace(c); });
+	auto wsback = std::find_if_not(s.rbegin(), s.rend(), [](unsigned char c) { return std::isspace(c); }).base();
+
+	return (wsback <= wsfront ? T() : T(wsfront, wsback));
+}
+
+/**
+ * Case-insensitive starts_with helper
+ * @param input: Input string
+ * @param test: Prefix to test
+ * @return True if input starts with test, case-insensitively
+ */
+template <typename T> bool istarts_with(const T& input, const T& test) {
+	if (test.size() > input.size())
+		return false;
+
+	auto it_input = input.begin();
+	auto it_test = test.begin();
+	std::locale loc;
+
+	for (; it_test != test.end(); ++it_test, ++it_input) {
+		if (std::tolower(*it_input, loc) != std::tolower(*it_test, loc))
+			return false;
+	}
+
+	return true;
+}
+#endif // Pandas_Helper_Common_Function
 
 /**
  * Find a key-value pair and return the key value as a reference

@@ -819,6 +819,9 @@ void quest_update_objective(map_session_data *sd, mob_data* md)
 
 			entry.nameid = it->nameid;
 			entry.identify = itemdb_isidentified(it->nameid);
+#ifdef Pandas_BattleConfig_Force_Identified
+			entry.identify = (battle_config.force_identified & 16 ? 1 : entry.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 			entry.amount = it->count;
 //#ifdef BOUND_ITEMS
 //			entry.bound = it->bound;

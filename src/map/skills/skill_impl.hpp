@@ -35,7 +35,7 @@ public:
 	/**
 	 * Modify hit rate for this skill - replaces hit rate switch statements
 	 */
-	virtual void modifyHitRate(int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const;
+	virtual void modifyHitRate(pec_int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const;
 
 	/**
 	 * Apply additional effects on the target after damage - called from skill_additional_effect

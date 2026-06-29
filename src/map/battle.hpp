@@ -123,7 +123,7 @@ int64 battle_calc_gvg_damage(block_list *src,block_list *bl,int64 damage,uint16 
 int64 battle_calc_bg_damage(block_list *src,block_list *bl,int64 damage,uint16 skill_id,int32 flag);
 int64 battle_calc_pk_damage(block_list &src, block_list &bl, int64 damage, uint16 skill_id, int32 flag);
 
-int32 battle_damage(block_list *src, block_list *target, int64 damage, int16 div_, uint16 skill_lv, uint16 skill_id, enum damage_lv dmg_lv, uint16 attack_type, bool additional_effects, t_tick tick, bool isspdamage, bool is_norm_attacked = false);
+int32 battle_damage(block_list *src, block_list *target, int64 damage, int16 div_, uint16 skill_lv, uint16 skill_id, enum damage_lv dmg_lv, pec_uint16 attack_type, bool additional_effects, t_tick tick, bool isspdamage, bool is_norm_attacked = false);
 int32 battle_delay_damage (t_tick tick, int32 amotion, block_list *src, block_list *target, int32 attack_type, uint16 skill_id, uint16 skill_lv, int64 damage, enum damage_lv dmg_lv, int16 div_, bool additional_effects, bool isspdamage, bool is_norm_attacked = false);
 int32 battle_fix_damage(block_list* src, block_list* target, int64 damage, int16 div_, uint16 skill_id);
 
@@ -781,6 +781,128 @@ struct Battle_Config
 	int32 enable_bonus_map_drops;
 	int32 hide_cloaked_units;
 	int32 oridecon_research_fix;
+
+	// Pandas Configure
+#ifdef Pandas_BattleConfig_Force_LoadEvent
+	int32 force_loadevent; // 强制触发 OnPCLoadMapEvent 事件
+#endif // Pandas_BattleConfig_Force_LoadEvent
+
+#ifdef Pandas_BattleConfig_Force_Identified
+	int32 force_identified; // 强制特定渠道获得的装备自动变成已鉴定
+#endif // Pandas_BattleConfig_Force_Identified
+
+#ifdef Pandas_BattleConfig_CashMounting_UseitemLimit
+	int32 cashmount_useitem_limit; // 乘坐“商城坐骑”时禁止使用特定类型的物品
+#endif // Pandas_BattleConfig_CashMounting_UseitemLimit
+
+#ifdef Pandas_BattleConfig_MaxAspdForPVP
+	int32 max_aspd_for_pvp; // 限制玩家在 PVP 地图上的最大攻速
+#endif // Pandas_BattleConfig_MaxAspdForPVP
+
+#ifdef Pandas_BattleConfig_MaxAspdForGVG
+	int32 max_aspd_for_gvg; // 限制玩家在 GVG 地图上的最大攻速
+#endif // Pandas_BattleConfig_MaxAspdForGVG
+
+#ifdef Pandas_BattleConfig_AtCmd_No_Permission
+	int32 atcmd_no_permission; // 当没有权限的玩家执行 GM 指令时的处理策略
+#endif // Pandas_BattleConfig_AtCmd_No_Permission
+
+#ifdef Pandas_BattleConfig_Multiplayer_Recall_Behavior
+	int32 multiplayer_recall_behavior; // 控制多人召唤时是否避开在线摆摊玩家
+#endif // Pandas_BattleConfig_Multiplayer_Recall_Behavior
+
+#ifdef Pandas_BattleConfig_AlwaysTriggerNPCKillEvent
+	int32 always_trigger_npc_killevent; // 当魔物拥有且触发了自己的死亡事件标签后, 是否还会继续触发 OnNPCKillEvent 事件
+#endif // Pandas_BattleConfig_AlwaysTriggerNPCKillEvent
+
+#ifdef Pandas_BattleConfig_AlwaysTriggerMVPKillEvent
+	int32 always_trigger_mvp_killevent; // 当 MVP 魔物拥有且触发了自己的死亡事件标签后, 是否还会继续触发 OnPCKillMvpEvent 事件
+#endif // Pandas_BattleConfig_AlwaysTriggerMVPKillEvent
+
+#ifdef Pandas_BattleConfig_Suspend_MonsterIgnore
+	int32 suspend_monsterignore; // 当玩家使用挂机系列指令时, 处于哪些模式不会被魔物攻击
+#endif // Pandas_BattleConfig_Suspend_MonsterIgnore
+
+#ifdef Pandas_BattleConfig_Suspend_Whisper_Response
+	int32 suspend_whisper_response; // 当玩家使用挂机系列指令时, 处于哪些模式会自动回复私聊讯息
+#endif // Pandas_BattleConfig_Suspend_Whisper_Response
+
+#ifdef Pandas_BattleConfig_Suspend_Offline_BodyDirection
+	int32 suspend_offline_bodydirection; // 当玩家进入离线挂机模式时, 地图服务器重启后的身体朝向哪里
+#endif // Pandas_BattleConfig_Suspend_Offline_BodyDirection
+
+#ifdef Pandas_BattleConfig_Suspend_Offline_HeadDirection
+	int32 suspend_offline_headdirection; // 当玩家进入离线挂机模式时, 地图服务器重启后的头部朝向哪里
+#endif // Pandas_BattleConfig_Suspend_Offline_HeadDirection
+
+#ifdef Pandas_BattleConfig_Suspend_Offline_Sitdown
+	int32 suspend_offline_sitdown; // 当玩家进入离线挂机模式时, 地图服务器重启后处于站立还是坐下状态
+#endif // Pandas_BattleConfig_Suspend_Offline_Sitdown
+
+#ifdef Pandas_BattleConfig_Suspend_AFK_BodyDirection
+	int32 suspend_afk_bodydirection; // 当玩家进入离开模式时, 地图服务器重启后的身体朝向哪里
+#endif // Pandas_BattleConfig_Suspend_AFK_BodyDirection
+
+#ifdef Pandas_BattleConfig_Suspend_AFK_Headdirection
+	int32 suspend_afk_headdirection; // 当玩家进入离开模式时, 地图服务器重启后的头部朝向哪里
+#endif // Pandas_BattleConfig_Suspend_AFK_Headdirection
+
+#ifdef Pandas_BattleConfig_Suspend_AFK_Sitdown
+	int32 suspend_afk_sitdown; // 当玩家进入离开模式时, 地图服务器重启后处于站立还是坐下状态
+#endif // Pandas_BattleConfig_Suspend_AFK_Sitdown
+
+#ifdef Pandas_BattleConfig_Suspend_AFK_HeadTop_ViewID
+	int32 suspend_afk_headtop_viewid; // 当玩家进入离开模式时, 将头饰上的更换为哪一个指定的头饰外观编号
+#endif // Pandas_BattleConfig_Suspend_AFK_HeadTop_ViewID
+
+#ifdef Pandas_BattleConfig_Suspend_Normal_BodyDirection
+	int32 suspend_normal_bodydirection; // 当玩家进入普通模式时, 被拉上线的角色身体朝向哪里
+#endif // Pandas_BattleConfig_Suspend_Normal_BodyDirection
+
+#ifdef Pandas_BattleConfig_Suspend_Normal_HeadDirection
+	int32 suspend_normal_headdirection; // 当玩家进入普通模式时, 被拉上线的角色头部朝向哪里
+#endif // Pandas_BattleConfig_Suspend_Normal_HeadDirection
+
+#ifdef Pandas_BattleConfig_Suspend_Normal_Sitdown
+	int32 suspend_normal_sitdown; // 当玩家进入普通模式时, 被拉上线的角色处于站立还是坐下状态
+#endif // Pandas_BattleConfig_Suspend_Normal_Sitdown
+
+#ifdef Pandas_BattleConfig_BattleRecord_AutoEnabled_Unit
+	int32 batrec_autoenabled_unit; // 有哪些单位默认开启战斗记录
+#endif // Pandas_BattleConfig_BattleRecord_AutoEnabled_Unit
+
+#ifdef Pandas_BattleConfig_Repeat_ClearUnit_Interval
+	int32 repeat_clearunit_interval; // 重发魔物死亡封包的间隔时间
+#endif // Pandas_BattleConfig_Repeat_ClearUnit_Interval
+
+#ifdef Pandas_BattleConfig_Dead_Area_Size
+	int32 dead_area_size; // 魔物死亡封包将会发送给周围多少个格的玩家
+#endif // Pandas_BattleConfig_Dead_Area_Size
+
+#ifdef Pandas_BattleConfig_Remove_Manhole_With_Status
+	int32 remove_manhole_with_status; // 当"人孔/黑洞陷阱"地面陷阱被移除的时候, 是否同时使被捕获的玩家立即脱困
+#endif // Pandas_BattleConfig_Remove_Manhole_With_Status
+
+#ifdef Pandas_BattleConfig_Restore_Mes_Logic
+	int32 restore_mes_logic; // 使 2021-11-03 及更新版本的客户端在执行 mes 指令时使用经典换行策略
+#endif // Pandas_BattleConfig_Restore_Mes_Logic
+
+#ifdef Pandas_BattleConfig_ItemDB_Warning_Policy
+	int32 itemdb_warning_policy; // 是否关闭加载物品数据库时的一些警告信息
+#endif // Pandas_BattleConfig_ItemDB_Warning_Policy
+
+#ifdef Pandas_BattleConfig_MobDB_DamageMotion_Min
+	int32 mob_default_damagemotion; // 当魔物被攻击时受伤动画的默认播放时长, 值越小看起来越快 (单位为: 毫秒)
+#endif // Pandas_BattleConfig_MobDB_DamageMotion_Min
+
+#ifdef Pandas_BattleConfig_Strict_Parameters_Of_Rand
+	int32 strict_parameters_of_rand; // 是否对 rand 脚本指令进行严格的参数检查
+#endif // Pandas_BattleConfig_Strict_Parameters_Of_Rand
+
+#ifdef Pandas_BattleConfig_Mob_SetUnitData_Persistence
+	int32 mob_setunitdata_persistence; // 是否高优先级持久化保存 setunitdata 对魔物的设置
+#endif // Pandas_BattleConfig_Mob_SetUnitData_Persistence
+	// PYHELP - BATTLECONFIG - INSERT POINT - <Section 2>
 
 #include <custom/battle_config_struct.inc>
 };

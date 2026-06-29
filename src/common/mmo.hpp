@@ -5,6 +5,9 @@
 #define MMO_HPP
 
 #include <ctime>
+#include <map>
+#include <memory>
+#include <vector>
 
 #include <config/core.hpp>
 
@@ -97,7 +100,18 @@ typedef uint32 t_itemid;
 #define MAX_STORAGE 600 ///Max number of storage slots a player can have
 #define MAX_GUILD_STORAGE 600 ///Max number of storage slots a guild
 #define MAX_PARTY 12 ///Max party member
+#ifndef Pandas_Guild_Extension_Configure
 #define MAX_GUILD 16+10*6	///Increased max guild members +6 per 1 extension levels [Lupus]
+#else
+#ifndef GUILD_INITIAL_MEMBER
+	#define GUILD_INITIAL_MEMBER 16
+#endif // MAX_GUILD_INITIAL_MEMBER
+#ifndef GUILD_EXTENSION_PERLEVEL
+	#define GUILD_EXTENSION_PERLEVEL 6
+#endif // GUILD_EXTENSION_PERLEVEL
+// 使 MAX_GUILD 的值能够通过上述两个宏定义计算而来 [Sola丶小克]
+#define MAX_GUILD GUILD_INITIAL_MEMBER + 10 * GUILD_EXTENSION_PERLEVEL
+#endif // Pandas_Guild_Extension_Configure
 #define MAX_GUILDPOSITION 20	///Increased max guild positions to accommodate for all members [Valaris] (removed) [PoW]
 #define MAX_GUILDEXPULSION 32 ///Max Guild expulsion
 #define MAX_GUILDALLIANCE 16 ///Max Guild alliance
@@ -148,6 +162,11 @@ enum e_enchantgrade : uint16{
 
 const t_itemid WEDDING_RING_M = 2634;
 const t_itemid WEDDING_RING_F = 2635;
+
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+#define MACADDRESS_LENGTH (17 + 1)
+#define IP4ADDRESS_LENGTH (15 + 1)
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 //For character names, title names, guilds, maps, etc.
 //Includes null-terminator as it is the length of the array.
@@ -235,6 +254,9 @@ enum item_types {
 	IT_DELAYCONSUME,//11
 	IT_SHADOWGEAR,  //12
 	IT_CASH = 18,
+#ifdef Pandas_Item_Amulet_System
+	IT_AMULET, //19
+#endif // Pandas_Item_Amulet_System
 	IT_MAX
 };
 
@@ -270,6 +292,50 @@ enum e_mode {
 	MD_STATUSIMMUNE			= 0x4000000,
 	MD_SKILLIMMUNE			= 0x8000000,
 };
+
+#ifdef Pandas_Struct_Unit_CommonData
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+#ifdef Pandas_Aura_Mechanism
+struct s_aura_effect {
+	uint16 effect_id = 0;
+	uint32 replay_interval = 0;
+	int32 replay_tid = INVALID_TIMER;
+};
+#else
+struct s_aura_effect;
+#endif // Pandas_Aura_Mechanism
+#endif // Pandas_Struct_Unit_CommonData_Aura
+
+#ifdef Pandas_Struct_Unit_CommonData_BattleRecord
+struct s_batrec_item {
+	uint32 interactive_block_id = 0;
+	uint16 interactive_block_type = 0;
+	uint32 interactive_master_id = 0;
+	int64 damage = 0;
+};
+typedef std::shared_ptr<s_batrec_item> s_batrec_item_ptr;
+typedef std::map<uint32, s_batrec_item_ptr> batrec_map;
+#endif // Pandas_Struct_Unit_CommonData_BattleRecord
+
+// 多种单位的结构体都会嵌入的一个数据结构
+// 这里定义的内容在 map_session_data, npc_data, mob_data, homun_data,
+// mercenary_data, elemental_data, pet_data 结构体中的 ucd 成员中都会同时拥有
+struct s_unit_common_data {
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	struct s_ucd_aura {
+		uint32 id = 0; // 该单位启用的光环编号
+		std::vector<std::shared_ptr<s_aura_effect>> effects; // 该单位生效的特效组合
+	} aura;
+#endif // Pandas_Struct_Unit_CommonData_Aura
+#ifdef Pandas_Struct_Unit_CommonData_BattleRecord
+	struct s_ucd_batrec {
+		bool dorecord = false; // 是否进行记录
+		batrec_map* dmg_receive = nullptr; // 受到的伤害 <伤害来源GID, 伤害值>
+		batrec_map* dmg_cause = nullptr; // 造成的伤害 <攻击目标GID, 伤害值>
+	} batrec;
+#endif // Pandas_Struct_Unit_CommonData_BattleRecord
+};
+#endif // Pandas_Struct_Unit_CommonData
 
 #define MD_MASK 0x000FFFF
 #define ATR_MASK 0x0FF0000
@@ -426,6 +492,9 @@ struct bonus_script_data {
 	uint16 flag; ///< Flags @see enum e_bonus_script_flags
 	int16 icon; ///< Icon SI
 	uint8 type; ///< 0 - None, 1 - Buff, 2 - Debuff
+#ifdef Pandas_Struct_BonusScriptData_Extend
+	uint64 bonus_id; ///< 此 bonus_script 的唯一编号
+#endif // Pandas_Struct_BonusScriptData_Extend
 };
 
 struct s_skill_cooldown_data {
@@ -449,6 +518,9 @@ enum e_storage_mode {
 
 struct s_storage {
 	bool dirty; ///< Dirty status, data needs to be saved
+#ifdef Pandas_Fix_Storage_DirtyFlag_Override
+	bool dirty_when_saving; ///< 保存请求待确认期间是否发生过新的增删改操作
+#endif // Pandas_Fix_Storage_DirtyFlag_Override
 	bool status; ///< Current status of storage (opened or closed)
 	uint16 amount; ///< Amount of items in storage
 	bool lock; ///< If locked, can't use storage when item bound retrieval
@@ -541,7 +613,7 @@ struct s_elemental {
 	int16 class_;
 	int32 mode;
 	int32 hp, sp, max_hp, max_sp, matk, atk, atk2;
-	int16 hit, flee, amotion, def, mdef;
+	pec_int16 hit, flee, amotion, def, mdef;
 	t_tick life_time;
 };
 
@@ -593,8 +665,8 @@ struct mmo_charstatus {
 
 	char name[NAME_LENGTH];
 	uint32 base_level,job_level;
-	uint16 str,agi,vit,int_,dex,luk;
-	uint16 pow,sta,wis,spl,con,crt;
+	pec_uint16 str,agi,vit,int_,dex,luk;
+	pec_uint16 pow,sta,wis,spl,con,crt;
 	unsigned char slot,sex;
 
 	uint32 mapip;

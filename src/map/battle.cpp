@@ -316,7 +316,7 @@ static t_tick battle_calc_walkdelay(block_list& bl, int64 damage, int16 div_, t_
 * @param is_norm_attacked: If it should trigger the special normal attacked event on monsters
 * @return HP+SP+AP (0 if HP/SP/AP remained unchanged)
 */
-int32 battle_damage(block_list *src, block_list *target, int64 damage, int16 div_, uint16 skill_lv, uint16 skill_id, enum damage_lv dmg_lv, uint16 attack_type, bool additional_effects, t_tick tick, bool isspdamage, bool is_norm_attacked) {
+int32 battle_damage(block_list *src, block_list *target, int64 damage, int16 div_, uint16 skill_lv, uint16 skill_id, enum damage_lv dmg_lv, pec_uint16 attack_type, bool additional_effects, t_tick tick, bool isspdamage, bool is_norm_attacked) {
 	if (target == nullptr)
 		return 0;
 
@@ -374,7 +374,7 @@ struct delay_damage {
 	uint16 skill_lv;
 	uint16 skill_id;
 	enum damage_lv dmg_lv;
-	uint16 attack_type;
+	pec_uint16 attack_type;
 	bool additional_effects;
 	enum bl_type src_type;
 	bool isspdamage;
@@ -938,7 +938,7 @@ int32 battle_calc_cardfix(int32 attack_type, block_list *src, block_list *target
 		case BF_WEAPON:
 			// Affected by attacker ATK bonuses
 			if( sd && !nk[NK_IGNOREATKCARD] && (left&2) ) {
-				int16 cardfix_ = 1000;
+				pec_int16 cardfix_ = 1000;
 
 				if( sd->state.arrow_atk ) { // Ranged attack
 					cardfix = cardfix * (100 + sd->right_weapon.addrace[tstatus->race] + sd->indexed_bonus.arrow_addrace[tstatus->race] +
@@ -1249,6 +1249,15 @@ static void battle_absorb_damage(block_list *bl, struct Damage *d) {
 						dmg_new = hp;
 					}
 				}
+#ifdef Pandas_Bonus2_bAbsorbDmgMaxHP
+				if (sd->bonus.absorb_dmg_trigger_hpratio && sd->bonus.absorb_dmg_cap_ratio) {
+					double dmg_ratio = (double)dmg_ori / status_get_max_hp(bl);
+					if (dmg_ratio * 100 >= min(sd->bonus.absorb_dmg_trigger_hpratio, 100)) {
+						int32 hp = min(sd->bonus.absorb_dmg_cap_ratio, 100) * status_get_max_hp(bl) / 100;
+						dmg_new = hp;
+					}
+				}
+#endif // Pandas_Bonus2_bAbsorbDmgMaxHP
 			}
 			break;
 	}
@@ -2046,6 +2055,12 @@ int64 battle_calc_damage(block_list *src,block_list *bl,struct Damage *d,int64 d
 	if (bl->type == BL_MOB) { // Reduces damage received for Green Aura MVP
 		mob_data *md = BL_CAST(BL_MOB, bl);
 
+#ifdef Pandas_ScriptParams_DamageTaken_Extend
+		if (md && md->damagetaken < 0) {
+			md->damagetaken = md->db->damagetaken;
+		}
+#endif // Pandas_ScriptParams_DamageTaken_Extend
+
 		if (md && md->damagetaken != 100)
 			damage = i64max(damage * md->damagetaken / 100, 1);
 	}
@@ -2515,7 +2530,7 @@ static int32 battle_calc_base_weapon_attack(block_list *src, struct status_data 
 static int64 battle_calc_base_damage(block_list *src, struct status_data *status, struct weapon_atk *wa, status_change *sc, uint16 t_size, int32 flag)
 {
 	uint32 atkmin = 0, atkmax = 0;
-	int16 type = 0;
+	pec_int16 type = 0;
 	int64 damage = 0;
 	map_session_data *sd = nullptr;
 
@@ -3043,7 +3058,7 @@ static bool is_attack_critical(struct Damage* wd, block_list *src, const block_l
 		status_change *sc = status_get_sc(src);
 		const status_change *tsc = status_get_sc(target);
 		const map_session_data *tsd = BL_CAST(BL_PC, target);
-		int16 cri = sstatus->cri;
+		pec_int16 cri = sstatus->cri;
 
 		if (sd) {
 			cri += sd->indexed_bonus.critaddrace[tstatus->race] + sd->indexed_bonus.critaddrace[RC_ALL];
@@ -3233,7 +3248,7 @@ static bool is_attack_hitting(struct Damage* wd, block_list *src, block_list *ta
 	status_change *tsc = status_get_sc(target);
 	map_session_data *sd = BL_CAST(BL_PC, src);
 	std::bitset<NK_MAX> nk = battle_skill_get_damage_properties(skill_id, wd->miscflag);
-	int16 flee, hitrate;
+	pec_int16 flee, hitrate;
 
 	if (!first_call)
 		return (wd->dmg_lv != ATK_FLEE);
@@ -4558,11 +4573,15 @@ static void battle_attack_sc_bonus(struct Damage* wd, block_list *src, block_lis
 		if (sc->getSCE(SC_MADNESSCANCEL))
 			ATK_ADD(wd->equipAtk, wd->equipAtk2, 100);
 		if (sc->getSCE(SC_MAGICALBULLET)) {
-			int16 tmdef = tstatus->mdef + tstatus->mdef2;
+			pec_int16 tmdef = tstatus->mdef + tstatus->mdef2;
 
 			if (sstatus->matk_min > tmdef && sstatus->matk_max > sstatus->matk_min) {
 				ATK_ADD(wd->weaponAtk, wd->weaponAtk2, i64max((sstatus->matk_min + rnd() % (sstatus->matk_max - sstatus->matk_min)) - tmdef, 0));
+#ifndef Pandas_Fix_MagicalBullet_Damage_Overflow
 			} else {
+#else
+			} else if (sstatus->matk_min >= tmdef) {
+#endif // Pandas_Fix_MagicalBullet_Damage_Overflow
 				ATK_ADD(wd->weaponAtk, wd->weaponAtk2, i64max(sstatus->matk_min - tmdef, 0));
 			}
 		}
@@ -4727,9 +4746,9 @@ static void battle_calc_defense_reduction( Damage* wd, block_list* src, block_li
 	status_data* tstatus = status_get_status_data(*target);
 
 	//Defense reduction
-	int16 vit_def;
-	defType def1 = status_get_def(target); //Don't use tstatus->def1 due to skill timer reductions.
-	int16 def2 = tstatus->def2;
+	pec_int16 vit_def;
+	pec_defType def1 = status_get_def(target); //Don't use tstatus->def1 due to skill timer reductions.
+	pec_int16 def2 = tstatus->def2;
 
 	if (sd) {
 		int32 i = sd->indexed_bonus.ignore_def_by_race[tstatus->race] + sd->indexed_bonus.ignore_def_by_race[RC_ALL];
@@ -4742,7 +4761,7 @@ static void battle_calc_defense_reduction( Damage* wd, block_list* src, block_li
 
 		//Kagerou/Oboro Earth Charm effect +10% eDEF
 		if(sd->spiritcharm_type == CHARM_TYPE_LAND && sd->spiritcharm > 0) {
-			int16 si = 10 * sd->spiritcharm;
+			pec_int16 si = 10 * sd->spiritcharm;
 			def1 = (def1 * (100 + si)) / 100;
 		}
 	}
@@ -4757,13 +4776,13 @@ static void battle_calc_defense_reduction( Damage* wd, block_list* src, block_li
 
 	if (tsc) {
 		if (tsc->getSCE(SC_FORCEOFVANGUARD)) {
-			int16 i = 2 * tsc->getSCE(SC_FORCEOFVANGUARD)->val1;
+			pec_int16 i = 2 * tsc->getSCE(SC_FORCEOFVANGUARD)->val1;
 
 			def1 = (def1 * (100 + i)) / 100;
 		}
 
 		if( tsc->getSCE(SC_CAMOUFLAGE) ){
-			int16 i = 5 * tsc->getSCE(SC_CAMOUFLAGE)->val3; //5% per second
+			pec_int16 i = 5 * tsc->getSCE(SC_CAMOUFLAGE)->val3; //5% per second
 
 			i = min(i,100); //cap it to 100 for 0 def min
 			def1 = (def1*(100-i))/100;
@@ -5801,7 +5820,7 @@ static struct Damage battle_calc_weapon_attack(block_list *src, block_list *targ
 struct Damage battle_calc_magic_attack(block_list *src,block_list *target,uint16 skill_id,uint16 skill_lv,int32 mflag)
 {
 	int32 i, skill_damage = 0;
-	int16 s_ele = 0;
+	pec_int16 s_ele = 0;
 
 	TBL_PC *sd;
 	TBL_PC *tsd;
@@ -6070,7 +6089,7 @@ struct Damage battle_calc_magic_attack(block_list *src,block_list *target,uint16
 
 		if(!flag.imdef){
 			// Bonuses ignoring Mdef are added together
-			defType mdef = tstatus->mdef;
+			pec_defType mdef = tstatus->mdef;
 			int32 mdef2 = tstatus->mdef2;
 			i = 0;	// Bonus ratio that ignores Mdef
 
@@ -6109,7 +6128,11 @@ struct Damage battle_calc_magic_attack(block_list *src,block_list *target,uint16
 				mdef -= mdef * i / 100;
 
 			if(battle_config.magic_defense_type)
+#ifndef Pandas_CodeAnalysis_Suggestion
 				ad.damage = ad.damage - mdef*battle_config.magic_defense_type - mdef2;
+#else
+				ad.damage = ad.damage - ((int64)mdef) * battle_config.magic_defense_type - mdef2;
+#endif // Pandas_CodeAnalysis_Suggestion
 			else
 				ad.damage = ad.damage * (100-mdef)/100 - mdef2;
 #endif
@@ -6290,7 +6313,7 @@ struct Damage battle_calc_magic_attack(block_list *src,block_list *target,uint16
 struct Damage battle_calc_misc_attack(block_list *src,block_list *target,uint16 skill_id,uint16 skill_lv,int32 mflag)
 {
 	int32 skill_damage = 0;
-	int16 i, s_ele;
+	pec_int16 i, s_ele;
 
 	map_session_data *sd, *tsd;
 	struct Damage md; //DO NOT CONFUSE with md of mob_data!
@@ -6512,7 +6535,7 @@ struct Damage battle_calc_misc_attack(block_list *src,block_list *target,uint16 
 			// final damage = base damage + ((mirror image count + 1) / 5 * base damage) - (edef + sdef)
 			// modified def formula
 			{
-				int16 totaldef;
+				pec_int16 totaldef;
 				struct Damage atk = battle_calc_weapon_attack(src, target, skill_id, skill_lv, 0);
 				status_change *sc = status_get_sc(src);
 
@@ -6788,6 +6811,38 @@ struct Damage battle_calc_attack(int32 attack_type,block_list *bl,block_list *ta
 		d.dmg_lv = ATK_DEF;
 
 	map_session_data *sd = BL_CAST(BL_PC, bl);
+
+#ifdef Pandas_MapFlag_MaxDmg_Skill
+	if (skill_id && bl && map_getmapflag(bl->m, MF_MAXDMG_SKILL)) {
+		int val = map_getmapflag_param(bl->m, MF_MAXDMG_SKILL, 1);
+		if (val > 0 && d.damage + d.damage2 > val) {
+			int64 overval = (d.damage + d.damage2) - val;
+			if (d.damage2 >= overval) {
+				d.damage2 -= overval;
+			} else {
+				overval -= d.damage2;
+				d.damage2 = 0;
+				d.damage = cap_value(d.damage - overval, 0, val);
+			}
+		}
+	}
+#endif // Pandas_MapFlag_MaxDmg_Skill
+
+#ifdef Pandas_MapFlag_MaxDmg_Normal
+	if (!skill_id && bl && map_getmapflag(bl->m, MF_MAXDMG_NORMAL)) {
+		int val = map_getmapflag_param(bl->m, MF_MAXDMG_NORMAL, 1);
+		if (val > 0 && d.damage + d.damage2 > val) {
+			int64 overval = (d.damage + d.damage2) - val;
+			if (d.damage2 >= overval) {
+				d.damage2 -= overval;
+			} else {
+				overval -= d.damage2;
+				d.damage2 = 0;
+				d.damage = cap_value(d.damage - overval, 0, val);
+			}
+		}
+	}
+#endif // Pandas_MapFlag_MaxDmg_Normal
 
 	if (sd && d.damage + d.damage2 > 1)
 		battle_vanish_damage(sd, target, d.flag);
@@ -7395,6 +7450,167 @@ enum damage_lv battle_weapon_attack(block_list* src, block_list* target, t_tick 
 				skill_castend_damage_id(src, target, AB_DUPLELIGHT_MAGIC, sc->getSCE(SC_DUPLELIGHT)->val1, tick, flag | SD_LEVEL);
 		}
 	}
+
+#ifdef Pandas_Bonus4_bStatusAddDamage
+	if (sd && src->type == BL_PC && tsc) {
+		for (auto& it : sd->status_damage_adjust) {
+			if (!tsc->getSCE(it.type))
+				continue;
+			if (!(((it.battle_flag) & wd.flag) & BF_WEAPONMASK &&
+				((it.battle_flag) & wd.flag) & BF_RANGEMASK &&
+				((it.battle_flag) & wd.flag) & BF_SKILLMASK))
+				continue;
+			if (rnd() % 10000 < it.rate)
+				wd.damage = rathena::util::safe_addition_cap(wd.damage, (int64)it.val, INT64_MAX);
+		}
+		damage = wd.damage + wd.damage2;
+	}
+#endif // Pandas_Bonus4_bStatusAddDamage
+
+#ifdef Pandas_Bonus4_bStatusAddDamageRate
+	if (sd && src->type == BL_PC && tsc) {
+		int total_rate = 100;
+		for (auto& it : sd->status_damagerate_adjust) {
+			if (!tsc->getSCE(it.type))
+				continue;
+			if (!(((it.battle_flag) & wd.flag) & BF_WEAPONMASK &&
+				((it.battle_flag) & wd.flag) & BF_RANGEMASK &&
+				((it.battle_flag) & wd.flag) & BF_SKILLMASK))
+				continue;
+			if (rnd() % 10000 < it.rate)
+				total_rate = rathena::util::safe_addition_cap(total_rate, it.val, INT_MAX);
+		}
+		if (total_rate != 100) {
+			total_rate = cap_value(total_rate, -100, INT_MAX);
+			wd.damage = (int64)(wd.damage / 100.0 * total_rate);
+		}
+		damage = wd.damage + wd.damage2;
+	}
+#endif // Pandas_Bonus4_bStatusAddDamageRate
+
+#ifdef Pandas_Bonus3_bFinalAddRace
+	if (sd && tstatus) {
+		int total_rate = 100;
+		for (auto& it : sd->finaladd_race[tstatus->race]) {
+			if (!it.damage_rate)
+				continue;
+			if (!(((it.battle_flag) & wd.flag) & BF_WEAPONMASK &&
+				((it.battle_flag) & wd.flag) & BF_RANGEMASK &&
+				((it.battle_flag) & wd.flag) & BF_SKILLMASK))
+				continue;
+			total_rate = rathena::util::safe_addition_cap(total_rate, it.damage_rate, INT_MAX);
+		}
+		for (auto& it : sd->finaladd_race[RC_ALL]) {
+			if (!it.damage_rate)
+				continue;
+			if (!(((it.battle_flag) & wd.flag) & BF_WEAPONMASK &&
+				((it.battle_flag) & wd.flag) & BF_RANGEMASK &&
+				((it.battle_flag) & wd.flag) & BF_SKILLMASK))
+				continue;
+			total_rate = rathena::util::safe_addition_cap(total_rate, it.damage_rate, INT_MAX);
+		}
+		if (total_rate != 100) {
+			total_rate = cap_value(total_rate, -100, INT_MAX);
+			wd.damage = (int64)(wd.damage / 100.0 * total_rate);
+		}
+		damage = wd.damage + wd.damage2;
+	}
+#endif // Pandas_Bonus3_bFinalAddRace
+
+#ifdef Pandas_Bonus3_bFinalAddClass
+	if (sd && tstatus) {
+		int total_rate = 100;
+		for (auto& it : sd->finaladd_class[tstatus->class_]) {
+			if (!it.damage_rate)
+				continue;
+			if (!(((it.battle_flag) & wd.flag) & BF_WEAPONMASK &&
+				((it.battle_flag) & wd.flag) & BF_RANGEMASK &&
+				((it.battle_flag) & wd.flag) & BF_SKILLMASK))
+				continue;
+			total_rate = rathena::util::safe_addition_cap(total_rate, it.damage_rate, INT_MAX);
+		}
+		for (auto& it : sd->finaladd_class[CLASS_ALL]) {
+			if (!it.damage_rate)
+				continue;
+			if (!(((it.battle_flag) & wd.flag) & BF_WEAPONMASK &&
+				((it.battle_flag) & wd.flag) & BF_RANGEMASK &&
+				((it.battle_flag) & wd.flag) & BF_SKILLMASK))
+				continue;
+			total_rate = rathena::util::safe_addition_cap(total_rate, it.damage_rate, INT_MAX);
+		}
+		if (total_rate != 100) {
+			total_rate = cap_value(total_rate, -100, INT_MAX);
+			wd.damage = (int64)(wd.damage / 100.0 * total_rate);
+		}
+		damage = wd.damage + wd.damage2;
+	}
+#endif // Pandas_Bonus3_bFinalAddClass
+
+#ifdef Pandas_NpcExpress_PCHARMED
+	if (src && target && damage > 0) {
+		map_session_data* esd = nullptr;
+
+		if (target->type != BL_PC) {
+			block_list* mbl = battle_get_master(target);
+
+			if (mbl != nullptr && mbl->type == BL_PC)
+				esd = BL_CAST(BL_PC, mbl);
+		}
+
+		if (esd == nullptr && target->type == BL_PC)
+			esd = BL_CAST(BL_PC, target);
+
+		if (esd != nullptr) {
+			pc_setreg(esd, add_str("@harmed_target_type"), target->type);
+			pc_setreg(esd, add_str("@harmed_target_gid"), target->id);
+			pc_setreg(esd, add_str("@harmed_src_type"), src->type);
+			pc_setreg(esd, add_str("@harmed_src_gid"), src->id);
+			pc_setreg(esd, add_str("@harmed_src_mobid"), src->type == BL_MOB ? BL_CAST(BL_MOB, src)->mob_id : 0);
+			pc_setreg(esd, add_str("@harmed_damage_flag"), wd.flag);
+			pc_setreg(esd, add_str("@harmed_damage_skillid"), 0);
+			pc_setreg(esd, add_str("@harmed_damage_skilllv"), 0);
+			pc_setreg(esd, add_str("@harmed_damage_right"), wd.damage);
+			pc_setreg(esd, add_str("@harmed_damage_left"), wd.damage2);
+			npc_script_event(*esd, NPCX_PCHARMED);
+			wd.damage = static_cast<int32>(cap_value(pc_readreg(esd, add_str("@harmed_damage_right")), INT_MIN, INT_MAX));
+			wd.damage2 = static_cast<int32>(cap_value(pc_readreg(esd, add_str("@harmed_damage_left")), INT_MIN, INT_MAX));
+			damage = wd.damage + wd.damage2;
+		}
+	}
+#endif // Pandas_NpcExpress_PCHARMED
+
+#ifdef Pandas_NpcExpress_PCATTACK
+	if (src && target && damage > 0) {
+		map_session_data* esd = nullptr;
+
+		if (src->type != BL_PC) {
+			block_list* mbl = battle_get_master(src);
+
+			if (mbl != nullptr && mbl->type == BL_PC)
+				esd = BL_CAST(BL_PC, mbl);
+		}
+
+		if (esd == nullptr && src->type == BL_PC)
+			esd = BL_CAST(BL_PC, src);
+
+		if (esd != nullptr) {
+			pc_setreg(esd, add_str("@attack_src_type"), src->type);
+			pc_setreg(esd, add_str("@attack_src_gid"), src->id);
+			pc_setreg(esd, add_str("@attack_target_type"), target->type);
+			pc_setreg(esd, add_str("@attack_target_gid"), target->id);
+			pc_setreg(esd, add_str("@attack_target_mobid"), target->type == BL_MOB ? BL_CAST(BL_MOB, target)->mob_id : 0);
+			pc_setreg(esd, add_str("@attack_damage_flag"), wd.flag);
+			pc_setreg(esd, add_str("@attack_damage_skillid"), 0);
+			pc_setreg(esd, add_str("@attack_damage_skilllv"), 0);
+			pc_setreg(esd, add_str("@attack_damage_right"), wd.damage);
+			pc_setreg(esd, add_str("@attack_damage_left"), wd.damage2);
+			npc_script_event(*esd, NPCX_PCATTACK);
+			wd.damage = static_cast<int32>(cap_value(pc_readreg(esd, add_str("@attack_damage_right")), INT_MIN, INT_MAX));
+			wd.damage2 = static_cast<int32>(cap_value(pc_readreg(esd, add_str("@attack_damage_left")), INT_MIN, INT_MAX));
+			damage = wd.damage + wd.damage2;
+		}
+	}
+#endif // Pandas_NpcExpress_PCATTACK
 
 	clif_damage(*src, *target, tick, wd.amotion, wd.dmotion, wd.damage, wd.div_, wd.type, wd.damage2, wd.isspdamage);
 
@@ -8400,6 +8616,24 @@ static const struct _battle_data {
 	{ "max_aspd",                           &battle_config.max_aspd,                        190,    100,    199,            },
 	{ "max_third_aspd",                     &battle_config.max_third_aspd,                  193,    100,    199,            },
 	{ "max_summoner_aspd",                  &battle_config.max_summoner_aspd,               193,    100,    199,            },
+#ifdef Pandas_BattleConfig_MaxAspdForPVP
+	{ "max_aspd_for_pvp",                   &battle_config.max_aspd_for_pvp,                0,      0,      199,            },
+#endif // Pandas_BattleConfig_MaxAspdForPVP
+#ifdef Pandas_BattleConfig_MaxAspdForGVG
+	{ "max_aspd_for_gvg",                   &battle_config.max_aspd_for_gvg,                0,      0,      199,            },
+#endif // Pandas_BattleConfig_MaxAspdForGVG
+#ifdef Pandas_BattleConfig_AtCmd_No_Permission
+	{ "atcmd_no_permission",                &battle_config.atcmd_no_permission,             1,      0,      2,              },
+#endif // Pandas_BattleConfig_AtCmd_No_Permission
+#ifdef Pandas_BattleConfig_Multiplayer_Recall_Behavior
+	{ "multiplayer_recall_behavior",        &battle_config.multiplayer_recall_behavior,     3,      0,      3,              },
+#endif // Pandas_BattleConfig_Multiplayer_Recall_Behavior
+#ifdef Pandas_BattleConfig_AlwaysTriggerNPCKillEvent
+	{ "always_trigger_npc_killevent",       &battle_config.always_trigger_npc_killevent,    0,      0,      1,              },
+#endif // Pandas_BattleConfig_AlwaysTriggerNPCKillEvent
+#ifdef Pandas_BattleConfig_AlwaysTriggerMVPKillEvent
+	{ "always_trigger_mvp_killevent",       &battle_config.always_trigger_mvp_killevent,    1,      0,      1,              },
+#endif // Pandas_BattleConfig_AlwaysTriggerMVPKillEvent
 	{ "max_walk_speed",                     &battle_config.max_walk_speed,                  300,    100,    100*DEFAULT_WALK_SPEED, },
 	{ "max_lv",                             &battle_config.max_lv,                          99,     0,      MAX_LEVEL,      },
 	{ "aura_lv",                            &battle_config.aura_lv,                         99,     0,      INT_MAX,        },
@@ -8539,7 +8773,11 @@ static const struct _battle_data {
 	{ "max_exp_gain_rate",                  &battle_config.max_exp_gain_rate,               0,      0,      INT_MAX,        },
 	{ "backstab_bow_penalty",               &battle_config.backstab_bow_penalty,            0,      0,      1,              },
 	{ "night_at_start",                     &battle_config.night_at_start,                  0,      0,      1,              },
+#ifndef Pandas_MobInfomation_Extend
 	{ "show_mob_info",                      &battle_config.show_mob_info,                   0,      0,      1|2|4,          },
+#else
+	{ "show_mob_info",                      &battle_config.show_mob_info,                   0,      0,      1|2|4|8|16|32|64,},
+#endif // Pandas_MobInfomation_Extend
 	{ "ban_hack_trade",                     &battle_config.ban_hack_trade,                  0,      0,      INT_MAX,        },
 	{ "min_hair_style",                     &battle_config.min_hair_style,                  0,      0,      INT_MAX,        },
 	{ "max_hair_style",                     &battle_config.max_hair_style,                  23,     0,      INT_MAX,        },
@@ -8730,7 +8968,10 @@ static const struct _battle_data {
 	{ "revive_onwarp",                      &battle_config.revive_onwarp,                   1,      0,      1,              },
 	{ "fame_taekwon_mission",               &battle_config.fame_taekwon_mission,            1,      0,      INT_MAX,        },
 	{ "fame_refine_lv1",                    &battle_config.fame_refine_lv1,                 1,      0,      INT_MAX,        },
+#ifndef Pandas_BattleConfig_Verification
+	// 出现了重复定义, 这里先简单注释掉, 如果 rAthena 官方很久不改的话, 找个时间再提交个 PullRequest 修正下 [Sola丶小克]
 	{ "fame_refine_lv1",                    &battle_config.fame_refine_lv1,                 1,      0,      INT_MAX,        },
+#endif // Pandas_BattleConfig_Verification
 	{ "fame_refine_lv2",                    &battle_config.fame_refine_lv2,                 25,     0,      INT_MAX,        },
 	{ "fame_refine_lv3",                    &battle_config.fame_refine_lv3,                 1000,   0,      INT_MAX,        },
 	{ "fame_forge",                         &battle_config.fame_forge,                      10,     0,      INT_MAX,        },
@@ -8778,7 +9019,7 @@ static const struct _battle_data {
 	{ "refresh_song",                       &battle_config.refresh_song,                    0,      0,      1,              },
 	{ "refresh_song_icon",                  &battle_config.refresh_song_icon,               0,      0,      1,              },
 	{ "guild_maprespawn_clones",			&battle_config.guild_maprespawn_clones,			0,		0,		1,				},
-	{ "hide_fav_sell", 			&battle_config.hide_fav_sell,			0,      0,      1,              },
+	{ "hide_fav_sell", 						&battle_config.hide_fav_sell,					0,      0,      1,              },
 	{ "mail_daily_count",					&battle_config.mail_daily_count,				100,	0,		INT32_MAX,		},
 	{ "mail_zeny_fee",						&battle_config.mail_zeny_fee,					2,		0,		100,			},
 	{ "mail_attachment_price",				&battle_config.mail_attachment_price,			2500,	0,		INT32_MAX,		},
@@ -8786,7 +9027,7 @@ static const struct _battle_data {
 	{ "banana_bomb_duration",				&battle_config.banana_bomb_duration,			0,		0,		UINT16_MAX,		},
 	{ "guild_leaderchange_delay",			&battle_config.guild_leaderchange_delay,		1440,	0,		INT32_MAX,		},
 	{ "guild_leaderchange_woe",				&battle_config.guild_leaderchange_woe,			0,		0,		1,				},
-	{ "guild_alliance_onlygm",              &battle_config.guild_alliance_onlygm,           0,      0,      1, },
+	{ "guild_alliance_onlygm",              &battle_config.guild_alliance_onlygm,           0,      0,      1,				},
 	{ "feature.achievement",                &battle_config.feature_achievement,             1,      0,      1,              },
 	{ "allow_bound_sell",                   &battle_config.allow_bound_sell,                0,      0,      0xF,            },
 	{ "autoloot_adjust",                    &battle_config.autoloot_adjust,                 0,      0,      1,              },
@@ -8878,7 +9119,7 @@ static const struct _battle_data {
 	{ "feature.dynamicnpc_rangey",          &battle_config.feature_dynamicnpc_rangey,       2,      0,      INT_MAX,        },
 	{ "feature.dynamicnpc_direction",       &battle_config.feature_dynamicnpc_direction,    0,      0,      1,              },
 
-	{ "mob_respawn_time",                   &battle_config.mob_respawn_time,                1000,   1000,   INT_MAX,        },
+	{ "mob_respawn_time",                   &battle_config.mob_respawn_time,                1000,   0,      INT_MAX,        },
 	{ "mob_unlock_time",                    &battle_config.mob_unlock_time,                 2000,   0,      INT_MAX,        },
 	{ "map_edge_size",                      &battle_config.map_edge_size,                   15,     1,      40,             },
 	{ "randomize_center_cell",              &battle_config.randomize_center_cell,           1,      0,      1,              },
@@ -8909,8 +9150,110 @@ static const struct _battle_data {
 	{ "hide_cloaked_units",                 &battle_config.hide_cloaked_units,              0,      0,      BL_ALL,         },
 	{ "oridecon_research_fix",              &battle_config.oridecon_research_fix,           0,      0,      1,              },
 
+	// Pandas Configure
+#ifdef Pandas_BattleConfig_Suspend_MonsterIgnore
+	{ "suspend_monsterignore",              &battle_config.suspend_monsterignore,           3,      0,      7,              },
+#endif // Pandas_BattleConfig_Suspend_MonsterIgnore
+
+#ifdef Pandas_BattleConfig_Suspend_Whisper_Response
+	{ "suspend_whisper_response",           &battle_config.suspend_whisper_response,        2,      0,      7,              },
+#endif // Pandas_BattleConfig_Suspend_Whisper_Response
+
+#ifdef Pandas_BattleConfig_Suspend_Offline_BodyDirection
+	{ "suspend_offline_bodydirection",      &battle_config.suspend_offline_bodydirection,   -1,     -1,     7,              },
+#endif // Pandas_BattleConfig_Suspend_Offline_BodyDirection
+
+#ifdef Pandas_BattleConfig_Suspend_Offline_HeadDirection
+	{ "suspend_offline_headdirection",      &battle_config.suspend_offline_headdirection,   -1,     -1,     2,              },
+#endif // Pandas_BattleConfig_Suspend_Offline_HeadDirection
+
+#ifdef Pandas_BattleConfig_Suspend_Offline_Sitdown
+	{ "suspend_offline_sitdown",            &battle_config.suspend_offline_sitdown,         -1,     -1,     1,              },
+#endif // Pandas_BattleConfig_Suspend_Offline_Sitdown
+
+#ifdef Pandas_BattleConfig_Suspend_AFK_BodyDirection
+	{ "suspend_afk_bodydirection",          &battle_config.suspend_afk_bodydirection,       -1,     -1,     7,              },
+#endif // Pandas_BattleConfig_Suspend_AFK_BodyDirection
+
+#ifdef Pandas_BattleConfig_Suspend_AFK_Headdirection
+	{ "suspend_afk_headdirection",          &battle_config.suspend_afk_headdirection,       -1,     -1,     2,              },
+#endif // Pandas_BattleConfig_Suspend_AFK_Headdirection
+
+#ifdef Pandas_BattleConfig_Suspend_AFK_Sitdown
+	{ "suspend_afk_sitdown",                &battle_config.suspend_afk_sitdown,             1,      -1,     1,              },
+#endif // Pandas_BattleConfig_Suspend_AFK_Sitdown
+
+#ifdef Pandas_BattleConfig_Suspend_AFK_HeadTop_ViewID
+	{ "suspend_afk_headtop_viewid",         &battle_config.suspend_afk_headtop_viewid,      471,    0,      INT_MAX,        },
+#endif // Pandas_BattleConfig_Suspend_AFK_HeadTop_ViewID
+
+#ifdef Pandas_BattleConfig_Suspend_Normal_BodyDirection
+	{ "suspend_normal_bodydirection",       &battle_config.suspend_normal_bodydirection,    -1,     -1,     7,              },
+#endif // Pandas_BattleConfig_Suspend_Normal_BodyDirection
+
+#ifdef Pandas_BattleConfig_Suspend_Normal_HeadDirection
+	{ "suspend_normal_headdirection",       &battle_config.suspend_normal_headdirection,    -1,     -1,     2,              },
+#endif // Pandas_BattleConfig_Suspend_Normal_HeadDirection
+
+#ifdef Pandas_BattleConfig_Suspend_Normal_Sitdown
+	{ "suspend_normal_sitdown",             &battle_config.suspend_normal_sitdown,          -1,     -1,     1,              },
+#endif // Pandas_BattleConfig_Suspend_Normal_Sitdown
+
+#ifdef Pandas_BattleConfig_BattleRecord_AutoEnabled_Unit
+	{ "batrec_autoenabled_unit",            &battle_config.batrec_autoenabled_unit,         542,    0,      BL_ALL,         },
+#endif // Pandas_BattleConfig_BattleRecord_AutoEnabled_Unit
+
+#ifdef Pandas_BattleConfig_Repeat_ClearUnit_Interval
+	{ "repeat_clearunit_interval",          &battle_config.repeat_clearunit_interval,       0,      0,      1000,           },
+#endif // Pandas_BattleConfig_Repeat_ClearUnit_Interval
+
+#ifdef Pandas_BattleConfig_Dead_Area_Size
+	{ "dead_area_size",                     &battle_config.dead_area_size,                  28,     0,      200,            },
+#endif // Pandas_BattleConfig_Dead_Area_Size
+
+#ifdef Pandas_BattleConfig_Remove_Manhole_With_Status
+	{ "remove_manhole_with_status",         &battle_config.remove_manhole_with_status,      1,      0,      1,              },
+#endif // Pandas_BattleConfig_Remove_Manhole_With_Status
+
+#ifdef Pandas_BattleConfig_Restore_Mes_Logic
+	{ "restore_mes_logic",                  &battle_config.restore_mes_logic,               1,      0,      1,              },
+#endif // Pandas_BattleConfig_Restore_Mes_Logic
+
+#ifdef Pandas_BattleConfig_ItemDB_Warning_Policy
+	{ "itemdb_warning_policy",              &battle_config.itemdb_warning_policy,           0,      0,      3,              },
+#endif // Pandas_BattleConfig_ItemDB_Warning_Policy
+
+#ifdef Pandas_BattleConfig_MobDB_DamageMotion_Min
+	{ "mob_default_damagemotion",           &battle_config.mob_default_damagemotion,        0,      0,      UINT16_MAX,     },
+#endif // Pandas_BattleConfig_MobDB_DamageMotion_Min
+
+#ifdef Pandas_BattleConfig_Strict_Parameters_Of_Rand
+	{ "strict_parameters_of_rand",          &battle_config.strict_parameters_of_rand,       1,      0,      1,              },
+#endif // Pandas_BattleConfig_Strict_Parameters_Of_Rand
+
+#ifdef Pandas_BattleConfig_Mob_SetUnitData_Persistence
+	{ "mob_setunitdata_persistence",        &battle_config.mob_setunitdata_persistence,     1,      0,      1,              },
+#endif // Pandas_BattleConfig_Mob_SetUnitData_Persistence
+
+#ifdef Pandas_BattleConfig_Force_LoadEvent
+	{ "force_loadevent",                    &battle_config.force_loadevent,                 0,      0,      1,              },
+#endif // Pandas_BattleConfig_Force_LoadEvent
+
+#ifdef Pandas_BattleConfig_Force_Identified
+	{ "force_identified",                   &battle_config.force_identified,                0,      0,      511,            },
+#endif // Pandas_BattleConfig_Force_Identified
+
+#ifdef Pandas_BattleConfig_CashMounting_UseitemLimit
+	{ "cashmount_useitem_limit",            &battle_config.cashmount_useitem_limit,         64,     0,      511,            },
+#endif // Pandas_BattleConfig_CashMounting_UseitemLimit
+
+	// PYHELP - BATTLECONFIG - INSERT POINT - <Section 3>
 #include <custom/battle_config_init.inc>
 };
+
+#ifdef Pandas_BattleConfig_Verification
+bool battle_data_isset[ARRAYLENGTH(battle_data)];
+#endif // Pandas_BattleConfig_Verification
 
 /*==========================
  * Set battle settings
@@ -8929,6 +9272,9 @@ int32 battle_set_value(const char* w1, const char* w2)
 		val = battle_data[i].defval;
 	}
 
+#ifdef Pandas_BattleConfig_Verification
+	battle_data_isset[i] = true;
+#endif // Pandas_BattleConfig_Verification
 	*battle_data[i].val = val;
 	return 1;
 }
@@ -8952,8 +9298,15 @@ int32 battle_get_value(const char* w1)
 void battle_set_defaults()
 {
 	int32 i;
+#ifndef Pandas_BattleConfig_Verification
 	for (i = 0; i < ARRAYLENGTH(battle_data); i++)
 		*battle_data[i].val = battle_data[i].defval;
+#else
+	for (i = 0; i < ARRAYLENGTH(battle_data); i++) {
+		*battle_data[i].val = battle_data[i].defval;
+		battle_data_isset[i] = false;
+	}
+#endif // Pandas_BattleConfig_Verification
 }
 
 /*==================================
@@ -8966,6 +9319,16 @@ void battle_adjust_conf()
 	battle_config.max_third_aspd = (AMOTION_ZERO_ASPD - battle_config.max_third_aspd * AMOTION_INTERVAL) * AMOTION_DIVIDER_PC;
 	battle_config.max_summoner_aspd = (AMOTION_ZERO_ASPD - battle_config.max_summoner_aspd * AMOTION_INTERVAL) * AMOTION_DIVIDER_PC;
 	battle_config.max_extended_aspd = (AMOTION_ZERO_ASPD - battle_config.max_extended_aspd * AMOTION_INTERVAL) * AMOTION_DIVIDER_PC;
+#ifdef Pandas_BattleConfig_MaxAspdForPVP
+	// Convert visible ASPD into the internal attack motion interval.
+	if (battle_config.max_aspd_for_pvp > 0)
+		battle_config.max_aspd_for_pvp = (AMOTION_ZERO_ASPD - battle_config.max_aspd_for_pvp * AMOTION_INTERVAL) * AMOTION_DIVIDER_PC;
+#endif // Pandas_BattleConfig_MaxAspdForPVP
+#ifdef Pandas_BattleConfig_MaxAspdForGVG
+	// Convert visible ASPD into the internal attack motion interval.
+	if (battle_config.max_aspd_for_gvg > 0)
+		battle_config.max_aspd_for_gvg = (AMOTION_ZERO_ASPD - battle_config.max_aspd_for_gvg * AMOTION_INTERVAL) * AMOTION_DIVIDER_PC;
+#endif // Pandas_BattleConfig_MaxAspdForGVG
 	battle_config.max_walk_speed = 100 * DEFAULT_WALK_SPEED / battle_config.max_walk_speed;
 	battle_config.max_cart_weight *= 10;
 
@@ -8998,63 +9361,81 @@ void battle_adjust_conf()
 
 #if PACKETVER < 20100427
 	if (battle_config.feature_buying_store) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf:buying_store is enabled but it requires PACKETVER 2010-04-27 or newer, disabling...\n");
+#endif
 		battle_config.feature_buying_store = 0;
 	}
 #endif
 
 #if PACKETVER < 20100803
 	if (battle_config.feature_search_stores) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf:search_stores is enabled but it requires PACKETVER 2010-08-03 or newer, disabling...\n");
+#endif
 		battle_config.feature_search_stores = 0;
 	}
 #endif
 
 #if PACKETVER < 20120101
 	if (battle_config.feature_bgqueue) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf:bgqueue is enabled but it requires PACKETVER 2012-01-01 or newer, disabling...\n");
+#endif
 		battle_config.feature_bgqueue = 0;
 	}
 #endif
 
 #if PACKETVER > 20120000 && PACKETVER < 20130515 /* Exact date (when it started) not known */
 	if (battle_config.feature_auction) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf:feature.auction is enabled but it is not stable on PACKETVER " EXPAND_AND_QUOTE(PACKETVER) ", disabling...\n");
 		ShowWarning("conf/battle/feature.conf:feature.auction change value to '2' to silence this warning and maintain it enabled\n");
+#endif
 		battle_config.feature_auction = 0;
 	}
 #elif PACKETVER >= 20141112
 	if (battle_config.feature_auction) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf:feature.auction is enabled but it is not available for clients from 2014-11-12 on, disabling...\n");
 		ShowWarning("conf/battle/feature.conf:feature.auction change value to '2' to silence this warning and maintain it enabled\n");
+#endif
 		battle_config.feature_auction = 0;
 	}
 #endif
 
 #if PACKETVER < 20130724
 	if (battle_config.feature_banking) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf banking is enabled but it requires PACKETVER 2013-07-24 or newer, disabling...\n");
+#endif
 		battle_config.feature_banking = 0;
 	}
 #endif
 
 #if PACKETVER < 20131223
 	if (battle_config.mvp_exp_reward_message) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/client.conf MVP EXP reward message is enabled but it requires PACKETVER 2013-12-23 or newer, disabling...\n");
+#endif
 		battle_config.mvp_exp_reward_message = 0;
 	}
 #endif
 
 #if PACKETVER < 20141022
 	if (battle_config.feature_roulette) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf roulette is enabled but it requires PACKETVER 2014-10-22 or newer, disabling...\n");
+#endif
 		battle_config.feature_roulette = 0;
 	}
 #endif
 
 #if PACKETVER < 20150513
 	if (battle_config.feature_achievement) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf achievement is enabled but it requires PACKETVER 2015-05-13 or newer, disabling...\n");
+#endif
 		battle_config.feature_achievement = 0;
 	}
 #endif
@@ -9075,60 +9456,78 @@ void battle_adjust_conf()
 
 #if PACKETVER < 20141008
 	if (battle_config.feature_petevolution) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf petevolution is enabled but it requires PACKETVER 2014-10-08 or newer, disabling...\n");
+#endif
 		battle_config.feature_petevolution = 0;
 	}
 	if (battle_config.feature_pet_autofeed) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf pet auto feed is enabled but it requires PACKETVER 2014-10-08 or newer, disabling...\n");
+#endif
 		battle_config.feature_pet_autofeed = 0;
 	}
 #endif
 
 #if PACKETVER < 20161012
 	if (battle_config.feature_refineui) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf refine UI is enabled but it requires PACKETVER 2016-10-12 or newer, disabling...\n");
+#endif
 		battle_config.feature_refineui = 0;
 	}
 #endif
 
 #if PACKETVER < 20170208
 	if (battle_config.feature_equipswitch) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf equip switch is enabled but it requires PACKETVER 2017-02-08 or newer, disabling...\n");
+#endif
 		battle_config.feature_equipswitch = 0;
 	}
 #endif
 
 #if PACKETVER < 20170920
 	if( battle_config.feature_homunculus_autofeed ){
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf homunculus autofeeding is enabled but it requires PACKETVER 2017-09-20 or newer, disabling...\n");
+#endif
 		battle_config.feature_homunculus_autofeed = 0;
 	}
 #endif
 
 #if PACKETVER < 20180307
 	if( battle_config.feature_attendance ){
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf attendance system is enabled but it requires PACKETVER 2018-03-07 or newer, disabling...\n");
+#endif
 		battle_config.feature_attendance = 0;
 	}
 #endif
 
 #if PACKETVER < 20180321
 	if( battle_config.feature_privateairship ){
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf private airship system is enabled but it requires PACKETVER 2018-03-21 or newer, disabling...\n");
+#endif
 		battle_config.feature_privateairship = 0;
 	}
 #endif
 
 #if !( PACKETVER_MAIN_NUM >= 20190116 || PACKETVER_RE_NUM >= 20190116 || PACKETVER_ZERO_NUM >= 20181226 )
 	if( battle_config.feature_barter ){
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf barter shop system is enabled but it requires PACKETVER 2019-01-16 or newer, disabling...\n");
+#endif
 		battle_config.feature_barter = 0;
 	}
 #endif
 
 #if !( PACKETVER_MAIN_NUM >= 20191120 || PACKETVER_RE_NUM >= 20191106 || PACKETVER_ZERO_NUM >= 20191127 )
 	if( battle_config.feature_barter_extended ){
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf extended barter shop system is enabled but it requires PACKETVER 2019-11-06 or newer, disabling...\n");
+#endif
 		battle_config.feature_barter_extended = 0;
 	}
 #endif
@@ -9197,13 +9596,46 @@ int32 battle_config_read(const char* cfgName)
 					*symbol != atcommand_symbol)
 					charcommand_symbol = *symbol;
 			}else if( battle_set_value(w1, w2) == 0 )
+#ifndef Pandas_BattleConfig_Verification
 				ShowWarning("Unknown setting '%s' in file %s\n", w1, cfgName);
+#else
+				ShowWarning("Unknown battle configuration option '%s' in file %s\n", w1, cfgName);
+#endif // Pandas_BattleConfig_Verification
 		}
 
 		fclose(fp);
 	}
 
 	count--;
+
+#ifdef Pandas_BattleConfig_Verification
+	if (count == 0) {
+		int32 i = 0;
+
+		static const struct _battle_config_check_whitelist {
+			const char* name;
+		} bc_whitelist[] = {
+			{ "traps_setting" },
+			{ "item_enabled_npc" },
+			{ "guild_skill_relog_type" },				// 不同工作模式下拥有不同的默认值, 选项默认处于注释状态
+			{ "feature.instance_allow_reconnect" },		// 不同工作模式下拥有不同的默认值, 选项默认处于注释状态
+			{ "pet_hungry_friendly_decrease" },			// rAthena 对是否弃用此选项不明确, 先忽略检测
+			{ "hom_delay_reset_vaporize" },				// 不同工作模式下拥有不同的默认值, 选项默认处于注释状态
+			{ "hom_delay_reset_warp" },					// 不同工作模式下拥有不同的默认值, 选项默认处于注释状态
+			{ "alchemist_summon_setting" },				// 不同工作模式下拥有不同的默认值, 选项默认处于注释状态
+			{ "open_box_weight_rate" },					// 不同工作模式下拥有不同的默认值, 选项默认处于注释状态
+			{ "natural_heal_weight_rate" },				// 不同工作模式下拥有不同的默认值, 选项默认处于注释状态
+		};
+
+		for (i = 0; i < ARRAYLENGTH(battle_data); i++) {
+			int32 whiteidx = 0;
+			ARR_FIND(0, ARRAYLENGTH(bc_whitelist), whiteidx, strcmpi(bc_whitelist[whiteidx].name, battle_data[i].str) == 0);
+			if (!battle_data_isset[i] && whiteidx == ARRAYLENGTH(bc_whitelist)) {
+				ShowWarning("battle_config_read: '%s' can not be found in battle configuration files, defaulting to %d.\n", battle_data[i].str, battle_data[i].defval);
+			}
+		}
+	}
+#endif // Pandas_BattleConfig_Verification
 
 	if (count == 0)
 		battle_adjust_conf();

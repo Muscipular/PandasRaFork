@@ -27,7 +27,7 @@ void SkillCartCannon::calculateSkillRatio(const Damage *wd, const block_list *sr
 	RE_LVL_DMOD(100);
 }
 
-void SkillCartCannon::modifyHitRate(int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
+void SkillCartCannon::modifyHitRate(pec_int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
 	const map_session_data* sd = BL_CAST(BL_PC, src);
 
 	if (sd && pc_checkskill(sd, GN_REMODELING_CART))

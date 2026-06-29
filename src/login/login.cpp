@@ -4,8 +4,10 @@
 #pragma warning(disable:4800)
 #include "login.hpp"
 
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <regex>
 #include <string>
 #include <unordered_map>
 
@@ -15,6 +17,7 @@
 #include <common/md5calc.hpp>
 #include <common/mmo.hpp>
 #include <common/msg_conf.hpp>
+#include <common/performance.hpp>
 #include <common/random.hpp>
 #include <common/showmsg.hpp>
 #include <common/socket.hpp> //ip2str
@@ -34,7 +37,16 @@
 using namespace rathena;
 using namespace rathena::server_login;
 
+#ifdef Pandas_SQL_Configure_Optimization
+char default_codepage[32] = "";
+#endif // Pandas_SQL_Configure_Optimization
+
+#ifndef Pandas_Message_Conf
 #define LOGIN_MAX_MSG 30				/// Max number predefined in msg_conf
+#else
+// 此处根据 ALL_EXTEND_MSG 的定义重新修改 LOGIN_MAX_MSG
+#define LOGIN_MAX_MSG ALL_EXTEND_MSG	/// Max number predefined in msg_conf
+#endif // Pandas_Message_Conf
 static char* msg_table[LOGIN_MAX_MSG];	/// Login Server messages_conf
 
 //definition of exported var declared in header
@@ -54,6 +66,10 @@ struct s_subnet {
 int32 subnet_count = 0; //number of subnet config
 
 int32 login_fd; // login server file descriptor socket
+#ifdef Pandas_InterConfig_HideServerIpAddress
+// 是否不主动返回服务器的 IP 地址给到客户端
+int pandas_inter_hide_server_ipaddress = 0;
+#endif // Pandas_InterConfig_HideServerIpAddress
 
 //early declaration
 bool login_check_password( struct login_session_data& sd, struct mmo_account& acc );
@@ -142,6 +158,15 @@ struct auth_node* login_add_auth_node( struct login_session_data* sd, uint32 ip 
 	node->sex = sd->sex;
 	node->ip = ip;
 	node->clienttype = sd->clienttype;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	if( sd != nullptr && session[sd->fd] != nullptr ){
+		safestrncpy(node->mac_address, session[sd->fd]->mac_address, MACADDRESS_LENGTH);
+		safestrncpy(node->lan_address, session[sd->fd]->lan_address, IP4ADDRESS_LENGTH);
+	}else{
+		safestrncpy(node->mac_address, "", MACADDRESS_LENGTH);
+		safestrncpy(node->lan_address, "", IP4ADDRESS_LENGTH);
+	}
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	return node;
 }
@@ -199,7 +224,11 @@ void login_online_db_setoffline( int32 char_server ){
  * @return : 0
  */
 static TIMER_FUNC(login_online_data_cleanup){
+#ifndef Pandas_Speedup_Constant_References
 	for( std::pair<uint32,struct online_login_data> pair : online_db  ){
+#else
+	for (auto& pair : online_db) {
+#endif // Pandas_Speedup_Constant_References
 		// Unknown server.. set them offline
 		if( pair.second.char_server == -2 ){
 			login_remove_online_user( pair.first );
@@ -272,7 +301,11 @@ int32 login_mmo_auth_new(const char* userid, const char* pass, const char sex, c
 
 	if( DIFF_TICK(tick, new_reg_tick) > 0 ) {// Update the registration check.
 		num_regs = 0;
+#ifndef Pandas_Fix_Potential_Arithmetic_Overflow
 		new_reg_tick = tick + login_config.time_allowed*1000;
+#else
+		new_reg_tick = tick + (t_tick)login_config.time_allowed * 1000;
+#endif // Pandas_Fix_Potential_Arithmetic_Overflow
 	}
 	++num_regs;
 
@@ -294,6 +327,10 @@ int32 login_mmo_auth_new(const char* userid, const char* pass, const char sex, c
  *	x: acc state (TODO document me deeper)
  */
 int32 login_mmo_auth(struct login_session_data* sd, bool isServer) {
+	#ifdef Pandas_Crashfix_Prevent_NullPointer
+		if (!sd) return 0;
+	#endif // Pandas_Crashfix_Prevent_NullPointer
+
 	struct mmo_account acc;
 
 	char ip[16];
@@ -335,6 +372,17 @@ int32 login_mmo_auth(struct login_session_data* sd, bool isServer) {
 			// remove the _M/_F suffix
 			len -= 2;
 			sd->userid[len] = '\0';
+
+#ifdef Pandas_Strict_Userid_Verification
+			if (login_config.strict_new_account_userid) {
+				static const std::regex userid_rule(R"(^[A-Za-z0-9~!@#%%&_=`,;:'"/<>\$\^\*\(\)\-\+\[\]\{\}\|\.\?\\]+$)");
+
+				if (!std::regex_match(sd->userid, userid_rule)) {
+					ShowNotice("Attempt of creation of an contains special characters account (account: %s, sex: %c, ip: %s)\n", sd->userid, TOUPPER(sd->userid[len + 1]), ip);
+					return 3;
+				}
+			}
+#endif // Pandas_Strict_Userid_Verification
 
 			result = login_mmo_auth_new(sd->userid, sd->passwd, TOUPPER(sd->userid[len+1]), ip);
 			if( result != -1 )
@@ -415,6 +463,12 @@ int32 login_mmo_auth(struct login_session_data* sd, bool isServer) {
 	safestrncpy(sd->lastlogin, acc.lastlogin, sizeof(sd->lastlogin));
 	sd->sex = acc.sex;
 	sd->group_id = acc.group_id;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	if( sd != nullptr && session[sd->fd] != nullptr ){
+		safestrncpy(acc.mac_address, session[sd->fd]->mac_address, MACADDRESS_LENGTH);
+		safestrncpy(acc.lan_address, session[sd->fd]->lan_address, IP4ADDRESS_LENGTH);
+	}
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	// update account data
 	timestamp2string(acc.lastlogin, sizeof(acc.lastlogin), time(nullptr), "%Y-%m-%d %H:%M:%S");
@@ -482,6 +536,14 @@ bool login_check_password( struct login_session_data& sd, struct mmo_account& ac
 }
 
 int32 login_get_usercount( int32 users ){
+#ifdef Pandas_Support_Hide_Online_Players_Count
+#if PACKETVER >= 20170726
+	if (login_config.hide_online_players_count) return 4;
+#else
+	if (login_config.hide_online_players_count) return 0;
+#endif
+#endif // Pandas_Support_Hide_Online_Players_Count
+
 #if PACKETVER >= 20170726
 	if( login_config.usercount_disable ){
 		return 4; // Removes count and colorization completely
@@ -537,7 +599,11 @@ void login_do_final_msg(void){
 int32 login_lan_config_read(const char *lancfgName) {
 	FILE *fp;
 	int32 line_num = 0, s_subnet=ARRAYLENGTH(subnet);
+	#ifndef Pandas_Crashfix_Variable_Init
 	char line[1024], w1[64], w2[64], w3[64], w4[64];
+	#else
+	char line[1024] = { 0 }, w1[64] = { 0 }, w2[64] = { 0 }, w3[64] = { 0 }, w4[64] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 
 	if((fp = fopen(lancfgName, "r")) == nullptr) {
 		ShowWarning("LAN Support configuration file is not found: %s\n", lancfgName);
@@ -589,7 +655,11 @@ int32 login_lan_config_read(const char *lancfgName) {
  * @return True:success, Fals:failure (file not found|readable)
  */
 bool login_config_read(const char* cfgName, bool normal) {
+	#ifndef Pandas_Crashfix_Variable_Init
 	char line[1024], w1[32], w2[1024];
+	#else
+	char line[1024] = { 0 }, w1[32] = { 0 }, w2[1024] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	FILE* fp = fopen(cfgName, "r");
 	if (fp == nullptr) {
 		ShowError("Configuration file (%s) not found.\n", cfgName);
@@ -686,7 +756,15 @@ bool login_config_read(const char* cfgName, bool normal) {
 						memcpy(buf, &md5[i], 2);
 						buf[2] = 0;
 
+						#ifndef Pandas_Fix_Ignore_sscanf_Return_Value
 						sscanf(buf, "%2x", &byte);
+						#else
+						if (sscanf(buf, "%2x", &byte) != 1) {
+							ShowWarning("The client hash length is incorrect (hash: %s), skipping it...\n", md5);
+							nnode->hash[0] = '\0';
+							break;
+						}
+						#endif // Pandas_Fix_Ignore_sscanf_Return_Value
 						nnode->hash[i / 2] = (uint8)(byte & 0xFF);
 					}
 				}
@@ -702,6 +780,22 @@ bool login_config_read(const char* cfgName, bool normal) {
 			login_config.usercount_medium = atoi(w2);
 		else if (!strcmpi(w1, "usercount_high"))
 			login_config.usercount_high = atoi(w2);
+#ifdef Pandas_InterConfig_HideServerIpAddress
+		else if (!strcmpi(w1, "hide_server_ipaddress"))
+			pandas_inter_hide_server_ipaddress = config_switch(w2);
+#endif // Pandas_InterConfig_HideServerIpAddress
+#ifdef Pandas_Strict_Userid_Verification
+		else if (!strcmpi(w1, "strict_new_account_userid"))
+			login_config.strict_new_account_userid = (bool)config_switch(w2);
+#endif // Pandas_Strict_Userid_Verification
+#ifdef Pandas_Support_Hide_Online_Players_Count
+		else if (!strcmpi(w1, "hide_online_players_count"))
+			login_config.hide_online_players_count = (bool)config_switch(w2);
+#endif // Pandas_Support_Hide_Online_Players_Count
+#ifdef Pandas_SQL_Configure_Optimization
+		else if (!strcmpi(w1, "default_codepage"))
+			safestrncpy(default_codepage, w2, sizeof(default_codepage));
+#endif // Pandas_SQL_Configure_Optimization
 		else if(strcmpi(w1, "chars_per_account") == 0) { //maxchars per account [Sirius]
 			login_config.char_per_account = atoi(w2);
 			if( login_config.char_per_account > MAX_CHARS ) {
@@ -784,6 +878,9 @@ void login_set_defaults() {
 	login_config.usercount_medium = 500;
 	login_config.usercount_high = 1000;
 	login_config.char_per_account = MAX_CHARS - MAX_CHAR_VIP - MAX_CHAR_BILLING;
+#ifdef Pandas_Strict_Userid_Verification
+	login_config.strict_new_account_userid = true;
+#endif // Pandas_Strict_Userid_Verification
 #ifdef VIP_ENABLE
 	login_config.vip_sys.char_increase = MAX_CHAR_VIP;
 	login_config.vip_sys.group = 5;
@@ -844,6 +941,9 @@ void LoginServer::finalize(){
 }
 
 void LoginServer::handle_shutdown(){
+#ifdef Pandas_UserExperience_Linux_Ctrl_C_WarpLine
+	printf("\n");
+#endif // Pandas_UserExperience_Linux_Ctrl_C_WarpLine
 	ShowStatus("Shutting down...\n");
 	// TODO proper shutdown procedure; kick all characters, wait for acks, ...  [FlavioJS]
 	do_shutdown_loginchrif();
@@ -904,7 +1004,12 @@ bool LoginServer::initialize( int32 argc, char* argv[] ){
 
 	do_init_logincnslif();
 
+#ifndef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 	ShowStatus("The login-server is " CL_GREEN "ready" CL_RESET " (Server is listening on the port %u).\n\n", login_config.login_port);
+#else
+	performance_stop("core_init");
+	ShowStatus("The login-server is " CL_GREEN "ready" CL_RESET " (Server is listening on the port %u, took %" PRIu64 " milliseconds).\n\n", login_config.login_port, static_cast<uint64>(performance_get_milliseconds("core_init")));
+#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 	login_log(0, "login server", 100, "login server started");
 
 	return true;

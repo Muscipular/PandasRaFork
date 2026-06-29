@@ -52,7 +52,14 @@ std::string char_server_id = "ragnarok";
 std::string char_server_pw = ""; // Allow user to send empty password (bugreport:7787)
 std::string char_server_db = "ragnarok";
 std::string default_codepage = ""; //Feature by irmin.
+#ifdef Pandas_SQL_Configure_Optimization
+char char_codepage[32] = "";
+#endif // Pandas_SQL_Configure_Optimization
 uint32 party_share_level = 10;
+#ifdef Pandas_InterConfig_HideServerIpAddress
+// 是否不主动返回服务器的 IP 地址给到客户端
+int pandas_inter_hide_server_ipaddress = 0;
+#endif // Pandas_InterConfig_HideServerIpAddress
 
 /// Received packet Lengths from map-server
 int32 inter_recv_packet_length[] = {
@@ -834,7 +841,11 @@ int32 inter_config_read(const char* cfgName)
 	}
 
 	while(fgets(line, sizeof(line), fp)) {
+	#ifndef Pandas_Crashfix_Variable_Init
 		char w1[24], w2[1024];
+	#else
+		char w1[24] = { 0 }, w2[1024] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 
 		if (line[0] == '/' && line[1] == '/')
 			continue;
@@ -854,6 +865,14 @@ int32 inter_config_read(const char* cfgName)
 			char_server_db = w2;
 		else if(!strcmpi(w1,"default_codepage"))
 			default_codepage = w2;
+#ifdef Pandas_SQL_Configure_Optimization
+		else if(!strcmpi(w1,"char_codepage"))
+			safestrncpy(char_codepage, w2, sizeof(char_codepage));
+#endif // Pandas_SQL_Configure_Optimization
+#ifdef Pandas_InterConfig_HideServerIpAddress
+		else if(!strcmpi(w1, "hide_server_ipaddress"))
+			pandas_inter_hide_server_ipaddress = config_switch(w2);
+#endif // Pandas_InterConfig_HideServerIpAddress
 		else if(!strcmpi(w1,"party_share_level"))
 			party_share_level = (uint32)atof(w2);
 		else if(!strcmpi(w1,"log_inter"))
@@ -944,6 +963,13 @@ uint64 InterServerDatabase::parseBodyNode( const ryml::NodeRef& node ){
 			return 0;
 		}
 
+#ifdef Pandas_Fix_INTER_SERVER_DB_Field_Verify
+		if (max > MAX_STORAGE) {
+			this->invalidWarning(node, "Node \"Max\" value is exceeds MAX_STORAGE, defaulting to MAX_STORAGE(%d).\n", MAX_STORAGE);
+			max = MAX_STORAGE;
+		}
+#endif // Pandas_Fix_INTER_SERVER_DB_Field_Verify
+
 		storage_table->max_num = max;
 	}else{
 		if( !existing ){
@@ -975,20 +1001,31 @@ int32 inter_init_sql(const char *file)
 		exit(EXIT_FAILURE);
 	}
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if( !default_codepage.empty() ) {
 		if( SQL_ERROR == Sql_SetEncoding(sql_handle, default_codepage.c_str()) )
 			Sql_ShowDebug(sql_handle);
 	}
+#else
+	if( SQL_ERROR == Sql_SetEncoding(sql_handle, char_codepage, default_codepage.c_str(), "Char-Server") )
+		Sql_ShowDebug(sql_handle);
+#endif // Pandas_SQL_Configure_Optimization
 
 	interServerDb.load();
 	inter_guild_sql_init();
 	inter_storage_sql_init();
 	inter_party_sql_init();
 	inter_pet_sql_init();
+#ifndef Pandas_CodeAnalysis_Suggestion
+	// 这几个函数目前没有什么具体的实际作用, 暂时先注释掉: https://lgtm.com/rules/2165170567/
 	inter_homunculus_sql_init();
 	inter_mercenary_sql_init();
+#endif // Pandas_CodeAnalysis_Suggestion
 	inter_elemental_sql_init();
+#ifndef Pandas_CodeAnalysis_Suggestion
+	// 这几个函数目前没有什么具体的实际作用, 暂时先注释掉: https://lgtm.com/rules/2165170567/
 	inter_mail_sql_init();
+#endif // Pandas_CodeAnalysis_Suggestion
 	inter_auction_sql_init();
 	inter_clan_init();
 
@@ -1026,12 +1063,21 @@ void inter_Storage_sendInfo(int32 fd) {
 	size_t offset = 4;
 	size_t size = sizeof( struct s_storage_table );
 	size_t len = offset + interServerDb.size() * size;
+#ifdef Pandas_Unlock_Storage_Capacity_Limit
+	len += 2;
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 
 	// Send storage table information
 	WFIFOHEAD(fd, len);
 	WFIFOW(fd, 0) = 0x388c;
+
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 	WFIFOW( fd, 2 ) = static_cast<int16>( len );
 	offset = 4;
+#else
+	WFIFOL( fd, 2 ) = static_cast<int32>( len );
+	offset = 4 + 2;
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 	for( auto storage : interServerDb ){
 		memcpy(WFIFOP(fd, offset), storage.second.get(), size);
 		offset += size;
@@ -1069,7 +1115,11 @@ int32 mapif_broadcast(unsigned char *mes, int32 len, unsigned long fontColor, in
 
 // Wis sending
 int32 mapif_wis_message( std::shared_ptr<struct WisData> wd ){
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[2048];
+	#else
+	unsigned char buf[2048] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	int32 headersize = 12 + 2 * NAME_LENGTH;
 
 	if (wd->len > 2047-headersize) wd->len = 2047-headersize; //Force it to fit to avoid crashes. [Skotlex]
@@ -1154,7 +1204,11 @@ int32 mapif_parse_broadcast_item(int32 fd) {
 // Wis sending result
 // flag: 0: success to send wisper, 1: target character is not loged in?, 2: ignored by target
 int32 mapif_wis_reply( int32 mapserver_fd, char* target, uint8 flag ){
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[27];
+	#else
+	unsigned char buf[27] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 
 	WBUFW(buf, 0) = 0x3802;
 	safestrncpy(WBUFCP(buf, 2), target, NAME_LENGTH);
@@ -1396,7 +1450,17 @@ int32 inter_check_length(int32 fd, int32 length)
 	{// variable-length packet
 		if( RFIFOREST(fd) < 4 )
 			return 0;
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 		length = RFIFOW(fd,2);
+#else
+		if( RFIFOW(fd,0) == 0x308b || RFIFOW(fd,0) == 0x3019 ){
+			if( RFIFOREST(fd) < 6 )
+				return 0;
+			length = RFIFOL(fd,2);
+		}
+		else
+			length = RFIFOW(fd,2);
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 	}
 
 	if( (int32)RFIFOREST(fd) < length )

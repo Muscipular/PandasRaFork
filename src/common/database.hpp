@@ -16,7 +16,7 @@
 #include "core.hpp"
 #include "utilities.hpp"
 
-class YamlDatabase{
+class YamlDatabase {
 // Internal stuff
 private:
 	std::string type;
@@ -33,6 +33,12 @@ private:
 
 // These should be visible/usable by the implementation provider
 protected:
+#ifdef Pandas_Database_Yaml_BeQuiet
+	// 0 - 正常; &1 = 状态; &2 = 警告; &4 = 错误
+	uint16 quietLevel = 0;
+	void* p = nullptr;
+#endif // Pandas_Database_Yaml_BeQuiet
+
 	ryml::Parser parser;
 
 	// Helper functions
@@ -62,10 +68,14 @@ protected:
 	virtual void loadingFinished();
 
 public:
-	YamlDatabase( const std::string& type_, uint16 version_, uint16 minimumVersion_ ){
+	YamlDatabase( const std::string& type_, uint16 version_, uint16 minimumVersion_ ) {
 		this->type = type_;
 		this->version = version_;
 		this->minimumVersion = minimumVersion_;
+#ifdef Pandas_Database_Yaml_BeQuiet
+		this->quietLevel = 0;
+		this->p = this;
+#endif // Pandas_Database_Yaml_BeQuiet
 	}
 
 	YamlDatabase( const std::string& type_, uint16 version_ ) : YamlDatabase( type_, version_, version_ ){

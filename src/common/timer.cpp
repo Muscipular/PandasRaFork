@@ -352,6 +352,50 @@ t_tick settick_timer(int32 tid, t_tick tick)
 	return tick;
 }
 
+#ifdef Pandas_NpcEvent
+// Method:      gettick_timer
+// Description: 获取计时器的触发时间戳
+// Parameter:   int32 tid
+// Returns:     t_tick
+// Author:      Sola丶小克(CairoLee)  2022/04/28 21:50
+t_tick gettick_timer(int32 tid)
+{
+	if (tid == INVALID_TIMER) {
+		return -1;
+	}
+
+	size_t i;
+
+	// search timer position
+	ARR_FIND(0, BHEAP_LENGTH(timer_heap), i, BHEAP_DATA(timer_heap)[i] == tid);
+	if (i == BHEAP_LENGTH(timer_heap)) {
+		ShowError("gettick_timer: no such timer %d (%p(%s))\n", tid, timer_data[tid].func, search_timer_func_list(timer_data[tid].func));
+		return -1;
+	}
+
+	return timer_data[tid].tick;
+}
+#endif // Pandas_NpcEvent
+
+#ifdef Pandas_BattleRecord
+void exchange_timer_id(int32 origin_id, int32 new_id)
+{
+	for (int32 tid = 0; tid < timer_data_num; tid++) {
+		if (timer_data[tid].id > 0 && timer_data[tid].id == origin_id)
+			timer_data[tid].id = new_id;
+	}
+}
+
+void detect_invalid_timer(int32 id)
+{
+	for (int32 tid = 0; tid < timer_data_max; tid++) {
+		if (timer_data[tid].type && timer_data[tid].id == id && timer_data[tid].func) {
+			ShowWarning("%s: found invalid timer point to %d (timer id = %d, func = %s)\n", __func__, id, tid, search_timer_func_list(timer_data[tid].func));
+		}
+	}
+}
+#endif // Pandas_BattleRecord
+
 /// Executes all expired timers.
 /// Returns the value of the smallest non-expired timer (or 1 second if there aren't any).
 t_tick do_timer(t_tick tick)

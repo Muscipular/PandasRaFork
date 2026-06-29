@@ -136,8 +136,13 @@ static bool account_db_sql_init(AccountDB* self) {
 		return false;
 	}
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if( !db->codepage.empty() && SQL_ERROR == Sql_SetEncoding(sql_handle, db->codepage.c_str()) )
 		Sql_ShowDebug(sql_handle);
+#else
+	if( SQL_ERROR == Sql_SetEncoding(sql_handle, db->codepage.c_str(), default_codepage, "Login-Server") )
+		Sql_ShowDebug(sql_handle);
+#endif // Pandas_SQL_Configure_Optimization
 
 	self->remove_webtokens( self );
 

@@ -119,13 +119,14 @@ CREATE TABLE IF NOT EXISTS `db_roulette` (
 --
 
 CREATE TABLE IF NOT EXISTS `bonus_script` (
+  `id` bigint unsigned NOT NULL,
   `char_id` INT(11) UNSIGNED NOT NULL,
   `script` TEXT NOT NULL,
   `tick` BIGINT(20) NOT NULL DEFAULT '0',
   `flag` SMALLINT(5) UNSIGNED NOT NULL DEFAULT '0',
   `type` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0',
   `icon` SMALLINT(3) NOT NULL DEFAULT '-1',
-  KEY `char_id` (`char_id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB;
 
 --
@@ -217,18 +218,18 @@ CREATE TABLE IF NOT EXISTS `char` (
   `base_exp` bigint(20) unsigned NOT NULL default '0',
   `job_exp` bigint(20) unsigned NOT NULL default '0',
   `zeny` int(11) unsigned NOT NULL default '0',
-  `str` smallint(4) unsigned NOT NULL default '0',
-  `agi` smallint(4) unsigned NOT NULL default '0',
-  `vit` smallint(4) unsigned NOT NULL default '0',
-  `int` smallint(4) unsigned NOT NULL default '0',
-  `dex` smallint(4) unsigned NOT NULL default '0',
-  `luk` smallint(4) unsigned NOT NULL default '0',
-  `pow` smallint(4) unsigned NOT NULL default '0',
-  `sta` smallint(4) unsigned NOT NULL default '0',
-  `wis` smallint(4) unsigned NOT NULL default '0',
-  `spl` smallint(4) unsigned NOT NULL default '0',
-  `con` smallint(4) unsigned NOT NULL default '0',
-  `crt` smallint(4) unsigned NOT NULL default '0',
+  `str` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
+  `agi` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
+  `vit` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
+  `int` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
+  `dex` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
+  `luk` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
+  `pow` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
+  `sta` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
+  `wis` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
+  `spl` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
+  `con` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
+  `crt` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
   `max_hp` int(11) unsigned NOT NULL default '0',
   `hp` int(11) unsigned NOT NULL default '0',
   `max_sp` int(11) unsigned NOT NULL default '0',
@@ -408,11 +409,11 @@ CREATE TABLE IF NOT EXISTS `elemental` (
   `atk1` MEDIUMINT(6) unsigned NOT NULL default '0',
   `atk2` MEDIUMINT(6) unsigned NOT NULL default '0',
   `matk` MEDIUMINT(6) unsigned NOT NULL default '0',
-  `aspd` smallint(4) unsigned NOT NULL default '0',
-  `def` smallint(4) unsigned NOT NULL default '0',
-  `mdef` smallint(4) unsigned NOT NULL default '0',
-  `flee` smallint(4) unsigned NOT NULL default '0',
-  `hit` smallint(4) unsigned NOT NULL default '0',
+  `aspd` int(11) unsigned NOT NULL default '0',			-- Pandas modify for unlimit status : origin type is smallint(4)
+  `def` int(11) unsigned NOT NULL default '0',			-- Pandas modify for unlimit status : origin type is smallint(4)
+  `mdef` int(11) unsigned NOT NULL default '0',			-- Pandas modify for unlimit status : origin type is smallint(4)
+  `flee` int(11) unsigned NOT NULL default '0',			-- Pandas modify for unlimit status : origin type is smallint(4)
+  `hit` int(11) unsigned NOT NULL default '0',			-- Pandas modify for unlimit status : origin type is smallint(4)
   `life_time` bigint(20) NOT NULL default '0',
   PRIMARY KEY  (`ele_id`)
 ) ENGINE=MyISAM;
@@ -666,12 +667,12 @@ CREATE TABLE IF NOT EXISTS `homunculus` (
   `exp` bigint(20) unsigned NOT NULL default '0',
   `intimacy` int(12) NOT NULL default '0',
   `hunger` smallint(4) NOT NULL default '0',
-  `str` smallint(4) unsigned NOT NULL default '0',
-  `agi` smallint(4) unsigned NOT NULL default '0',
-  `vit` smallint(4) unsigned NOT NULL default '0',
-  `int` smallint(4) unsigned NOT NULL default '0',
-  `dex` smallint(4) unsigned NOT NULL default '0',
-  `luk` smallint(4) unsigned NOT NULL default '0',
+  `str` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
+  `agi` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
+  `vit` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
+  `int` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
+  `dex` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
+  `luk` int(11) unsigned NOT NULL default '0',	-- Pandas modify for unlimit status : origin type is smallint(4)
   `hp` int(11) unsigned NOT NULL default '0',
   `max_hp` int(11) unsigned NOT NULL default '0',
   `sp` int(11) unsigned NOT NULL default '0',
@@ -989,7 +990,7 @@ CREATE TABLE IF NOT EXISTS `party_bookings` (
   `world_name` varchar(32) NOT NULL,
   `account_id` int(11) unsigned NOT NULL,
   `char_id` int(11) unsigned NOT NULL,
-  `char_name` varchar(23) NOT NULL,
+  `char_name` varchar(30) NOT NULL,	-- Pandas modify for sync to `char` table field length
   `purpose` smallint(5) unsigned NOT NULL DEFAULT '0',
   `assist` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `damagedealer` tinyint(3) unsigned NOT NULL DEFAULT '0',
@@ -1154,4 +1155,24 @@ CREATE TABLE IF NOT EXISTS `vendings` (
   `sit` CHAR( 1 ) NOT NULL DEFAULT '1',
   `autotrade` tinyint(4) NOT NULL,
   PRIMARY KEY (`id`)
+) ENGINE=MyISAM;
+
+-- Pandas Table structure for table `suspend`
+CREATE TABLE IF NOT EXISTS `suspend` (
+  `account_id` int(11) unsigned NOT NULL,
+  `char_id` int(10) unsigned NOT NULL,
+  `sex` enum('F','M') NOT NULL DEFAULT 'M',
+  `map` varchar(20) NOT NULL,
+  `x` smallint(5) unsigned NOT NULL,
+  `y` smallint(5) unsigned NOT NULL,
+  `body_direction` CHAR( 1 ) NOT NULL DEFAULT '4',
+  `head_direction` CHAR( 1 ) NOT NULL DEFAULT '0',
+  `sit` CHAR( 1 ) NOT NULL DEFAULT '1',
+  `mode` tinyint(4) NOT NULL,
+  `tick` bigint(20) NOT NULL default '0',
+  `val1` int(11) NOT NULL default '0',
+  `val2` int(11) NOT NULL default '0',
+  `val3` int(11) NOT NULL default '0',
+  `val4` int(11) NOT NULL default '0',
+  PRIMARY KEY (`account_id`)
 ) ENGINE=MyISAM;

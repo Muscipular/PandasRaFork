@@ -46,6 +46,9 @@
 #include "showmsg.hpp"
 #include "strlib.hpp"
 #include "timer.hpp"
+#ifdef Pandas_Console_Charset_SmartConvert
+#include "utf8.hpp"
+#endif // Pandas_Console_Charset_SmartConvert
 
 // Reuseable global packet buffer to prevent too many allocations
 // Take socket.cpp::socket_max_client_packet into consideration
@@ -262,7 +265,11 @@ static time_t socket_data_last_tick = 0;
 // The connection is closed if it goes over the limit.
 #define WFIFO_MAX (1*1024*1024)
 
+#ifndef Pandas_Crashfix_Variable_Init
 struct socket_data* session[MAXCONN];
+#else
+struct socket_data* session[MAXCONN] = { 0 };
+#endif // Pandas_Crashfix_Variable_Init
 
 #ifdef SEND_SHORTLIST
 int32 send_shortlist_array[MAXCONN];// we only support MAXCONN sockets, limit the array to that
@@ -275,6 +282,9 @@ static int32 create_session(int32 fd, RecvFunc func_recv, SendFunc func_send, Pa
 #ifndef MINICORE
 	int32 ip_rules = 1;
 	static int32 connect_check(uint32 ip);
+#ifdef Pandas_Health_Monitors_Silent
+	static int32 hm_silent = 1;
+#endif // Pandas_Health_Monitors_Silent
 #endif
 
 const char* error_msg(void)
@@ -282,6 +292,11 @@ const char* error_msg(void)
 	static char buf[512];
 	int32 code = sErrno;
 	snprintf(buf, sizeof(buf), "error %d: %s", code, sErr(code));
+#ifdef Pandas_Console_Charset_SmartConvert
+	if (PandasUtf8::systemEncoding == PandasUtf8::PANDAS_ENCODING_UTF8) {
+		snprintf(buf, sizeof(buf), "%s", PandasUtf8::utf8ToAnsi(buf).c_str());
+	}
+#endif // Pandas_Console_Charset_SmartConvert
 	return buf;
 }
 
@@ -735,6 +750,10 @@ static int32 create_session(int32 fd, RecvFunc func_recv, SendFunc func_send, Pa
 	session[fd]->func_parse = func_parse;
 	session[fd]->rdata_tick = last_tick;
 	session[fd]->wdata_tick = last_tick;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	memset(session[fd]->mac_address, 0, MACADDRESS_LENGTH);
+	memset(session[fd]->lan_address, 0, IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 	return 0;
 }
 
@@ -839,10 +858,26 @@ int32 WFIFOSET(int32 fd, size_t len)
 
 	if( len > 0xFFFF )
 	{
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 		// dynamic packets allow up to UINT16_MAX bytes (<packet_id>.W <packet_len>.W ...)
 		// all known fixed-size packets are within this limit, so use the same limit
 		ShowFatalError("WFIFOSET: Packet 0x%x is too big. (len=%u, max=%u)\n", (*(uint16*)(s->wdata + s->wdata_size)), (uint32)len, 0xFFFF);
 		exit(EXIT_FAILURE);
+#else
+		uint16 cmd = (*(uint16*)(s->wdata + s->wdata_size));
+
+		if( cmd == 0x388a || cmd == 0x308b || cmd == 0x3818 || cmd == 0x3019 ){
+			if( len > 0xFFFFF ){
+				ShowFatalError("WFIFOSET: Packet 0x%x is too big. (len=%u, max=%u)\n", cmd, (uint32)len, 0xFFFFF);
+				exit(EXIT_FAILURE);
+			}
+		}else{
+			// dynamic packets allow up to UINT16_MAX bytes (<packet_id>.W <packet_len>.W ...)
+			// all known fixed-size packets are within this limit, so use the same limit
+			ShowFatalError("WFIFOSET: Packet 0x%x is too big. (len=%u, max=%u)\n", cmd, (uint32)len, 0xFFFF);
+			exit(EXIT_FAILURE);
+		}
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 	}
 	else if( len == 0 )
 	{
@@ -1092,6 +1127,10 @@ static int32 ddos_autoreset  = 10*60*1000;
 /// Connection history, an array of linked lists.
 /// The array's index for any ip is ip&0xFFFF
 static ConnectHistory* connect_history[0x10000];
+#ifdef Pandas_Health_Monitors_Silent
+static AccessControl* health_monitors = nullptr;
+static int32 health_monitorsnum = 0;
+#endif // Pandas_Health_Monitors_Silent
 
 static int32 connect_check_(uint32 ip);
 
@@ -1106,6 +1145,32 @@ static int32 connect_check(uint32 ip)
 	return result;
 }
 
+#ifdef Pandas_Health_Monitors_Silent
+static int32 check_iplist(uint32 ip, AccessControl* iplist, int32 list_cnt, const char* list_name) {
+	if (iplist == nullptr || list_cnt <= 0)
+		return 0;
+
+	for (int32 i = 0; i < list_cnt; ++i) {
+		if ((ip & iplist[i].mask) == (iplist[i].ip & iplist[i].mask)) {
+			if (access_debug && list_name != nullptr) {
+				ShowInfo("connect_check: Found match from %s list:%d.%d.%d.%d IP:%d.%d.%d.%d Mask:%d.%d.%d.%d\n",
+					list_name,
+					CONVIP(ip),
+					CONVIP(iplist[i].ip),
+					CONVIP(iplist[i].mask));
+			}
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+bool suppresses_close_mes(uint32 ip) {
+	return hm_silent && check_iplist(ip, health_monitors, health_monitorsnum, nullptr) == 1;
+}
+#endif // Pandas_Health_Monitors_Silent
+
 /// Verifies if the IP can connect.
 ///  0      : Connection Rejected
 ///  1 or 2 : Connection Accepted
@@ -1116,6 +1181,9 @@ static int32 connect_check_(uint32 ip)
 	int32 is_allowip = 0;
 	int32 is_denyip = 0;
 	int32 connect_ok = 0;
+#ifdef Pandas_Health_Monitors_Silent
+	int32 is_healthip = check_iplist(ip, health_monitors, health_monitorsnum, "health");
+#endif // Pandas_Health_Monitors_Silent
 
 	// Search the allow list
 	for( i=0; i < access_allownum; ++i ){
@@ -1173,6 +1241,11 @@ static int32 connect_check_(uint32 ip)
 		break;
 	}
 
+#ifdef Pandas_Health_Monitors_Silent
+	if (hm_silent && is_healthip)
+		connect_ok = 2;
+#endif // Pandas_Health_Monitors_Silent
+
 	// Inspect connection history
 	while( hist ) {
 		if( ip == hist->ip )
@@ -1183,6 +1256,12 @@ static int32 connect_check_(uint32 ip)
 			} else if( DIFF_TICK(gettick(),hist->tick) < ddos_interval )
 			{// connection within ddos_interval
 				hist->tick = gettick();
+#ifdef Pandas_FuncLogic_Whitelist_Privileges
+				if (connect_ok == 2) {
+					hist->count = 0;
+					return connect_ok;
+				}
+#endif // Pandas_FuncLogic_Whitelist_Privileges
 				if( hist->count++ >= ddos_count )
 				{// DDoS attack detected
 					hist->ddos = 1;
@@ -1223,8 +1302,13 @@ static TIMER_FUNC(connect_check_clear){
 		prev_hist = &root;
 		root.next = hist = connect_history[i];
 		while( hist ){
+#ifndef Pandas_Fix_Potential_Arithmetic_Overflow
 			if( (!hist->ddos && DIFF_TICK(tick,hist->tick) > ddos_interval*3) ||
 					(hist->ddos && DIFF_TICK(tick,hist->tick) > ddos_autoreset) )
+#else
+			if ((!hist->ddos && DIFF_TICK(tick, hist->tick) > (t_tick)ddos_interval * 3) ||
+				(hist->ddos && DIFF_TICK(tick, hist->tick) > ddos_autoreset))
+#endif // Pandas_Fix_Potential_Arithmetic_Overflow
 			{// Remove connection history
 				prev_hist->next = hist->next;
 				aFree(hist);
@@ -1295,7 +1379,11 @@ int32 access_ipmask(const char* str, AccessControl* acc)
 
 int32 socket_config_read(const char* cfgName)
 {
+	#ifndef Pandas_Crashfix_Variable_Init
 	char line[1024],w1[1024],w2[1024];
+	#else
+	char line[1024] = { 0 }, w1[1024] = { 0 }, w2[1024] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	FILE *fp;
 
 	fp = fopen(cfgName, "r");
@@ -1347,6 +1435,17 @@ int32 socket_config_read(const char* cfgName)
 			ddos_autoreset = atoi(w2);
 		else if (!strcmpi(w1,"debug"))
 			access_debug = config_switch(w2);
+#ifdef Pandas_Health_Monitors_Silent
+		else if (!strcmpi(w1, "make_hm_silent"))
+			hm_silent = config_switch(w2);
+		else if (!strcmpi(w1, "health")) {
+			RECREATE(health_monitors, AccessControl, health_monitorsnum + 1);
+			if (access_ipmask(w2, &health_monitors[health_monitorsnum]))
+				++health_monitorsnum;
+			else
+				ShowError("socket_config_read: Invalid ip or ip range '%s'!\n", line);
+		}
+#endif // Pandas_Health_Monitors_Silent
 #ifdef SOCKET_EPOLL
 		else if( !strcmpi( w1, "epoll_maxevents" ) ){
 			epoll_maxevents = atoi(w2);
@@ -1389,6 +1488,10 @@ void socket_final(void)
 		aFree(access_allow);
 	if( access_deny )
 		aFree(access_deny);
+#ifdef Pandas_Health_Monitors_Silent
+	if( health_monitors )
+		aFree(health_monitors);
+#endif // Pandas_Health_Monitors_Silent
 #endif
 
 	for( i = 1; i < fd_max; i++ )

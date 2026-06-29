@@ -885,7 +885,11 @@ int32 guild_calcinfo( std::shared_ptr<CharGuild> g ){
 	}
 
 	// Set the max number of members, Guild Extention skill - currently adds 6 to max per skill lv.
+#ifndef Pandas_Guild_Extension_Configure
 	g->guild.max_member = 16 + guild_checkskill(g, GD_EXTENSION) * 6;
+#else
+	g->guild.max_member = GUILD_INITIAL_MEMBER + guild_checkskill(g, GD_EXTENSION) * GUILD_EXTENSION_PERLEVEL;
+#endif // Pandas_Guild_Extension_Configure
 	if(g->guild.max_member > MAX_GUILD)
 	{
 		ShowError("Guild %d:%s has capacity for too many guild members (%d), max supported is %d\n", g->guild.guild_id, g->guild.name, g->guild.max_member, MAX_GUILD);
@@ -948,7 +952,11 @@ int32 mapif_guild_created( int32 fd, uint32 account_id, struct mmo_guild *g ){
 // Guild not found
 int32 mapif_guild_noinfo(int32 fd,int32 guild_id)
 {
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[12];
+	#else
+	unsigned char buf[12] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf,0)=0x3831;
 	WBUFW(buf,2)=8;
 	WBUFL(buf,4)=guild_id;
@@ -962,7 +970,11 @@ int32 mapif_guild_noinfo(int32 fd,int32 guild_id)
 
 // Send guild info
 int32 mapif_guild_info( int32 fd, const struct mmo_guild &g ){
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[8+sizeof(struct mmo_guild)];
+	#else
+	unsigned char buf[8+sizeof(struct mmo_guild)] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf,0)=0x3831;
 	WBUFW(buf,2)=4+sizeof(struct mmo_guild);
 	memcpy( buf + 4, &g, sizeof( struct mmo_guild ) );
@@ -989,7 +1001,11 @@ int32 mapif_guild_memberadded(int32 fd,int32 guild_id,uint32 account_id,uint32 c
 // ACK member leave
 int32 mapif_guild_withdraw(int32 guild_id,uint32 account_id,uint32 char_id,int32 flag, const char *name, const char *mes)
 {
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[55+NAME_LENGTH];
+	#else
+	unsigned char buf[55+NAME_LENGTH] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf, 0)=0x3834;
 	WBUFL(buf, 2)=guild_id;
 	WBUFL(buf, 6)=account_id;
@@ -1004,7 +1020,11 @@ int32 mapif_guild_withdraw(int32 guild_id,uint32 account_id,uint32 char_id,int32
 
 // Send short member's info
 int32 mapif_guild_memberinfoshort( const struct mmo_guild &g, int32 idx ){
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[19];
+	#else
+	unsigned char buf[19] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf, 0)=0x3835;
 	WBUFL(buf, 2)=g.guild_id;
 	WBUFL(buf, 6)=g.member[idx].account_id;
@@ -1019,7 +1039,11 @@ int32 mapif_guild_memberinfoshort( const struct mmo_guild &g, int32 idx ){
 // Send guild broken
 int32 mapif_guild_broken(int32 guild_id,int32 flag)
 {
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[7];
+	#else
+	unsigned char buf[7] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf,0)=0x3836;
 	WBUFL(buf,2)=guild_id;
 	WBUFB(buf,6)=flag;
@@ -1031,7 +1055,11 @@ int32 mapif_guild_broken(int32 guild_id,int32 flag)
 // Send guild message
 int32 mapif_guild_message(int32 guild_id,uint32 account_id,char *mes,int32 len, int32 sfd)
 {
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[512];
+	#else
+	unsigned char buf[512] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	if (len > 500)
 		len = 500;
 	WBUFW(buf,0)=0x3837;
@@ -1046,7 +1074,11 @@ int32 mapif_guild_message(int32 guild_id,uint32 account_id,char *mes,int32 len, 
 // Send basic info
 int32 mapif_guild_basicinfochanged(int32 guild_id,int32 type,const void *data,int32 len)
 {
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[2048];
+	#else
+	unsigned char buf[2048] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	if (len > 2038)
 		len = 2038;
 	WBUFW(buf, 0)=0x3839;
@@ -1061,7 +1093,11 @@ int32 mapif_guild_basicinfochanged(int32 guild_id,int32 type,const void *data,in
 // Send member info
 int32 mapif_guild_memberinfochanged(int32 guild_id,uint32 account_id,uint32 char_id, int32 type,const void *data,int32 len)
 {
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[2048];
+	#else
+	unsigned char buf[2048] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	if (len > 2030)
 		len = 2030;
 	WBUFW(buf, 0)=0x383a;
@@ -1078,7 +1114,11 @@ int32 mapif_guild_memberinfochanged(int32 guild_id,uint32 account_id,uint32 char
 // ACK guild skill up
 int32 mapif_guild_skillupack(int32 guild_id,uint16 skill_id,uint32 account_id)
 {
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[14];
+	#else
+	unsigned char buf[14] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf, 0)=0x383c;
 	WBUFL(buf, 2)=guild_id;
 	WBUFL(buf, 6)=skill_id;
@@ -1090,7 +1130,11 @@ int32 mapif_guild_skillupack(int32 guild_id,uint16 skill_id,uint32 account_id)
 // ACK guild alliance
 int32 mapif_guild_alliance(int32 guild_id1,int32 guild_id2,uint32 account_id1,uint32 account_id2,int32 flag,const char *name1,const char *name2)
 {
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[19+2*NAME_LENGTH];
+	#else
+	unsigned char buf[19+2*NAME_LENGTH] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf, 0)=0x383d;
 	WBUFL(buf, 2)=guild_id1;
 	WBUFL(buf, 6)=guild_id2;
@@ -1105,7 +1149,11 @@ int32 mapif_guild_alliance(int32 guild_id1,int32 guild_id2,uint32 account_id1,ui
 
 // Send a guild position desc
 int32 mapif_guild_position( const struct mmo_guild &g, int32 idx ){
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[12 + sizeof(struct guild_position)];
+	#else
+	unsigned char buf[12 + sizeof(struct guild_position)] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf,0)=0x383b;
 	WBUFW(buf,2)=sizeof(struct guild_position)+12;
 	WBUFL(buf,4)=g.guild_id;
@@ -1117,7 +1165,11 @@ int32 mapif_guild_position( const struct mmo_guild &g, int32 idx ){
 
 // Send the guild notice
 int32 mapif_guild_notice( const struct mmo_guild &g ){
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[256];
+	#else
+	unsigned char buf[256] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf,0)=0x383e;
 	WBUFL(buf,2)=g.guild_id;
 	memcpy(WBUFP(buf,6),g.mes1,MAX_GUILDMES1);
@@ -1128,7 +1180,11 @@ int32 mapif_guild_notice( const struct mmo_guild &g ){
 
 // Send emblem data
 int32 mapif_guild_emblem( const struct mmo_guild &g ){
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[12 + sizeof(g.emblem_data)];
+	#else
+	unsigned char buf[12 + sizeof(g.emblem_data)] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf,0)=0x383f;
 	WBUFW(buf,2)=g.emblem_len+12;
 	WBUFL(buf,4)=g.guild_id;
@@ -1140,7 +1196,11 @@ int32 mapif_guild_emblem( const struct mmo_guild &g ){
 
 // Send the guild emblem_id (version)
 int32 mapif_guild_emblem_version( const struct mmo_guild &g ){
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[10];
+	#else
+	unsigned char buf[10] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf, 0) = 0x3841;
 	WBUFL(buf, 2) = g.guild_id;
 	WBUFL(buf, 6) = g.emblem_id;
@@ -1150,7 +1210,11 @@ int32 mapif_guild_emblem_version( const struct mmo_guild &g ){
 }
 
 int32 mapif_guild_master_changed( const struct mmo_guild &g, int32 aid, int32 cid, time_t time ){
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[18];
+	#else
+	unsigned char buf[18] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf,0)=0x3843;
 	WBUFL(buf,2)=g.guild_id;
 	WBUFL(buf,6)=aid;
@@ -1215,6 +1279,7 @@ int32 mapif_parse_CreateGuild(int32 fd,uint32 account_id,char *name,struct guild
 	memcpy(&g->guild.member[0],master,sizeof(struct guild_member));
 	g->guild.member[0].modified = GS_MEMBER_MODIFIED;
 
+#ifndef Pandas_Message_Hardcode_Extract
 	// Set default positions
 	g->guild.position[0].mode = GUILD_PERM_DEFAULT;
 	strcpy(g->guild.position[0].name,"GuildMaster");
@@ -1224,6 +1289,17 @@ int32 mapif_parse_CreateGuild(int32 fd,uint32 account_id,char *name,struct guild
 		sprintf(g->guild.position[i].name,"Position %d",i+1);
 		g->guild.position[i].modified = GS_POSITION_MODIFIED;
 	}
+#else
+	// Set default positions
+	g->guild.position[0].mode = GUILD_PERM_DEFAULT;
+	strcpy(g->guild.position[0].name,msg_txt_cn(0));
+	strcpy(g->guild.position[MAX_GUILDPOSITION-1].name,msg_txt_cn(2));
+	g->guild.position[0].modified = g->guild.position[MAX_GUILDPOSITION-1].modified = GS_POSITION_MODIFIED;
+	for(i=1;i<MAX_GUILDPOSITION-1;i++) {
+		sprintf(g->guild.position[i].name,msg_txt_cn(1),i+1);
+		g->guild.position[i].modified = GS_POSITION_MODIFIED;
+	}
+#endif // Pandas_Message_Hardcode_Extract
 
 	// Initialize guild property
 	g->guild.max_member=16;

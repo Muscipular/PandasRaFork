@@ -33,6 +33,10 @@ struct mmo_account {
 	char pincode[PINCODE_LENGTH+1];		// pincode system
 	time_t pincode_change;	// (timestamp): last time of pincode change
 	char web_auth_token[WEB_AUTH_TOKEN_LENGTH]; // web authentication token (randomized on each login)
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	char mac_address[MACADDRESS_LENGTH];
+	char lan_address[IP4ADDRESS_LENGTH];
+#endif // Pandas_Extract_SSOPacket_MacAddress
 #ifdef VIP_ENABLE
 	int32 old_group;
 	time_t vip_time;

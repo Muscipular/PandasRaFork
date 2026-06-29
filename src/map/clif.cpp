@@ -5,6 +5,9 @@
 #include "clif.hpp"
 
 #include <cstdarg>
+#ifdef Pandas_Fix_Progressbar_Refresh_Stuck
+#include <cmath>
+#endif // Pandas_Fix_Progressbar_Refresh_Stuck
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -41,6 +44,12 @@
 #include "instance.hpp"
 #include "intif.hpp"
 #include "itemdb.hpp"
+#ifdef Pandas_Item_Amulet_System
+#include "itemamulet.hpp"
+#endif // Pandas_Item_Amulet_System
+#ifdef Pandas_Item_ControlViewID
+#include "itemprops.hpp"
+#endif // Pandas_Item_ControlViewID
 #include "log.hpp"
 #include "mail.hpp"
 #include "map.hpp"
@@ -77,9 +86,16 @@ static inline int32 client_exp(t_exp exp) {
 
 /* for clif_clearunit_delayed */
 static struct eri *delay_clearunit_ers;
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+static struct eri* twice_clearunit_ers;
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 
 struct s_packet_db packet_db[MAX_PACKET_DB + 1];
 unsigned long color_table[COLOR_MAX];
+
+#ifdef Pandas_ScriptCommand_Next_Dropitem_Special
+s_next_dropitem_special next_dropitem_special;
+#endif // Pandas_ScriptCommand_Next_Dropitem_Special
 
 #include "clif_obfuscation.hpp"
 static bool clif_session_isValid( const map_session_data* sd );
@@ -109,6 +125,11 @@ enum e_inventory_type{
 static inline int32 itemtype(t_itemid nameid) {
 	struct item_data* id = itemdb_search(nameid); //Use itemdb_search, so non-existence item will use dummy data and won't crash the server. bugreport:8468
 	int32 type = id->type;
+#ifdef Pandas_Item_Amulet_System
+	// 若是护身符道具, 在这里全部把它当做 IT_ETC 类型返回
+	if (type == IT_AMULET || amulet_is(nameid))
+		return IT_ETC;
+#endif // Pandas_Item_Amulet_System
 	if( type == IT_SHADOWGEAR ) {
 		if( id->equip&EQP_SHADOW_WEAPON )
 			return IT_WEAPON;
@@ -482,6 +503,15 @@ int32 clif_send(const void* buf, int32 len, const block_list* bl, enum send_targ
 	std::shared_ptr<s_battleground_data> bg;
 	int32 x0 = 0, x1 = 0, y0 = 0, y1 = 0, fd;
 	struct s_mapiterator* iter;
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+	uint16 area_size = AREA_SIZE;
+	if (type == AREA_DEAD) {
+		if (!AREA_DEAD_SIZE)
+			area_size = AREA_SIZE * 2;
+		else
+			area_size = AREA_DEAD_SIZE;
+	}
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 
 	if( type != ALL_CLIENT )
 		nullpo_ret(bl);
@@ -516,13 +546,21 @@ int32 clif_send(const void* buf, int32 len, const block_list* bl, enum send_targ
 
 	case AREA:
 	case AREA_WOSC:
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+	case AREA_DEAD:
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 		if (sd && bl->prev == nullptr) //Otherwise source misses the packet.[Skotlex]
 			clif_send (buf, len, bl, SELF);
 		[[fallthrough]];
 	case AREA_WOC:
 	case AREA_WOS:
+#ifndef Pandas_Ease_Mob_Stuck_After_Dead
 		map_foreachinallarea(clif_send_sub, bl->m, bl->x-AREA_SIZE, bl->y-AREA_SIZE, bl->x+AREA_SIZE, bl->y+AREA_SIZE,
 			BL_PC, buf, len, bl, type);
+#else
+		map_foreachinallarea(clif_send_sub, bl->m, bl->x - area_size, bl->y - area_size, bl->x + area_size, bl->y + area_size,
+			BL_PC, buf, len, bl, type);
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 		break;
 	case AREA_CHAT_WOC:
 		map_foreachinallarea(clif_send_sub, bl->m, bl->x-(AREA_SIZE-5), bl->y-(AREA_SIZE-5),
@@ -919,6 +957,13 @@ void clif_dropflooritem( const flooritem_data* fitem, bool canShowEffect ){
 		p.showdropeffect = 0;
 		p.dropeffectmode = DROPEFFECT_NONE;
 	}
+#ifdef Pandas_ScriptCommand_Next_Dropitem_Special
+	if (next_dropitem_special.drop_effect != -1) {
+		p.showdropeffect = 1;
+		p.dropeffectmode = next_dropitem_special.drop_effect - 1;
+		next_dropitem_special.drop_effect = -1;
+	}
+#endif // Pandas_ScriptCommand_Next_Dropitem_Special
 #endif
 	clif_send( &p, sizeof(p), fitem, AREA );
 }
@@ -959,6 +1004,28 @@ void clif_clearunit_single( uint32 GID, clr_type type, const map_session_data& t
 	clif_send( &packet, sizeof( packet ), &tsd, SELF );
 }
 
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+static TIMER_FUNC(clif_clearunit_twice_sub) {
+	block_list* bl = (block_list*)data;
+
+	if (!bl) {
+		ers_free(twice_clearunit_ers, bl);
+		return 0;
+	}
+
+	unsigned char buf[8] = { 0 };
+
+	WBUFW(buf, 0) = 0x80;
+	WBUFL(buf, 2) = bl->id;
+	WBUFB(buf, 6) = (clr_type)id;
+
+	clif_send(buf, packet_len(0x80), bl, (clr_type)id == CLR_DEAD ? AREA_DEAD : AREA_WOS);
+
+	ers_free(twice_clearunit_ers, bl);
+	return 0;
+}
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
+
 /// Makes a unit (char, npc, mob, homun) disappear to all clients in area.
 /// 0080 <id>.L <type>.B (ZC_NOTIFY_VANISH)
 /// type:
@@ -974,12 +1041,29 @@ void clif_clearunit_area( const block_list& bl, clr_type type ){
 	packet.gid = bl.id;
 	packet.type = static_cast<uint8>(type);
 
+#ifndef Pandas_Ease_Mob_Stuck_After_Dead
 	clif_send(&packet, sizeof(PACKET_ZC_NOTIFY_VANISH), &bl, type == CLR_DEAD ? AREA : AREA_WOS);
+#else
+	clif_send(&packet, sizeof(PACKET_ZC_NOTIFY_VANISH), &bl, type == CLR_DEAD ? AREA_DEAD : AREA_WOS);
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 
 	if(disguised(&bl)) {
 		packet.gid = disguised_bl_id( bl.id );
 		clif_send(&packet, sizeof(PACKET_ZC_NOTIFY_VANISH), &bl, SELF);
 	}
+
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+	if (!battle_config.repeat_clearunit_interval) {
+		if (bl.type == BL_MOB && type == CLR_DEAD) {
+			block_list* tbl = ers_alloc(twice_clearunit_ers, block_list);
+			if (tbl) {
+				memcpy(tbl, &bl, sizeof(block_list));
+				add_timer(gettick() + battle_config.repeat_clearunit_interval,
+					clif_clearunit_twice_sub, (int32)type, (intptr_t)tbl);
+			}
+		}
+	}
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 }
 
 
@@ -1034,6 +1118,41 @@ static int32 clif_setlevel(const block_list* bl) {
 	}
 	return lv;
 }
+
+#ifdef Pandas_Aura_Mechanism
+void clif_send_auras_single(struct block_list* bl, map_session_data* tsd) {
+	if (!bl || !tsd || bl->m == -1) return;
+	struct s_unit_common_data* ucd = status_get_ucd(bl);
+	if (!ucd) return;
+	if (aura_need_hiding(bl, tsd)) return;
+#ifdef Pandas_MapFlag_NoAura
+	if (map_getmapflag(bl->m, MF_NOAURA)) return;
+#endif // Pandas_MapFlag_NoAura
+
+	for (auto it : ucd->aura.effects) {
+		if (it->replay_tid != INVALID_TIMER) continue;
+		clif_specialeffect_single(bl, it->effect_id, tsd->fd);
+	}
+}
+
+void clif_send_auras(struct block_list* bl, enum send_target target, bool ignore_when_hidden, enum e_aura_special flag) {
+	if (!bl || bl->m == -1) return;
+#ifdef Pandas_MapFlag_NoAura
+	if (map_getmapflag(bl->m, MF_NOAURA)) return;
+#endif // Pandas_MapFlag_NoAura
+	if (aura_need_hiding(bl) && ignore_when_hidden)
+		return;
+
+	struct s_unit_common_data* ucd = status_get_ucd(bl);
+	if (!ucd) return;
+
+	for (auto it : ucd->aura.effects) {
+		if (it->replay_tid != INVALID_TIMER) continue;
+		if (flag != AURA_SPECIAL_NOTHING && (aura_special(it->effect_id) & flag) != flag) continue;
+		clif_specialeffect(bl, it->effect_id, target);
+	}
+}
+#endif // Pandas_Aura_Mechanism
 
 /*==========================================
  * Prepares 'unit standing/spawning' packet
@@ -1116,8 +1235,15 @@ static void clif_set_unit_idle( const block_list* bl, bool walking, send_target 
 		map_session_data* sd = (map_session_data*)tbl;
 		npc_data* nd = (npc_data*)bl;
 		int32 option = (sc) ? sc->option : 0;
+#ifdef Pandas_Fix_Cloak_Status_Baffling
+		uint16 cloak_reverting = (sc) ? sc->cloak_reverting : 0;
+#endif // Pandas_Fix_Cloak_Status_Baffling
 
-		if( !nd->vd.dead_sit ){
+		if( !nd->vd.dead_sit
+#ifdef Pandas_Fix_Cloak_Status_Baffling
+			&& !cloak_reverting
+#endif // Pandas_Fix_Cloak_Status_Baffling
+		){
 			if( std::find( sd->cloaked_npc.begin(), sd->cloaked_npc.end(), nd->id ) != sd->cloaked_npc.end() ){
 				option ^= OPTION_CLOAK;
 			}
@@ -1193,6 +1319,11 @@ static void clif_set_unit_idle( const block_list* bl, bool walking, send_target 
 	safestrncpy(p.name, status_get_name( *bl ), NAME_LENGTH);
 #endif
 
+#ifdef Pandas_Player_Suspend_System
+	if (sd != nullptr && bl->type == BL_PC)
+		suspend_set_unit_idle(sd, &p);
+#endif // Pandas_Player_Suspend_System
+
 	clif_send( &p, sizeof( p ), tbl, target );
 	// if disguised, send to self
 	if( disguised( bl ) ){
@@ -1208,6 +1339,16 @@ static void clif_set_unit_idle( const block_list* bl, bool walking, send_target 
 #endif
 		clif_send(&p, sizeof(p), bl, SELF);
 	}
+
+#ifdef Pandas_Aura_Mechanism
+	block_list* aura_bl = const_cast<block_list*>(bl);
+	if (tbl != nullptr && tbl->type == BL_PC) {
+		map_session_data* tsd = BL_CAST(BL_PC, const_cast<block_list*>(tbl));
+		clif_send_auras_single(aura_bl, tsd);
+	} else {
+		clif_send_auras(aura_bl, target, false, AURA_SPECIAL_NOTHING);
+	}
+#endif // Pandas_Aura_Mechanism
 }
 
 static void clif_spawn_unit( const block_list* bl, enum send_target target ){
@@ -1361,6 +1502,10 @@ static void clif_spawn_unit( const block_list* bl, enum send_target target ){
 	}else{
 		clif_send( &p, sizeof( p ), bl, target );
 	}
+
+#ifdef Pandas_Aura_Mechanism
+	clif_send_auras(const_cast<block_list*>(bl), target, true, AURA_SPECIAL_NOTHING);
+#endif // Pandas_Aura_Mechanism
 }
 
 /*==========================================
@@ -1448,6 +1593,11 @@ static void clif_set_unit_walking( const block_list& bl, const map_session_data*
 	safestrncpy(p.name, status_get_name( bl ), NAME_LENGTH);
 #endif
 
+#ifdef Pandas_Player_Suspend_System
+	if (sd != nullptr && bl.type == BL_PC)
+		suspend_set_unit_walking(sd, &p);
+#endif // Pandas_Player_Suspend_System
+
 	clif_send( &p, sizeof(p), tsd ? tsd : &bl, target );
 
 	// if disguised, send the info to self
@@ -1464,6 +1614,15 @@ static void clif_set_unit_walking( const block_list& bl, const map_session_data*
 #endif
 		clif_send(&p, sizeof(p), &bl, SELF);
 	}
+
+#ifdef Pandas_Aura_Mechanism
+	block_list* aura_bl = const_cast<block_list*>(&bl);
+	if (tsd != nullptr) {
+		clif_send_auras_single(aura_bl, const_cast<map_session_data*>(tsd));
+	} else {
+		clif_send_auras(aura_bl, target, true, AURA_SPECIAL_HIDE_DISAPPEAR);
+	}
+#endif // Pandas_Aura_Mechanism
 }
 
 /// Changes sprite of a non player object.
@@ -1724,6 +1883,9 @@ int32 clif_spawn( const block_list* bl, bool walking ){
 			if (sd->spiritcharm_type != CHARM_TYPE_NONE && sd->spiritcharm > 0)
 				clif_spiritcharm( *sd );
 			clif_efst_status_change_sub(bl, bl, AREA);
+#ifdef Pandas_Aura_Mechanism
+			clif_send_auras(const_cast<block_list*>(bl), SELF, true, AURA_SPECIAL_NOTHING);
+#endif // Pandas_Aura_Mechanism
 		}
 		break;
 	case BL_MOB:
@@ -2175,12 +2337,21 @@ void clif_changemapserver( const map_session_data& sd, const char* map, uint16 x
 	packet.yPos = y;
 	packet.ip = htonl(ip);
 	packet.port = ntows(htons(port)); // [!] LE byte order here [!]
+#ifdef Pandas_InterConfig_HideServerIpAddress
+	if (pandas_inter_hide_server_ipaddress) {
+		// 若希望不主动返回服务器的 IP 地址, 那么将此处的地图服务器 IP 重设为 0
+		// 此处调整会导致无法适应多 IP 地址的地图服务器架构, 但是可以支持单服务器不同端口的这种形式...
+		packet.ip = 0;
+	}
+#endif // Pandas_InterConfig_HideServerIpAddress
 #if PACKETVER >= 20170315
 	safestrncpy( packet.domain, "", sizeof( packet.domain ) );
 #endif
 
 #ifdef DEBUG
+#ifndef Pandas_UserExperience_Debug_Hide_SubnetInfo
 	ShowDebug( "Sending the client (%d %d.%d.%d.%d) to map-server with ip %d.%d.%d.%d and port %hu\n", sd.status.account_id, CONVIP(session[sd.fd]->client_addr), CONVIP(ip), port );
+#endif // Pandas_UserExperience_Debug_Hide_SubnetInfo
 #endif
 
 	clif_send( &packet, sizeof( packet ), &sd, SELF );
@@ -2469,6 +2640,22 @@ void clif_scriptmes( const map_session_data& sd, uint32 npcid, const char *mes )
 	PACKET_ZC_SAY_DIALOG* p = reinterpret_cast<PACKET_ZC_SAY_DIALOG*>( packet_buffer );
 
 	int16 length = (int16)( strlen( mes ) + 1 );
+
+#if defined(Pandas_BattleConfig_Restore_Mes_Logic) && PACKETVER >= 20211103
+	if( battle_config.restore_mes_logic && strlen( mes ) != 0 && mes[0] == ' ' ){
+		std::string strMessage( mes );
+		strMessage = '\n' + strMessage;
+		int16 dwMessageLen = (int16)( strlen( strMessage.c_str() ) + 1 );
+
+		p->PacketType = HEADER_ZC_SAY_DIALOG;
+		p->PacketLength = sizeof( *p ) + dwMessageLen;
+		p->NpcID = npcid;
+		safestrncpy( p->message, strMessage.c_str(), dwMessageLen );
+
+		clif_send( p, p->PacketLength, &sd, SELF );
+		return;
+	}
+#endif // defined(Pandas_BattleConfig_Restore_Mes_Logic) && PACKETVER >= 20211103
 
 	p->PacketType = HEADER_ZC_SAY_DIALOG;
 	p->PacketLength = sizeof( *p ) + length;
@@ -2927,7 +3114,17 @@ void clif_delitem( const map_session_data& sd, int32 index, int32 amount, int16 
 #endif
 }
 
+#ifndef Pandas_FuncParams_Clif_Item_Equip
 static void clif_item_equip( int16 idx, EQUIPITEM_INFO *p, const item *it, const item_data *id, int32 eqp_pos ){
+#else
+// 拓展 caller 参数的可选值:
+// 0 - 未知或者不关心的调用者
+// 1 - 调用者是 clif_inventorylist
+// 2 - 调用者是 clif_storagelist
+// 3 - 调用者是 clif_cartlist
+// 4 - 调用者是 clif_viewequip_ack
+static void clif_item_equip( int16 idx, EQUIPITEM_INFO *p, const item *it, const item_data *id, int32 eqp_pos, uint16 caller = 0 ){
+#endif // Pandas_FuncParams_Clif_Item_Equip
 	nullpo_retv( p );
 	nullpo_retv( it );
 	nullpo_retv( id );
@@ -2962,6 +3159,22 @@ static void clif_item_equip( int16 idx, EQUIPITEM_INFO *p, const item *it, const
 #if PACKETVER >= 20100629
 	// TODO: WBUFW(buf,n+8) = (equip == -2 && id->equip == EQP_AMMO) ? id->equip : 0;
 	p->wItemSpriteNumber = ( id->equip&EQP_VISIBLE ) ? id->look : 0;
+#ifdef Pandas_Item_ControlViewID
+	switch (caller) {
+		case 1:
+			if (id->look && ITEM_PROPERTIES_HASFLAG(id, noview_mask, ITEM_NOVIEW_WHEN_I_SEE) && caller == 1) {
+				p->wItemSpriteNumber = 0;
+			}
+			break;
+		case 4:
+			if (id->look && ITEM_PROPERTIES_HASFLAG(id, noview_mask, ITEM_NOVIEW_WHEN_T_SEE) && caller == 4) {
+				p->wItemSpriteNumber = 0;
+			}
+			break;
+		default:
+			break;
+	}
+#endif // Pandas_Item_ControlViewID
 #endif
 
 #if PACKETVER >= 20120925
@@ -3079,7 +3292,11 @@ void clif_inventorylist( map_session_data *sd ){
 
 		// Non-stackable (Equippable)
 		if( !itemdb_isstackable2( sd->inventory_data[i] ) ){
+#ifndef Pandas_FuncParams_Clif_Item_Equip
 			clif_item_equip( client_index( i ), &itemlist_equip.list[equip++], &sd->inventory.u.items_inventory[i], sd->inventory_data[i], pc_equippoint( sd, i ) );
+#else
+			clif_item_equip( client_index( i ), &itemlist_equip.list[equip++], &sd->inventory.u.items_inventory[i], sd->inventory_data[i], pc_equippoint( sd, i ), 1 );
+#endif // Pandas_FuncParams_Clif_Item_Equip
 
 			if( equip == MAX_INVENTORY_ITEM_PACKET_EQUIP ){
 				itemlist_equip.PacketType  = inventorylistequipType;
@@ -3174,7 +3391,11 @@ void clif_storagelist( map_session_data* sd, const struct item* items, int32 ite
 
 		// Non-stackable (Equippable)
 		if( !itemdb_isstackable2( id ) ){
+#ifndef Pandas_FuncParams_Clif_Item_Equip
 			clif_item_equip( client_storage_index( i ), &storage_itemlist_equip.list[equip++], &items[i], id, pc_equippoint_sub( sd, id ) );
+#else
+			clif_item_equip( client_storage_index( i ), &storage_itemlist_equip.list[equip++], &items[i], id, pc_equippoint_sub( sd, id ), 2 );
+#endif // Pandas_FuncParams_Clif_Item_Equip
 
 			if( equip == MAX_STORAGE_ITEM_PACKET_EQUIP ){
 				storage_itemlist_equip.PacketType  = storageListEquipType;
@@ -3262,7 +3483,11 @@ void clif_cartlist( map_session_data *sd ){
 
 		// Non-stackable (Equippable)
 		if( !itemdb_isstackable2(id) ){
+#ifndef Pandas_FuncParams_Clif_Item_Equip
 			clif_item_equip( client_index( i ), &itemlist_equip.list[equip++], &sd->cart.u.items_cart[i], id, id->equip );
+#else
+			clif_item_equip( client_index( i ), &itemlist_equip.list[equip++], &sd->cart.u.items_cart[i], id, id->equip, 3 );
+#endif // Pandas_FuncParams_Clif_Item_Equip
 		 // Stackable (Normal)
 		}else{
 			clif_item_normal( client_index( i ), &itemlist_normal.list[normal++], &sd->cart.u.items_cart[i], id );
@@ -4148,8 +4373,17 @@ void clif_initialstatus( map_session_data& sd ) {
 #ifdef RENEWAL
 	packet.plusmdefPower = pc_rightside_mdef( &sd );
 #else
+#ifndef Pandas_Extreme_Computing
 	// Negative check for Frenzy'ed characters.
 	packet.plusmdefPower = std::max( pc_rightside_mdef( &sd ), 0 );
+#else
+	int32 temp = std::max(static_cast<int32>(pc_rightside_mdef(&sd)), 0);
+	if (temp > std::numeric_limits<int16>::max()) {
+		packet.plusmdefPower = std::numeric_limits<int16>::max();
+	} else {
+		packet.plusmdefPower = static_cast<int16>(temp);
+	}
+#endif // Pandas_Extreme_Computing
 #endif
 
 	packet.hitSuccessValue = sd.battle_status.hit;
@@ -4160,6 +4394,24 @@ void clif_initialstatus( map_session_data& sd ) {
 	packet.plusASPD = 0;
 
 	clif_send( &packet, sizeof( packet ), &sd, SELF );
+
+#ifdef Pandas_Extreme_Computing
+	// ZC_STATUS 封包发送的 MATK 等字段仅支持 WORD 类型且是有符号的, 最大也就 0x7FFF (32767)
+	// 因此发送了上述封包后我们需要再补充调用 clif_updatestatus 这个封包里 MATK 等字段时 INT 类型的 (有无符号没测试)
+	// 就算是有符号, 也应该能支持到 0x7FFFFFFF (2147483647) 总之.... 很好... 哈哈哈
+	clif_updatestatus(sd, SP_ATK1);
+	clif_updatestatus(sd, SP_ATK2);
+	clif_updatestatus(sd, SP_MATK1);
+	clif_updatestatus(sd, SP_MATK2);
+	clif_updatestatus(sd, SP_DEF1);
+	clif_updatestatus(sd, SP_DEF2);
+	clif_updatestatus(sd, SP_MDEF1);
+	clif_updatestatus(sd, SP_MDEF2);
+	clif_updatestatus(sd, SP_HIT);
+	clif_updatestatus(sd, SP_CRITICAL);
+	clif_updatestatus(sd, SP_FLEE1);
+	clif_updatestatus(sd, SP_FLEE2);
+#endif // Pandas_Extreme_Computing
 
 	clif_updatestatus(sd, SP_STR);
 	clif_updatestatus(sd, SP_AGI);
@@ -4319,6 +4571,13 @@ void clif_equipitemack( const map_session_data& sd, uint8 flag, int32 index, int
 	}else{
 		p.wItemSpriteNumber = 0;
 	}
+#ifdef Pandas_Item_ControlViewID
+	if (flag == ITEM_EQUIP_ACK_OK && sd.inventory_data[index]->look != 0) {
+		if (ITEM_PROPERTIES_HASFLAG(sd.inventory_data[index], noview_mask, ITEM_NOVIEW_WHEN_I_SEE)) {
+			p.wItemSpriteNumber = 0;
+		}
+	}
+#endif // Pandas_Item_ControlViewID
 #endif
 	p.result = flag;
 
@@ -4371,6 +4630,10 @@ void clif_misceffect( const block_list& bl, e_notify_effect type ){
 
 	clif_send( &packet, sizeof( packet ), &bl, AREA );
 }
+
+#ifdef Pandas_Aura_Mechanism
+void clif_getareachar_unit(map_session_data* sd, struct block_list* bl);
+#endif // Pandas_Aura_Mechanism
 
 
 /// Notifies clients in the area of a state change.
@@ -4427,6 +4690,27 @@ void clif_changeoption_target( const block_list* bl, const block_list* target ){
 			clif_send( &p, sizeof( p ), target, SELF );
 		}
 	}
+
+#ifdef Pandas_Aura_Mechanism
+	block_list* aura_bl = const_cast<block_list*>(bl);
+	struct s_unit_common_data* ucd = status_get_ucd(aura_bl);
+	if (ucd) {
+		if (target != nullptr && target->type == BL_PC) {
+			map_session_data* tsd = BL_CAST(BL_PC, const_cast<block_list*>(target));
+			clif_clearunit_single(bl->id, CLR_TRICKDEAD, *tsd);
+			if (!aura_need_hiding(aura_bl, const_cast<block_list*>(target))) {
+				clif_getareachar_unit(tsd, aura_bl);
+			}
+		} else if (bl->type == BL_NPC) {
+			clif_clearunit_area(*bl, CLR_TRICKDEAD);
+			map_foreachinallrange(clif_insight, aura_bl, AREA_SIZE, BL_PC, aura_bl);
+		}
+
+		if (bl->type == BL_PC) {
+			clif_send_auras(aura_bl, SELF, false, AURA_SPECIAL_HIDE_DISAPPEAR);
+		}
+	}
+#endif // Pandas_Aura_Mechanism
 }
 
 
@@ -5103,6 +5387,10 @@ void clif_getareachar_unit( map_session_data* sd,block_list *bl ){
 				clif_specialeffect_single(bl,EF_BABYBODY2,sd->fd);
 			clif_efst_status_change_sub(sd, bl, SELF);
 			clif_progressbar_npc(nd, sd);
+#ifdef Pandas_ScriptCommand_ShowVend
+			if (nd->vendingboard.show)
+				clif_showvendingboard(nd, nd->vendingboard.message, SELF, sd);
+#endif // Pandas_ScriptCommand_ShowVend
 		}
 		break;
 	case BL_MOB:
@@ -5251,7 +5539,11 @@ void clif_damage(block_list& src, block_list& dst, t_tick tick, int32 sdelay, in
 		// it displays the damage and makes the target flinch / stop. If the damage frame is undefined,
 		// it instead displays the damage / flinch / stop at the beginning of the second to last frame.
 		// We define the time after which the damage frame shows at 1x speed as clientamotion.
+#ifndef Pandas_Extreme_Computing
 		uint16 clientamotion = std::max((uint16)1, status_get_clientamotion(&src));
+#else
+		pec_ushort clientamotion = std::max((pec_ushort)1, status_get_clientamotion(&src));
+#endif // Pandas_Extreme_Computing
 
 		// Knowing when the damage frame happens in the animation allows us to synchronize the timing
 		// between client and server using the formula below.
@@ -5279,6 +5571,15 @@ void clif_damage(block_list& src, block_list& dst, t_tick tick, int32 sdelay, in
 		p.damage = static_cast<decltype(p.damage)>( std::min( damage, static_cast<decltype(damage)>( std::numeric_limits<decltype(p.damage)>::max() ) ) );
 		p.damage2 = static_cast<decltype(p.damage2)>( std::min( damage2, static_cast<decltype(damage2)>( std::numeric_limits<decltype(p.damage2)>::max() ) ) );
 	}
+
+#ifdef Pandas_MapFlag_HideDamage
+	if (map_getmapflag(src.m, MF_HIDEDAMAGE)) {
+		// 伤害会存在段数的概念, 客户端会把总伤害除以段数后显示每段伤害.
+		// 让每段伤害变成负数即可隐藏具体伤害, 同时保留攻击段数动画.
+		p.damage = div * -1;
+		p.damage2 = div * -1;
+	}
+#endif // Pandas_MapFlag_HideDamage
 
 #if PACKETVER >= 20131223
 	p.isSPDamage = (spdamage) ? 1 : 0; // IsSPDamage - Displays blue digits.
@@ -5677,11 +5978,21 @@ int32 clif_insight(block_list *bl,va_list ap)
 			skill_getareachar_skillunit_visibilty_single((TBL_SKILL*)bl, tsd);
 			break;
 		default:
+#ifdef Pandas_Aura_Mechanism
+			if (bl && tsd) {
+				clif_clearunit_single(bl->id, CLR_TRICKDEAD, *tsd);
+			}
+#endif // Pandas_Aura_Mechanism
 			clif_getareachar_unit(tsd,bl);
 			break;
 		}
 	}
 	if (clif_session_isValid(sd)) { //Tell sd that tbl walked into his view
+#ifdef Pandas_Aura_Mechanism
+		if (tbl && sd) {
+			clif_clearunit_single(tbl->id, CLR_TRICKDEAD, *sd);
+		}
+#endif // Pandas_Aura_Mechanism
 		clif_getareachar_unit(sd,tbl);
 	}
 	return 0;
@@ -6069,6 +6380,14 @@ void clif_skill_damage( const block_list& src, const block_list& dst, t_tick tic
 	}
 	packet.level = skill_lv;
 	packet.count = static_cast<decltype(packet.count)>(div);
+
+#ifdef Pandas_MapFlag_HideDamage
+	if (map_getmapflag(src.m, MF_HIDEDAMAGE)) {
+		// 伤害会存在段数的概念, 客户端会把总伤害除以段数后显示每段伤害.
+		// 让段数为负数即可让每段伤害变成负数, 从而隐藏具体伤害.
+		packet.count = static_cast<decltype(packet.count)>(div * -1);
+	}
+#endif // Pandas_MapFlag_HideDamage
 
 	// For some reason, late 2013 and newer clients have
 	// a issue that causes players and monsters to endure
@@ -6719,6 +7038,17 @@ void clif_broadcast( const block_list* bl, const char* mes, size_t len, int32 ty
 	p->packetType = HEADER_ZC_BROADCAST;
 	p->PacketLength = sizeof( *p );
 
+#ifdef Pandas_ScriptCommand_Announce
+	if ((type & BC_NAME) != 0 && bl != nullptr && bl->type == BL_PC) {
+		int16 length = static_cast<int16>(NAME_LENGTH + 4);
+
+		// If the message starts with "micc", the following string is treated as the sender name.
+		sprintf(p->message, "micc%s", BL_CAST(BL_PC, bl)->status.name);
+		strncpy(&p->message[length], mes, len);
+		p->PacketLength += static_cast<decltype(p->PacketLength)>(length + len);
+	}
+	else
+#endif // Pandas_ScriptCommand_Announce
 	if( ( type&BC_BLUE ) != 0 ){
 		// If there's "blue" at the beginning of the message, game client will display it in blue instead of yellow.
 		const char* color = "blue";
@@ -7081,6 +7411,26 @@ void clif_use_card( const map_session_data* sd,int32 idx)
 	if (!sd->inventory_data[idx] || sd->inventory_data[idx]->type != IT_CARD)
 		return; //Avoid parsing invalid item indexes (no card/no item)
 
+#ifdef Pandas_BattleConfig_CashMounting_UseitemLimit
+	// 当玩家双击卡片时先判定是否乘坐了“商城坐骑”,
+	// 如果是那么再根据 cashmount_useitem_limit 设置决定是否拒绝 [Sola丶小克]
+	if (sd && !sd->sc.empty() && sd->sc.getSCE(SC_ALL_RIDING)) {
+		bool isblocked = false;
+		switch (sd->inventory_data[idx]->type) {
+			case IT_CARD: {
+				isblocked = (battle_config.cashmount_useitem_limit & 16) == 16;
+				break;
+			}
+		}
+		if (isblocked) {
+			char message[128] = { 0 };
+			safesnprintf(message, sizeof(message), msg_txt_cn(sd, 3), sd->inventory_data[idx]->ename.c_str()); // 很抱歉, 当您坐上“商城坐骑”时, 无法使用: %s
+			clif_displaymessage(sd->fd, message);
+			return;
+		}
+	}
+#endif // Pandas_BattleConfig_CashMounting_UseitemLimit
+
 	ep=sd->inventory_data[idx]->equip;
 	WFIFOHEAD(fd,MAX_INVENTORY * 2 + 4);
 	WFIFOW(fd,0)=0x17b;
@@ -7090,8 +7440,14 @@ void clif_use_card( const map_session_data* sd,int32 idx)
 
 		if(sd->inventory_data[i] == nullptr)
 			continue;
+#ifndef Pandas_Shadowgear_Support_Card
 		if(sd->inventory_data[i]->type!=IT_WEAPON && sd->inventory_data[i]->type!=IT_ARMOR)
 			continue;
+#else
+		// 玩家双击卡片时, 出现的道具列表中允许影子装备出现
+		if(sd->inventory_data[i]->type!=IT_WEAPON && sd->inventory_data[i]->type!=IT_ARMOR && sd->inventory_data[i]->type!=IT_SHADOWGEAR)
+			continue;
+#endif // Pandas_Shadowgear_Support_Card
 		if(itemdb_isspecial(sd->inventory.u.items_inventory[i].card[0])) //Can't slot it
 			continue;
 
@@ -7343,6 +7699,11 @@ void clif_cart_additem( const map_session_data* sd, int32 n, int32 amount ){
 	p.itemId = client_nameid( sd->cart.u.items_cart[n].nameid );
 #if PACKETVER >= 5
 	p.itemType = itemdb_type( sd->cart.u.items_cart[n].nameid );
+#ifdef Pandas_Item_Amulet_System
+	// 若是护身符道具, 那么发送给客户端的道具类型直接从 IT_AMULET 换成 IT_ETC
+	if (amulet_is(sd->cart.u.items_cart[n].nameid))
+		p.itemType = amulet_pandas_type(sd->cart.u.items_cart[n].nameid);
+#endif // Pandas_Item_Amulet_System
 #endif
 	p.identified = sd->cart.u.items_cart[n].identify;
 	p.damaged  = sd->cart.u.items_cart[n].attribute;
@@ -7618,6 +7979,23 @@ void clif_showvendingboard( map_session_data& sd, enum send_target target, block
 
 	clif_send( &p, sizeof( p ), tbl, target );
 }
+
+#ifdef Pandas_ScriptCommand_ShowVend
+void clif_showvendingboard(block_list* bl, const char* name, enum send_target target, block_list* tbl) {
+	if (tbl == nullptr) {
+		tbl = bl;
+		target = AREA_WOS;
+	}
+
+	PACKET_ZC_STORE_ENTRY p = {};
+
+	p.packetType = HEADER_ZC_STORE_ENTRY;
+	p.makerAID = bl->id;
+	safestrncpy(p.storeName, name, sizeof(p.storeName));
+
+	clif_send(&p, sizeof(p), tbl, target);
+}
+#endif // Pandas_ScriptCommand_ShowVend
 
 
 /// Removes a vending board from screen.
@@ -8246,6 +8624,12 @@ void clif_sendegg( map_session_data* sd)
 		clif_displaymessage(fd, msg_txt(sd,666));
 		return;
 	}
+#ifdef Pandas_MapFlag_NoPet
+	if( map_getmapflag( sd->m, MF_NOPET ) ){
+		clif_displaymessage( fd, msg_txt_cn( sd, 5 ) );
+		return;
+	}
+#endif // Pandas_MapFlag_NoPet
 	WFIFOHEAD(fd, MAX_INVENTORY * 2 + 4);
 	WFIFOW(fd,0)=0x1a6;
 	for(i=0,n=0;i<MAX_INVENTORY;i++){
@@ -9560,8 +9944,12 @@ void clif_GM_kick( map_session_data *sd, map_session_data *tsd)
 {
 	nullpo_retv(tsd);
 
-	if (sd == nullptr)
+	if (sd == nullptr) {
 		tsd->state.keepshop = true;
+#ifdef Pandas_Player_Suspend_System
+		tsd->state.keepsuspend = true;
+#endif // Pandas_Player_Suspend_System
+	}
 
 	if (session_isActive(tsd->fd))
 		clif_authfail_fd(tsd->fd, 15);
@@ -9914,6 +10302,18 @@ void clif_refresh(map_session_data *sd)
 		pc_disguise(sd, disguise);
 	}
 	clif_refresh_storagewindow(sd);
+
+#ifdef Pandas_Fix_Progressbar_Refresh_Stuck
+	if (sd->progressbar.npc_id) {
+		int32 second = 0;
+		second = (int32)ceil((sd->progressbar.timeout - gettick()) / 1000.0);
+		clif_progressbar(sd, 0, max(second, 1));	// 至少显示 1 秒
+	}
+#endif // Pandas_Fix_Progressbar_Refresh_Stuck
+
+#ifdef Pandas_Aura_Mechanism
+	clif_send_auras_single(sd, sd);
+#endif // Pandas_Aura_Mechanism
 }
 
 
@@ -9955,10 +10355,25 @@ void clif_name( const block_list* src, const block_list* bl, send_target target 
 				p = party_search( sd->status.party_id );
 			}
 
+			const bool display_party_info = p && ( sd->guild || battle_config.display_party_name );
+
+#ifdef Pandas_MapFlag_HidePartyInfo
+			const bool hide_party_info = display_party_info && map_getmapflag(sd->m, MF_HIDEPARTYINFO);
+#endif // Pandas_MapFlag_HidePartyInfo
+
 			// do not display party unless the player is also in a guild
-			if( p && ( sd->guild || battle_config.display_party_name ) ){
+			if( display_party_info ){
 				safestrncpy( packet.party_name, p->party.name, NAME_LENGTH );
+#ifdef Pandas_MapFlag_HidePartyInfo
+				// 若当前地图启用了 hidepartyinfo 标记, 除了自己之外不再返回角色的队伍名称.
+				if (hide_party_info && src->id != bl->id)
+					safestrncpy(packet.party_name, "", NAME_LENGTH);
+#endif // Pandas_MapFlag_HidePartyInfo
 			}
+
+#ifdef Pandas_MapFlag_HideGuildInfo
+			const bool hide_guild_info = sd->guild && map_getmapflag(sd->m, MF_HIDEGUILDINFO);
+#endif // Pandas_MapFlag_HideGuildInfo
 
 			if( sd->guild ){
 				int32 position;
@@ -9968,6 +10383,13 @@ void clif_name( const block_list* src, const block_list* bl, send_target target 
 
 				safestrncpy( packet.guild_name, sd->guild->guild.name, NAME_LENGTH );
 				safestrncpy( packet.position_name, sd->guild->guild.position[position].name, NAME_LENGTH );
+#ifdef Pandas_MapFlag_HideGuildInfo
+				// 若当前地图启用了 hideguildinfo 标记, 除了自己之外不再返回角色的公会名称和职位名称.
+				if (hide_guild_info && src->id != bl->id) {
+					safestrncpy(packet.guild_name, "", NAME_LENGTH);
+					safestrncpy(packet.position_name, "", NAME_LENGTH);
+				}
+#endif // Pandas_MapFlag_HideGuildInfo
 			}else if( sd->clan ){
 				safestrncpy( packet.position_name, sd->clan->name, NAME_LENGTH );
 			}
@@ -9975,6 +10397,33 @@ void clif_name( const block_list* src, const block_list* bl, send_target target 
 #if PACKETVER_MAIN_NUM >= 20150225 || PACKETVER_RE_NUM >= 20141126 || defined( PACKETVER_ZERO )
 			packet.title_id = sd->status.title_id; // Title ID
 #endif
+
+#if defined(Pandas_MapFlag_HidePartyInfo) || defined(Pandas_MapFlag_HideGuildInfo)
+			bool hide_name_area_info = false;
+#ifdef Pandas_MapFlag_HidePartyInfo
+			hide_name_area_info = hide_name_area_info || hide_party_info;
+#endif // Pandas_MapFlag_HidePartyInfo
+#ifdef Pandas_MapFlag_HideGuildInfo
+			hide_name_area_info = hide_name_area_info || hide_guild_info;
+#endif // Pandas_MapFlag_HideGuildInfo
+
+			if (hide_name_area_info && src == bl && target == AREA) {
+				// clif_name_area 使用 src == bl 广播, 需要拆成自己完整可见、周围玩家隐藏受限信息.
+				clif_send(&packet, sizeof(packet), src, SELF);
+#ifdef Pandas_MapFlag_HidePartyInfo
+				if (hide_party_info)
+					safestrncpy(packet.party_name, "", NAME_LENGTH);
+#endif // Pandas_MapFlag_HidePartyInfo
+#ifdef Pandas_MapFlag_HideGuildInfo
+				if (hide_guild_info) {
+					safestrncpy(packet.guild_name, "", NAME_LENGTH);
+					safestrncpy(packet.position_name, "", NAME_LENGTH);
+				}
+#endif // Pandas_MapFlag_HideGuildInfo
+				clif_send(&packet, sizeof(packet), src, AREA_WOS);
+				return;
+			}
+#endif // Pandas_MapFlag_HidePartyInfo || Pandas_MapFlag_HideGuildInfo
 
 			clif_send(&packet, sizeof(packet), src, target);
 		}
@@ -10034,6 +10483,7 @@ void clif_name( const block_list* src, const block_list* bl, send_target target 
 
 				clif_send(&packet, sizeof(packet), src, target);
 			}else if( battle_config.show_mob_info ){
+#ifndef Pandas_MobInfomation_Extend
 				PACKET_ZC_ACK_REQNAMEALL packet = { 0 };
 
 				packet.packet_id = HEADER_ZC_ACK_REQNAMEALL;
@@ -10059,6 +10509,111 @@ void clif_name( const block_list* src, const block_list* bl, send_target target 
 					*(str_p-3) = '\0'; //Remove trailing space + pipe.
 					safestrncpy( packet.party_name, mobhp, NAME_LENGTH );
 				}
+#else
+				PACKET_ZC_ACK_REQNAMEALL packet = { 0 };
+
+				packet.packet_id = HEADER_ZC_ACK_REQNAMEALL;
+				packet.gid = bl->id;
+				safestrncpy(packet.name, md->name, NAME_LENGTH);
+
+				int option = battle_config.show_mob_info;
+
+#ifdef Pandas_MapFlag_MobInfo
+				if (md->m >= 0 && map_getmapflag(md->m, MF_MOBINFO)) {
+					option = map_getmapflag_param(md->m, MF_MOBINFO, 1);
+				}
+#endif // Pandas_MapFlag_MobInfo
+
+				char mobhp[50] = { 0 }, *str_p = mobhp;
+
+				if (option & 4) {
+					str_p += sprintf(str_p, "Lv. %d | ", md->level);
+				}
+
+				if (option & 1) {
+					str_p += sprintf(str_p, "HP: %u/%u | ", md->status.hp, md->status.max_hp);
+				}
+
+				if (option & 2) {
+					str_p += sprintf(str_p, "HP: %u%% | ", get_percentage(md->status.hp, md->status.max_hp));
+				}
+
+				if (option & 8) {
+					str_p += sprintf(str_p, "NO.%d | ", md->mob_id);
+				}
+
+				if (str_p != mobhp) {
+					*(str_p - 3) = '\0';
+				}
+
+				if (strlen(mobhp) >= NAME_LENGTH - 1) {
+					memset(mobhp, 0, sizeof(mobhp));
+					str_p = &mobhp[0];
+
+					if (option & 4) {
+						str_p += sprintf(str_p, "Lv.%d ", md->level);
+					}
+
+					if (option & 1 || option & 2) {
+						str_p += sprintf(str_p, "HP:%u%% ", get_percentage(md->status.hp, md->status.max_hp));
+					}
+
+					if (option & 8) {
+						str_p += sprintf(str_p, "NO.%d ", md->mob_id);
+					}
+
+					if (str_p != mobhp) {
+						*(str_p - 1) = '\0';
+					}
+				}
+
+				char mobhp2[50] = { 0 }, *str_p2 = mobhp2;
+
+				if (option & 16) {
+					char mobsize_fmt[100] = { 0 };
+					sprintf(mobsize_fmt, "%s", msg_txt_cn(nullptr, 22));
+
+					char mobsize[50] = { 0 };
+					sprintf(mobsize, "%s", msg_txt_cn(nullptr, 23 + md->status.size));
+
+					str_p2 += sprintf(str_p2, mobsize_fmt, mobsize);
+				}
+
+				if (option & 32) {
+					char mobrace_fmt[100] = { 0 };
+					sprintf(mobrace_fmt, "%s", msg_txt_cn(nullptr, 26));
+
+					char mobrace[50] = { 0 };
+					sprintf(mobrace, "%s", msg_txt_cn(nullptr, 27 + md->status.race));
+
+					if (option & 16) {
+						str_p2 += sprintf(str_p2, " ");
+					}
+
+					str_p2 += sprintf(str_p2, mobrace_fmt, mobrace);
+				}
+
+				char mobhp3[50] = { 0 }, *str_p3 = mobhp3;
+
+				if (option & 64) {
+					char mobele_fmt[100] = { 0 };
+					sprintf(mobele_fmt, "%s", msg_txt_cn(nullptr, 51));
+
+					char mobele[50] = { 0 };
+					sprintf(mobele, "%s", msg_txt_cn(nullptr, 52 + md->status.def_ele));
+
+					str_p3 += sprintf(str_p3, mobele_fmt, mobele, md->status.ele_lv);
+				}
+
+				if (str_p != mobhp)
+					safestrncpy(packet.party_name, mobhp, NAME_LENGTH);
+
+				if (str_p2 != mobhp2)
+					safestrncpy(packet.guild_name, mobhp2, NAME_LENGTH);
+
+				if (str_p3 != mobhp3)
+					safestrncpy(packet.position_name, mobhp3, NAME_LENGTH);
+#endif // Pandas_MobInfomation_Extend
 
 				clif_send(&packet, sizeof(packet), src, target);
 			} else {
@@ -10363,7 +10918,11 @@ void clif_viewequip_ack( const map_session_data& sd, const map_session_data& tsd
 				continue;
 			}
 
+#ifndef Pandas_FuncParams_Clif_Item_Equip
 			clif_item_equip( client_index( k ), &p->list[equip], &tsd.inventory.u.items_inventory[k], tsd.inventory_data[k], pc_equippoint( &tsd, k ) );
+#else
+			clif_item_equip( client_index( k ), &p->list[equip], &tsd.inventory.u.items_inventory[k], tsd.inventory_data[k], pc_equippoint( &tsd, k ), 4 );
+#endif // Pandas_FuncParams_Clif_Item_Equip
 
 			p->PacketLength += static_cast<decltype(p->PacketLength)>( sizeof( p->list[0] ) );
 			equip++;
@@ -10571,6 +11130,20 @@ static bool clif_process_message(map_session_data* sd, bool whisperFormat, char*
 		sd->idletime_mer = last_tick;
 
 	//achievement_update_objective(sd, AG_CHATTING, 1, 1); // !TODO: Confirm how this achievement is triggered
+
+#ifdef Pandas_NpcExpress_PC_TALK
+	if (sd) {
+		pc_setreg(sd, add_str("@talk_x"), sd->x);
+		pc_setreg(sd, add_str("@talk_y"), sd->y);
+		pc_setreg(sd, add_str("@talk_mapid"), (sd ? sd->m : -1));
+		pc_setregstr(sd, add_str("@talk_mapname$"), (sd && sd->m >= 0 ? map[sd->m].name : ""));
+
+		pc_setreg(sd, add_str("@talk_gid"), sd->id);
+		pc_setregstr(sd, add_str("@talk_name$"), out_name);
+		pc_setregstr(sd, add_str("@talk_mes$"), out_message);
+		npc_script_event(*sd, NPCX_PC_TALK);
+	}
+#endif // Pandas_NpcExpress_PC_TALK
 
 	return true;
 }
@@ -10809,6 +11382,9 @@ void clif_parse_LoadEndAck(int32 fd,map_session_data *sd)
 
 	// reset the callshop flag if the player changes map
 	sd->state.callshop = 0;
+#ifdef Pandas_Fix_ScriptControl_Shop_Missing_NpcID_Error
+	sd->callshop_master_npcid = 0;
+#endif // Pandas_Fix_ScriptControl_Shop_Missing_NpcID_Error
 
 	if(map_addblock(sd))
 		return;
@@ -10849,9 +11425,25 @@ void clif_parse_LoadEndAck(int32 fd,map_session_data *sd)
 
 	// pet
 	if( sd->pd ) {
+#ifdef Pandas_MapFlag_NoPet
+		if( map_getmapflag( sd->m, MF_NOPET ) ){
+			clif_displaymessage( sd->fd, msg_txt_cn( sd, 4 ) );
+			pet_return_egg( sd, sd->pd );
+#if PACKETVER >= 20180620 && PACKETVER < 20180704
+			clif_inventorylist( sd );
+#endif // PACKETVER >= 20180620 && PACKETVER < 20180704
+		} else
+#endif // Pandas_MapFlag_NoPet
 		if( battle_config.pet_no_gvg && mapdata_flag_gvg(mapdata) ) { //Return the pet to egg. [Skotlex]
 			clif_displaymessage(sd->fd, msg_txt(sd,666));
 			pet_return_egg( sd, sd->pd );
+#ifdef Pandas_Fix_LoadEndAck_Pet_Return_To_Egg_Missing
+#if PACKETVER >= 20180620 && PACKETVER < 20180704
+			// 目前测试只覆盖了 20180620 客户端
+			// 若客户端的封包版本大于等于 20180704 的话, pet_return_egg 内部有做处理
+			clif_inventorylist(sd);
+#endif // PACKETVER >= 20180620 && PACKETVER < 20180704
+#endif // Pandas_Fix_LoadEndAck_Pet_Return_To_Egg_Missing
 		} else {
 			if(map_addblock(sd->pd))
 				return;
@@ -10863,6 +11455,13 @@ void clif_parse_LoadEndAck(int32 fd,map_session_data *sd)
 	}
 
 	//homunculus [blackhole89]
+#ifdef Pandas_MapFlag_NoHomun
+	if( hom_is_active(sd->hd) && map_getmapflag( sd->m, MF_NOHOMUN ) ){
+		// 当前地图禁止使用人工生命体, 已自动将其安息
+		clif_displaymessage( sd->fd, msg_txt_cn( sd, 6 ) );
+		hom_vaporize( sd, HOM_ST_REST );
+	} else
+#endif // Pandas_MapFlag_NoHomun
 	if( hom_is_active(sd->hd) ) {
 		if(map_addblock(sd->hd))
 			return;
@@ -10879,6 +11478,12 @@ void clif_parse_LoadEndAck(int32 fd,map_session_data *sd)
 			skill_unit_move(sd->hd,gettick(),1); // apply land skills immediately
 	}
 
+#ifdef Pandas_MapFlag_NoMerc
+	if( sd->md && map_getmapflag( sd->m, MF_NOMERC ) ){
+		// 当前地图禁止使用佣兵, 已自动将其禁用
+		clif_displaymessage( sd->fd, msg_txt_cn( sd, 8 ) );
+	} else
+#endif // Pandas_MapFlag_NoMerc
 	if( sd->md ) {
 		if(map_addblock(sd->md))
 			return;
@@ -10984,6 +11589,19 @@ void clif_parse_LoadEndAck(int32 fd,map_session_data *sd)
 		// Set facing direction before check below to update client
 		if (battle_config.spawn_direction)
 			unit_setdir(sd, sd->status.body_direction, false);
+#ifdef Pandas_NpcExpress_ENTERMAP
+		if (sd) {
+			pc_setreg(sd, add_str("@frommap_id"), 0);
+			pc_setreg(sd, add_str("@frommap_x"), 0);
+			pc_setreg(sd, add_str("@frommap_y"), 0);
+			pc_setregstr(sd, add_str("@frommap_name$"), "");
+			pc_setreg(sd, add_str("@tomap_id"), sd->m);
+			pc_setreg(sd, add_str("@tomap_x"), sd->x);
+			pc_setreg(sd, add_str("@tomap_y"), sd->y);
+			pc_setregstr(sd, add_str("@tomap_name$"), map[sd->m].name);
+			npc_script_event(*sd, NPCX_ENTERMAP);
+		}
+#endif // Pandas_NpcExpress_ENTERMAP
 	} else {
 		//For some reason the client "loses" these on warp/map-change.
 		clif_updatestatus(*sd,SP_STR);
@@ -11005,9 +11623,17 @@ void clif_parse_LoadEndAck(int32 fd,map_session_data *sd)
 		sd->state.using_fake_npc = 0;
 		sd->state.menu_or_input = 0;
 		sd->npc_menu = 0;
+#ifdef Pandas_Fix_Prompt_Cancel_Combine_Close_Error
+		sd->npc_menu_npcid = 0;
+#endif // Pandas_Fix_Prompt_Cancel_Combine_Close_Error
 
+#ifndef Pandas_Struct_Map_Session_Data_Skip_LoadEndAck_NPC_Event_Dequeue
 		if(sd->npc_id)
 			npc_event_dequeue(sd);
+#else
+		if (sd->npc_id && !sd->pandas.skip_loadendack_npc_event_dequeue)
+			npc_event_dequeue(sd);
+#endif // Pandas_Struct_Map_Session_Data_Skip_LoadEndAck_NPC_Event_Dequeue
 	}
 
 	if( sd->state.changemap ) {// restore information that gets lost on map-change
@@ -11126,9 +11752,20 @@ void clif_parse_LoadEndAck(int32 fd,map_session_data *sd)
 		clif_openvending( *sd );
 		clif_showvendingboard( *sd );
 	}
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+	else if (sd->state.buyingstore) {
+		clif_buyingstore_open(sd);
+		clif_buyingstore_myitemlist(*sd);
+		clif_buyingstore_entry(*sd);
+	}
+#endif // Pandas_Support_Transfer_Autotrade_Player
 
 	// Don't trigger NPC event or opening vending/buyingstore will be failed
+#ifndef Pandas_BattleConfig_Force_LoadEvent
 	if(!sd->state.autotrade && mapdata->getMapFlag(MF_LOADEVENT)) // Lance
+#else
+	if(!sd->state.autotrade && (mapdata->getMapFlag(MF_LOADEVENT) || battle_config.force_loadevent)) // Lance
+#endif // Pandas_BattleConfig_Force_LoadEvent
 		npc_script_event( *sd, NPCE_LOADMAP );
 
 	if (pc_checkskill(sd, SG_DEVIL) && ((sd->class_&MAPID_THIRDMASK) == MAPID_STAR_EMPEROR || pc_is_maxjoblv(sd)))
@@ -11306,13 +11943,21 @@ void clif_progressbar( const map_session_data* sd, unsigned long color, uint32 s
 
 /// Removes an ongoing progress bar (ZC_PROGRESS_CANCEL).
 /// 02f2
-void clif_progressbar_abort( const map_session_data* sd )
+void clif_progressbar_abort( map_session_data* sd )
 {
 	int32 fd = sd->fd;
 
 	WFIFOHEAD(fd,packet_len(0x2f2));
 	WFIFOW(fd,0) = 0x2f2;
 	WFIFOSET(fd,packet_len(0x2f2));
+
+#ifdef Pandas_NpcExpress_PROGRESSABORT
+	if (isAllowTriggerEvent(sd, NPCX_PROGRESSABORT)) {
+		pc_setreg(sd, add_str("@abort_npc_id"), sd->progressbar.npc_id);
+		pc_setreg(sd, add_str("@abort_timeout"), (int64)sd->progressbar.timeout);
+		npc_script_event(*sd, NPCX_PROGRESSABORT);
+	}
+#endif // Pandas_NpcExpress_PROGRESSABORT
 }
 
 
@@ -11532,10 +12177,8 @@ void clif_parse_GlobalMessage(int32 fd, map_session_data* sd)
 	safestrncpy(WFIFOCP(fd,4), output, length );
 	WFIFOSET(fd, WFIFOW(fd,2));
 
-#ifdef PCRE_SUPPORT
 	// trigger listening npcs
 	map_foreachinallrange(npc_chat_sub, sd, AREA_SIZE, BL_NPC, output, strlen(output), sd);
-#endif
 
 	// Chat logging type 'O' / Global Chat
 	log_chat(LOG_CHAT_GLOBAL, 0, sd->status.char_id, sd->status.account_id, mapindex_id2name(sd->mapindex), sd->x, sd->y, nullptr, message);
@@ -11952,7 +12595,12 @@ void clif_parse_WisMessage(int32 fd, map_session_data* sd)
 	}
 
 	// if player is autotrading
+	#ifndef Pandas_Struct_Autotrade_Extend
 	if (dstsd->state.autotrade == 1){
+	#else
+	if ((dstsd->state.autotrade & AUTOTRADE_VENDING) ||
+		(dstsd->state.autotrade & AUTOTRADE_BUYINGSTORE)) {
+	#endif // Pandas_Struct_Autotrade_Extend
 		safesnprintf(output,sizeof(output),"%s is in autotrade mode and cannot receive whispered messages.", dstsd->status.name);
 		clif_wis_message(sd, wisp_server_name, output, strlen(output) + 1, 0);
 		return;
@@ -12878,6 +13526,23 @@ void clif_parse_skill_toid( map_session_data* sd, uint16 skill_id, uint16 skill_
 	if (inf&INF_GROUND_SKILL || !inf)
 		return; //Using a ground/passive skill on a target? WRONG.
 
+#ifdef Pandas_NpcFilter_USE_SKILL
+	if (sd && sd->type == BL_PC) {
+		pc_setreg(sd, add_str("@useskill_id"), skill_id);
+		pc_setreg(sd, add_str("@useskill_lv"), skill_lv);
+		pc_setreg(sd, add_str("@useskill_pos_x"), -1);
+		pc_setreg(sd, add_str("@useskill_pos_y"), -1);
+		pc_setreg(sd, add_str("@useskill_target_gid"), target_id);
+
+		pc_setreg(sd, add_str("@useskill_x"), -1);
+		pc_setreg(sd, add_str("@useskill_y"), -1);
+		pc_setreg(sd, add_str("@useskill_target"), target_id);
+
+		if (npc_script_filter(sd, NPCF_USE_SKILL))
+			return;
+	}
+#endif // Pandas_NpcFilter_USE_SKILL
+
 	if (sd->state.block_action & PCBLOCK_SKILL) {
 		clif_msg( *sd, MSI_BUSY );
 		return;
@@ -13003,6 +13668,23 @@ static void clif_parse_UseSkillToPosSub( int32 fd, map_session_data& sd, uint16 
 
 	if( !(skill_get_inf(skill_id)&INF_GROUND_SKILL) )
 		return; //Using a target skill on the ground? WRONG.
+
+#ifdef Pandas_NpcFilter_USE_SKILL
+	if (sd.type == BL_PC) {
+		pc_setreg(&sd, add_str("@useskill_id"), skill_id);
+		pc_setreg(&sd, add_str("@useskill_lv"), skill_lv);
+		pc_setreg(&sd, add_str("@useskill_pos_x"), x);
+		pc_setreg(&sd, add_str("@useskill_pos_y"), y);
+		pc_setreg(&sd, add_str("@useskill_target_gid"), 0);
+
+		pc_setreg(&sd, add_str("@useskill_x"), x);
+		pc_setreg(&sd, add_str("@useskill_y"), y);
+		pc_setreg(&sd, add_str("@useskill_target"), 0);
+
+		if (npc_script_filter(&sd, NPCF_USE_SKILL))
+			return;
+	}
+#endif // Pandas_NpcFilter_USE_SKILL
 
 	if (sd.state.block_action & PCBLOCK_SKILL) {
 		clif_msg( sd, MSI_BUSY );
@@ -13332,6 +14014,12 @@ void clif_parse_NpcSelectMenu(int32 fd,map_session_data *sd){
 	}
 
 	sd->npc_menu = select;
+#ifdef Pandas_Fix_Prompt_Cancel_Combine_Close_Error
+	if (sd->npc_menu == 0xff) {
+		// 若用户取消了菜单, 那么记录此时的 npc_id 是多少
+		sd->npc_menu_npcid = npc_id;
+	}
+#endif // Pandas_Fix_Prompt_Cancel_Combine_Close_Error
 
 	if( battle_config.idletime_option&IDLE_NPC_MENU ){
 		sd->idletime = last_tick;
@@ -13416,7 +14104,19 @@ void clif_parse_NpcCloseClicked(int32 fd,map_session_data *sd)
 
 	const PACKET_CZ_CLOSE_DIALOG* p = reinterpret_cast<PACKET_CZ_CLOSE_DIALOG*>( RFIFOP( fd, 0 ) );
 
+#ifndef Pandas_Fix_Prompt_Cancel_Combine_Close_Error
 	npc_scriptcont( sd, p->GID, true );
+#else
+	int npc_id = p->GID;
+
+	// 当 npc_id 为 0 且刚刚菜单选择的是取消时,
+	// 优先采用 sd->npc_menu_npcid 里备份的 npc_id 来进行后续流程
+	if (!npc_id && sd->npc_menu == 0xff) {
+		npc_id = sd->npc_menu_npcid;
+	}
+
+	npc_scriptcont(sd, npc_id, true);
+#endif // Pandas_Fix_Prompt_Cancel_Combine_Close_Error
 }
 
 
@@ -14818,7 +15518,9 @@ void clif_parse_GMKick(int32 fd, map_session_data *sd)
 			if( pc_can_use_command(sd, "unloadnpc", COMMAND_ATCOMMAND)) {
 				npc_unload_duplicates(nd);
 				npc_unload(nd,true);
+#ifndef Pandas_Speedup_Unloadnpc_Without_Refactoring_ScriptEvent
 				npc_read_event_script();
+#endif // Pandas_Speedup_Unloadnpc_Without_Refactoring_ScriptEvent
 			}
 		}
 		break;
@@ -15867,6 +16569,10 @@ void clif_parse_Check(int32 fd, map_session_data *sd)
 ///		1 = over weight
 ///		2 = fatal error
 void clif_Mail_setattachment( map_session_data* sd, int32 index, int32 amount, uint8 flag ){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	int32 fd = sd->fd;
 
 #if PACKETVER < 20150513
@@ -15899,6 +16605,11 @@ void clif_Mail_setattachment( map_session_data* sd, int32 index, int32 amount, u
 				continue;
 			}
 
+#ifdef Pandas_Crashfix_Prevent_NullPointer
+				if( !sd->inventory_data[sd->mail.item[i].index] ){
+					return; // 直接放弃发送封包
+				}
+#endif // Pandas_Crashfix_Prevent_NullPointer
 			p.weight += sd->mail.item[i].amount * ( sd->inventory_data[sd->mail.item[i].index]->weight / 10 );
 		}
 		p.favorite = ( item->favorite != 0 ) ? 1 : 0;
@@ -15925,6 +16636,10 @@ void clif_Mail_setattachment( map_session_data* sd, int32 index, int32 amount, u
 /// 09f2 <mail id>.Q <mail tab>.B <result>.B (ZC_ACK_ZENY_FROM_MAIL)
 /// 09f4 <mail id>.Q <mail tab>.B <result>.B (ZC_ACK_ITEM_FROM_MAIL)
 void clif_mail_getattachment(map_session_data* sd, struct mail_message *msg, uint8 result, enum mail_attachment_type type) {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	int32 fd = sd->fd;
 
@@ -15933,6 +16648,10 @@ void clif_mail_getattachment(map_session_data* sd, struct mail_message *msg, uin
 	WFIFOB(fd,2) = result;
 	WFIFOSET(fd,packet_len(0x245));
 #else
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!msg) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	switch( type ){
 		case MAIL_ATT_ITEM:
 		case MAIL_ATT_ZENY:
@@ -15961,6 +16680,10 @@ void clif_mail_getattachment(map_session_data* sd, struct mail_message *msg, uin
 ///     1 = recipinent does not exist
 /// 09ed <result>.B (ZC_ACK_WRITE_MAIL)
 void clif_Mail_send(map_session_data* sd, enum mail_send_result result){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	int32 fd = sd->fd;
 
@@ -15985,6 +16708,10 @@ void clif_Mail_send(map_session_data* sd, enum mail_send_result result){
 ///     1 = failure
 // 09f6 <mail tab>.B <mail id>.Q (ZC_ACK_DELETE_MAIL)
 void clif_mail_delete( map_session_data* sd, struct mail_message *msg, bool success ){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd || !msg) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	int32 fd = sd->fd;
 
@@ -16025,6 +16752,10 @@ void clif_Mail_return(int32 fd, int32 mail_id, int16 fail)
 /// 024a <mail id>.L <title>.40B <sender>.24B (ZC_MAIL_RECEIVE)
 /// 09e7 <result>.B (ZC_NOTIFY_UNREADMAIL)
 void clif_Mail_new(map_session_data* sd, int32 mail_id, const char *sender, const char *title){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	int32 fd = sd->fd;
 
@@ -16068,6 +16799,10 @@ void clif_Mail_window(int32 fd, int32 flag)
 /// 0ac2 <packet len>.W <unknown>.B (ZC_ACK_MAIL_LIST3)
 ///		{ <type>.B <mail id>.Q <read>.B <type>.B <sender>.24B <expires>.L <title length>.W <title>.?B }*
 void clif_Mail_refreshinbox(map_session_data *sd,enum mail_inbox_type type,int64 mailID){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	int32 fd = sd->fd;
 	struct mail_data *md = &sd->mail.inbox;
@@ -16261,6 +16996,10 @@ void clif_Mail_refreshinbox(map_session_data *sd,enum mail_inbox_type type,int64
 /// 0ac0 <mail id>.Q <unknown>.16B (CZ_OPEN_MAILBOX2)
 /// 0ac1 <mail id>.Q <unknown>.16B (CZ_REQ_REFRESH_MAIL_LIST2)
 void clif_parse_Mail_refreshinbox(int32 fd, map_session_data *sd){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	if( mail_invalid_operation( sd ) ){
 		return;
 	}
@@ -16328,6 +17067,10 @@ void clif_parse_Mail_refreshinbox(int32 fd, map_session_data *sd){
 ///		{  }*n
 // TODO: Packet description => for repeated block
 void clif_Mail_read( map_session_data *sd, int32 mail_id ){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	int32 i, fd = sd->fd;
 
 	ARR_FIND(0, MAIL_MAX_INBOX, i, sd->mail.inbox.msg[i].id == mail_id);
@@ -16443,6 +17186,10 @@ void clif_Mail_read( map_session_data *sd, int32 mail_id ){
 /// 0241 <mail id>.L (CZ_MAIL_OPEN)
 /// 09ea <mail tab>.B <mail id>.Q (CZ_REQ_READ_MAIL)
 void clif_parse_Mail_read(int32 fd, map_session_data *sd){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	int32 mail_id = RFIFOL(fd,packet_db[RFIFOW(fd,0)].pos[0]);
 #else
@@ -16461,6 +17208,10 @@ void clif_parse_Mail_read(int32 fd, map_session_data *sd){
 /// Allow a player to begin writing a mail
 /// 0a12 <receiver>.24B <success>.B (ZC_ACK_OPEN_WRITE_MAIL)
 void clif_send_Mail_beginwrite_ack( map_session_data *sd, char* name, bool success ){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	PACKET_ZC_ACK_OPEN_WRITE_MAIL p = { 0 };
 
 	p.PacketType = rodexopenwrite;
@@ -16472,6 +17223,10 @@ void clif_send_Mail_beginwrite_ack( map_session_data *sd, char* name, bool succe
 /// Request to start writing a mail
 /// 0a08 <receiver>.24B (CZ_REQ_OPEN_WRITE_MAIL)
 void clif_parse_Mail_beginwrite( int32 fd, map_session_data *sd ){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	char name[NAME_LENGTH];
 
 	safestrncpy(name, RFIFOCP(fd, 2), NAME_LENGTH);
@@ -16494,6 +17249,10 @@ void clif_parse_Mail_beginwrite( int32 fd, map_session_data *sd ){
 /// Notification that the client cancelled writing a mail
 /// 0a03 (CZ_REQ_CANCEL_WRITE_MAIL)
 void clif_parse_Mail_cancelwrite( int32 fd, map_session_data *sd ){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	sd->state.mail_writing = false;
 }
 
@@ -16502,6 +17261,10 @@ void clif_parse_Mail_cancelwrite( int32 fd, map_session_data *sd ){
 /// 0a51 <char id>.L <class>.W <base level>.W <name>.24B (ZC_CHECK_RECEIVE_CHARACTER_NAME2)
 void clif_Mail_Receiver_Ack( const map_session_data* sd, uint32 char_id, int16 class_, uint32 level, const char* name ){
 #if PACKETVER >= 20141119
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	PACKET_ZC_CHECKNAME p = { 0 };
 
 	p.PacketType = HEADER_ZC_CHECKNAME;
@@ -16518,6 +17281,10 @@ void clif_Mail_Receiver_Ack( const map_session_data* sd, uint32 char_id, int16 c
 /// Request information about the recipient
 /// 0a13 <name>.24B (CZ_CHECK_RECEIVE_CHARACTER_NAME)
 void clif_parse_Mail_Receiver_Check(int32 fd, map_session_data *sd) {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER >= 20140423
 #if PACKETVER_MAIN_NUM >= 20201104 || PACKETVER_RE_NUM >= 20211103 || PACKETVER_ZERO_NUM >= 20201118
 	const PACKET_CZ_CHECKNAME2* p = reinterpret_cast<PACKET_CZ_CHECKNAME2*>( RFIFOP( fd, 0 ) );
@@ -16541,6 +17308,10 @@ void clif_parse_Mail_Receiver_Check(int32 fd, map_session_data *sd) {
 /// 09f1 <mail id>.Q <mail tab>.B (CZ_REQ_ZENY_FROM_MAIL)
 /// 09f3 <mail id>.Q <mail tab>.B (CZ_REQ_ITEM_FROM_MAIL)
 void clif_parse_Mail_getattach( int32 fd, map_session_data *sd ){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	int32 i;
 	struct mail_message* msg;
 #if PACKETVER < 20150513
@@ -16647,6 +17418,10 @@ void clif_parse_Mail_getattach( int32 fd, map_session_data *sd ){
 /// 0243 <mail id>.L (CZ_MAIL_DELETE)
 /// 09f5 <mail tab>.B <mail id>.Q (CZ_REQ_DELETE_MAIL)
 void clif_parse_Mail_delete(int32 fd, map_session_data *sd){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	int32 mail_id = RFIFOL(fd,packet_db[RFIFOW(fd,0)].pos[0]);
 #else
@@ -16691,6 +17466,10 @@ void clif_parse_Mail_delete(int32 fd, map_session_data *sd){
 /// Request to return a mail.
 /// 0273 <mail id>.L <receive name>.24B (CZ_REQ_MAIL_RETURN)
 void clif_parse_Mail_return(int32 fd, map_session_data *sd){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER_MAIN_NUM >= 20201104 || PACKETVER_RE_NUM >= 20211103 || PACKETVER_ZERO_NUM >= 20201118
 	const PACKET_CZ_RODEX_RETURN* p = reinterpret_cast<PACKET_CZ_RODEX_RETURN*>( RFIFOP( fd, 0 ) );
 
@@ -16699,7 +17478,7 @@ void clif_parse_Mail_return(int32 fd, map_session_data *sd){
 	int32 mail_id = p->msgId;
 
 	// not supported for now
-	return;
+	// return;
 #else
 	int32 mail_id = RFIFOL(fd,packet_db[RFIFOW(fd,0)].pos[0]);
 #endif
@@ -16723,6 +17502,10 @@ void clif_parse_Mail_return(int32 fd, map_session_data *sd){
 /// 0247 <index>.W <amount>.L (CZ_MAIL_ADD_ITEM)
 /// 0a04 <index>.W <amount>.W (CZ_REQ_ADD_ITEM_TO_MAIL)
 void clif_parse_Mail_setattach(int32 fd, map_session_data *sd){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	struct s_packet_db* info = &packet_db[RFIFOW(fd,0)];
 	uint16 idx = RFIFOW(fd,info->pos[0]);
 #if PACKETVER < 20150513
@@ -16756,6 +17539,10 @@ void clif_parse_Mail_setattach(int32 fd, map_session_data *sd){
 /// Remove an item from a mail
 /// 0a07 <result>.B <index>.W <amount>.W <weight>.W
 void clif_mail_removeitem( const map_session_data* sd, bool success, int32 index, int32 amount ){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	PACKET_ZC_ACK_REMOVE_ITEM_MAIL p = { 0 };
 
 	p.PacketType = rodexremoveitem;
@@ -16795,6 +17582,10 @@ void clif_mail_removeitem( const map_session_data* sd, bool success, int32 index
 /// 0a06 <index>.W <amount>.W (CZ_REQ_REMOVE_ITEM_MAIL)
 void clif_parse_Mail_winopen(int32 fd, map_session_data *sd)
 {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	int32 type = RFIFOW(fd,packet_db[RFIFOW(fd,0)].pos[0]);
 
@@ -16815,6 +17606,10 @@ void clif_parse_Mail_winopen(int32 fd, map_session_data *sd)
 /// 09ec <packet len>.W <recipient>.24B <sender>.24B <zeny>.Q <title length>.W <body length>.W <title>.?B <body>.?B (CZ_REQ_WRITE_MAIL)
 /// 0a6e <packet len>.W <recipient>.24B <sender>.24B <zeny>.Q <title length>.W <body length>.W <char id>.L <title>.?B <body>.?B (CZ_REQ_WRITE_MAIL2)
 void clif_parse_Mail_send(int32 fd, map_session_data *sd){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	struct s_packet_db* info = &packet_db[RFIFOW(fd,0)];
 
@@ -16825,6 +17620,12 @@ void clif_parse_Mail_send(int32 fd, map_session_data *sd){
 		ShowWarning("Invalid Msg Len from account %d.\n", sd->status.account_id);
 		return;
 	}
+
+#ifdef Pandas_MapFlag_NoMail
+	if( mail_invalid_operation( sd ) ){
+		return;
+	}
+#endif // Pandas_MapFlag_NoMail
 
 	mail_send(sd, RFIFOCP(fd,info->pos[1]), RFIFOCP(fd,info->pos[2]), RFIFOCP(fd,info->pos[4]), RFIFOB(fd,info->pos[3]));
 #else
@@ -17650,6 +18451,10 @@ void clif_parse_Adopt_reply(int32 fd, map_session_data *sd){
 ///     BOSS_INFO_ALIVE_WITHMSG = Boss is alive (initial announce).
 ///     BOSS_INFO_DEAD = Boss is dead.
 void clif_bossmapinfo( const map_session_data& sd, mob_data* md, e_bossmap_info flag ){
+#ifdef Pandas_Crashfix_BossMapinfo
+	if (flag != BOSS_INFO_NOT && !md) return;
+#endif // Pandas_Crashfix_BossMapinfo
+
 	PACKET_ZC_BOSS_INFO p = {};
 
 	p.packetType = HEADER_ZC_BOSS_INFO;
@@ -17690,16 +18495,61 @@ void clif_bossmapinfo( const map_session_data& sd, mob_data* md, e_bossmap_info 
 	clif_send( &p, sizeof( p ), &sd, SELF );
 }
 
+#ifdef Pandas_ScriptCommand_BossMonster
+void clif_bossmapinfo_clear(map_session_data* sd)
+{
+	if (!sd)
+		return;
+
+	int fd = sd->fd;
+
+	WFIFOHEAD(fd, 70);
+	memset(WFIFOP(fd, 0), 0, 70);
+	WFIFOW(fd, 0) = 0x293;
+	WFIFOB(fd, 2) = BOSS_INFO_ALIVE;
+	WFIFOL(fd, 3) = -1;
+	WFIFOL(fd, 7) = -1;
+	WFIFOSET(fd, 70);
+}
+#endif // Pandas_ScriptCommand_BossMonster
+
 
 /// Requesting equip of a player (CZ_EQUIPWIN_MICROSCOPE).
 /// 02d6 <account id>.L
 void clif_parse_ViewPlayerEquip(int32 fd, map_session_data* sd)
 {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	nullpo_retv(sd);
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	int32 aid = RFIFOL(fd, packet_db[RFIFOW(fd,0)].pos[0]);
 	map_session_data* tsd = map_id2sd(aid);
 
 	if (!tsd)
 		return;
+
+#ifdef Pandas_NpcFilter_VIEW_EQUIP
+	if (sd && sd->type == BL_PC && tsd->type == BL_PC && sd->m == tsd->m) {
+		pc_setregstr(sd, add_str("@vieweq_name$"), tsd->status.name);
+		pc_setreg(sd, add_str("@vieweq_cid"), tsd->status.char_id);
+		pc_setreg(sd, add_str("@vieweq_aid"), tsd->status.account_id);
+		pc_setreg(sd, add_str("@eqview_cid"), tsd->status.char_id);
+
+		pc_setregstr(sd, add_str("@view_equip_target_name$"), tsd->status.name);
+		pc_setreg(sd, add_str("@view_equip_target_cid"), tsd->status.char_id);
+		pc_setreg(sd, add_str("@view_equip_target_aid"), tsd->status.account_id);
+		pc_setreg(sd, add_str("@view_equip_target_allowed"), tsd->status.show_equip);
+		pc_setreg(sd, add_str("@view_equip_bypass_limit"), 0);
+
+		if (npc_script_filter(sd, NPCF_VIEW_EQUIP))
+			return;
+
+		if (pc_readreg(sd, add_str("@view_equip_bypass_limit")) == 1) {
+			clif_viewequip_ack(*sd, *tsd);
+			return;
+		}
+	}
+#endif // Pandas_NpcFilter_VIEW_EQUIP
 
 	if (sd->m != tsd->m)
 		return;
@@ -17720,6 +18570,10 @@ void clif_parse_configuration( int32 fd, map_session_data* sd ){
 	int32 cmd = RFIFOW(fd,0);
 	int32 type = RFIFOL(fd,packet_db[cmd].pos[0]);
 	bool flag = RFIFOL(fd,packet_db[cmd].pos[1]) != 0;
+
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
 
 	switch( type ){
 		case CONFIG_OPEN_EQUIPMENT_WINDOW:
@@ -19898,10 +20752,26 @@ void clif_parse_MoveItem( int32 fd, map_session_data* sd ){
 		return;
 	}
 
-	if ( sd->inventory.u.items_inventory[index].favorite != 0 && p->favorite == true )
+	if ( sd->inventory.u.items_inventory[index].favorite != 0 && p->favorite == true ) {
+#ifdef Pandas_NpcFilter_FAVORITE_DEL
+		pc_setreg(sd, add_str("@unfavorite_nameid"), sd->inventory.u.items_inventory[index].nameid);
+		pc_setreg(sd, add_str("@unfavorite_amount"), sd->inventory.u.items_inventory[index].amount);
+		pc_setreg(sd, add_str("@unfavorite_idx"), index);
+		if (npc_script_filter(sd, NPCF_FAVORITE_DEL))
+			return;
+#endif // Pandas_NpcFilter_FAVORITE_DEL
 		sd->inventory.u.items_inventory[index].favorite = 0;
-	else if( p->favorite == false )
+	}
+	else if( p->favorite == false ) {
+#ifdef Pandas_NpcFilter_FAVORITE_ADD
+		pc_setreg(sd, add_str("@favorite_nameid"), sd->inventory.u.items_inventory[index].nameid);
+		pc_setreg(sd, add_str("@favorite_amount"), sd->inventory.u.items_inventory[index].amount);
+		pc_setreg(sd, add_str("@favorite_idx"), index);
+		if (npc_script_filter(sd, NPCF_FAVORITE_ADD))
+			return;
+#endif // Pandas_NpcFilter_FAVORITE_ADD
 		sd->inventory.u.items_inventory[index].favorite = 1;
+	}
 	else
 		return;/* nothing to do. */
 
@@ -20761,6 +21631,12 @@ void clif_parse_change_title(int32 fd, map_session_data *sd)
 
 	title_id = RFIFOL(fd, 2);
 
+#ifdef Pandas_Character_Title_Controller
+	// 玩家从装备面板中修改了称号, 走相关的事件判断是否需要就此终止
+	if (!npc_change_title_event(sd, title_id, 0))
+		return;
+#endif // Pandas_Character_Title_Controller
+
 	if( title_id == sd->status.title_id ){
 		// It is exactly the same as the old one
 		return;
@@ -20868,6 +21744,20 @@ void clif_roulette_open( map_session_data* sd ){
 /// 0A19 (CZ_REQ_OPEN_ROULETTE)
 void clif_parse_roulette_open( int32 fd, map_session_data* sd ){
 	nullpo_retv(sd);
+
+#ifdef Pandas_NpcFilter_ROULETTE_OPEN
+	// 禁止在与 NPC 对话的时候使用乐透大转盘。
+	if (sd->npc_id || pc_hasprogress(sd, WIP_DISABLE_NPC)) {
+		clif_msg(*sd, MSI_BUSY);
+		return;
+	}
+
+	// 避免过滤事件中的 NPC 对话被绕过 processhalt 后直接打开大乐透面板。
+	if (sd && sd->type == BL_PC && !sd->npc_id) {
+		if (npc_script_filter(sd, NPCF_ROULETTE_OPEN))
+			return;
+	}
+#endif // Pandas_NpcFilter_ROULETTE_OPEN
 
 	if (!battle_config.feature_roulette) {
 		clif_messagecolor(sd,color_table[COLOR_RED],msg_txt(sd,1497),false,SELF); //Roulette is disabled
@@ -21427,6 +22317,14 @@ void clif_dressing_room( const map_session_data& sd ){
 void clif_parse_Oneclick_Itemidentify(int32 fd, map_session_data *sd) {
 #if PACKETVER >= 20150513
 	int16 idx = RFIFOW(fd,packet_db[RFIFOW(fd,0)].pos[0]) - 2, magnifier_idx;
+
+#ifdef Pandas_NpcFilter_ONECLICK_IDENTIFY
+	if (sd) {
+		pc_setreg(sd, add_str("@identify_idx"), idx);
+		if (npc_script_filter(sd, NPCF_ONECLICK_IDENTIFY))
+			return;
+	}
+#endif // Pandas_NpcFilter_ONECLICK_IDENTIFY
 
 	// Ignore the request
 	// - Invalid item index
@@ -25514,6 +26412,16 @@ void clif_parse_partybooking_reply( int32 fd, map_session_data* sd ){
 	}
 
 	if( p->accept ){
+#ifdef Pandas_NpcFilter_PARTYJOIN
+		if (sd && tsd) {
+			pc_setreg(tsd, add_str("@join_party_id"), sd->status.party_id);
+			pc_setreg(tsd, add_str("@join_party_aid"), sd->status.account_id);
+			if (npc_script_filter(tsd, NPCF_PARTYJOIN)) {
+				clif_partybooking_reply(tsd, sd, 0);
+				return;
+			}
+		}
+#endif // Pandas_NpcFilter_PARTYJOIN
 		party_join( *tsd, sd->status.party_id );
 	}
 
@@ -25677,7 +26585,16 @@ static int32 clif_parse(int32 fd)
 				//Disassociate character from the socket connection.
 				session[fd]->session_data = nullptr;
 				sd->fd = 0;
+	#ifndef Pandas_Struct_Autotrade_Extend
 				ShowInfo("Character '" CL_WHITE "%s" CL_RESET "' logged off (using @autotrade).\n", sd->status.name);
+	#else
+				if (sd->state.autotrade & AUTOTRADE_OFFLINE)
+					ShowInfo("Character '" CL_WHITE "%s" CL_RESET "' logged off (using @suspend).\n", sd->status.name);
+				else if (sd->state.autotrade & AUTOTRADE_AFK)
+					ShowInfo("Character '" CL_WHITE "%s" CL_RESET "' logged off (using @afk).\n", sd->status.name);
+				else
+					ShowInfo("Character '" CL_WHITE "%s" CL_RESET "' logged off (using @autotrade).\n", sd->status.name);
+	#endif // Pandas_Struct_Autotrade_Extend
 			} else
 			if (sd->state.active) {
 				// Player logout display [Valaris]
@@ -25689,6 +26606,9 @@ static int32 clif_parse(int32 fd)
 				map_quit(sd);
 			}
 		} else {
+#ifdef Pandas_Health_Monitors_Silent
+			if (!suppresses_close_mes(session[fd]->client_addr))
+#endif // Pandas_Health_Monitors_Silent
 			ShowInfo("Closed connection from '" CL_WHITE "%s" CL_RESET "'.\n", ip2str(session[fd]->client_addr, nullptr));
 		}
 		do_close(fd);
@@ -25833,6 +26753,11 @@ void packetdb_readdb(){
 #include "clif_packetdb.hpp"
 #include "clif_shuffle.hpp"
 
+#ifdef Pandas_Support_Specify_PacketKeys
+	if (clif_cryptKey_custom[0] > 0 && clif_cryptKey_custom[1] > 0 && clif_cryptKey_custom[2] > 0)
+		memcpy(&clif_cryptKey, &clif_cryptKey_custom, sizeof(clif_cryptKey_custom));
+#endif // Pandas_Support_Specify_PacketKeys
+
 	ShowStatus("Using packet version: " CL_WHITE "%d" CL_RESET ".\n", PACKETVER);
 
 #ifdef PACKET_OBFUSCATION
@@ -25883,8 +26808,14 @@ void do_init_clif(void) {
 #endif
 
 	delay_clearunit_ers = ers_new(sizeof(block_list),"clif.cpp::delay_clearunit_ers",ERS_OPT_CLEAR);
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+	twice_clearunit_ers = ers_new(sizeof(block_list),"clif.cpp::twice_clearunit_ers", ERS_OPT_CLEAR);
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 }
 
 void do_final_clif(void) {
 	ers_destroy(delay_clearunit_ers);
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+	ers_destroy(twice_clearunit_ers);
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 }

@@ -140,16 +140,24 @@ static void logclif_auth_ok(struct login_session_data* sd) {
 		char_server.users = login_get_usercount( ch_server[i].users );
 		char_server.type = ch_server[i].type;
 		char_server.new_ = ch_server[i].new_;
+#ifdef Pandas_InterConfig_HideServerIpAddress
+		if (pandas_inter_hide_server_ipaddress) {
+			// 若希望不主动返回服务器的 IP 地址, 那么将此处的角色服务器 IP 重设为 0
+			char_server.ip = 0;
+		}
+#endif // Pandas_InterConfig_HideServerIpAddress
 #if PACKETVER >= 20170315
 		memset( &char_server.unknown, 0, sizeof( char_server.unknown ) );
 #endif
 
 #ifdef DEBUG
+#ifndef Pandas_UserExperience_Debug_Hide_SubnetInfo
 		ShowDebug(
 			"Sending the client (%d %d.%d.%d.%d) to char-server %s with ip %d.%d.%d.%d and port "
 			"%hu\n",
 			sd->account_id, CONVIP(ip), ch_server[i].name,
 			CONVIP((subnet_char_ip) ? subnet_char_ip : ch_server[i].ip), ch_server[i].port);
+#endif // Pandas_UserExperience_Debug_Hide_SubnetInfo
 #endif
 
 		n++;
@@ -341,6 +349,10 @@ static bool logclif_parse_reqauth_sso( int32 fd, login_session_data& sd ){
 	ShowStatus( "Request for connection (SSO mode) of %s (ip: %s)\n", sd.userid, ip );
 	// Shinryo: For the time being, just use token as password.
 	safestrncpy( sd.passwd, p->token, std::min( sizeof( sd.passwd ), token_length + 1 ) );
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	safestrncpy( session[fd]->mac_address, p->mac, MACADDRESS_LENGTH );
+	safestrncpy( session[fd]->lan_address, p->ip, IP4ADDRESS_LENGTH );
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	if( login_config.use_md5_passwds ){
 		MD5_String( sd.passwd, sd.passwd );
@@ -512,6 +524,9 @@ int32 logclif_parse(int32 fd) {
 
 	if( session[fd]->flag.eof )
 	{
+#ifdef Pandas_Health_Monitors_Silent
+		if (!suppresses_close_mes(ipl))
+#endif // Pandas_Health_Monitors_Silent
 		ShowInfo("Closed connection from '" CL_WHITE "%s" CL_RESET "'.\n", ip);
 		do_close(fd);
 		return 0;

@@ -9,6 +9,7 @@
 #include <common/cbasetypes.hpp>
 #include <common/core.hpp>
 #include <common/mmo.hpp> // NAME_LENGTH,SEX_*
+#include <common/msg_conf.hpp>
 #include <common/timer.hpp>
 #include <config/core.hpp>
 
@@ -16,6 +17,14 @@
 
 using rathena::server_core::Core;
 using rathena::server_core::e_core_type;
+
+#ifdef Pandas_InterConfig_HideServerIpAddress
+extern int pandas_inter_hide_server_ipaddress;
+#endif // Pandas_InterConfig_HideServerIpAddress
+
+#ifdef Pandas_SQL_Configure_Optimization
+extern char default_codepage[32];
+#endif // Pandas_SQL_Configure_Optimization
 
 namespace rathena::server_login {
 class LoginServer : public Core {
@@ -108,6 +117,14 @@ struct Login_Config {
 	int32 client_hash_check;							/// flags for checking client md5
 	struct client_hash_node *client_hash_nodes;		/// linked list containing md5 hash for each gm group
 
+#ifdef Pandas_Strict_Userid_Verification
+	bool strict_new_account_userid;					/// 是否禁止使用中文等字符作为游戏账号 [Sola丶小克]
+#endif // Pandas_Strict_Userid_Verification
+
+#ifdef Pandas_Support_Hide_Online_Players_Count
+	bool hide_online_players_count;					/// 是否隐藏角色服务器的在线人数 [Sola丶小克]
+#endif // Pandas_Support_Hide_Online_Players_Count
+
 	bool usercount_disable;							/// Disable colorization and description in general?
 	int32 usercount_low;								/// Amount of users that will display in green
 	int32 usercount_medium;							/// Amount of users that will display in yellow
@@ -130,6 +147,11 @@ extern struct Login_Config login_config;
 
 #define msg_config_read(cfgName) login_msg_config_read(cfgName)
 #define msg_txt(msg_number) login_msg_txt(msg_number)
+#ifdef Pandas_Message_Conf
+	#define msg_txt_cn(msg_number) login_msg_txt(msg_number + ALL_EXTEND_FIRST_MSG)
+#else
+	#define msg_txt_cn(msg_number) disabled_msg_txt(msg_number + ALL_EXTEND_FIRST_MSG)
+#endif // Pandas_Message_Conf
 #define do_final_msg() login_do_final_msg()
 int32 login_msg_config_read(const char *cfgName);
 const char* login_msg_txt(int32 msg_number);
@@ -155,6 +177,10 @@ struct auth_node {
 	uint32 ip;
 	char sex;
 	uint8 clienttype;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	char mac_address[MACADDRESS_LENGTH];
+	char lan_address[IP4ADDRESS_LENGTH];
+#endif // Pandas_Extract_SSOPacket_MacAddress
 };
 
 ///Accessors

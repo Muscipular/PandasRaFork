@@ -12,6 +12,7 @@
 #include <unordered_map>
 
 #include <common/nullpo.hpp>
+#include <common/assistant.hpp>
 #include <common/random.hpp>
 #include <common/showmsg.hpp>
 #include <common/strlib.hpp>
@@ -22,7 +23,11 @@
 #include "cashshop.hpp"
 #include "clif.hpp"
 #include "intif.hpp"
+#ifdef Pandas_Database_ItemProperties
+#include "itemprops.hpp"
+#endif // Pandas_Database_ItemProperties
 #include "log.hpp"
+#include "map_artisan.hpp"
 #include "mob.hpp"
 #include "pc.hpp"
 #include "status.hpp"
@@ -36,6 +41,92 @@ ItemGroupDatabase itemdb_group;
 struct s_roulette_db rd;
 
 static void itemdb_jobid2mapid(uint64 bclass[3], e_mapid jobmask, bool active);
+
+#ifdef Pandas_Struct_Item_Data_Pandas
+enum e_script_type {
+	SCRIPT_TYPE_USED,
+	SCRIPT_TYPE_EQUIP,
+	SCRIPT_TYPE_UNEQUIP
+};
+
+//************************************
+// Method:      item_script_process
+// Description: 当物品的脚本信息更新时, 执行自定义处理操作
+// Access:      public static
+// Parameter:   std::shared_ptr<item_data> item
+// Parameter:   e_script_type script_type
+// Parameter:   std::string script
+// Returns:     void
+// Author:      Sola丶小克(CairoLee)  2021/01/02 14:46
+//************************************
+inline static void item_script_process(std::shared_ptr<item_data> item, e_script_type script_type, std::string script) {
+	if (!item) return;
+
+#ifdef Pandas_Struct_Item_Data_Script_Plaintext
+	switch (script_type)
+	{
+	case SCRIPT_TYPE_USED:
+		item->pandas.script_plaintext.script = util::trim_copy(script);
+		break;
+	case SCRIPT_TYPE_EQUIP:
+		item->pandas.script_plaintext.equip_script = util::trim_copy(script);
+		break;
+	case SCRIPT_TYPE_UNEQUIP:
+		item->pandas.script_plaintext.unequip_script = util::trim_copy(script);
+		break;
+	default:
+		break;
+	}
+#endif // Pandas_Struct_Item_Data_Script_Plaintext
+
+#ifdef Pandas_Struct_Item_Data_Taming_Mobid
+	// 判断该道具的脚本是否调用了 pet 或 mpet 指令 [Sola丶小克]
+	// 若确实有相关的调用, 则记录下此道具支持捕捉的魔物编号
+	if (script_type == SCRIPT_TYPE_USED && !script.empty()) {
+		if (!hasCatchPet(script, item->pandas.taming_mobid)) {
+			item->pandas.taming_mobid.clear();
+		}
+	}
+#endif // Pandas_Struct_Item_Data_Taming_Mobid
+
+#ifdef Pandas_Struct_Item_Data_Has_CallFunc
+	// 判断该道具的脚本是不是有 callfunc "xxxx"; 若有则记录一下 [Sola丶小克]
+	if (script_type == SCRIPT_TYPE_USED && !script.empty()) {
+		item->pandas.has_callfunc = hasCallfunc(script);
+	}
+#endif // Pandas_Struct_Item_Data_Has_CallFunc
+};
+
+//************************************
+// Method:      item_script_reset
+// Description: 当物品的脚本信息被重置时, 执行自定义处理操作
+// Access:      public static
+// Parameter:   std::shared_ptr<item_data> item
+// Parameter:   e_script_type script_type
+// Returns:     void
+// Author:      Sola丶小克(CairoLee)  2021/01/02 14:46
+//************************************
+inline static void item_script_reset(std::shared_ptr<item_data> item, e_script_type script_type) {
+	if (!item) return;
+
+#ifdef Pandas_Struct_Item_Data_Script_Plaintext
+	switch (script_type)
+	{
+	case SCRIPT_TYPE_USED:
+		item->pandas.script_plaintext.script.clear();
+		break;
+	case SCRIPT_TYPE_EQUIP:
+		item->pandas.script_plaintext.equip_script.clear();
+		break;
+	case SCRIPT_TYPE_UNEQUIP:
+		item->pandas.script_plaintext.unequip_script.clear();
+		break;
+	default:
+		break;
+	}
+#endif // Pandas_Struct_Item_Data_Script_Plaintext
+};
+#endif // Pandas_Struct_Item_Data_Pandas
 
 const std::string ItemDatabase::getDefaultLocation() {
 	return std::string(db_path) + "/item_db.yml";
@@ -465,7 +556,12 @@ uint64 ItemDatabase::parseBodyNode(const ryml::NodeRef& node) {
 				return 0;
 
 			if (active) {
+#ifndef Pandas_Shadowgear_Support_Card
 				if (constant & EQP_SHADOW_GEAR && item->type != IT_SHADOWGEAR) {
+#else
+				// 准许卡片类型道具设置影子装备的穿戴位置, 而不会被系统判定为无效道具
+				if (constant & EQP_SHADOW_GEAR && item->type != IT_SHADOWGEAR && item->type != IT_CARD) {
+#endif // Pandas_Shadowgear_Support_Card
 					this->invalidWarning(node, "Invalid item equip location %s as it's not a Shadow Gear item type, defaulting to IT_ETC.\n", equipName.c_str());
 					item->type = IT_ETC;
 				}
@@ -1069,9 +1165,17 @@ uint64 ItemDatabase::parseBodyNode(const ryml::NodeRef& node) {
 		}
 
 		item->script = parse_script(script.c_str(), this->getCurrentFile().c_str(), this->getLineNumber(node["Script"]), SCRIPT_IGNORE_EXTERNAL_BRACKETS);
+
+#ifdef Pandas_Struct_Item_Data_Pandas
+		item_script_process(item, SCRIPT_TYPE_USED, script);
+#endif // Pandas_Struct_Item_Data_Pandas
 	} else {
 		if (!exists) 
 			item->script = nullptr;
+#ifdef Pandas_Struct_Item_Data_Pandas
+		if (!exists)
+			item_script_reset(item, SCRIPT_TYPE_USED);
+#endif // Pandas_Struct_Item_Data_Pandas
 	}
 
 	if (this->nodeExists(node, "EquipScript")) {
@@ -1086,9 +1190,17 @@ uint64 ItemDatabase::parseBodyNode(const ryml::NodeRef& node) {
 		}
 
 		item->equip_script = parse_script(script.c_str(), this->getCurrentFile().c_str(), this->getLineNumber(node["EquipScript"]), SCRIPT_IGNORE_EXTERNAL_BRACKETS);
+
+#ifdef Pandas_Struct_Item_Data_Pandas
+		item_script_process(item, SCRIPT_TYPE_EQUIP, script);
+#endif // Pandas_Struct_Item_Data_Pandas
 	} else {
 		if (!exists)
 			item->equip_script = nullptr;
+#ifdef Pandas_Struct_Item_Data_Pandas
+		if (!exists)
+			item_script_reset(item, SCRIPT_TYPE_EQUIP);
+#endif // Pandas_Struct_Item_Data_Pandas
 	}
 
 	if (this->nodeExists(node, "UnEquipScript")) {
@@ -1103,9 +1215,17 @@ uint64 ItemDatabase::parseBodyNode(const ryml::NodeRef& node) {
 		}
 
 		item->unequip_script = parse_script(script.c_str(), this->getCurrentFile().c_str(), this->getLineNumber(node["UnEquipScript"]), SCRIPT_IGNORE_EXTERNAL_BRACKETS);
+
+#ifdef Pandas_Struct_Item_Data_Pandas
+		item_script_process(item, SCRIPT_TYPE_UNEQUIP, script);
+#endif // Pandas_Struct_Item_Data_Pandas
 	} else {
 		if (!exists)
 			item->unequip_script = nullptr;
+#ifdef Pandas_Struct_Item_Data_Pandas
+		if (!exists)
+			item_script_reset(item, SCRIPT_TYPE_UNEQUIP);
+#endif // Pandas_Struct_Item_Data_Pandas
 	}
 
 	if (!exists)
@@ -1188,12 +1308,18 @@ void ItemDatabase::loadingFinished(){
 			item->value_sell = item->value_buy / 2;
 
 		if (item->value_buy / 124. < item->value_sell / 75.) {
+#ifdef Pandas_BattleConfig_ItemDB_Warning_Policy
+			if (!(battle_config.itemdb_warning_policy & 1))
+#endif // Pandas_BattleConfig_ItemDB_Warning_Policy
 			ShowWarning("Buying/Selling [%d/%d] price of %s (%u) allows Zeny making exploit through buying/selling at discounted/overcharged prices! Defaulting Sell to 1 Zeny.\n", item->value_buy, item->value_sell, item->name.c_str(), item->nameid);
 			item->value_sell = 1;
 		}
 
 		// Shields need to have a view ID to be able to be recognized by ST_SHIELD check in skill.cpp
 		if( item->type == IT_ARMOR && ( item->equip & EQP_SHIELD ) != 0 && item->look == 0 ){
+#ifdef Pandas_BattleConfig_ItemDB_Warning_Policy
+			if (!(battle_config.itemdb_warning_policy & 2))
+#endif // Pandas_BattleConfig_ItemDB_Warning_Policy
 			ShowWarning( "Item %s (%u) is a shield and should have a view id. Defaulting to Guard...\n", item->name.c_str(), item->nameid );
 			item->look = 1;
 		}
@@ -3052,6 +3178,9 @@ void ItemGroupDatabase::pc_get_itemgroup_sub( map_session_data& sd, bool identif
 	tmp.nameid = data->nameid;
 	tmp.bound = data->bound;
 	tmp.identify = identify ? identify : itemdb_isidentified(data->nameid);
+#ifdef Pandas_BattleConfig_Force_Identified
+	tmp.identify = (battle_config.force_identified & 1 ? 1 : tmp.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 	tmp.expire_time = (data->duration) ? (uint32)(time(nullptr) + data->duration*60) : 0;
 	if (data->isNamed) {
 		tmp.card[0] = itemdb_isequip(data->nameid) ? CARD0_FORGE : CARD0_CREATE;
@@ -3187,6 +3316,9 @@ const char* itemdb_typename(enum item_types type)
 		case IT_DELAYCONSUME:   return "Delay-Consume Usable";
 		case IT_SHADOWGEAR:     return "Shadow Equipment";
 		case IT_CASH:           return "Cash Usable";
+#ifdef Pandas_Item_Amulet_System
+		case IT_AMULET:         return "Amulet";
+#endif // Pandas_Item_Amulet_System
 	}
 	return "Unknown Type";
 }
@@ -3760,7 +3892,7 @@ void ItemGroupDatabase::loadingFinished() {
 		}
 	}
 
-	TypesafeYamlDatabase::loadingFinished();
+	TypesafeCachedYamlDatabase::loadingFinished();
 }
 
 /** Read item forbidden by mapflag (can't equip item)
@@ -3915,6 +4047,9 @@ uint64 ComboDatabase::parseBodyNode(const ryml::NodeRef& node) {
 				combo->script = nullptr;
 			}
 			combo->script = parse_script(script.c_str(), this->getCurrentFile().c_str(), this->getLineNumber(node["Script"]), SCRIPT_IGNORE_EXTERNAL_BRACKETS);
+#ifdef Pandas_Struct_S_Item_Combo_With_Plaintext
+			combo->script_plaintext = util::trim_copy(script);
+#endif // Pandas_Struct_S_Item_Combo_With_Plaintext
 		} else {
 			if (!exists) {
 				combo->script = nullptr;
@@ -3943,6 +4078,41 @@ void ComboDatabase::loadingFinished() {
 
 	TypesafeYamlDatabase::loadingFinished();
 }
+
+#ifdef Pandas_Crashfix_RouletteData_UnInit
+// Method:      itemdb_dummy_roulette_db
+// Description: 禁用大乐透时的配置数据默认填充函数
+// Parameter:   void
+// Returns:     bool
+// Author:      Sola丶小克(CairoLee)  2020/8/11 22:39
+bool itemdb_dummy_roulette_db(void) {
+	// 由于 大乐透 功能可以在战斗配置选项中通过 feature.roulette 来禁用和启用
+	// 如果 GM 先将 feature.roulette 设置为 off, 进入游戏后再修改 feature.roulette 为 on 并使用
+	// @reloadbattleconf 来重新加载配置文件的话
+	// 在进行过上述操作后, 点击大乐透按钮会导致地图服务器崩溃.
+	// 为了修复上面这个问题, 改造了一下大乐透数据的加载逻辑, 当 feature.roulette 设为 off 的时候
+	// 会默认为 大乐透的数据变量 rd 填充上默认的 苹果
+	// 这样再进行上述操作的时候, 就不会再出现崩溃的问题了, 虽然看起来显得繁琐
+	int32 i, j;
+
+	for (j = 0; j < MAX_ROULETTE_LEVEL; j++) {
+		int32 limit = MAX_ROULETTE_COLUMNS - j;
+
+		rd.items[j] = limit;
+		RECREATE(rd.nameid[j], t_itemid, rd.items[j]);
+		RECREATE(rd.qty[j], uint16, rd.items[j]);
+		RECREATE(rd.flag[j], int32, rd.items[j]);
+
+		for (i = 0; i < rd.items[j]; i++) {
+			rd.nameid[j][i] = ITEMID_APPLE;
+			rd.qty[j][i] = 1;
+			rd.flag[j][i] = 0;
+		}
+	}
+
+	return true;
+}
+#endif // Pandas_Crashfix_RouletteData_UnInit
 
 /**
  * Process Roulette items
@@ -4399,7 +4569,11 @@ static int32 itemdb_read_sqldb(void) {
 		uint32 total_columns = Sql_NumColumns(mmysql_handle);
 		uint64 total_rows = Sql_NumRows(mmysql_handle), rows = 0, count = 0;
 
+#ifndef Pandas_Fix_Use_SQL_DB_Make_Terminal_Show_Null
 		ShowStatus("Loading '" CL_WHITE "%" PRIdPTR CL_RESET "' entries in '" CL_WHITE "%s" CL_RESET "'\n", total_rows, item_db_name[fi]);
+#else
+		ShowStatus("Loading '" CL_WHITE "%" PRIu64 CL_RESET "' entries in '" CL_WHITE "%s" CL_RESET "'\n", total_rows, item_db_name[fi]);
+#endif // Pandas_Fix_Use_SQL_DB_Make_Terminal_Show_Null
 
 		// process rows one by one
 		while( SQL_SUCCESS == Sql_NextRow(mmysql_handle) ) {
@@ -4508,6 +4682,9 @@ uint64 RandomOptionDatabase::parseBodyNode(const ryml::NodeRef& node) {
 		}
 
 		randopt->script = parse_script(script.c_str(), this->getCurrentFile().c_str(), this->getLineNumber(node["Script"]), SCRIPT_IGNORE_EXTERNAL_BRACKETS);
+#ifdef Pandas_Struct_S_Random_Opt_Data_With_Plaintext
+		randopt->script_plaintext = util::trim_copy(script);
+#endif // Pandas_Struct_S_Random_Opt_Data_With_Plaintext
 	}
 
 	if (!exists)
@@ -4923,6 +5100,18 @@ static void itemdb_read(void) {
 
 	if (battle_config.feature_roulette)
 		itemdb_parse_roulette_db();
+#ifdef Pandas_Crashfix_RouletteData_UnInit
+	// 若没有启用大乐透功能, 那么也初始化一组默认的配置数据
+	else
+		itemdb_dummy_roulette_db();
+#endif // Pandas_Crashfix_RouletteData_UnInit
+
+#ifdef Pandas_Database_ItemProperties
+	// 加载 item_properties.yml 必须在 item_db.load(); 之后进行
+	// 因此加载过程中需要判断物品编号是否有效, 这需要依赖 itemdb_read 的执行结果
+	item_properties_db.load();
+	item_properties_db.parsePropertiesToItemDB(item_db);
+#endif // Pandas_Database_ItemProperties
 }
 
 /*==========================================
@@ -4948,6 +5137,10 @@ int32 item_data::inventorySlotNeeded(int32 quantity)
 
 void itemdb_gen_itemmoveinfo()
 {
+#ifdef Pandas_UserExperience_AutoCreate_Generated_Directory
+	makeDirectories("generated/clientside/data/");
+#endif // Pandas_UserExperience_AutoCreate_Generated_Directory
+
 	ShowInfo("itemdb_gen_itemmoveinfo: Generating itemmoveinfov5.txt.\n");
 	auto starttime = std::chrono::system_clock::now();
 	auto os = std::ofstream("./generated/clientside/data/itemmoveinfov5.txt", std::ios::trunc);
@@ -4995,6 +5188,11 @@ void itemdb_reload(void) {
 		pc_setinventorydata( *sd );
 		pc_check_available_item(sd, ITMCHK_ALL); // Check for invalid(ated) items.
 		pc_load_combo(sd); // Check to see if new combos are available
+#ifdef Pandas_Database_ItemProperties
+		// 当启用了道具特殊属性数据库的话, 重载物品信息后
+		// 重新给每个玩家发放背包信息, 以便一些相关的设置能够直接生效
+		clif_inventorylist(sd);
+#endif // Pandas_Database_ItemProperties
 		status_calc_pc(sd, SCO_FORCE); // 
 	}
 	mapit_free(iter);
@@ -5014,7 +5212,13 @@ void do_final_itemdb(void) {
 	item_reform_db.clear();
 	item_enchant_db.clear();
 	item_package_db.clear();
+#ifdef Pandas_Database_ItemProperties
+	item_properties_db.clear();
+#endif // Pandas_Database_ItemProperties
+
+#ifndef Pandas_Crashfix_RouletteData_UnInit
 	if (battle_config.feature_roulette)
+#endif // Pandas_Crashfix_RouletteData_UnInit
 		itemdb_roulette_free();
 }
 

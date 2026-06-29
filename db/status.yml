@@ -51,4 +51,9 @@ Footer:
     Mode: Prerenewal
   - Path: db/re/status.yml
     Mode: Renewal
+  # 熊猫模拟器社区版的数据补丁
+  - Path: db/pandas/pre-re/status.yml
+    Mode: Prerenewal
+  # 请确保你对状态数据库的改动都在上面那些补丁之后被加载,
+  # 这将使得你的数据拥有最高优先级.
   - Path: db/import/status.yml

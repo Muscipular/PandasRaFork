@@ -3,6 +3,11 @@
 
 #include "showmsg.hpp"
 
+#ifdef Pandas_Console_Translate
+#include <common/translate.hpp>
+#define strcat(a, b) ::strcat(a, translate(b).c_str())
+#endif // Pandas_Console_Translate
+
 #include <cstdlib> // atexit
 #include <ctime>
 
@@ -39,6 +44,10 @@
 #include "cbasetypes.hpp"
 #include "core.hpp" //[Ind] - For SERVER_TYPE
 #include "strlib.hpp" // StringBuf
+#include "assistant.hpp"
+#ifdef Pandas_Console_Charset_SmartConvert
+#include "utf8.hpp"
+#endif // Pandas_Console_Charset_SmartConvert
 
 ///////////////////////////////////////////////////////////////////////////////
 /// behavioral parameter.
@@ -54,7 +63,7 @@ char console_log_filepath[32] = "./log/unknown.log";
 ///////////////////////////////////////////////////////////////////////////////
 /// static/dynamic buffer for the messages
 
-#define SBUF_SIZE 2054 // never put less that what's required for the debug message
+#define SBUF_SIZE 1024 * 4
 
 #define NEWBUF(buf)				\
 	struct {					\
@@ -538,7 +547,11 @@ int32	VFPRINTF(FILE *file, const char *fmt, va_list argptr)
 
 	if( is_console(file) || stdout_with_ansisequence )
 	{
+#ifndef Pandas_Console_Charset_SmartConvert
 		vfprintf(file, fmt, argptr);
+#else
+		PandasUtf8::vfprintf(file, fmt, argptr);
+#endif // Pandas_Console_Charset_SmartConvert
 		return 0;
 	}
 
@@ -662,13 +675,22 @@ int32	FPRINTF(FILE *file, const char *fmt, ...)
 
 char timestamp_format[20] = ""; //For displaying Timestamps
 
+#ifndef Pandas_Console_Translate
 int32 _vShowMessage(enum msg_type flag, const char *string, va_list ap)
+#else
+int32 _vShowMessage(enum msg_type flag, std::string instr, va_list ap)
+#endif // Pandas_Console_Translate
 {
 	va_list apcopy;
 	char prefix[100];
 #if defined(DEBUGLOGMAP) || defined(DEBUGLOGCHAR) || defined(DEBUGLOGLOGIN)
 	FILE *fp;
 #endif
+
+#ifdef Pandas_Console_Translate
+	translate(instr);
+	const char* string = instr.c_str();
+#endif // Pandas_Console_Translate
 	
 	if (!string || *string == '\0') {
 		ShowError("Empty string passed to _vShowMessage().\n");
@@ -702,7 +724,11 @@ int32 _vShowMessage(enum msg_type flag, const char *string, va_list ap)
 				flag == MSG_DEBUG ? "Debug" :
 				"Unknown");
 			va_copy(apcopy, ap);
+		#ifndef Pandas_Console_Charset_SmartConvert
 			vfprintf(log,string,apcopy);
+		#else
+			PandasUtf8::vfprintf(log, string, apcopy);
+		#endif // Pandas_Console_Charset_SmartConvert
 			va_end(apcopy);
 			fclose(log);
 		}

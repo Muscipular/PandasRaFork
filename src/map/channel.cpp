@@ -42,6 +42,13 @@ struct Channel* channel_create(struct Channel *tmp_chan) {
 	if (!tmp_chan->name[0])
 		return nullptr;
 
+#ifdef Pandas_Fix_Duplicate_Channel_Name_Make_MemoryLeak
+	if (strdb_exists(channel_db, tmp_chan->name)) {
+		ShowWarning("channel_create: Duplicate channel name '%s', skipping.\n", tmp_chan->name);
+		return nullptr;
+	}
+#endif // Pandas_Fix_Duplicate_Channel_Name_Make_MemoryLeak
+
 	CREATE(channel, struct Channel, 1); //will exit on fail allocation
 	//channel->id = tmp_chan->id;
 	channel->users = idb_alloc(DB_OPT_BASE);
@@ -1392,7 +1399,7 @@ void channel_read_config(void) {
 	config_setting_t *chan_setting = nullptr;
 
 	if (conf_read_file(&channels_conf, channel_conf)) {
-		ShowError("Cannot read file '%s' for channel connfig.\n", channel_conf);
+		ShowError("Cannot read file '%s' for channel config.\n", channel_conf);
 		return;
 	}
 

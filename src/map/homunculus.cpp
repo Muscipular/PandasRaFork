@@ -16,6 +16,9 @@
 #include <common/utils.hpp>
 
 #include "battle.hpp"
+#ifdef Pandas_BattleRecord
+#include "battlerec.hpp"
+#endif // Pandas_BattleRecord
 #include "clif.hpp"
 #include "intif.hpp"
 #include "itemdb.hpp"
@@ -231,7 +234,11 @@ void hom_delspiritball(TBL_HOM *hd, int32 count, int32 type) {
 * @param hd
 * @return flag &1 - Standard dead, &2 - Remove object from map, &4 - Delete object from memory
 */
+#ifndef Pandas_FuncDefine_UnitDead_With_ExtendInfo
 int32 hom_dead(homun_data *hd)
+#else
+int32 hom_dead(homun_data *hd, block_list *src, uint16 skill_id)
+#endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
 {
 	//There's no intimacy penalties on death (from Tharis)
 	map_session_data *sd = hd->master;
@@ -239,6 +246,16 @@ int32 hom_dead(homun_data *hd)
 	//Delete timers when dead.
 	hom_hungry_timer_delete(hd);
 	hd->homunculus.hp = 0;
+
+#ifdef Pandas_NpcExpress_UNIT_KILL
+	if (src && hd) {
+		npc_event_aide_unitkill(src, hd, skill_id);
+	}
+#endif // Pandas_NpcExpress_UNIT_KILL
+
+#ifdef Pandas_BattleRecord
+	batrec_reset(hd);
+#endif // Pandas_BattleRecord
 
 	if (!sd) //unit remove map will invoke unit free
 		return 3;
@@ -279,6 +296,9 @@ int32 hom_vaporize(map_session_data *sd, int32 flag)
 	if (battle_config.hom_delay_reset_vaporize) {
 		skill_blockhomun_clear(*hd);
 	}
+#ifdef Pandas_BattleRecord
+	batrec_reset(hd);
+#endif // Pandas_BattleRecord
 	status_change_clear(hd, 1);
 	clif_hominfo(sd, sd->hd, 0);
 	hom_save(hd);
@@ -1085,6 +1105,9 @@ void hom_alloc(map_session_data *sd, struct s_homunculus *hom)
 	hd->regen.tick.sp = tick;
 
 	map_addiddb(hd);
+#ifdef Pandas_BattleRecord
+	batrec_new(hd);
+#endif // Pandas_BattleRecord
 	status_calc_homunculus(hd, SCO_FIRST);
 
 	hd->hungry_timer = INVALID_TIMER;
@@ -1114,6 +1137,13 @@ void hom_init_timers(homun_data * hd)
 bool hom_call(map_session_data *sd)
 {
 	homun_data *hd;
+
+#ifdef Pandas_MapFlag_NoHomun
+	if( sd && map_getmapflag( sd->m, MF_NOHOMUN ) ){
+		clif_displaymessage( sd->fd, msg_txt_cn( sd, 7 ) );
+		return true;
+	}
+#endif // Pandas_MapFlag_NoHomun
 
 	if (!sd->status.hom_id) //Create a new homun.
 		return hom_create_request(sd, HM_CLASS_BASE + rnd_value(0, 7)) ;
