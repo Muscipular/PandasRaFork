@@ -382,6 +382,10 @@
 // 此选项用于指定哪些单位默认开启战斗记录
 #define Pandas_BattleConfig_BattleRecord_AutoEnabled_Unit
 
+// 是否启用 mob_setunitdata_persistence 配置选项及其功能 [Sola丶小克]
+// 此选项用于高优先级持久化保存 setunitdata 对魔物的设置
+#define Pandas_BattleConfig_Mob_SetUnitData_Persistence
+
 // ============================================================================
 // 脚本引擎修改组 - Pandas_ScriptEngine
 // ============================================================================
