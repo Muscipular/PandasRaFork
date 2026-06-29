@@ -32,6 +32,9 @@
 #include "homunculus.hpp"
 #include "intif.hpp"
 #include "itemdb.hpp"
+#ifdef Pandas_Item_Properties
+#include "itemprops.hpp"
+#endif // Pandas_Item_Properties
 #include "log.hpp"
 #include "map.hpp"
 #include "mercenary.hpp"
@@ -8310,7 +8313,19 @@ bool skill_check_condition_castbegin( map_session_data& sd, uint16 skill_id, uin
 			if( (skill_id == WZ_EARTHSPIKE && sc && sc->getSCE(SC_EARTHSCROLL) && rnd()%100 > sc->getSCE(SC_EARTHSCROLL)->val2) || sd.inventory_data[i]->flag.delay_consume & DELAYCONSUME_NOCONSUME ) // [marquis007]
 				; //Do not consume item.
 			else if( sd.inventory.u.items_inventory[i].expire_time == 0 )
+#ifndef Pandas_Item_Properties
 				pc_delitem(&sd,i,1,0,0,LOG_TYPE_CONSUME); // Rental usable items are not consumed until expiration
+#else
+			{
+				// 判断是否需要避免物品被玩家主动使用而消耗
+				// 若可以被玩家主动使用而消耗, 那么执行原有的道具删除流程
+				struct item_data *id = sd.inventory_data[i];
+
+				if (!ITEM_PROPERTIES_HASFLAG(id, special_mask, ITEM_PRO_AVOID_CONSUME_FOR_USE)) {
+					pc_delitem(&sd,i,1,0,0,LOG_TYPE_CONSUME); // Rental usable items are not consumed until expiration
+				}
+			}
+#endif // Pandas_Item_Properties
 		}
 		if(!sd.skillitem_keep_requirement)
 			return true;

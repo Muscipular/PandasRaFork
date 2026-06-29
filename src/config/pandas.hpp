@@ -395,6 +395,17 @@
 #endif // Pandas_ScriptEngine
 
 // ============================================================================
+// 道具机制组 - Pandas_Item_Properties
+// ============================================================================
+
+// 以下选项依赖 Pandas_Struct_Item_Data_Properties 的拓展
+#ifdef Pandas_Struct_Item_Data_Properties
+	// 启用道具特殊属性的部分生效代码 [Sola丶小克]
+	// 此选项开启后 item_properties.yml 数据库中 AvoidConsumeForUse / AvoidConsumeForSkill 才能发挥作用
+	#define Pandas_Item_Properties
+#endif // Pandas_Struct_Item_Data_Properties
+
+// ============================================================================
 // 脚本指令组 - Pandas_ScriptCommands
 // ============================================================================
 

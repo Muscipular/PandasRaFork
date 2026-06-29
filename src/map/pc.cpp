@@ -47,6 +47,9 @@
 #include "instance.hpp"
 #include "intif.hpp"
 #include "itemdb.hpp" // MAX_ITEMGROUP
+#ifdef Pandas_Item_Properties
+#include "itemprops.hpp"
+#endif // Pandas_Item_Properties
 #include "log.hpp"
 #include "map.hpp"
 #include "mercenary.hpp"
@@ -6121,6 +6124,12 @@ char pc_delitem(map_session_data *sd,int32 n,int32 amount,int32 type, int16 reas
 	if(n < 0 || sd->inventory.u.items_inventory[n].nameid == 0 || amount <= 0 || sd->inventory.u.items_inventory[n].amount<amount || sd->inventory_data[n] == nullptr)
 		return 1;
 
+#ifdef Pandas_Item_Properties
+	// 避免物品被作为发动技能的必要道具而消耗
+	if (ITEM_PROPERTIES_HASFLAG(sd->inventory_data[n], special_mask, ITEM_PRO_AVOID_CONSUME_FOR_SKILL) && reason == 1)
+		return 0;
+#endif // Pandas_Item_Properties
+
 	log_pick_pc(sd, log_type, -amount, &sd->inventory.u.items_inventory[n]);
 
 	sd->inventory.u.items_inventory[n].amount -= amount;
@@ -6547,7 +6556,18 @@ int32 pc_useitem(map_session_data *sd,int32 n)
 		if( item.expire_time == 0 && nameid != ITEMID_REINS_OF_MOUNT )
 		{
 			clif_useitemack(sd, n, amount - 1, true);
+#ifdef Pandas_Item_Properties
+			// 判断是否需要避免物品被玩家主动使用而消耗
+			// 若可以被玩家主动使用而消耗, 那么执行原有的道具删除流程
+			if (ITEM_PROPERTIES_HASFLAG(id, special_mask, ITEM_PRO_AVOID_CONSUME_FOR_USE)) {
+				clif_useitemack(sd, n, 0, false);
+			}
+			else {
+#endif // Pandas_Item_Properties
 			pc_delitem(sd, n, 1, 1, 0, LOG_TYPE_CONSUME); // Rental Usable Items are not deleted until expiration
+#ifdef Pandas_Item_Properties
+			}
+#endif // Pandas_Item_Properties
 		}
 		else
 			clif_useitemack(sd, n, 0, false);
