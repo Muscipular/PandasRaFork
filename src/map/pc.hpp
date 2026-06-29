@@ -417,6 +417,9 @@ public:
 #ifdef Pandas_Struct_Map_Session_Data_MultiTransfer
 		bool multitransfer = false; // 用于标记接下来的 pc_setpos 调用是一次多人传送
 #endif // Pandas_Struct_Map_Session_Data_MultiTransfer
+#ifdef Pandas_Struct_Map_Session_Data_Skip_LoadEndAck_NPC_Event_Dequeue
+		bool skip_loadendack_npc_event_dequeue = false;
+#endif // Pandas_Struct_Map_Session_Data_Skip_LoadEndAck_NPC_Event_Dequeue
 	} pandas;
 #endif // Pandas_Struct_Map_Session_Data_Pandas
 	//NOTE: When deciding to add a flag to state or special_state, take into consideration that state is preserved in
