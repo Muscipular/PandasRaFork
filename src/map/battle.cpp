@@ -8937,6 +8937,10 @@ static const struct _battle_data {
 	{ "suspend_afk_bodydirection",          &battle_config.suspend_afk_bodydirection,       -1,     -1,     7,              },
 #endif // Pandas_BattleConfig_Suspend_AFK_BodyDirection
 
+#ifdef Pandas_BattleConfig_Suspend_AFK_Headdirection
+	{ "suspend_afk_headdirection",          &battle_config.suspend_afk_headdirection,       -1,     -1,     2,              },
+#endif // Pandas_BattleConfig_Suspend_AFK_Headdirection
+
 #include <custom/battle_config_init.inc>
 };
 
