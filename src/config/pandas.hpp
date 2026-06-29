@@ -1,3 +1,5 @@
+#pragma once
+
 	#define Pandas_Basic
 
 // ============================================================================
@@ -28,6 +30,7 @@
 	// 是否启用 Google Breakpad 用于处理程序崩溃
 
 	// 是否启用一些杂乱的自定义辅助函数
+	#define Pandas_Helper_Common_Function
 
 	// 是否启用代码分析工具所建议的处理措施以避免潜在风险
 	// 包含的工具有: LGTM, CodeQL, Microsoft Code Analysis 等

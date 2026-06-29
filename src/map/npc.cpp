@@ -119,6 +119,25 @@ struct script_event_s{
 // Holds pointers to the commonly executed scripts for speedup. [Skotlex]
 std::map<enum npce_event, std::vector<struct script_event_s>> script_event;
 
+#ifdef Pandas_Helper_Common_Function
+struct event_data* npc_event_data(const char* eventname) {
+	return static_cast<struct event_data*>(strdb_get(ev_db, eventname));
+}
+
+bool npc_event_exists(const char* eventname) {
+	return strdb_get(ev_db, eventname) != nullptr;
+}
+
+bool npc_event_exists(struct npc_data* nd, const char* eventname) {
+	nullpo_retr(false, nd);
+
+	char name[EVENT_NAME_LENGTH] = { 0 };
+	snprintf(name, ARRAYLENGTH(name), "%s::%s", nd->exname, eventname);
+
+	return npc_event_exists(name);
+}
+#endif // Pandas_Helper_Common_Function
+
 // Static functions
 static npc_data* npc_create_npc( int16 m, int16 x, int16 y );
 static void npc_parsename( npc_data* nd, const char* name, const char* start, const char* buffer, const char* filepath );

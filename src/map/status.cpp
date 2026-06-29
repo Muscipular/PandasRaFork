@@ -9562,6 +9562,44 @@ const status_change* status_get_sc(const block_list* bl){
 	return status_get_sc(const_cast<block_list*>(bl));
 }
 
+#ifdef Pandas_Helper_Common_Function
+bool status_ishiding(struct block_list* bl, struct block_list* observer_bl) {
+	if (bl == nullptr)
+		return false;
+
+	status_change* sc = status_get_sc(bl);
+
+	if (sc == nullptr)
+		return false;
+
+	int option = sc->option;
+
+	if (bl->type == BL_NPC && observer_bl != nullptr && observer_bl->type == BL_PC) {
+		npc_data* nd = reinterpret_cast<npc_data*>(bl);
+		map_session_data* sd = reinterpret_cast<map_session_data*>(observer_bl);
+
+		if (npc_is_cloaked(nd, sd))
+			option |= OPTION_CLOAK;
+		else
+			option &= ~OPTION_CLOAK;
+	}
+
+	return (option & (OPTION_HIDE | OPTION_CLOAK | OPTION_CHASEWALK)) != 0;
+}
+
+bool status_isinvisible(struct block_list* bl) {
+	if (bl == nullptr)
+		return false;
+
+	status_change* sc = status_get_sc(bl);
+
+	if (sc == nullptr)
+		return false;
+
+	return (sc->option & OPTION_INVISIBLE) != 0;
+}
+#endif // Pandas_Helper_Common_Function
+
 
 /*========================================== [Playtester]
 * Returns the interval for status changes that iterate multiple times

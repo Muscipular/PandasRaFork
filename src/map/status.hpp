@@ -3654,6 +3654,10 @@ const struct view_data *status_get_viewdata(const block_list* bl);
 void status_set_viewdata(block_list *bl, int32 class_);
 status_change* status_get_sc(block_list* bl);
 const status_change* status_get_sc(const block_list* bl);
+#ifdef Pandas_Helper_Common_Function
+bool status_ishiding(struct block_list* bl, struct block_list* observer_bl = nullptr);
+bool status_isinvisible(struct block_list* bl);
+#endif // Pandas_Helper_Common_Function
 
 bool status_isdead(const block_list &bl);
 int32 status_isimmune(const block_list* bl);

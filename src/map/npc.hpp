@@ -1661,6 +1661,11 @@ void npc_event_do_oninit(void);
 
 int32 npc_event_do(const char* name);
 int32 npc_event_do_id(const char* name, int32 rid);
+#ifdef Pandas_Helper_Common_Function
+struct event_data* npc_event_data(const char* eventname);
+bool npc_event_exists(const char* eventname);
+bool npc_event_exists(struct npc_data* nd, const char* eventname);
+#endif // Pandas_Helper_Common_Function
 int32 npc_event_doall(const char* name);
 void npc_event_runall( const char* eventname );
 int32 npc_event_doall_id(const char* name, int32 rid);

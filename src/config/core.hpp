@@ -11,6 +11,8 @@
 
 #include <custom/defines_pre.hpp>
 
+#include <config/pandas.hpp>
+
 /// Max number of items on @autolootid list
 #define AUTOLOOTITEM_SIZE 10
 
