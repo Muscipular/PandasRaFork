@@ -19152,6 +19152,9 @@ BUILDIN_FUNC(getunitdata)
 			getunitdata_sub(UMOB_RES, md->status.res);
 			getunitdata_sub(UMOB_MRES, md->status.mres);
 			getunitdata_sub(UMOB_DAMAGETAKEN, md->damagetaken);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+			getunitdata_sub(UMOB_AURA, md->ucd.aura.id);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 			} break;
 
 		case BL_HOM: {
@@ -19198,6 +19201,9 @@ BUILDIN_FUNC(getunitdata)
 			getunitdata_sub(UHOM_DMOTION, hd->battle_status.dmotion);
 			getunitdata_sub(UHOM_TARGETID, hd->ud.target);
 			getunitdata_sub(UHOM_GROUP_ID, hd->ud.group_id);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+			getunitdata_sub(UHOM_AURA, hd->ucd.aura.id);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 			} break;
 
 		case BL_PET: {
@@ -19241,6 +19247,9 @@ BUILDIN_FUNC(getunitdata)
 			getunitdata_sub(UPET_ADELAY, pd->status.adelay);
 			getunitdata_sub(UPET_DMOTION, pd->status.dmotion);
 			getunitdata_sub(UPET_GROUP_ID, pd->ud.group_id);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+			getunitdata_sub(UPET_AURA, pd->ucd.aura.id);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 			} break;
 
 		case BL_MER: {
@@ -19284,6 +19293,9 @@ BUILDIN_FUNC(getunitdata)
 			getunitdata_sub(UMER_DMOTION, mc->base_status.dmotion);
 			getunitdata_sub(UMER_TARGETID, mc->ud.target);
 			getunitdata_sub(UMER_GROUP_ID, mc->ud.group_id);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+			getunitdata_sub(UMER_AURA, mc->ucd.aura.id);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 			} break;
 
 		case BL_ELEM: {
@@ -19329,6 +19341,9 @@ BUILDIN_FUNC(getunitdata)
 			getunitdata_sub(UELE_DMOTION, ed->base_status.dmotion);
 			getunitdata_sub(UELE_TARGETID, ed->ud.target);
 			getunitdata_sub(UELE_GROUP_ID, ed->ud.group_id);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+			getunitdata_sub(UELE_AURA, ed->ucd.aura.id);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 			} break;
 
 		case BL_NPC: {
@@ -19380,6 +19395,9 @@ BUILDIN_FUNC(getunitdata)
 			getunitdata_sub(UNPC_BODY2, nd->vd.look[LOOK_BODY2]);
 			getunitdata_sub(UNPC_DEADSIT, nd->vd.dead_sit);
 			getunitdata_sub(UNPC_GROUP_ID, nd->ud.group_id);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+			getunitdata_sub(UNPC_AURA, nd->ucd.aura.id);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 			} break;
 
 		default:
@@ -19528,6 +19546,11 @@ BUILDIN_FUNC(setunitdata)
 			case UMOB_RES: md->base_status->res = (int16)value; calc_status = true; break;
 			case UMOB_MRES: md->base_status->mres = (int16)value; calc_status = true; break;
 			case UMOB_DAMAGETAKEN: md->damagetaken = (uint16)value; break;
+#if defined(Pandas_Struct_Unit_CommonData_Aura) && defined(Pandas_Aura_Mechanism)
+			case UMOB_AURA:
+				aura_make_effective(bl, value);
+				break;
+#endif // Pandas_Struct_Unit_CommonData_Aura && Pandas_Aura_Mechanism
 			default:
 				ShowError("buildin_setunitdata: Unknown data identifier %d for BL_MOB.\n", type);
 				return SCRIPT_CMD_FAILURE;
@@ -19593,6 +19616,11 @@ BUILDIN_FUNC(setunitdata)
 				break;
 			}
 			case UHOM_GROUP_ID: hd->ud.group_id = value; unit_refresh(bl); break;
+#if defined(Pandas_Struct_Unit_CommonData_Aura) && defined(Pandas_Aura_Mechanism)
+			case UHOM_AURA:
+				aura_make_effective(bl, value);
+				break;
+#endif // Pandas_Struct_Unit_CommonData_Aura && Pandas_Aura_Mechanism
 			default:
 				ShowError("buildin_setunitdata: Unknown data identifier %d for BL_HOM.\n", type);
 				return SCRIPT_CMD_FAILURE;
@@ -19646,6 +19674,11 @@ BUILDIN_FUNC(setunitdata)
 			case UPET_ADELAY: pd->status.adelay = (int16)value; break;
 			case UPET_DMOTION: pd->status.dmotion = (int16)value; break;
 			case UPET_GROUP_ID: pd->ud.group_id = value; unit_refresh(bl); break;
+#if defined(Pandas_Struct_Unit_CommonData_Aura) && defined(Pandas_Aura_Mechanism)
+			case UPET_AURA:
+				aura_make_effective(bl, value);
+				break;
+#endif // Pandas_Struct_Unit_CommonData_Aura && Pandas_Aura_Mechanism
 			default:
 				ShowError("buildin_setunitdata: Unknown data identifier %d for BL_PET.\n", type);
 				return SCRIPT_CMD_FAILURE;
@@ -19709,6 +19742,11 @@ BUILDIN_FUNC(setunitdata)
 				break;
 			}
 			case UMER_GROUP_ID: mc->ud.group_id = value; unit_refresh(bl); break;
+#if defined(Pandas_Struct_Unit_CommonData_Aura) && defined(Pandas_Aura_Mechanism)
+			case UMER_AURA:
+				aura_make_effective(bl, value);
+				break;
+#endif // Pandas_Struct_Unit_CommonData_Aura && Pandas_Aura_Mechanism
 			default:
 				ShowError("buildin_setunitdata: Unknown data identifier %d for BL_MER.\n", type);
 				return SCRIPT_CMD_FAILURE;
@@ -19780,6 +19818,11 @@ BUILDIN_FUNC(setunitdata)
 				break;
 			}
 			case UELE_GROUP_ID: ed->ud.group_id = value; unit_refresh(bl); break;
+#if defined(Pandas_Struct_Unit_CommonData_Aura) && defined(Pandas_Aura_Mechanism)
+			case UELE_AURA:
+				aura_make_effective(bl, value);
+				break;
+#endif // Pandas_Struct_Unit_CommonData_Aura && Pandas_Aura_Mechanism
 			default:
 				ShowError("buildin_setunitdata: Unknown data identifier %d for BL_ELEM.\n", type);
 				return SCRIPT_CMD_FAILURE;
@@ -19846,6 +19889,11 @@ BUILDIN_FUNC(setunitdata)
 			case UNPC_BODY2: clif_changelook(bl, LOOK_BODY2, (uint16)value); break;
 			case UNPC_DEADSIT: nd->vd.dead_sit = (char)value; unit_refresh(bl); break;
 			case UNPC_GROUP_ID: nd->ud.group_id = value; unit_refresh(bl); break;
+#if defined(Pandas_Struct_Unit_CommonData_Aura) && defined(Pandas_Aura_Mechanism)
+			case UNPC_AURA:
+				aura_make_effective(bl, value);
+				break;
+#endif // Pandas_Struct_Unit_CommonData_Aura && Pandas_Aura_Mechanism
 			default:
 				ShowError("buildin_setunitdata: Unknown data identifier %d for BL_NPC.\n", type);
 				return SCRIPT_CMD_FAILURE;

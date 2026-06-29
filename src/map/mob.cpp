@@ -1200,6 +1200,9 @@ int32 mob_spawn (mob_data *md)
 		md->spotted_log[i] = 0;
 
 	md->dmglog.clear();
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	md->ucd.aura = {};
+#endif // Pandas_Struct_Unit_CommonData_Aura
 
 	if (md->lootitems)
 		memset(md->lootitems, 0, sizeof(*md->lootitems));

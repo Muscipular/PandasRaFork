@@ -4050,6 +4050,9 @@
 	export_constant(UMOB_RES);
 	export_constant(UMOB_MRES);
 	export_constant(UMOB_DAMAGETAKEN);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	export_constant(UMOB_AURA);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 
 	/* unit control - homunculus */
 	export_constant(UHOM_SIZE);
@@ -4093,6 +4096,9 @@
 	export_constant(UHOM_DMOTION);
 	export_constant(UHOM_TARGETID);
 	export_constant(UHOM_GROUP_ID);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	export_constant(UHOM_AURA);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 
 	/* unit control - pet */
 	export_constant(UPET_SIZE);
@@ -4133,6 +4139,9 @@
 	export_constant(UPET_ADELAY);
 	export_constant(UPET_DMOTION);
 	export_constant(UPET_GROUP_ID);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	export_constant(UPET_AURA);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 
 	/* unit control - mercenary */
 	export_constant(UMER_SIZE);
@@ -4173,6 +4182,9 @@
 	export_constant(UMER_DMOTION);
 	export_constant(UMER_TARGETID);
 	export_constant(UMER_GROUP_ID);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	export_constant(UMER_AURA);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 
 	/* unit control - elemental */
 	export_constant(UELE_SIZE);
@@ -4215,6 +4227,9 @@
 	export_constant(UELE_DMOTION);
 	export_constant(UELE_TARGETID);
 	export_constant(UELE_GROUP_ID);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	export_constant(UELE_AURA);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 
 	/* unit control - NPC */
 	export_constant(UNPC_LEVEL);
@@ -4263,6 +4278,9 @@
 	export_constant(UNPC_BODY2);
 	export_constant(UNPC_DEADSIT);
 	export_constant(UNPC_GROUP_ID);
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	export_constant(UNPC_AURA);
+#endif // Pandas_Struct_Unit_CommonData_Aura
 
 	export_constant(NAV_NONE);
 	export_constant(NAV_AIRSHIP_ONLY);

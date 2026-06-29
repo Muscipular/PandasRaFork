@@ -2362,6 +2362,20 @@ void pc_reg_received(map_session_data *sd)
 	sd->change_level_4th = static_cast<unsigned char>(pc_readglobalreg(sd, add_str(JOBCHANGE4TH_VAR)));
 	sd->die_counter = static_cast<int32>(pc_readglobalreg(sd, add_str(PCDIECOUNTER_VAR)));
 
+#if defined(Pandas_Struct_Unit_CommonData_Aura) && defined(Pandas_Aura_Mechanism)
+	// 从角色的变量中读取当前角色设置启用的光环编号
+	sd->ucd.aura.id = static_cast<int32>(pc_readglobalreg(sd, add_str(AURA_VARIABLE)));
+	std::shared_ptr<s_aura> aura = aura_search(sd->ucd.aura.id);
+	if (aura != nullptr) {
+		// 若是一个有效的光环编号则将其特效组合放到生效列表
+		aura_effects_refill(&sd->bl);
+	} else {
+		// 若不是一个有效的光环编号, 则将相关变量和值重置为 0
+		sd->ucd.aura.id = 0;
+		pc_setglobalreg(sd, add_str(AURA_VARIABLE), 0);
+	}
+#endif // Pandas_Struct_Unit_CommonData_Aura && Pandas_Aura_Mechanism
+
 	sd->langtype = static_cast<int32>(pc_readaccountreg(sd, add_str(LANGTYPE_VAR)));
 	if (msg_checklangtype(sd->langtype,true) < 0)
 		sd->langtype = 0; //invalid langtype reset to default

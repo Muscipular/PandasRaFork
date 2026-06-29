@@ -501,6 +501,9 @@ enum unitdata_mobtypes {
 	UMOB_RES,
 	UMOB_MRES,
 	UMOB_DAMAGETAKEN,
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	UMOB_AURA,
+#endif // Pandas_Struct_Unit_CommonData_Aura
 };
 
 enum unitdata_homuntypes {
@@ -545,6 +548,9 @@ enum unitdata_homuntypes {
 	UHOM_DMOTION,
 	UHOM_TARGETID,
 	UHOM_GROUP_ID,
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	UHOM_AURA,
+#endif // Pandas_Struct_Unit_CommonData_Aura
 };
 
 enum unitdata_pettypes {
@@ -586,6 +592,9 @@ enum unitdata_pettypes {
 	UPET_ADELAY,
 	UPET_DMOTION,
 	UPET_GROUP_ID,
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	UPET_AURA,
+#endif // Pandas_Struct_Unit_CommonData_Aura
 };
 
 enum unitdata_merctypes {
@@ -627,6 +636,9 @@ enum unitdata_merctypes {
 	UMER_DMOTION,
 	UMER_TARGETID,
 	UMER_GROUP_ID,
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	UMER_AURA,
+#endif // Pandas_Struct_Unit_CommonData_Aura
 };
 
 enum unitdata_elemtypes {
@@ -670,6 +682,9 @@ enum unitdata_elemtypes {
 	UELE_DMOTION,
 	UELE_TARGETID,
 	UELE_GROUP_ID,
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	UELE_AURA,
+#endif // Pandas_Struct_Unit_CommonData_Aura
 };
 
 enum unitdata_npctypes {
@@ -719,6 +734,9 @@ enum unitdata_npctypes {
 	UNPC_BODY2,
 	UNPC_DEADSIT,
 	UNPC_GROUP_ID,
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	UNPC_AURA,
+#endif // Pandas_Struct_Unit_CommonData_Aura
 };
 
 enum navigation_service {

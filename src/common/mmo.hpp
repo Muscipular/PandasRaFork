@@ -5,6 +5,8 @@
 #define MMO_HPP
 
 #include <ctime>
+#include <memory>
+#include <vector>
 
 #include <config/core.hpp>
 
@@ -272,10 +274,20 @@ enum e_mode {
 };
 
 #ifdef Pandas_Struct_Unit_CommonData
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+struct s_aura_effect;
+#endif // Pandas_Struct_Unit_CommonData_Aura
+
 // 多种单位的结构体都会嵌入的一个数据结构
 // 这里定义的内容在 map_session_data, npc_data, mob_data, homun_data,
 // mercenary_data, elemental_data, pet_data 结构体中的 ucd 成员中都会同时拥有
 struct s_unit_common_data {
+#ifdef Pandas_Struct_Unit_CommonData_Aura
+	struct s_ucd_aura {
+		uint32 id = 0; // 该单位启用的光环编号
+		std::vector<std::shared_ptr<s_aura_effect>> effects; // 该单位生效的特效组合
+	} aura;
+#endif // Pandas_Struct_Unit_CommonData_Aura
 };
 #endif // Pandas_Struct_Unit_CommonData
 

@@ -50,6 +50,7 @@
 
 	#ifdef Pandas_Struct_Unit_CommonData
 		// 使 s_unit_common_data 可记录单位的光环信息 [Sola丶小克]
+		#define Pandas_Struct_Unit_CommonData_Aura
 
 		// 使 s_unit_common_data 可记录战斗记录信息 [Sola丶小克]
 	#endif // Pandas_Struct_Unit_CommonData
