@@ -5087,6 +5087,22 @@ s_mob_db::s_mob_db()
 	this->status.adelay = MAX_ASPD_NOPC;
 	this->status.amotion = MAX_ASPD_NOPC/AMOTION_DIVIDER_NOPC;
 	this->status.clientamotion = cap_value(status.amotion, 1, USHRT_MAX);
+#ifdef Pandas_BattleConfig_MobDB_DamageMotion_Min
+	if( battle_config.mob_default_damagemotion ){
+		uint16 speed = battle_config.mob_default_damagemotion;
+
+		if( battle_config.monster_damage_delay_rate != 100 )
+			speed = speed * battle_config.monster_damage_delay_rate / 100;
+
+		this->status.dmotion = speed;
+
+		if( battle_config.mob_default_damagemotion == 1 && battle_config.monster_damage_delay_rate < 100 && speed == 0 ){
+			this->status.dmotion = 1;
+		}
+	}else{
+		this->status.dmotion = 0;
+	}
+#endif // Pandas_BattleConfig_MobDB_DamageMotion_Min
 	this->status.mode = static_cast<e_mode>(MONSTER_TYPE_06);
 	this->vd = {};
 	this->option = {};
