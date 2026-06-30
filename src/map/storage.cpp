@@ -241,7 +241,11 @@ static enum e_storage_add storage_canGetItem(struct s_storage *stor, int32 idx, 
  * @param amount : quantity of items
  * @return 0:success, 1:failed, 2:failed because of room or stack checks
  */
+#ifndef Pandas_FuncDefine_STORAGE_ADDITEM
 static int32 storage_additem(map_session_data* sd, struct s_storage *stor, struct item *it, int32 amount)
+#else
+int32 storage_additem(map_session_data* sd, struct s_storage *stor, struct item *it, int32 amount, bool direct_creater)
+#endif // Pandas_FuncDefine_STORAGE_ADDITEM
 {
 	struct item_data *data;
 	int32 i;
@@ -272,6 +276,10 @@ static int32 storage_additem(map_session_data* sd, struct s_storage *stor, struc
 
 				stor->u.items_storage[i].amount += amount;
 				stor->dirty = true;
+#ifdef Pandas_FuncDefine_STORAGE_ADDITEM
+				if( direct_creater )
+					return 0;
+#endif // Pandas_FuncDefine_STORAGE_ADDITEM
 				clif_storageitemadded(sd,&stor->u.items_storage[i],i,amount);
 
 				return 0;
@@ -287,11 +295,21 @@ static int32 storage_additem(map_session_data* sd, struct s_storage *stor, struc
 	if( i >= stor->max_amount )
 		return 2;
 
+#ifdef Pandas_FuncDefine_STORAGE_ADDITEM
+	if( direct_creater && data->flag.guid && !it->unique_id )
+		it->unique_id = pc_generate_unique_id(sd);
+	log_pick_pc(sd, LOG_TYPE_SCRIPT, amount, it);
+#endif // Pandas_FuncDefine_STORAGE_ADDITEM
+
 	// add item to slot
 	memcpy(&stor->u.items_storage[i],it,sizeof(stor->u.items_storage[0]));
 	stor->amount++;
 	stor->u.items_storage[i].amount = amount;
 	stor->dirty = true;
+#ifdef Pandas_FuncDefine_STORAGE_ADDITEM
+	if( direct_creater )
+		return 0;
+#endif // Pandas_FuncDefine_STORAGE_ADDITEM
 	clif_storageitemadded(sd,&stor->u.items_storage[i],i,amount);
 	clif_updatestorageamount(*sd, stor->amount, stor->max_amount);
 

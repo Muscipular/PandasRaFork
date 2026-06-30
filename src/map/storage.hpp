@@ -52,6 +52,9 @@ struct guild_log_entry{
 const char *storage_getName(uint8 id);
 bool storage_exists(uint8 id);
 
+#ifdef Pandas_FuncDefine_STORAGE_ADDITEM
+int32 storage_additem(map_session_data* sd, struct s_storage *stor, struct item *it, int32 amount, bool direct_creater = false);
+#endif // Pandas_FuncDefine_STORAGE_ADDITEM
 int32 storage_delitem(map_session_data* sd, struct s_storage *stor, int32 index, int32 amount);
 int32 storage_storageopen(map_session_data *sd);
 void storage_storageadd(map_session_data *sd, struct s_storage *stor, int32 index, int32 amount);

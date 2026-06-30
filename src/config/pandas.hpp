@@ -549,6 +549,7 @@
 	#define Pandas_FuncLogic_PC_EQUIPITEM_BOUND_OPPORTUNITY
 
 	// 调整 storage.cpp 中 storage_additem 的函数定义, 移除 static 关键字 [Sola丶小克]
+	#define Pandas_FuncDefine_STORAGE_ADDITEM
 
 	// 调整 instance.cpp 中 instance_destroy 的定义
 	// 增加 skip_erase 参数用于控制成功销毁副本后不 erase 掉 instance 对象
@@ -873,6 +874,11 @@
 	// 设置 NPC 的自毁策略, 用于配合 copynpc 实现在开宝箱/挖矿时进行自毁等场景
 	// 是否启用 npcexists 脚本指令 [Sola丶小克]
 	// 该指令用于判断指定名称的 NPC 是否存在, 就算不存在控制台也不会报错
+	#ifdef Pandas_FuncDefine_STORAGE_ADDITEM
+		// 是否启用 storagegetitem 脚本指令 [Sola丶小克]
+		// 往仓库直接创造一个指定的道具, 必须在仓库关闭的时候才能调用
+		#define Pandas_ScriptCommand_StorageGetItem
+	#endif // Pandas_FuncDefine_STORAGE_ADDITEM
 	// 是否启用 setinventoryinfo 脚本指令 [Sola丶小克]
 	// 该指令用于设置指定背包序号道具的部分详细信息, 与 getinventoryinfo 对应
 	// 是否启用 updateinventory 脚本指令 [Sola丶小克]
