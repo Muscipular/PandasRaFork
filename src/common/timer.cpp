@@ -352,6 +352,24 @@ t_tick settick_timer(int32 tid, t_tick tick)
 	return tick;
 }
 
+#ifdef Pandas_NpcEvent
+t_tick gettick_timer(int32 tid)
+{
+	if (tid == INVALID_TIMER)
+		return -1;
+
+	size_t i;
+
+	ARR_FIND(0, BHEAP_LENGTH(timer_heap), i, BHEAP_DATA(timer_heap)[i] == tid);
+	if (i == BHEAP_LENGTH(timer_heap)) {
+		ShowError("gettick_timer: no such timer %d (%p(%s))\n", tid, timer_data[tid].func, search_timer_func_list(timer_data[tid].func));
+		return -1;
+	}
+
+	return timer_data[tid].tick;
+}
+#endif // Pandas_NpcEvent
+
 #ifdef Pandas_BattleRecord
 void exchange_timer_id(int32 origin_id, int32 new_id)
 {

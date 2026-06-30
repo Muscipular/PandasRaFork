@@ -59,6 +59,9 @@ int32 delete_timer(int32 tid, TimerFunc func);
 
 t_tick addtick_timer(int32 tid, t_tick tick);
 t_tick settick_timer(int32 tid, t_tick tick);
+#ifdef Pandas_NpcEvent
+t_tick gettick_timer(int32 tid);
+#endif // Pandas_NpcEvent
 
 #ifdef Pandas_BattleRecord
 void exchange_timer_id(int32 origin_id, int32 new_id);

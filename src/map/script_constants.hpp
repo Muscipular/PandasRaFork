@@ -242,6 +242,13 @@
 	export_constant(BRA_COMBINE);
 	export_constant(BRA_DISCRETE);
 #endif // Pandas_BattleRecord
+#ifdef Pandas_NpcEvent
+	export_constant(CLR_OUTSIGHT);
+	export_constant(CLR_DEAD);
+	export_constant(CLR_RESPAWN);
+	export_constant(CLR_TELEPORT);
+	export_constant(CLR_TRICKDEAD);
+#endif // Pandas_NpcEvent
 #endif // Pandas_ScriptCommands
 
 	/* min and maximum variable value */
