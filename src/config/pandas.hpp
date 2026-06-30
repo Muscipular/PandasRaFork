@@ -1314,6 +1314,8 @@
 	#ifdef Pandas_Character_Title_Controller
 		// 是否启用 setchartitle 脚本指令 [Sola丶小克]
 		// 设置指定玩家的称号ID, 客户端封包版本大于等于 20150513 才可用
+		#define Pandas_ScriptCommand_SetCharTitle
+
 		// 是否启用 getchartitle 脚本指令 [Sola丶小克]
 		// 获得指定玩家的称号ID, 客户端封包版本大于等于 20150513 才可用
 	#endif // Pandas_Character_Title_Controller

@@ -29932,6 +29932,39 @@ BUILDIN_FUNC(getbossinfo) {
 }
 #endif // Pandas_ScriptCommand_GetBossInfo
 
+#ifdef Pandas_ScriptCommand_SetCharTitle
+/* ===========================================================
+ * 指令: setchartitle
+ * 描述: 设置指定玩家的称号ID
+ * 用法: setchartitle <称号ID>{,<角色编号>};
+ * 返回: 设置成功则返回 1, 设置失败则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(setchartitle) {
+#if PACKETVER < 20150513
+	ShowWarning("%s: Title System it requires PACKETVER 2015-05-13 or newer...\n", __func__);
+	script_pushint(st, 0);
+	return SCRIPT_CMD_FAILURE;
+#else
+	TBL_PC* sd = nullptr;
+	int64 input_title_id = script_getnum(st, 2);
+
+	if (input_title_id < 0)
+		input_title_id = 0;
+
+	uint32 title_id = static_cast<uint32>(input_title_id);
+
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushint(st, (npc_change_title_event(sd, title_id, 1) ? 1 : 0));
+	return SCRIPT_CMD_SUCCESS;
+#endif
+}
+#endif // Pandas_ScriptCommand_SetCharTitle
+
 /// script command definitions
 /// for an explanation on args, see add_buildin_func
 struct script_function buildin_func[] = {
@@ -29960,6 +29993,9 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(warpparty,"siii???"), // [Fredzilla] [Paradox924X]
 	BUILDIN_DEF(warpguild,"siii"), // [Fredzilla]
 	BUILDIN_DEF(setlook,"ii?"),
+#ifdef Pandas_ScriptCommand_SetCharTitle
+	BUILDIN_DEF(setchartitle, "i?"),					// 设置指定玩家的称号ID [Sola丶小克]
+#endif // Pandas_ScriptCommand_SetCharTitle
 	BUILDIN_DEF(changelook,"ii?"), // Simulates but don't Store it
 	BUILDIN_DEF2(setr,"set","rv?"),
 	BUILDIN_DEF(setr,"rv??"), // Not meant to be used directly, required for var++/var--
