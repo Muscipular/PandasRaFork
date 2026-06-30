@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -18,12 +19,29 @@
 #endif // _WIN32
 
 bool isRegexMatched(const std::string& content, const std::string& patterns);
+void deployImportDirectories();
+bool getExecuteFilepath(std::string& outFilepath);
+bool getExecuteFileDirectory(std::string& outFileDirectory);
+bool isDirectoryExists(const std::string& path);
+bool makeDirectories(const std::string& path);
+bool ensureDirectories(const std::string& filepath);
+bool deleteDirectory(std::string path);
+bool copyDirectory(const std::filesystem::path& from, const std::filesystem::path& to);
+bool isFileExists(const std::string& path);
+bool copyFile(const std::string& fromPath, const std::string& toPath);
+bool deleteFile(const std::string& path);
+bool strEndWith(std::string fullstring, std::string ending);
+bool strEndWith(std::wstring fullstring, std::wstring ending);
 void strReplace(std::string& str, const std::string& from, const std::string& to);
 void strReplace(std::wstring& str, const std::wstring& from, const std::wstring& to);
 void strReplace(char* str, const char* from, const char* to);
 bool strContain(std::vector<std::string> needle, const std::string& str);
 bool strContain(std::string needle, const std::string& str);
 std::vector<std::string> strExplode(std::string const& s, char delim);
+void standardizePathSep(std::string& path);
+void standardizePathSep(std::wstring& path);
+void ensurePathEndwithSep(std::string& path, const std::string& sep);
+void ensurePathEndwithSep(std::wstring& path, const std::wstring& sep);
 std::string formatVersion(std::string ver, bool bPrefix, bool bSuffix, int ver_type);
 bool isCommercialVersion();
 std::string getPandasVersion(bool bPrefix = true, bool bSuffix = true);

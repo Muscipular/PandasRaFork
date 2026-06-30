@@ -54,6 +54,7 @@ set( COMMON_ALL_HEADERS
 	"${COMMON_SOURCE_DIR}/assistant.hpp"
 	"${COMMON_SOURCE_DIR}/cbasetypes.hpp"
 	"${COMMON_SOURCE_DIR}/mmo.hpp"
+	"${COMMON_SOURCE_DIR}/processmutex.hpp"
 	)
 
 add_library(minicore)
@@ -62,6 +63,7 @@ target_sources(minicore PRIVATE
 	"${COMMON_SOURCE_DIR}/core.cpp"
 	"${COMMON_SOURCE_DIR}/malloc.cpp"
 	"${COMMON_SOURCE_DIR}/performance.cpp"
+	"${COMMON_SOURCE_DIR}/processmutex.cpp"
 	"${COMMON_SOURCE_DIR}/showmsg.cpp"
 	"${COMMON_SOURCE_DIR}/strlib.cpp"
 	"${COMMON_SOURCE_DIR}/assistant.cpp"
@@ -132,6 +134,7 @@ set( COMMON_BASE_SOURCES
 	"${COMMON_SOURCE_DIR}/md5calc.cpp"
 	"${COMMON_SOURCE_DIR}/nullpo.cpp"
 	"${COMMON_SOURCE_DIR}/performance.cpp"
+	"${COMMON_SOURCE_DIR}/processmutex.cpp"
 	"${COMMON_SOURCE_DIR}/random.cpp"
 	"${COMMON_SOURCE_DIR}/showmsg.cpp"
 	"${COMMON_SOURCE_DIR}/socket.cpp"

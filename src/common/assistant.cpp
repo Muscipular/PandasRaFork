@@ -3,17 +3,23 @@
 #include <algorithm>
 #include <cctype>
 #include <cstring>
+#include <filesystem>
 #include <regex>
 #include <sstream>
-#include <utility>
+#include <stdexcept>
 #include <string>
+#include <utility>
 
 #include <config/pandas.hpp>
 
+#include "processmutex.hpp"
 #include "showmsg.hpp"
 
 #ifdef _WIN32
 #include <Windows.h>
+#else
+#include <limits.h>
+#include <unistd.h>
 #endif // _WIN32
 
 bool isRegexMatched(const std::string& content, const std::string& patterns) {
@@ -24,6 +30,257 @@ bool isRegexMatched(const std::string& content, const std::string& patterns) {
 	}
 	catch (const std::regex_error& e) {
 		ShowWarning("%s throw regex_error : %s\n", __func__, e.what());
+		return false;
+	}
+}
+
+bool deployImportDirectory(std::string fromImportDir, std::string toImportDir) {
+	std::string workDirectory;
+	if (!getExecuteFileDirectory(workDirectory)) {
+		return false;
+	}
+
+	std::string fromDirectory = workDirectory + fromImportDir;
+	std::string toDirectory = workDirectory + toImportDir;
+
+	ensurePathEndwithSep(fromDirectory, PATH_SEPARATOR);
+	ensurePathEndwithSep(toDirectory, PATH_SEPARATOR);
+
+	standardizePathSep(fromDirectory);
+	standardizePathSep(toDirectory);
+
+	if (!isDirectoryExists(toDirectory)) {
+		if (!copyDirectory(fromDirectory, toDirectory)) {
+			ShowWarning("Could not copy %s to %s.\n", fromImportDir.c_str(), toImportDir.c_str());
+			return false;
+		}
+	}
+
+	try {
+		for (const auto& entry : std::filesystem::directory_iterator(fromDirectory)) {
+			if (!entry.is_regular_file()) {
+				continue;
+			}
+
+			std::filesystem::path toFullPath = std::filesystem::path(toDirectory) / entry.path().filename();
+			if (isFileExists(toFullPath.string())) {
+				continue;
+			}
+
+			std::string displayTargetPath = toImportDir;
+			ensurePathEndwithSep(displayTargetPath, PATH_SEPARATOR);
+			displayTargetPath += entry.path().filename().string();
+			standardizePathSep(displayTargetPath);
+
+			if (!copyFile(entry.path().string(), toFullPath.string())) {
+				ShowWarning("Deploy %s is failed.\n", displayTargetPath.c_str());
+			}
+			else {
+				ShowInfo("Deploy %s is successful.\n", displayTargetPath.c_str());
+			}
+		}
+	}
+	catch (const std::filesystem::filesystem_error& e) {
+		ShowWarning("%s: %s\n", __func__, e.what());
+		return false;
+	}
+
+	if (!isDirectoryExists(std::string(workDirectory + "src"))) {
+		deleteDirectory(fromDirectory);
+	}
+
+	return true;
+}
+
+void deployImportDirectories() {
+	ProcessMutex mutex = ProcessMutex("PANDAS_IMPORT_DEPLOY_MUTEX");
+	const bool locked = mutex.lock();
+
+	const struct import_data {
+		std::string import_from;
+		std::string import_to;
+	} import_data[] = {
+		{ "conf/import-tmpl", "conf/import" },
+		{ "conf/msg_conf/import-tmpl", "conf/msg_conf/import" },
+		{ "db/import-tmpl", "db/import" }
+	};
+
+	for (const auto& entry : import_data) {
+		deployImportDirectory(entry.import_from, entry.import_to);
+	}
+
+	if (locked) {
+		mutex.unlock();
+	}
+}
+
+bool getExecuteFilepath(std::string& outFilepath) {
+#ifdef _WIN32
+	std::string buffer(MAX_PATH, '\0');
+	DWORD length = GetModuleFileNameA(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+
+	while (length == buffer.size() && GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+		buffer.resize(buffer.size() * 2, '\0');
+		length = GetModuleFileNameA(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+	}
+
+	if (length == 0) {
+		outFilepath.clear();
+		return false;
+	}
+
+	buffer.resize(length);
+	outFilepath = buffer;
+	return true;
+#else
+	char buffer[PATH_MAX] = { 0 };
+	ssize_t length = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+
+	if (length == -1) {
+		outFilepath.clear();
+		return false;
+	}
+
+	buffer[length] = '\0';
+	outFilepath = buffer;
+	return true;
+#endif // _WIN32
+}
+
+bool getExecuteFileDirectory(std::string& outFileDirectory) {
+	std::string filePath;
+	if (!getExecuteFilepath(filePath)) {
+		outFileDirectory.clear();
+		return false;
+	}
+
+	std::size_t pos = filePath.rfind(PATH_SEPARATOR);
+	if (pos == std::string::npos) {
+		outFileDirectory.clear();
+		return false;
+	}
+
+	outFileDirectory = filePath.substr(0, pos);
+	ensurePathEndwithSep(outFileDirectory, PATH_SEPARATOR);
+	return true;
+}
+
+bool isDirectoryExists(const std::string& path) {
+	try {
+		std::filesystem::path dirpath(path);
+		dirpath = dirpath.lexically_normal();
+		return std::filesystem::is_directory(dirpath);
+	}
+	catch (const std::filesystem::filesystem_error& e) {
+		ShowWarning("%s: %s\n", __func__, e.what());
+		return false;
+	}
+}
+
+bool makeDirectories(const std::string& dirpath) {
+	try {
+		std::filesystem::path path(dirpath);
+		path = path.lexically_normal();
+		if (isDirectoryExists(dirpath) || isFileExists(dirpath)) {
+			return true;
+		}
+		return std::filesystem::create_directories(path);
+	}
+	catch (const std::filesystem::filesystem_error& e) {
+		ShowWarning("%s: %s\n", __func__, e.what());
+		return false;
+	}
+}
+
+bool ensureDirectories(const std::string& filepath) {
+	try {
+		std::filesystem::path path(filepath);
+		path = path.lexically_normal().parent_path();
+		return makeDirectories(path.string());
+	}
+	catch (const std::filesystem::filesystem_error& e) {
+		ShowWarning("%s: %s\n", __func__, e.what());
+		return false;
+	}
+}
+
+bool deleteDirectory(std::string path) {
+	try {
+		std::filesystem::path dirpath(path);
+		dirpath = dirpath.lexically_normal();
+		std::filesystem::remove_all(dirpath);
+		return true;
+	}
+	catch (const std::filesystem::filesystem_error& e) {
+		ShowWarning("%s: %s\n", __func__, e.what());
+		return false;
+	}
+}
+
+bool copyDirectory(const std::filesystem::path& from, const std::filesystem::path& to) {
+	try {
+		if (std::filesystem::exists(to)) {
+			throw std::runtime_error("The path " + to.generic_string() + " is already exists.");
+		}
+
+		if (std::filesystem::is_directory(from)) {
+			std::filesystem::create_directories(to);
+			for (const auto& item : std::filesystem::directory_iterator(from)) {
+				if (!copyDirectory(item.path(), to / item.path().filename())) {
+					return false;
+				}
+			}
+		}
+		else if (std::filesystem::is_regular_file(from)) {
+			std::filesystem::copy_file(from, to, std::filesystem::copy_options::overwrite_existing);
+		}
+		else {
+			throw std::runtime_error("The path " + from.generic_string() + " is not found.");
+		}
+	}
+	catch (const std::exception& e) {
+		ShowWarning("%s: %s\n", __func__, e.what());
+		return false;
+	}
+
+	return true;
+}
+
+bool isFileExists(const std::string& path) {
+	try {
+		std::filesystem::path filepath(path);
+		filepath = filepath.lexically_normal();
+		return std::filesystem::is_regular_file(filepath);
+	}
+	catch (const std::filesystem::filesystem_error& e) {
+		ShowWarning("%s: %s\n", __func__, e.what());
+		return false;
+	}
+}
+
+bool copyFile(const std::string& from, const std::string& to) {
+	try {
+		std::filesystem::path frompath(from);
+		frompath = frompath.lexically_normal();
+
+		std::filesystem::path topath(to);
+		topath = topath.lexically_normal();
+
+		std::filesystem::copy_file(frompath, topath, std::filesystem::copy_options::overwrite_existing);
+		return true;
+	}
+	catch (const std::filesystem::filesystem_error&) {
+		return false;
+	}
+}
+
+bool deleteFile(const std::string& path) {
+	try {
+		std::filesystem::path filepath(path);
+		filepath = filepath.lexically_normal();
+		return std::filesystem::remove(filepath);
+	}
+	catch (const std::filesystem::filesystem_error&) {
 		return false;
 	}
 }
@@ -91,6 +348,42 @@ std::vector<std::string> strExplode(std::string const& s, char delim) {
 		result.push_back("");
 
 	return result;
+}
+
+bool strEndWith(std::string fullstring, std::string ending) {
+	if (fullstring.length() >= ending.length()) {
+		return (0 == fullstring.compare(fullstring.length() - ending.length(), ending.length(), ending));
+	}
+	return false;
+}
+
+bool strEndWith(std::wstring fullstring, std::wstring ending) {
+	if (fullstring.length() >= ending.length()) {
+		return (0 == fullstring.compare(fullstring.length() - ending.length(), ending.length(), ending));
+	}
+	return false;
+}
+
+void standardizePathSep(std::string& path) {
+	strReplace(path, "/", PATH_SEPARATOR);
+	strReplace(path, "\\", PATH_SEPARATOR);
+}
+
+void standardizePathSep(std::wstring& path) {
+	strReplace(path, L"/", WIDE_PATH_SEPARATOR);
+	strReplace(path, L"\\", WIDE_PATH_SEPARATOR);
+}
+
+void ensurePathEndwithSep(std::string& path, const std::string& sep) {
+	if (!(strEndWith(path, "\\") || strEndWith(path, "/"))) {
+		path.append(sep);
+	}
+}
+
+void ensurePathEndwithSep(std::wstring& path, const std::wstring& sep) {
+	if (!(strEndWith(path, L"\\") || strEndWith(path, L"/"))) {
+		path.append(sep);
+	}
 }
 
 std::string formatVersion(std::string ver, bool bPrefix, bool bSuffix, int ver_type) {
