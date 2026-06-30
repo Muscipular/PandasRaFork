@@ -1052,12 +1052,21 @@ void inter_Storage_sendInfo(int32 fd) {
 	size_t offset = 4;
 	size_t size = sizeof( struct s_storage_table );
 	size_t len = offset + interServerDb.size() * size;
+#ifdef Pandas_Unlock_Storage_Capacity_Limit
+	len += 2;
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 
 	// Send storage table information
 	WFIFOHEAD(fd, len);
 	WFIFOW(fd, 0) = 0x388c;
+
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 	WFIFOW( fd, 2 ) = static_cast<int16>( len );
 	offset = 4;
+#else
+	WFIFOL( fd, 2 ) = static_cast<int32>( len );
+	offset = 4 + 2;
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 	for( auto storage : interServerDb ){
 		memcpy(WFIFOP(fd, offset), storage.second.get(), size);
 		offset += size;
@@ -1422,7 +1431,17 @@ int32 inter_check_length(int32 fd, int32 length)
 	{// variable-length packet
 		if( RFIFOREST(fd) < 4 )
 			return 0;
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 		length = RFIFOW(fd,2);
+#else
+		if( RFIFOW(fd,0) == 0x308b || RFIFOW(fd,0) == 0x3019 ){
+			if( RFIFOREST(fd) < 6 )
+				return 0;
+			length = RFIFOL(fd,2);
+		}
+		else
+			length = RFIFOW(fd,2);
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 	}
 
 	if( (int32)RFIFOREST(fd) < length )

@@ -568,6 +568,7 @@ bool intif_send_guild_storage(uint32 account_id, struct s_storage *gstor)
 {
 	if (CheckForCharServer())
 		return false;
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 	WFIFOHEAD(inter_fd,sizeof(struct s_storage)+12);
 	WFIFOW(inter_fd,0) = 0x3019;
 	WFIFOW(inter_fd,2) = (uint16)sizeof(struct s_storage)+12;
@@ -575,6 +576,15 @@ bool intif_send_guild_storage(uint32 account_id, struct s_storage *gstor)
 	WFIFOL(inter_fd,8) = gstor->id;
 	memcpy( WFIFOP(inter_fd,12),gstor, sizeof(struct s_storage) );
 	WFIFOSET(inter_fd,WFIFOW(inter_fd,2));
+#else
+	WFIFOHEAD(inter_fd,sizeof(struct s_storage)+12+2);
+	WFIFOW(inter_fd,0) = 0x3019;
+	WFIFOL(inter_fd,2) = (uint32)sizeof(struct s_storage)+12+2;
+	WFIFOL(inter_fd,4 + 2) = account_id;
+	WFIFOL(inter_fd,8 + 2) = gstor->id;
+	memcpy( WFIFOP(inter_fd,12 + 2),gstor, sizeof(struct s_storage) );
+	WFIFOSET(inter_fd,WFIFOL(inter_fd,2));
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 	return true;
 }
 
@@ -1492,16 +1502,23 @@ int32 intif_parse_LoadGuildStorage(int32 fd)
 	struct s_storage *gstor;
 	map_session_data *sd;
 	int32 guild_id, flag;
+#ifdef Pandas_Unlock_Storage_Capacity_Limit
+	const int32 packet_offset = 2;
+	int32 packet_len = RFIFOL(fd,2);
+#else
+	const int32 packet_offset = 0;
+	int32 packet_len = RFIFOW(fd,2);
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 
-	guild_id = RFIFOL(fd,8);
-	flag = RFIFOL(fd,12);
+	guild_id = RFIFOL(fd,8 + packet_offset);
+	flag = RFIFOL(fd,12 + packet_offset);
 	if (guild_id <= 0)
 		return 0;
 
-	sd = map_id2sd( RFIFOL(fd,4) );
+	sd = map_id2sd( RFIFOL(fd,4 + packet_offset) );
 	if (flag){ //If flag != 0, we attach a player and open the storage
 		if(sd == nullptr){
-			ShowError("intif_parse_LoadGuildStorage: user not found (AID: %d)\n",RFIFOL(fd,4));
+			ShowError("intif_parse_LoadGuildStorage: user not found (AID: %d)\n",RFIFOL(fd,4 + packet_offset));
 			return 0;
 		}
 	}
@@ -1518,13 +1535,13 @@ int32 intif_parse_LoadGuildStorage(int32 fd)
 		ShowWarning("intif_parse_LoadGuildStorage: received storage for an already modified non-saved storage! (User %d:%d)\n", flag?sd->status.account_id:1, flag?sd->status.char_id:1);
 		return 0;
 	}
-	if (RFIFOW(fd,2)-13 != sizeof(struct s_storage)) {
-		ShowError("intif_parse_LoadGuildStorage: data size error %d %" PRIuPTR "\n",RFIFOW(fd,2)-13 , sizeof(struct s_storage));
+	if (packet_len - 13 - packet_offset != sizeof(struct s_storage)) {
+		ShowError("intif_parse_LoadGuildStorage: data size error %d %" PRIuPTR "\n", packet_len - 13 - packet_offset, sizeof(struct s_storage));
 		gstor->status = false;
 		return 0;
 	}
 
-	memcpy(gstor,RFIFOP(fd,13),sizeof(struct s_storage));
+	memcpy(gstor,RFIFOP(fd,13 + packet_offset),sizeof(struct s_storage));
 	if( flag )
 		storage_guild_storageopen(sd);
 
@@ -3424,8 +3441,15 @@ void intif_parse_itembound_store2gstorage(int32 fd) {
  */
 static bool intif_parse_StorageReceived(int32 fd)
 {
-	char type =  RFIFOB(fd,4);
-	uint32 account_id = RFIFOL(fd, 5);
+#ifdef Pandas_Unlock_Storage_Capacity_Limit
+	const int32 packet_offset = 2;
+	int32 packet_len = RFIFOL(fd,2);
+#else
+	const int32 packet_offset = 0;
+	int32 packet_len = RFIFOW(fd,2);
+#endif // Pandas_Unlock_Storage_Capacity_Limit
+	char type =  RFIFOB(fd,4 + packet_offset);
+	uint32 account_id = RFIFOL(fd, 5 + packet_offset);
 	map_session_data *sd = map_id2sd(account_id);
 	struct s_storage *stor, *p; //storage
 	size_t sz_stor = sizeof(struct s_storage);
@@ -3435,12 +3459,12 @@ static bool intif_parse_StorageReceived(int32 fd)
 		return false;
 	}
 
-	if (!RFIFOB(fd, 9)) {
+	if (!RFIFOB(fd, 9 + packet_offset)) {
 		ShowError("intif_parse_StorageReceived: Failed to load! (AID: %d, type: %d)\n", account_id, type);
 		return false;
 	}
 
-	p = (struct s_storage *)RFIFOP(fd,10);
+	p = (struct s_storage *)RFIFOP(fd,10 + packet_offset);
 
 	switch (type) { 
 		case TABLE_INVENTORY:
@@ -3469,8 +3493,8 @@ static bool intif_parse_StorageReceived(int32 fd)
 			return false;
 		}
 	}
-	if (RFIFOW(fd,2)-10 != sz_stor) {
-		ShowError("intif_parse_StorageReceived: data size error %d %" PRIuPTR "\n",RFIFOW(fd,2)-10 , sz_stor);
+	if (packet_len - 10 - packet_offset != sz_stor) {
+		ShowError("intif_parse_StorageReceived: data size error %d %" PRIuPTR "\n", packet_len - 10 - packet_offset, sz_stor);
 		stor->status = false;
 		return false;
 	}
@@ -3602,12 +3626,19 @@ static void intif_parse_StorageSaved(int32 fd)
  * Receive storage information
  **/
 void intif_parse_StorageInfo_recv(int32 fd) {
-	int32 size = sizeof(struct s_storage_table), count = (RFIFOW(fd, 2) - 4) / size;
+#ifdef Pandas_Unlock_Storage_Capacity_Limit
+	const int32 packet_offset = 2;
+	int32 packet_len = RFIFOL(fd, 2);
+#else
+	const int32 packet_offset = 0;
+	int32 packet_len = RFIFOW(fd, 2);
+#endif // Pandas_Unlock_Storage_Capacity_Limit
+	int32 size = sizeof(struct s_storage_table), count = (packet_len - 4 - packet_offset) / size;
 
 	storage_db.clear();
 
 	for( int32 i = 0; i < count; i++ ){
-		struct s_storage_table* ptr = (struct s_storage_table*)RFIFOP( fd, 4 + size * i );
+		struct s_storage_table* ptr = (struct s_storage_table*)RFIFOP( fd, 4 + packet_offset + size * i );
 		std::shared_ptr<struct s_storage_table> storage = std::make_shared<struct s_storage_table>();
 
 		safestrncpy( storage->name, ptr->name, sizeof( storage->name ) );
@@ -3664,6 +3695,7 @@ bool intif_storage_save( const map_session_data* sd, const s_storage* stor )
 	if (CheckForCharServer())
 		return false;
 
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 	WFIFOHEAD(inter_fd, stor_size+13);
 	WFIFOW(inter_fd, 0) = 0x308b;
 	WFIFOW(inter_fd, 2) = stor_size+13;
@@ -3672,6 +3704,16 @@ bool intif_storage_save( const map_session_data* sd, const s_storage* stor )
 	WFIFOL(inter_fd, 9) = sd->status.char_id;
 	memcpy(WFIFOP(inter_fd, 13), stor, stor_size);
 	WFIFOSET(inter_fd, stor_size+13);
+#else
+	WFIFOHEAD(inter_fd, stor_size+13+2);
+	WFIFOW(inter_fd, 0) = 0x308b;
+	WFIFOL(inter_fd, 2) = stor_size+13+2;
+	WFIFOB(inter_fd, 4 + 2) = stor->type;
+	WFIFOL(inter_fd, 5 + 2) = sd->status.account_id;
+	WFIFOL(inter_fd, 9 + 2) = sd->status.char_id;
+	memcpy(WFIFOP(inter_fd, 13 + 2), stor, stor_size);
+	WFIFOSET(inter_fd, stor_size+13+2);
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 	return true;
 }
 
@@ -3780,7 +3822,17 @@ int32 intif_parse(int32 fd)
 	if(packet_len==-1){
 		if(RFIFOREST(fd)<4)
 			return 2;
+#ifndef Pandas_Unlock_Storage_Capacity_Limit
 		packet_len = RFIFOW(fd,2);
+#else
+		if( cmd == 0x3818 || cmd == 0x388a || cmd == 0x388c ){
+			if( RFIFOREST(fd) < 6 )
+				return 2;
+			packet_len = RFIFOL(fd,2);
+		}
+		else
+			packet_len = RFIFOW(fd,2);
+#endif // Pandas_Unlock_Storage_Capacity_Limit
 	}
 	if((int32)RFIFOREST(fd)<packet_len){
 		return 2;
