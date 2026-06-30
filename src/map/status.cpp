@@ -3572,6 +3572,17 @@ static uint32 status_calc_maxhp_pc( map_session_data& sd, uint32 vit ){
 		dmax = 1.0;
 	}
 
+#ifdef Pandas_Extreme_Computing
+	if (battle_config.hp_rate != 100)
+		dmax = (uint32)(battle_config.hp_rate * (dmax / 100.));
+	if (sd.status.base_level < 100)
+		dmax = cap_value(dmax, 1, (uint32)battle_config.max_hp_lv99);
+	else if (sd.status.base_level < 151)
+		dmax = cap_value(dmax, 1, (uint32)battle_config.max_hp_lv150);
+	else
+		dmax = cap_value(dmax, 1, (uint32)battle_config.max_hp);
+#endif // Pandas_Extreme_Computing
+
 	return cap_value( static_cast<uint32>( dmax ), 1, std::numeric_limits<uint32>::max() );
 }
 
@@ -3622,6 +3633,12 @@ static uint32 status_calc_maxsp_pc( map_session_data& sd, uint32 int_ ){
 	if( dmax < 1.0 ){
 		dmax = 1.0;
 	}
+
+#ifdef Pandas_Extreme_Computing
+	if (battle_config.sp_rate != 100)
+		dmax = (uint32)(battle_config.sp_rate * (dmax / 100.));
+	dmax = cap_value(dmax, 1, (uint32)battle_config.max_sp);
+#endif // Pandas_Extreme_Computing
 
 	return cap_value( static_cast<uint32>( dmax ), 1, std::numeric_limits<uint32>::max() );
 }
@@ -3677,13 +3694,22 @@ bool status_calc_weight(map_session_data *sd, enum e_status_calc_weight_opt flag
 {
 	int32 b_weight, b_max_weight, skill, i;
 	status_change *sc;
+#ifdef Pandas_Extreme_Computing
+	int add_max_weight = 0;
+#endif // Pandas_Extreme_Computing
 
 	nullpo_retr(false, sd);
 
 	sc = &sd->sc;
 	b_max_weight = sd->max_weight; // Store max weight for later comparison
 	b_weight = sd->weight; // Store current weight for later comparison
+#ifndef Pandas_Extreme_Computing
 	sd->max_weight = job_db.get_maxWeight(pc_mapid2jobid(sd->class_, sd->status.sex)) + sd->status.str * 300; // Recalculate max weight
+#else
+	// 客户端能展现最大的负重数值是 0x7FFFFFFF (2147483647)
+	// 由于解除了 str 的上限, 这里可能会爆掉, 因此额外做一些防止溢出的规避措施
+	sd->max_weight = cap_value(job_db.get_maxWeight(pc_mapid2jobid(sd->class_, sd->status.sex)) + sd->status.str * 300, 0, PEC_MAX_WEIGHT);
+#endif // Pandas_Extreme_Computing
 
 	if (flag&CALCWT_ITEM) {
 		sd->weight = 0; // Reset current weight
@@ -3695,6 +3721,7 @@ bool status_calc_weight(map_session_data *sd, enum e_status_calc_weight_opt flag
 		}
 	}
 
+#ifndef Pandas_Extreme_Computing
 	if (flag&CALCWT_MAXBONUS) {
 		// Skill/Status bonus weight increases
 		sd->max_weight += sd->add_max_weight; // From bAddMaxWeight
@@ -3711,6 +3738,28 @@ bool status_calc_weight(map_session_data *sd, enum e_status_calc_weight_opt flag
 		if (pc_ismadogear(sd))
 			sd->max_weight += 15000;
 	}
+#else
+	if (flag&CALCWT_MAXBONUS) {
+		// Skill/Status bonus weight increases
+		add_max_weight += sd->add_max_weight; // From bAddMaxWeight
+		if ((skill = pc_checkskill(sd, MC_INCCARRY)) > 0)
+			add_max_weight += 2000 * skill;
+		if (pc_isriding(sd) && pc_checkskill(sd, KN_RIDING) > 0)
+			add_max_weight += 10000;
+		else if (pc_isridingdragon(sd))
+			add_max_weight += 5000 + 2000 * pc_checkskill(sd, RK_DRAGONTRAINING);
+		// 计算 SC_KNOWLEDGE 时需要依赖叠加至今的 max_weight, 赋值一下
+		sd->max_weight = cap_value(sd->max_weight + add_max_weight, 0, PEC_MAX_WEIGHT);
+		add_max_weight = 0;
+		if (sc->getSCE(SC_KNOWLEDGE))
+			add_max_weight += sd->max_weight * sc->getSCE(SC_KNOWLEDGE)->val1 / 10;
+		if ((skill = pc_checkskill(sd, ALL_INCCARRY)) > 0)
+			add_max_weight += 2000 * skill;
+		if (pc_ismadogear(sd))
+			add_max_weight += 15000;
+		sd->max_weight = cap_value(sd->max_weight + add_max_weight, 0, PEC_MAX_WEIGHT);
+	}
+#endif // Pandas_Extreme_Computing
 
 	// Update the client if the new weight calculations don't match
 	if (b_weight != sd->weight)
@@ -4378,6 +4427,8 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 // ----- HP MAX CALCULATION -----
 	base_status->max_hp = sd->status.max_hp = status_calc_maxhp_pc( *sd, base_status->vit );
 
+#ifndef Pandas_Extreme_Computing
+	// 此处逻辑已经被转入到 status_calc_maxhpsp_pc 函数中实现, 此处无需重复进行
 	if(battle_config.hp_rate != 100)
 		base_status->max_hp = (uint32)(battle_config.hp_rate * (base_status->max_hp/100.));
 
@@ -4387,14 +4438,18 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 		base_status->max_hp = cap_value(base_status->max_hp,1,(uint32)battle_config.max_hp_lv150);
 	else
 		base_status->max_hp = cap_value(base_status->max_hp,1,(uint32)battle_config.max_hp);
+#endif // Pandas_Extreme_Computing
 
 // ----- SP MAX CALCULATION -----
 	base_status->max_sp = sd->status.max_sp = status_calc_maxsp_pc( *sd, base_status->int_ );
 
+#ifndef Pandas_Extreme_Computing
+	// 此处逻辑已经被转入到 status_calc_maxhpsp_pc 函数中实现, 此处无需重复进行
 	if(battle_config.sp_rate != 100)
 		base_status->max_sp = (uint32)(battle_config.sp_rate * (base_status->max_sp/100.));
 
 	base_status->max_sp = cap_value(base_status->max_sp,1,(uint32)battle_config.max_sp);
+#endif // Pandas_Extreme_Computing
 
 // ----- AP MAX CALCULATION -----
 	base_status->max_ap = sd->status.max_ap = status_calc_maxap_pc( *sd );
@@ -6228,6 +6283,8 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 		if( bl.type == BL_PC ) {
 			status->max_hp = status_calc_maxhp_pc( *sd, status->vit );
 
+#ifndef Pandas_Extreme_Computing
+			// 此处逻辑已经被转入到 status_calc_maxhpsp_pc 函数中实现, 此处无需重复进行
 			if(battle_config.hp_rate != 100)
 				status->max_hp = (uint32)(battle_config.hp_rate * (status->max_hp/100.));
 
@@ -6237,6 +6294,7 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 				status->max_hp = umin(status->max_hp,(uint32)battle_config.max_hp_lv150);
 			else
 				status->max_hp = umin(status->max_hp,(uint32)battle_config.max_hp);
+#endif // Pandas_Extreme_Computing
 		}
 		else
 			status->max_hp = status_calc_maxhp(&bl, b_status->max_hp);
@@ -6251,10 +6309,13 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 		if( bl.type == BL_PC ) {
 			status->max_sp = status_calc_maxsp_pc( *sd, status->int_ );
 
+#ifndef Pandas_Extreme_Computing
+			// 此处逻辑已经被转入到 status_calc_maxhpsp_pc 函数中实现, 此处无需重复进行
 			if(battle_config.sp_rate != 100)
 				status->max_sp = (uint32)(battle_config.sp_rate * (status->max_sp/100.));
 
 			status->max_sp = umin(status->max_sp,(uint32)battle_config.max_sp);
+#endif // Pandas_Extreme_Computing
 		}
 		else
 			status->max_sp = status_calc_maxsp(&bl, b_status->max_sp);

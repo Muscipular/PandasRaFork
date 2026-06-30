@@ -4292,8 +4292,17 @@ void clif_initialstatus( map_session_data& sd ) {
 #ifdef RENEWAL
 	packet.plusmdefPower = pc_rightside_mdef( &sd );
 #else
+#ifndef Pandas_Extreme_Computing
 	// Negative check for Frenzy'ed characters.
 	packet.plusmdefPower = std::max( pc_rightside_mdef( &sd ), 0 );
+#else
+	int32 temp = std::max(static_cast<int32>(pc_rightside_mdef(&sd)), 0);
+	if (temp > std::numeric_limits<int16>::max()) {
+		packet.plusmdefPower = std::numeric_limits<int16>::max();
+	} else {
+		packet.plusmdefPower = static_cast<int16>(temp);
+	}
+#endif // Pandas_Extreme_Computing
 #endif
 
 	packet.hitSuccessValue = sd.battle_status.hit;
@@ -4304,6 +4313,24 @@ void clif_initialstatus( map_session_data& sd ) {
 	packet.plusASPD = 0;
 
 	clif_send( &packet, sizeof( packet ), &sd, SELF );
+
+#ifdef Pandas_Extreme_Computing
+	// ZC_STATUS 封包发送的 MATK 等字段仅支持 WORD 类型且是有符号的, 最大也就 0x7FFF (32767)
+	// 因此发送了上述封包后我们需要再补充调用 clif_updatestatus 这个封包里 MATK 等字段时 INT 类型的 (有无符号没测试)
+	// 就算是有符号, 也应该能支持到 0x7FFFFFFF (2147483647) 总之.... 很好... 哈哈哈
+	clif_updatestatus(sd, SP_ATK1);
+	clif_updatestatus(sd, SP_ATK2);
+	clif_updatestatus(sd, SP_MATK1);
+	clif_updatestatus(sd, SP_MATK2);
+	clif_updatestatus(sd, SP_DEF1);
+	clif_updatestatus(sd, SP_DEF2);
+	clif_updatestatus(sd, SP_MDEF1);
+	clif_updatestatus(sd, SP_MDEF2);
+	clif_updatestatus(sd, SP_HIT);
+	clif_updatestatus(sd, SP_CRITICAL);
+	clif_updatestatus(sd, SP_FLEE1);
+	clif_updatestatus(sd, SP_FLEE2);
+#endif // Pandas_Extreme_Computing
 
 	clif_updatestatus(sd, SP_STR);
 	clif_updatestatus(sd, SP_AGI);
@@ -5427,7 +5454,11 @@ void clif_damage(block_list& src, block_list& dst, t_tick tick, int32 sdelay, in
 		// it displays the damage and makes the target flinch / stop. If the damage frame is undefined,
 		// it instead displays the damage / flinch / stop at the beginning of the second to last frame.
 		// We define the time after which the damage frame shows at 1x speed as clientamotion.
+#ifndef Pandas_Extreme_Computing
 		uint16 clientamotion = std::max((uint16)1, status_get_clientamotion(&src));
+#else
+		pec_ushort clientamotion = std::max((pec_ushort)1, status_get_clientamotion(&src));
+#endif // Pandas_Extreme_Computing
 
 		// Knowing when the damage frame happens in the animation allows us to synchronize the timing
 		// between client and server using the formula below.

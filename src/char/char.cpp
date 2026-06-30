@@ -310,7 +310,11 @@ int32 char_mmo_char_tosql(uint32 char_id, struct mmo_charstatus* p){
 		if( SQL_ERROR == Sql_Query(sql_handle, "UPDATE `%s` SET `base_level`='%d', `job_level`='%d',"
 			"`base_exp`='%" PRIu64 "', `job_exp`='%" PRIu64 "', `zeny`='%d',"
 			"`max_hp`='%u',`hp`='%u',`max_sp`='%u',`sp`='%u',`status_point`='%d',`skill_point`='%d',"
+#ifndef Pandas_Extreme_Computing
 			"`str`='%d',`agi`='%d',`vit`='%d',`int`='%d',`dex`='%d',`luk`='%d',"
+#else
+			"`str`='%u',`agi`='%u',`vit`='%u',`int`='%u',`dex`='%u',`luk`='%u',"
+#endif // Pandas_Extreme_Computing
 			"`option`='%d',`party_id`='%d',`guild_id`='%d',`pet_id`='%d',`homun_id`='%d',`elemental_id`='%d',"
 			"`weapon`='%d',`shield`='%d',`head_top`='%d',`head_mid`='%d',`head_bottom`='%d',"
 			"`last_map`='%s',`last_x`='%d',`last_y`='%d',`last_instanceid`='%d',"
@@ -318,7 +322,11 @@ int32 char_mmo_char_tosql(uint32 char_id, struct mmo_charstatus* p){
 			"`delete_date`='%lu',`robe`='%d',`moves`='%d',`font`='%u',`uniqueitem_counter`='%u',"
 			"`hotkey_rowshift`='%d', `clan_id`='%d', `title_id`='%lu', `show_equip`='%d', `hotkey_rowshift2`='%d',"
 			"`max_ap`='%u',`ap`='%u',`trait_point`='%d',"
+#ifndef Pandas_Extreme_Computing
 			"`pow`='%d',`sta`='%d',`wis`='%d',`spl`='%d',`con`='%d',`crt`='%d'"
+#else
+			"`pow`='%u',`sta`='%u',`wis`='%u',`spl`='%u',`con`='%u',`crt`='%u'"
+#endif // Pandas_Extreme_Computing
 			" WHERE `account_id`='%d' AND `char_id` = '%d'",
 			schema_config.char_db, p->base_level, p->job_level,
 			p->base_exp, p->job_exp, p->zeny,
@@ -946,12 +954,21 @@ int32 char_mmo_chars_fromsql( char_session_data& sd, CHARACTER_INFO chars[], uin
 	||	SQL_ERROR == stmt.BindColumn( 6,  SQLDT_UINT64, &p.base_exp )
 	||	SQL_ERROR == stmt.BindColumn( 7,  SQLDT_UINT64, &p.job_exp )
 	||	SQL_ERROR == stmt.BindColumn( 8,  SQLDT_INT32, &p.zeny )
+#ifndef Pandas_Extreme_Computing
 	||	SQL_ERROR == stmt.BindColumn( 9,  SQLDT_INT16, &p.str )
 	||	SQL_ERROR == stmt.BindColumn( 10, SQLDT_INT16, &p.agi )
 	||	SQL_ERROR == stmt.BindColumn( 11, SQLDT_INT16, &p.vit )
 	||	SQL_ERROR == stmt.BindColumn( 12, SQLDT_INT16, &p.int_ )
 	||	SQL_ERROR == stmt.BindColumn( 13, SQLDT_INT16, &p.dex )
 	||	SQL_ERROR == stmt.BindColumn( 14, SQLDT_INT16, &p.luk )
+#else
+	||	SQL_ERROR == stmt.BindColumn( 9,  SQLDT_UINT32, &p.str )
+	||	SQL_ERROR == stmt.BindColumn( 10, SQLDT_UINT32, &p.agi )
+	||	SQL_ERROR == stmt.BindColumn( 11, SQLDT_UINT32, &p.vit )
+	||	SQL_ERROR == stmt.BindColumn( 12, SQLDT_UINT32, &p.int_ )
+	||	SQL_ERROR == stmt.BindColumn( 13, SQLDT_UINT32, &p.dex )
+	||	SQL_ERROR == stmt.BindColumn( 14, SQLDT_UINT32, &p.luk )
+#endif // Pandas_Extreme_Computing
 	||	SQL_ERROR == stmt.BindColumn( 15, SQLDT_UINT32, &p.max_hp )
 	||	SQL_ERROR == stmt.BindColumn( 16, SQLDT_UINT32, &p.hp )
 	||	SQL_ERROR == stmt.BindColumn( 17, SQLDT_UINT32, &p.max_sp )
@@ -986,12 +1003,21 @@ int32 char_mmo_chars_fromsql( char_session_data& sd, CHARACTER_INFO chars[], uin
 	||	SQL_ERROR == stmt.BindColumn( 46, SQLDT_UINT32, &p.max_ap )
 	||	SQL_ERROR == stmt.BindColumn( 47, SQLDT_UINT32, &p.ap )
 	||	SQL_ERROR == stmt.BindColumn( 48, SQLDT_UINT32, &p.trait_point )
+#ifndef Pandas_Extreme_Computing
 	||	SQL_ERROR == stmt.BindColumn( 49, SQLDT_INT16, &p.pow )
 	||	SQL_ERROR == stmt.BindColumn( 50, SQLDT_INT16, &p.sta )
 	||	SQL_ERROR == stmt.BindColumn( 51, SQLDT_INT16, &p.wis )
 	||	SQL_ERROR == stmt.BindColumn( 52, SQLDT_INT16, &p.spl )
 	||	SQL_ERROR == stmt.BindColumn( 53, SQLDT_INT16, &p.con )
 	||	SQL_ERROR == stmt.BindColumn( 54, SQLDT_INT16, &p.crt )
+#else
+	||	SQL_ERROR == stmt.BindColumn( 49, SQLDT_UINT32, &p.pow )
+	||	SQL_ERROR == stmt.BindColumn( 50, SQLDT_UINT32, &p.sta )
+	||	SQL_ERROR == stmt.BindColumn( 51, SQLDT_UINT32, &p.wis )
+	||	SQL_ERROR == stmt.BindColumn( 52, SQLDT_UINT32, &p.spl )
+	||	SQL_ERROR == stmt.BindColumn( 53, SQLDT_UINT32, &p.con )
+	||	SQL_ERROR == stmt.BindColumn( 54, SQLDT_UINT32, &p.crt )
+#endif // Pandas_Extreme_Computing
 	||	SQL_ERROR == stmt.BindColumn( 55, SQLDT_UINT16, &p.inventory_slots )
 	||	SQL_ERROR == stmt.BindColumn( 56, SQLDT_UINT8, &p.body_direction )
 	||	SQL_ERROR == stmt.BindColumn( 57, SQLDT_UINT16, &p.disable_call )
@@ -1066,12 +1092,21 @@ int32 char_mmo_char_fromsql(uint32 char_id, struct mmo_charstatus* p, bool load_
 	||	SQL_ERROR == stmt.BindColumn(7, SQLDT_UINT64, &p->base_exp)
 	||	SQL_ERROR == stmt.BindColumn(8, SQLDT_UINT64, &p->job_exp)
 	||	SQL_ERROR == stmt.BindColumn(9, SQLDT_INT32, &p->zeny)
+#ifndef Pandas_Extreme_Computing
 	||	SQL_ERROR == stmt.BindColumn(10, SQLDT_INT16, &p->str)
 	||	SQL_ERROR == stmt.BindColumn(11, SQLDT_INT16, &p->agi)
 	||	SQL_ERROR == stmt.BindColumn(12, SQLDT_INT16, &p->vit)
 	||	SQL_ERROR == stmt.BindColumn(13, SQLDT_INT16, &p->int_)
 	||	SQL_ERROR == stmt.BindColumn(14, SQLDT_INT16, &p->dex)
 	||	SQL_ERROR == stmt.BindColumn(15, SQLDT_INT16, &p->luk)
+#else
+	||	SQL_ERROR == stmt.BindColumn(10, SQLDT_UINT32, &p->str)
+	||	SQL_ERROR == stmt.BindColumn(11, SQLDT_UINT32, &p->agi)
+	||	SQL_ERROR == stmt.BindColumn(12, SQLDT_UINT32, &p->vit)
+	||	SQL_ERROR == stmt.BindColumn(13, SQLDT_UINT32, &p->int_)
+	||	SQL_ERROR == stmt.BindColumn(14, SQLDT_UINT32, &p->dex)
+	||	SQL_ERROR == stmt.BindColumn(15, SQLDT_UINT32, &p->luk)
+#endif // Pandas_Extreme_Computing
 	||	SQL_ERROR == stmt.BindColumn(16, SQLDT_UINT32, &p->max_hp)
 	||	SQL_ERROR == stmt.BindColumn(17, SQLDT_UINT32, &p->hp)
 	||	SQL_ERROR == stmt.BindColumn(18, SQLDT_UINT32, &p->max_sp)
@@ -1122,12 +1157,21 @@ int32 char_mmo_char_fromsql(uint32 char_id, struct mmo_charstatus* p, bool load_
 	||	SQL_ERROR == stmt.BindColumn(63, SQLDT_UINT32, &p->max_ap)
 	||	SQL_ERROR == stmt.BindColumn(64, SQLDT_UINT32, &p->ap)
 	||	SQL_ERROR == stmt.BindColumn(65, SQLDT_UINT32, &p->trait_point)
+#ifndef Pandas_Extreme_Computing
 	||	SQL_ERROR == stmt.BindColumn(66, SQLDT_INT16, &p->pow)
 	||	SQL_ERROR == stmt.BindColumn(67, SQLDT_INT16, &p->sta)
 	||	SQL_ERROR == stmt.BindColumn(68, SQLDT_INT16, &p->wis)
 	||	SQL_ERROR == stmt.BindColumn(69, SQLDT_INT16, &p->spl)
 	||	SQL_ERROR == stmt.BindColumn(70, SQLDT_INT16, &p->con)
 	||	SQL_ERROR == stmt.BindColumn(71, SQLDT_INT16, &p->crt)
+#else
+	||	SQL_ERROR == stmt.BindColumn(66, SQLDT_UINT32, &p->pow)
+	||	SQL_ERROR == stmt.BindColumn(67, SQLDT_UINT32, &p->sta)
+	||	SQL_ERROR == stmt.BindColumn(68, SQLDT_UINT32, &p->wis)
+	||	SQL_ERROR == stmt.BindColumn(69, SQLDT_UINT32, &p->spl)
+	||	SQL_ERROR == stmt.BindColumn(70, SQLDT_UINT32, &p->con)
+	||	SQL_ERROR == stmt.BindColumn(71, SQLDT_UINT32, &p->crt)
+#endif // Pandas_Extreme_Computing
 	||	SQL_ERROR == stmt.BindColumn(72, SQLDT_UINT16, &p->inventory_slots)
 	||	SQL_ERROR == stmt.BindColumn(73, SQLDT_UINT8, &p->body_direction)
 	||	SQL_ERROR == stmt.BindColumn(74, SQLDT_UINT8, &p->disable_call)
@@ -1439,6 +1483,11 @@ int32 char_make_new_char( struct char_session_data* sd, char* name_, int32 str, 
 	}
 
 	// Check status values
+#ifdef Pandas_Extreme_Computing
+	// 这里是刻意给下面代码的注释, 这个 define 中不存在任何一行有效代码
+	// 这里的角色创建六位没有击穿 INT 的情况
+	// 所以这里没有必要再将 int 提升到 uint32, 只要兼容就 OK
+#endif // Pandas_Extreme_Computing
 #if PACKETVER < 20120307
 	// All stats together always have to add up to a total of 30 points
 	if( ( str + agi + vit + int_ + dex + luk ) != 30 ){
@@ -1506,6 +1555,12 @@ int32 char_make_new_char( struct char_session_data* sd, char* name_, int32 str, 
 #endif
 
 	//Insert the new char entry to the database
+#ifdef Pandas_Extreme_Computing
+	// 这里是刻意给下面代码的注释, 这个 define 中不存在任何一行有效代码
+	// 这里的角色创建六维能力值没有击穿 INT 的情况
+	// 所以这里没有必要再将 int 提升到 uint32, 只要兼容就 OK
+	// 此处写入六维能力值使用了 %d 来替换 int 也是合适的, 暂时无需对它进行扩容
+#endif // Pandas_Extreme_Computing
 	if( SQL_ERROR == Sql_Query(sql_handle, "INSERT INTO `%s` (`account_id`, `char_num`, `name`, `class`, `zeny`, `status_point`, `str`, `agi`, `vit`, `int`, `dex`, `luk`, `max_hp`, `hp`,"
 		"`max_sp`, `sp`, `hair`, `hair_color`, `last_map`, `last_x`, `last_y`, `save_map`, `save_x`, `save_y`, `sex`, `last_instanceid`, `body`) VALUES ("
 		"'%d', '%d', '%s', '%d', '%d',  '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%u', '%u', '%u', '%u', '%d', '%d', '%s', '%d', '%d', '%s', '%d', '%d', '%c', '0', '%d')",

@@ -10752,12 +10752,15 @@ bool pc_setparam(map_session_data *sd,int64 type,int64 val_tmp)
 		sd->battle_status.hp = cap_value(val, 1, (int32)sd->battle_status.max_hp);
 		break;
 	case SP_MAXHP:
+#ifndef Pandas_Extreme_Computing
+		// 此处的 sd->battle_status.max_hp 已经在 status_calc_maxhpsp_pc 函数中统一限制区间
 		if (sd->status.base_level < 100)
 			sd->battle_status.max_hp = cap_value(val, 1, battle_config.max_hp_lv99);
 		else if (sd->status.base_level < 151)
 			sd->battle_status.max_hp = cap_value(val, 1, battle_config.max_hp_lv150);
 		else
 			sd->battle_status.max_hp = cap_value(val, 1, battle_config.max_hp);
+#endif // Pandas_Extreme_Computing
 
 		if( sd->battle_status.max_hp < sd->battle_status.hp )
 		{
@@ -10769,7 +10772,10 @@ bool pc_setparam(map_session_data *sd,int64 type,int64 val_tmp)
 		sd->battle_status.sp = cap_value(val, 0, (int32)sd->battle_status.max_sp);
 		break;
 	case SP_MAXSP:
+#ifndef Pandas_Extreme_Computing
+		// 此处的 sd->battle_status.max_sp 已经在 status_calc_maxhpsp_pc 函数中统一限制区间
 		sd->battle_status.max_sp = cap_value(val, 1, battle_config.max_sp);
+#endif // Pandas_Extreme_Computing
 
 		if( sd->battle_status.max_sp < sd->battle_status.sp )
 		{
@@ -14365,10 +14371,17 @@ uint64 JobDatabase::parseBodyNode(const ryml::NodeRef& node) {
 						continue;
 					}
 
+#ifndef Pandas_Extreme_Computing
 					uint16 max;
 
 					if (!this->asUInt16(statNode, stat.c_str(), max))
 						return 0;
+#else
+					pec_ushort max = 0;
+
+					if (!this->asUInt32(statNode, stat.c_str(), max))
+						return 0;
+#endif // Pandas_Extreme_Computing
 
 					job->max_param[constant] = max;
 				}
