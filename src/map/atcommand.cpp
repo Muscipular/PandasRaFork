@@ -11565,6 +11565,73 @@ ACMD_FUNC(macrochecker){
 
 #include <custom/atcommand.inc>
 
+#ifdef Pandas_AtCommand_RecallMap
+/* ===========================================================
+ * 指令: recallmap
+ * 描述: 召唤当前(或指定)地图的玩家来到身边
+ * 用法: @recallmap {mapname}
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(recallmap) {
+	map_session_data* pl_sd = nullptr;
+	struct s_mapiterator* iter = nullptr;
+	int count = 0;
+	char mapname[MAP_NAME_LENGTH_EXT] = { 0 };
+	unsigned short mapindex = 0;
+
+	nullpo_retr(-1, sd);
+
+	// 若使用指令时没有携带任何参数, 那么认为需要召唤 GM 所在地图的玩家
+	if (message == nullptr || message[0] == '\0') {
+		mapindex = sd->mapindex;
+	}
+
+	// 若携带了一个参数且成功被 sscanf 匹配, 那么修改需要召唤的玩家地图
+	if (sscanf(message, "%15s[^\n]", mapname) == 1) {
+		mapindex = mapindex_name2id(mapname);
+		if (mapindex == 0)
+		{
+			sprintf(atcmd_output, msg_txt(sd, 1157), mapname); // Unknown map '%s'.
+			clif_displaymessage(fd, atcmd_output);
+			return -1;
+		}
+	}
+
+	if (sd->m >= 0 && map_getmapflag(sd->m, MF_NOWARPTO) && !pc_has_permission(sd, PC_PERM_WARP_ANYWHERE)) {
+		clif_displaymessage(fd, msg_txt(sd, 1032)); // You are not authorized to warp someone to your current map.
+		return -1;
+	}
+
+	iter = mapit_getallusers();
+	for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter))
+	{
+		if (sd->status.account_id != pl_sd->status.account_id && pc_get_group_level(sd) >= pc_get_group_level(pl_sd))
+		{
+			if (map_getmapdata(pl_sd->m)->index != mapindex)
+				continue;
+			if (pl_sd->m == sd->m && pl_sd->x == sd->x && pl_sd->y == sd->y)
+				continue; // Don't waste time warping the character to the same place.
+			if (pl_sd->m >= 0 && map_getmapflag(pl_sd->m, MF_NOWARP) && !pc_has_permission(sd, PC_PERM_WARP_ANYWHERE))
+				count++;
+			else {
+				if (pc_setpos(pl_sd, sd->mapindex, sd->x, sd->y, CLR_RESPAWN) == SETPOS_AUTOTRADE) {
+					count++;
+				}
+			}
+		}
+	}
+	mapit_free(iter);
+
+	clif_displaymessage(fd, msg_txt_cn(sd, 1)); // 已召唤指定地图的全部玩家!
+	if (count) {
+		sprintf(atcmd_output, msg_txt(sd, 1033), count); // Because you are not authorized to warp from some maps, %d player(s) have not been recalled.
+		clif_displaymessage(fd, atcmd_output);
+	}
+
+	return 0;
+}
+#endif // Pandas_AtCommand_RecallMap
+
 /**
  * Fills the reference of available commands in atcommand DBMap
  **/
@@ -11579,6 +11646,9 @@ void atcommand_basecommands(void) {
 	 * TODO: List all commands that causing crash
 	 **/
 	AtCommandInfo atcommand_base[] = {
+#ifdef Pandas_AtCommand_RecallMap
+		ACMD_DEF(recallmap),			// 召唤当前(或指定)地图的玩家来到身边 [Sola丶小克]
+#endif // Pandas_AtCommand_RecallMap
 #include <custom/atcommand_def.inc>
 		ACMD_DEF(mapmove),
 		ACMD_DEF(where),
