@@ -12922,6 +12922,23 @@ void clif_parse_skill_toid( map_session_data* sd, uint16 skill_id, uint16 skill_
 	if (inf&INF_GROUND_SKILL || !inf)
 		return; //Using a ground/passive skill on a target? WRONG.
 
+#ifdef Pandas_NpcFilter_USE_SKILL
+	if (sd && sd->bl.type == BL_PC) {
+		pc_setreg(sd, add_str("@useskill_id"), skill_id);
+		pc_setreg(sd, add_str("@useskill_lv"), skill_lv);
+		pc_setreg(sd, add_str("@useskill_pos_x"), -1);
+		pc_setreg(sd, add_str("@useskill_pos_y"), -1);
+		pc_setreg(sd, add_str("@useskill_target_gid"), target_id);
+
+		pc_setreg(sd, add_str("@useskill_x"), -1);
+		pc_setreg(sd, add_str("@useskill_y"), -1);
+		pc_setreg(sd, add_str("@useskill_target"), target_id);
+
+		if (npc_script_filter(sd, NPCF_USE_SKILL))
+			return;
+	}
+#endif // Pandas_NpcFilter_USE_SKILL
+
 	if (sd->state.block_action & PCBLOCK_SKILL) {
 		clif_msg( *sd, MSI_BUSY );
 		return;
@@ -13047,6 +13064,23 @@ static void clif_parse_UseSkillToPosSub( int32 fd, map_session_data& sd, uint16 
 
 	if( !(skill_get_inf(skill_id)&INF_GROUND_SKILL) )
 		return; //Using a target skill on the ground? WRONG.
+
+#ifdef Pandas_NpcFilter_USE_SKILL
+	if (sd.bl.type == BL_PC) {
+		pc_setreg(&sd, add_str("@useskill_id"), skill_id);
+		pc_setreg(&sd, add_str("@useskill_lv"), skill_lv);
+		pc_setreg(&sd, add_str("@useskill_pos_x"), x);
+		pc_setreg(&sd, add_str("@useskill_pos_y"), y);
+		pc_setreg(&sd, add_str("@useskill_target_gid"), 0);
+
+		pc_setreg(&sd, add_str("@useskill_x"), x);
+		pc_setreg(&sd, add_str("@useskill_y"), y);
+		pc_setreg(&sd, add_str("@useskill_target"), 0);
+
+		if (npc_script_filter(&sd, NPCF_USE_SKILL))
+			return;
+	}
+#endif // Pandas_NpcFilter_USE_SKILL
 
 	if (sd.state.block_action & PCBLOCK_SKILL) {
 		clif_msg( sd, MSI_BUSY );

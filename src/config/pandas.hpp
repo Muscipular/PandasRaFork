@@ -107,6 +107,7 @@
 			// 当玩家准备使用技能时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCUseSkillFilter
 			// 常量名称: NPCF_USE_SKILL / 变量名称: use_skill_filter_name
+			#define Pandas_NpcFilter_USE_SKILL
 
 			// 当玩家准备打开乐透大转盘的时候触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCOpenRouletteFilter

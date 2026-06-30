@@ -180,6 +180,9 @@ struct Script_Config {
 #ifdef Pandas_NpcFilter_USE_ITEM
 	const char* use_item_filter_name;
 #endif // Pandas_NpcFilter_USE_ITEM
+#ifdef Pandas_NpcFilter_USE_SKILL
+	const char* use_skill_filter_name;
+#endif // Pandas_NpcFilter_USE_SKILL
 
 	// NPC related
 	const char* ontouch_event_name;

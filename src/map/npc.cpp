@@ -6479,6 +6479,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCF_USE_ITEM:
 		return script_config.use_item_filter_name;
 #endif // Pandas_NpcFilter_USE_ITEM
+#ifdef Pandas_NpcFilter_USE_SKILL
+	case NPCF_USE_SKILL:
+		return script_config.use_skill_filter_name;
+#endif // Pandas_NpcFilter_USE_SKILL
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;
