@@ -46,6 +46,9 @@
 #include "showmsg.hpp"
 #include "strlib.hpp"
 #include "timer.hpp"
+#ifdef Pandas_Console_Charset_SmartConvert
+#include "utf8.hpp"
+#endif // Pandas_Console_Charset_SmartConvert
 
 // Reuseable global packet buffer to prevent too many allocations
 // Take socket.cpp::socket_max_client_packet into consideration
@@ -282,6 +285,11 @@ const char* error_msg(void)
 	static char buf[512];
 	int32 code = sErrno;
 	snprintf(buf, sizeof(buf), "error %d: %s", code, sErr(code));
+#ifdef Pandas_Console_Charset_SmartConvert
+	if (PandasUtf8::systemEncoding == PandasUtf8::PANDAS_ENCODING_UTF8) {
+		snprintf(buf, sizeof(buf), "%s", PandasUtf8::utf8ToAnsi(buf).c_str());
+	}
+#endif // Pandas_Console_Charset_SmartConvert
 	return buf;
 }
 

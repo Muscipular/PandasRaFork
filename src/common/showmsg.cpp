@@ -44,6 +44,9 @@
 #include "cbasetypes.hpp"
 #include "core.hpp" //[Ind] - For SERVER_TYPE
 #include "strlib.hpp" // StringBuf
+#ifdef Pandas_Console_Charset_SmartConvert
+#include "utf8.hpp"
+#endif // Pandas_Console_Charset_SmartConvert
 
 ///////////////////////////////////////////////////////////////////////////////
 /// behavioral parameter.
@@ -543,7 +546,11 @@ int32	VFPRINTF(FILE *file, const char *fmt, va_list argptr)
 
 	if( is_console(file) || stdout_with_ansisequence )
 	{
+#ifndef Pandas_Console_Charset_SmartConvert
 		vfprintf(file, fmt, argptr);
+#else
+		PandasUtf8::vfprintf(file, fmt, argptr);
+#endif // Pandas_Console_Charset_SmartConvert
 		return 0;
 	}
 
@@ -716,7 +723,11 @@ int32 _vShowMessage(enum msg_type flag, std::string instr, va_list ap)
 				flag == MSG_DEBUG ? "Debug" :
 				"Unknown");
 			va_copy(apcopy, ap);
+		#ifndef Pandas_Console_Charset_SmartConvert
 			vfprintf(log,string,apcopy);
+		#else
+			PandasUtf8::vfprintf(log, string, apcopy);
+		#endif // Pandas_Console_Charset_SmartConvert
 			va_end(apcopy);
 			fclose(log);
 		}
