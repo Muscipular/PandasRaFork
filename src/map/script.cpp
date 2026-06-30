@@ -28640,6 +28640,54 @@ BUILDIN_FUNC(preg_match) {
 #endif
 }
 
+#ifdef Pandas_ScriptCommand_ProcessHalt
+/* ===========================================================
+ * 指令: processhalt
+ * 描述: 在事件处理代码中使用该指令, 可以中断源代码的后续处理逻辑
+ * 用法: processhalt {<是否设置中断>};
+ * 返回: 该指令无论成功失败, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(processhalt) {
+	map_session_data *sd = nullptr;
+
+	if (!script_rid2sd(sd))
+		return SCRIPT_CMD_SUCCESS;
+
+	if (sd->pandas.workinevent == NPCE_MAX) {
+		ShowError("buildin_processhalt: Require work in event script.\n");
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	const char* name = npc_get_script_event_name(sd->pandas.workinevent);
+
+	if (name == nullptr) {
+		ShowError("buildin_processhalt: Can not get the event name for event type : %d\n", sd->pandas.workinevent);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	std::string evname = std::string(name);
+
+	if (evname.find("Filter") == std::string::npos) {
+		ShowError("buildin_processhalt: The '%s' event is not support processhalt.\n", evname.c_str());
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	bool makehalt = true;
+
+	if (script_hasdata(st, 2) && script_isint(st, 2)) {
+		makehalt = (cap_value(script_getnum(st, 2), 0, 1) == 1);
+	}
+
+	if (!setProcessHalt(sd, sd->pandas.workinevent, makehalt)) {
+		ShowError("buildin_processhalt: An error occurred while setting the '%s' event halt status to '%d'.\n", evname.c_str(), (int32)makehalt);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_ProcessHalt
+
 #ifdef Pandas_ScriptCommand_UnlockCmd
 /* ===========================================================
  * 指令: unlockcmd
@@ -29073,6 +29121,9 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(deletepset,"i"), // Delete a pattern set [MouseJstr]
 #endif
 	BUILDIN_DEF(preg_match,"ss?"),
+#ifdef Pandas_ScriptCommand_ProcessHalt
+	BUILDIN_DEF(processhalt, "?"), // 用于中断源代码的后续处理逻辑 [Sola丶小克]
+#endif // Pandas_ScriptCommand_ProcessHalt
 #ifdef Pandas_ScriptCommand_UnlockCmd
 	BUILDIN_DEF(unlockcmd, ""), // 解锁实时事件和过滤器事件的指令限制 [Sola丶小克]
 #endif // Pandas_ScriptCommand_UnlockCmd

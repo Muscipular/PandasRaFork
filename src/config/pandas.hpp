@@ -644,6 +644,9 @@
 	// 是否启用 processhalt 脚本指令 [Sola丶小克]
 	// 在事件处理代码中使用该指令, 可以中断源代码的后续处理逻辑
 	// 此选项开关需要依赖 Pandas_Struct_Map_Session_Data_EventHalt 的拓展
+	#ifdef Pandas_Struct_Map_Session_Data_EventHalt
+		#define Pandas_ScriptCommand_ProcessHalt
+	#endif // Pandas_Struct_Map_Session_Data_EventHalt
 	// 是否启用 settrigger 脚本指令 [Sola丶小克]
 	// 使用该指令可以设置某个事件或过滤器的触发行为 (是否触发、下次触发、永久触发)
 	// 此选项开关需要依赖 Pandas_Struct_Map_Session_Data_EventTrigger 的拓展
