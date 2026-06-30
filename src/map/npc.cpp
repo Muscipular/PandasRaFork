@@ -131,6 +131,28 @@ struct script_event_s{
 // Holds pointers to the commonly executed scripts for speedup. [Skotlex]
 std::map<enum npce_event, std::vector<struct script_event_s>> script_event;
 
+#ifdef Pandas_NpcEvent_KILLMVP
+void npc_event_aide_killmvp(map_session_data* sd, map_session_data* mvp_sd, mob_data* md) {
+	nullpo_retv(md);
+
+	if (sd == nullptr)
+		return;
+
+	if (md->get_bosstype() != BOSSTYPE_MVP)
+		return;
+
+	pc_setparam(sd, SP_KILLEDRID, md->mob_id);
+	pc_setparam(sd, SP_KILLEDGID, md->id);
+	pc_setreg(sd, add_str("@mob_dead_x"), static_cast<int32>(md->x));
+	pc_setreg(sd, add_str("@mob_dead_y"), static_cast<int32>(md->y));
+	pc_setreg(sd, add_str("@mob_lasthit_rid"), sd->id);
+	pc_setreg(sd, add_str("@mob_lasthit_cid"), static_cast<int32>(sd->status.char_id));
+	pc_setreg(sd, add_str("@mob_mvp_rid"), mvp_sd != nullptr ? mvp_sd->id : 0);
+	pc_setreg(sd, add_str("@mob_mvp_cid"), mvp_sd != nullptr ? static_cast<int32>(mvp_sd->status.char_id) : 0);
+	npc_script_event(*sd, NPCE_KILLMVP);
+}
+#endif // Pandas_NpcEvent_KILLMVP
+
 #ifdef Pandas_NpcFilter_STORAGE_ADD
 bool npc_event_aide_storage_add(map_session_data* sd, struct s_storage* store, int32 idx, int32 amount, int32 item_from) {
 	nullpo_retr(false, sd);
@@ -6664,6 +6686,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCF_FAVORITE_DEL:
 		return script_config.favorite_del_filter_name;
 #endif // Pandas_NpcFilter_FAVORITE_DEL
+#ifdef Pandas_NpcEvent_KILLMVP
+	case NPCE_KILLMVP:
+		return script_config.killmvp_event_name;
+#endif // Pandas_NpcEvent_KILLMVP
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;

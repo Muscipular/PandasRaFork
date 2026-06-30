@@ -8,6 +8,7 @@
 	#define Pandas_FuncIncrease
 	#define Pandas_CreativeWork
 	#define Pandas_ScriptEngine
+	#define Pandas_NpcEvent
 	#define Pandas_ScriptCommands
 
 // ============================================================================
@@ -649,6 +650,21 @@
 	// 修正 add_str 触发 str_buf 的扩容分配后 st->funcname 的所指向的指令名称无效的问题,
 	// 因为 st->funcname 指针指向的内存已在扩容分配时被释放 [Sola丶小克]
 #endif // Pandas_ScriptEngine
+
+// ============================================================================
+// NPC 事件组 - Pandas_NpcEvent
+// ============================================================================
+
+#ifdef Pandas_NpcEvent
+	/************************************************************************/
+	/* Event 类型的标准事件，这些事件不能被 processhalt 打断                    */
+	/************************************************************************/
+
+	// 当玩家杀死 MVP 魔物后触发事件 [Sola丶小克]
+	// 事件类型: Event / 事件名称: OnPCKillMvpEvent
+	// 常量名称: NPCE_KILLMVP / 变量名称: killmvp_event_name
+	#define Pandas_NpcEvent_KILLMVP
+#endif // Pandas_NpcEvent
 
 // ============================================================================
 // 道具机制组 - Pandas_Item_Properties

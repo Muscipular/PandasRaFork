@@ -246,6 +246,9 @@ struct Script_Config {
 #ifdef Pandas_NpcFilter_FAVORITE_DEL
 	const char* favorite_del_filter_name;
 #endif // Pandas_NpcFilter_FAVORITE_DEL
+#ifdef Pandas_NpcEvent_KILLMVP
+	const char* killmvp_event_name;
+#endif // Pandas_NpcEvent_KILLMVP
 	// NPC related
 	const char* ontouch_event_name;
 	const char* ontouch2_event_name;

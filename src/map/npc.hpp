@@ -1699,9 +1699,15 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcFilter_FAVORITE_DEL
 	NPCF_FAVORITE_DEL,
 #endif // Pandas_NpcFilter_FAVORITE_DEL
+#ifdef Pandas_NpcEvent_KILLMVP
+	NPCE_KILLMVP,
+#endif // Pandas_NpcEvent_KILLMVP
 	NPCE_MAX
 };
 
+#ifdef Pandas_NpcEvent_KILLMVP
+void npc_event_aide_killmvp(map_session_data* sd, map_session_data* mvp_sd, mob_data* md);
+#endif // Pandas_NpcEvent_KILLMVP
 struct view_data* npc_get_viewdata(int32 class_);
 int32 npc_chat_sub(block_list* bl, va_list ap);
 int32 npc_event_dequeue(map_session_data* sd,bool free_script_stack=true);
