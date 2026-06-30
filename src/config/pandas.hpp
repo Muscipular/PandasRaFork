@@ -128,6 +128,7 @@
 			// 当玩家准备脱下装备时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCUnequipFilter
 			// 常量名称: NPCF_UNEQUIP / 变量名称: unequip_filter_name
+			#define Pandas_NpcFilter_UNEQUIP
 
 			// 当玩家准备获得一个状态(Buff)时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCBuffStartFilter

@@ -12549,6 +12549,19 @@ bool pc_unequipitem(map_session_data *sd, int32 n, int32 flag) {
 	if (battle_config.battle_log)
 		ShowInfo("unequip %d %x:%x\n",n,pc_equippoint(sd,n),pos);
 
+#ifdef Pandas_NpcFilter_UNEQUIP
+	pc_setreg(sd, add_str("@unequip_idx"), n);
+	pc_setreg(sd, add_str("@unequip_pos"), n);
+	pc_setreg(sd, add_str("@unequip_swapping"), (flag & 16 ? 1 : 0));
+	pc_setreg(sd, add_str("@unequip_force"), (flag & 2 ? 1 : 0));
+
+	if (npc_script_filter(sd, NPCF_UNEQUIP) && !(flag & 16))
+		return false;
+
+	// 如果道具在脚本进行 Filter 处理期间被删了, 那么也终止后续流程
+	if (sd->inventory.u.items_inventory[n].nameid == 0 || sd->inventory_data[n] == nullptr)
+		return false;
+#endif // Pandas_NpcFilter_UNEQUIP
 	for(i = 0; i < EQI_MAX; i++) {
 		if (pos & equip_bitmask[i])
 			sd->equip_index[i] = -1;
@@ -12664,7 +12677,12 @@ int32 pc_equipswitch( map_session_data* sd, int32 index ){
 				unequipped_position |= unequip_item->equip;
 
 				// Unequip the item
+#if !defined(Pandas_NpcEvent_UNEQUIP) && !defined(Pandas_NpcFilter_UNEQUIP)
 				pc_unequipitem( sd, unequip_index, 0 );
+#else
+				// flag & 16 是一个自定义标记, 表示本次脱下装备是由装备切换机制引发的
+				pc_unequipitem( sd, unequip_index, 16 );
+#endif // !defined(Pandas_NpcEvent_UNEQUIP) && !defined(Pandas_NpcFilter_UNEQUIP)
 			}
 		}
 
