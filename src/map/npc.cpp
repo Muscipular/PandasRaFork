@@ -2671,6 +2671,12 @@ static enum e_CASHSHOP_ACK npc_cashshop_process_payment(npc_data *nd, int32 pric
 
 				if (cost[1] < points || cost[0] < (price - points)) {
 					sprintf(output, msg_txt(sd, 713), nd->u.shop.pointshop_str); // You do not have enough '%s'.
+#ifdef Pandas_Support_Pointshop_Variable_DisplayName
+					// 如果 pointshop 变量有别名的话, 优先显示别名
+					if (nd->u.shop.pointshop_str_nick[0] != 0) {
+						sprintf(output, msg_txt(sd, 713), nd->u.shop.pointshop_str_nick); // You do not have enough '%s'.
+					}
+#endif // Pandas_Support_Pointshop_Variable_DisplayName
 					clif_messagecolor(sd, color_table[COLOR_RED], output, false, SELF);
 					return ERROR_TYPE_PURCHASE_FAIL;
 				}
@@ -2680,6 +2686,12 @@ static enum e_CASHSHOP_ACK npc_cashshop_process_payment(npc_data *nd, int32 pric
 				}
 
 				sprintf(output, msg_txt(sd, 716), nd->u.shop.pointshop_str, cost[0] - (price - points)); // Your '%s' is now: %d
+#ifdef Pandas_Support_Pointshop_Variable_DisplayName
+				// 如果 pointshop 变量有别名的话, 优先显示别名
+				if (nd->u.shop.pointshop_str_nick[0] != 0) {
+					sprintf(output, msg_txt(sd, 716), nd->u.shop.pointshop_str_nick, cost[0] - (price - points)); // Your '%s' is now: %d
+				}
+#endif // Pandas_Support_Pointshop_Variable_DisplayName
 				clif_messagecolor(sd, color_table[COLOR_LIGHT_GREEN], output, false, SELF);
 			}
 			break;
@@ -2839,9 +2851,15 @@ void npc_shop_currency_type( const map_session_data* sd, const npc_data* nd, int
 				memset(output, '\0', sizeof(output));
 
 				sprintf(output, msg_txt(sd, 715), nd->u.shop.pointshop_str); // Point Shop List: '%s'
+#ifdef Pandas_Support_Pointshop_Variable_DisplayName
+				// 如果 pointshop 变量有别名的话, 优先显示别名
+				if (nd->u.shop.pointshop_str_nick[0] != 0) {
+					sprintf(output, msg_txt(sd, 715), nd->u.shop.pointshop_str_nick); // Point Shop List: '%s'
+				}
+#endif // Pandas_Support_Pointshop_Variable_DisplayName
 				clif_broadcast(sd, output, strlen(output) + 1, BC_BLUE,SELF);
 			}
-			
+
 			cost[0] = static_cast<int32>(pc_readreg2(sd, nd->u.shop.pointshop_str));
 			break;
 	}
@@ -4209,6 +4227,9 @@ static const char* npc_parse_warp(char* w1, char* w2, char* w3, char* w4, const 
 static const char* npc_parse_shop(char* w1, char* w2, char* w3, char* w4, const char* start, const char* buffer, const char* filepath)
 {
 	char *p, point_str[32];
+#ifdef Pandas_Support_Pointshop_Variable_DisplayName
+	char point_str_nick[64] = { 0 };
+#endif // Pandas_Support_Pointshop_Variable_DisplayName
 	int32 m, is_discount = 0;
 	uint16 dir;
 	int16 x, y;
@@ -4268,10 +4289,21 @@ static const char* npc_parse_shop(char* w1, char* w2, char* w3, char* w4, const 
 			break;
 		}
 		case NPCTYPE_POINTSHOP: {
+#ifndef Pandas_Support_Pointshop_Variable_DisplayName
 			if (sscanf(p, ",%31[^,:]:%11d,",point_str,&is_discount) < 1) {
 				ShowError("npc_parse_shop: Invalid item cost definition in file '%s', line '%d'. Ignoring the rest of the line...\n * w1=%s\n * w2=%s\n * w3=%s\n * w4=%s\n", filepath, strline(buffer,start-buffer), w1, w2, w3, w4);
 				return strchr(start,'\n'); // skip and continue
 			}
+#else
+			if (sscanf(p, ",%31[^|]|%63[^,:]:%11d,", point_str, point_str_nick, &is_discount) < 3) {
+				if (sscanf(p, ",%31[^|]|%63[^,:],", point_str, point_str_nick) < 2) {
+					if (sscanf(p, ",%31[^,:]:%11d,", point_str, &is_discount) < 1) {
+						ShowError("npc_parse_shop: Invalid item cost definition in file '%s', line '%d'. Ignoring the rest of the line...\n * w1=%s\n * w2=%s\n * w3=%s\n * w4=%s\n", filepath, strline(buffer, start - buffer), w1, w2, w3, w4);
+						return strchr(start, '\n'); // skip and continue
+					}
+				}
+			}
+#endif // Pandas_Support_Pointshop_Variable_DisplayName
 			switch(point_str[0]) {
 				case '$':
 				case '.':
@@ -4410,6 +4442,9 @@ static const char* npc_parse_shop(char* w1, char* w2, char* w3, char* w4, const 
 	}else if( type == NPCTYPE_POINTSHOP ){
 		// Point shop currency
 		safestrncpy( nd->u.shop.pointshop_str, point_str, strlen( point_str ) + 1 );
+#ifdef Pandas_Support_Pointshop_Variable_DisplayName
+		safestrncpy(nd->u.shop.pointshop_str_nick, point_str_nick, strlen(point_str_nick) + 1);
+#endif // Pandas_Support_Pointshop_Variable_DisplayName
 	}
 
 	nd->u.shop.discount = is_discount > 0;
@@ -4834,6 +4869,9 @@ const char* npc_parse_duplicate( char* w1, char* w2, char* w3, char* w4, const c
 			nd->u.shop.shop_item = dnd->u.shop.shop_item;
 			nd->u.shop.count = dnd->u.shop.count;
 			nd->u.shop.discount =  dnd->u.shop.discount;
+#ifdef Pandas_Support_Pointshop_Variable_DisplayName
+			safestrncpy(nd->u.shop.pointshop_str_nick, dnd->u.shop.pointshop_str_nick, sizeof(dnd->u.shop.pointshop_str_nick));
+#endif // Pandas_Support_Pointshop_Variable_DisplayName
 			break;
 
 		case NPCTYPE_WARP:

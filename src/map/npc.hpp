@@ -201,6 +201,11 @@ struct npc_data : public block_list {
 			uint16 count;
 			t_itemid itemshop_nameid; // Item Shop cost item ID
 			char pointshop_str[32]; // Point Shop cost variable name
+#ifdef Pandas_Support_Pointshop_Variable_DisplayName
+			// 提醒: 针对 npc_data.u.shop 中添加的内容, 需要在复制 npc 的时候也同时进行复制
+			// 涉及到的函数有 npc.cpp 的 npc_parse_duplicate 和 copynpc 脚本指令 [Sola丶小克]
+			char pointshop_str_nick[64]; // 用于保存变量的昵称, 以便呈现给玩家
+#endif // Pandas_Support_Pointshop_Variable_DisplayName
 			bool discount;
 		} shop;
 		struct {

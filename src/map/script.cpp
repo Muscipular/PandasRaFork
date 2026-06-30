@@ -29003,6 +29003,9 @@ BUILDIN_FUNC(copynpc) {
 			nd->u.shop.shop_item = dnd->u.shop.shop_item;
 			nd->u.shop.count = dnd->u.shop.count;
 			nd->u.shop.discount = dnd->u.shop.discount;
+#ifdef Pandas_Support_Pointshop_Variable_DisplayName
+			safestrncpy(nd->u.shop.pointshop_str_nick, dnd->u.shop.pointshop_str_nick, sizeof(dnd->u.shop.pointshop_str_nick));
+#endif // Pandas_Support_Pointshop_Variable_DisplayName
 			break;
 
 		case NPCTYPE_WARP:
