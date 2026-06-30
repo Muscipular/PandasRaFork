@@ -198,6 +198,9 @@ struct Script_Config {
 #ifdef Pandas_NpcFilter_SC_START
 	const char* sc_start_filter_name;
 #endif // Pandas_NpcFilter_SC_START
+#ifdef Pandas_NpcFilter_USE_REVIVE_TOKEN
+	const char* use_revive_token_filter_name;
+#endif // Pandas_NpcFilter_USE_REVIVE_TOKEN
 	// NPC related
 	const char* ontouch_event_name;
 	const char* ontouch2_event_name;

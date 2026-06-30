@@ -1651,6 +1651,9 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcFilter_SC_START
 	NPCF_SC_START,
 #endif // Pandas_NpcFilter_SC_START
+#ifdef Pandas_NpcFilter_USE_REVIVE_TOKEN
+	NPCF_USE_REVIVE_TOKEN,
+#endif // Pandas_NpcFilter_USE_REVIVE_TOKEN
 	NPCE_MAX
 };
 

@@ -138,6 +138,7 @@
 			// 当玩家使用菜单中的原地复活之证时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCUseReviveTokenFilter
 			// 常量名称: NPCF_USE_REVIVE_TOKEN / 变量名称: use_revive_token_filter_name
+			#define Pandas_NpcFilter_USE_REVIVE_TOKEN
 
 			// 当玩家使用一键鉴定道具时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCUseOCIdentifyFilter

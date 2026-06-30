@@ -10267,6 +10267,10 @@ void pc_revive(map_session_data *sd,uint32 hp, uint32 sp, uint32 ap) {
 bool pc_revive_item(map_session_data *sd) {
 	nullpo_retr(false, sd);
 
+#ifdef Pandas_NpcFilter_USE_REVIVE_TOKEN
+	if (npc_script_filter(sd, NPCF_USE_REVIVE_TOKEN))
+		return false;
+#endif // Pandas_NpcFilter_USE_REVIVE_TOKEN
 	if (!pc_isdead(sd) || sd->respawn_tid != INVALID_TIMER)
 		return false;
 
