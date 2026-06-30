@@ -23966,6 +23966,40 @@ BUILDIN_FUNC(getcharip)
 	}
 	return SCRIPT_CMD_SUCCESS;
 }
+#ifdef Pandas_ScriptCommand_GetCharMacAddress
+/* ===========================================================
+ * 指令: getcharmac
+ * 描述: 获取指定角色登录时使用的 MAC 地址
+ * 用法: getcharmac(<账户编号>/<角色编号>/<"角色名称">);
+ * 返回: 成功则返回 MAC 地址, 失败则返回空字符串
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getcharmac) {
+	map_session_data* sd = nullptr;
+
+	if (script_hasdata(st, 2)) {
+		if (script_isstring(st, 2)) {
+			sd = map_nick2sd(script_getstr(st, 2), false);
+		} else {
+			int32 id = script_getnum(st, 2);
+
+			sd = map_id2sd(id);
+			if (sd == nullptr)
+				sd = map_charid2sd(id);
+		}
+	} else {
+		script_rid2sd(sd);
+	}
+
+	if (sd == nullptr || !session_isValid(sd->fd) || session[sd->fd]->mac_address[0] == '\0') {
+		script_pushconststr(st, "");
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushstrcopy(st, session[sd->fd]->mac_address);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetCharMacAddress
 /**
  * is_function(<function name>) -> 1 if function exists, 0 otherwise
  **/
@@ -30584,6 +30618,9 @@ struct script_function buildin_func[] = {
 	 **/
 	BUILDIN_DEF(getargcount,""),
 	BUILDIN_DEF(getcharip,"?"),
+#ifdef Pandas_ScriptCommand_GetCharMacAddress
+	BUILDIN_DEF(getcharmac, "?"),					// 获取指定角色登录时使用的 MAC 地址 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetCharMacAddress
 	BUILDIN_DEF(is_function,"s"),
 	BUILDIN_DEF(get_revision,""),
 	BUILDIN_DEF(get_githash,""),

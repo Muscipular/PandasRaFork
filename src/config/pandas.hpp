@@ -1186,6 +1186,10 @@
 	// 是否启用 getcharmac 脚本指令 [Sola丶小克]
 	// 该指令用于获取指定角色登录时使用的 MAC 地址
 	// 此选项开关需要依赖 Pandas_Extract_SSOPacket_MacAddress 的拓展
+	#ifdef Pandas_Extract_SSOPacket_MacAddress
+		#define Pandas_ScriptCommand_GetCharMacAddress
+	#endif // Pandas_Extract_SSOPacket_MacAddress
+
 	// 是否启用 getconstant 脚本指令 [Sola丶小克]
 	// 该指令用于查询一个常量字符串对应的数值
 	// 是否启用 preg_search 脚本指令 [Sola丶小克]
