@@ -38,6 +38,10 @@
 using namespace rathena;
 using namespace rathena::server_login;
 
+#ifdef Pandas_SQL_Configure_Optimization
+char default_codepage[32] = "";
+#endif // Pandas_SQL_Configure_Optimization
+
 #ifndef Pandas_Message_Conf
 #define LOGIN_MAX_MSG 30				/// Max number predefined in msg_conf
 #else
@@ -756,6 +760,10 @@ bool login_config_read(const char* cfgName, bool normal) {
 		else if (!strcmpi(w1, "hide_online_players_count"))
 			login_config.hide_online_players_count = (bool)config_switch(w2);
 #endif // Pandas_Support_Hide_Online_Players_Count
+#ifdef Pandas_SQL_Configure_Optimization
+		else if (!strcmpi(w1, "default_codepage"))
+			safestrncpy(default_codepage, w2, sizeof(default_codepage));
+#endif // Pandas_SQL_Configure_Optimization
 		else if(strcmpi(w1, "chars_per_account") == 0) { //maxchars per account [Sirius]
 			login_config.char_per_account = atoi(w2);
 			if( login_config.char_per_account > MAX_CHARS ) {

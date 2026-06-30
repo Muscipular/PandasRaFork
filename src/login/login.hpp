@@ -22,6 +22,10 @@ using rathena::server_core::e_core_type;
 extern int pandas_inter_hide_server_ipaddress;
 #endif // Pandas_InterConfig_HideServerIpAddress
 
+#ifdef Pandas_SQL_Configure_Optimization
+extern char default_codepage[32];
+#endif // Pandas_SQL_Configure_Optimization
+
 namespace rathena::server_login {
 class LoginServer : public Core {
 	protected:

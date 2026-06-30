@@ -13,6 +13,9 @@
 #include <common/sql.hpp>
 #include <common/strlib.hpp>
 
+#ifdef Pandas_SQL_Configure_Optimization
+#include "login.hpp" // default_codepage
+#endif // Pandas_SQL_Configure_Optimization
 
 std::string log_db_hostname = "127.0.0.1";
 uint16 log_db_port = 3306;
@@ -132,8 +135,13 @@ bool loginlog_init(void) {
 		exit(EXIT_FAILURE);
 	}
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if( !log_codepage.empty() && SQL_ERROR == Sql_SetEncoding(sql_handle, log_codepage.c_str()) )
 		Sql_ShowDebug(sql_handle);
+#else
+	if( SQL_ERROR == Sql_SetEncoding(sql_handle, log_codepage.c_str(), default_codepage, "Log") )
+		Sql_ShowDebug(sql_handle);
+#endif // Pandas_SQL_Configure_Optimization
 
 	enabled = true;
 

@@ -199,8 +199,13 @@ void ipban_init(void) {
 
 	ShowInfo("Ipban connection made.\n");
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if( !ipban_codepage.empty() && SQL_ERROR == Sql_SetEncoding(sql_handle, ipban_codepage.c_str()) )
 		Sql_ShowDebug(sql_handle);
+#else
+	if( SQL_ERROR == Sql_SetEncoding(sql_handle, ipban_codepage.c_str(), default_codepage, "Ipban") )
+		Sql_ShowDebug(sql_handle);
+#endif // Pandas_SQL_Configure_Optimization
 
 	if( login_config.ipban_cleanup_interval > 0 )
 	{ // set up periodic cleanup of connection history and active bans

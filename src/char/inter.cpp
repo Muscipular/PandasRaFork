@@ -52,6 +52,9 @@ std::string char_server_id = "ragnarok";
 std::string char_server_pw = ""; // Allow user to send empty password (bugreport:7787)
 std::string char_server_db = "ragnarok";
 std::string default_codepage = ""; //Feature by irmin.
+#ifdef Pandas_SQL_Configure_Optimization
+char char_codepage[32] = "";
+#endif // Pandas_SQL_Configure_Optimization
 uint32 party_share_level = 10;
 #ifdef Pandas_InterConfig_HideServerIpAddress
 // 是否不主动返回服务器的 IP 地址给到客户端
@@ -858,6 +861,10 @@ int32 inter_config_read(const char* cfgName)
 			char_server_db = w2;
 		else if(!strcmpi(w1,"default_codepage"))
 			default_codepage = w2;
+#ifdef Pandas_SQL_Configure_Optimization
+		else if(!strcmpi(w1,"char_codepage"))
+			safestrncpy(char_codepage, w2, sizeof(char_codepage));
+#endif // Pandas_SQL_Configure_Optimization
 #ifdef Pandas_InterConfig_HideServerIpAddress
 		else if(!strcmpi(w1, "hide_server_ipaddress"))
 			pandas_inter_hide_server_ipaddress = config_switch(w2);
@@ -983,10 +990,15 @@ int32 inter_init_sql(const char *file)
 		exit(EXIT_FAILURE);
 	}
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if( !default_codepage.empty() ) {
 		if( SQL_ERROR == Sql_SetEncoding(sql_handle, default_codepage.c_str()) )
 			Sql_ShowDebug(sql_handle);
 	}
+#else
+	if( SQL_ERROR == Sql_SetEncoding(sql_handle, char_codepage, default_codepage.c_str(), "Char-Server") )
+		Sql_ShowDebug(sql_handle);
+#endif // Pandas_SQL_Configure_Optimization
 
 	interServerDb.load();
 	inter_guild_sql_init();

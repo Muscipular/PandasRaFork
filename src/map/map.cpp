@@ -63,6 +63,9 @@ using namespace rathena;
 using namespace rathena::server_map;
 
 std::string default_codepage = "";
+#ifdef Pandas_SQL_Configure_Optimization
+char map_codepage[32] = "";
+#endif // Pandas_SQL_Configure_Optimization
 #ifdef Pandas_InterConfig_HideServerIpAddress
 // 是否不主动返回服务器的 IP 地址给到客户端
 int32 pandas_inter_hide_server_ipaddress = 0;
@@ -112,6 +115,9 @@ uint16 log_db_port = 3306;
 std::string log_db_id = "ragnarok";
 std::string log_db_pw = "";
 std::string log_db_db = "log";
+#ifdef Pandas_SQL_Configure_Optimization
+char log_codepage[32] = "";
+#endif // Pandas_SQL_Configure_Optimization
 Sql* logmysql_handle;
 
 // inter config
@@ -4501,6 +4507,11 @@ int32 inter_config_read(const char *cfgName)
 		else
 		if(strcmpi(w1,"default_codepage")==0)
 			default_codepage = w2;
+#ifdef Pandas_SQL_Configure_Optimization
+		else
+		if(strcmpi(w1,"map_codepage")==0)
+			safestrncpy(map_codepage, w2, sizeof(map_codepage));
+#endif // Pandas_SQL_Configure_Optimization
 #ifdef Pandas_InterConfig_HideServerIpAddress
 		else
 		if(strcmpi(w1, "hide_server_ipaddress") == 0)
@@ -4525,6 +4536,11 @@ int32 inter_config_read(const char *cfgName)
 		else
 		if(strcmpi(w1,"log_db_db")==0)
 			log_db_db = w2;
+#ifdef Pandas_SQL_Configure_Optimization
+		else
+		if(strcmpi(w1,"log_codepage")==0)
+			safestrncpy(log_codepage, w2, sizeof(log_codepage));
+#endif // Pandas_SQL_Configure_Optimization
 		else
 		if(strcmpi(w1,"start_status_points")==0)
 			inter_config.start_status_points=atoi(w2);
@@ -4572,12 +4588,19 @@ int32 map_sql_init(void)
 	}
 	ShowStatus("Connect success! (Map Server Connection)\n");
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if( !default_codepage.empty() ) {
 		if ( SQL_ERROR == Sql_SetEncoding(mmysql_handle, default_codepage.c_str()) )
 			Sql_ShowDebug(mmysql_handle);
 		if ( SQL_ERROR == Sql_SetEncoding(qsmysql_handle, default_codepage.c_str()) )
 			Sql_ShowDebug(qsmysql_handle);
 	}
+#else
+	if ( SQL_ERROR == Sql_SetEncoding(mmysql_handle, map_codepage, default_codepage.c_str(), "Map-Server") )
+		Sql_ShowDebug(mmysql_handle);
+	if ( SQL_ERROR == Sql_SetEncoding(qsmysql_handle, map_codepage, default_codepage.c_str(), nullptr) )
+		Sql_ShowDebug(qsmysql_handle);
+#endif // Pandas_SQL_Configure_Optimization
 	return 0;
 }
 
@@ -4614,9 +4637,14 @@ int32 log_sql_init(void)
 	}
 	ShowStatus("" CL_WHITE "[SQL]" CL_RESET ": Successfully '" CL_GREEN "connected" CL_RESET "' to Database '" CL_WHITE "%s" CL_RESET "'.\n", log_db_db.c_str());
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if( !default_codepage.empty() )
 		if ( SQL_ERROR == Sql_SetEncoding(logmysql_handle, default_codepage.c_str()) )
 			Sql_ShowDebug(logmysql_handle);
+#else
+	if ( SQL_ERROR == Sql_SetEncoding(logmysql_handle, log_codepage, default_codepage.c_str(), "Log") )
+		Sql_ShowDebug(logmysql_handle);
+#endif // Pandas_SQL_Configure_Optimization
 
 	return 0;
 }

@@ -4,12 +4,23 @@
 #include "sql.hpp"
 
 #include <cstdlib>// strtoul
+#include <cstring>
+#include <string>
 
 #include "cbasetypes.hpp"
 #include "cli.hpp"
+#ifdef Pandas_SQL_Configure_Optimization
+#include "core.hpp" // rathena::server_core
+#include "db.hpp" // ARR_FIND
+#endif // Pandas_SQL_Configure_Optimization
 #include "malloc.hpp"
 #include "showmsg.hpp"
 #include "timer.hpp"
+#ifdef Pandas_SQL_Configure_Optimization
+#include "utf8.hpp"
+
+using namespace rathena::server_core;
+#endif // Pandas_SQL_Configure_Optimization
 
 // MySQL 8.0 or later removed my_bool typedef.
 // Reintroduce it as a bandaid fix.
@@ -163,6 +174,7 @@ int32 Sql_GetColumnNames(Sql* self, const char* table, char* out_buf, size_t buf
 
 
 
+#ifndef Pandas_SQL_Configure_Optimization
 /// Changes the encoding of the connection.
 int32 Sql_SetEncoding(Sql* self, const char* encoding)
 {
@@ -170,6 +182,93 @@ int32 Sql_SetEncoding(Sql* self, const char* encoding)
 		return SQL_SUCCESS;
 	return SQL_ERROR;
 }
+#else
+/// Changes the encoding of the connection.
+int32 Sql_SetEncoding(Sql* self, const char* encoding, const char* default_encoding, const char* connect_name)
+{
+	bool no_set_encoding = false;
+	std::string current_codepage;
+	if (!self) {
+		return SQL_ERROR;
+	}
+
+	do {
+		if (!encoding || strlen(encoding) <= 0) {
+			if (default_encoding && strlen(default_encoding) > 0) {
+				encoding = default_encoding;
+			}
+			else {
+				no_set_encoding = true;
+				break;
+			}
+		}
+
+		char* data = nullptr;
+		if (SQL_ERROR == Sql_Query(self, "SHOW VARIABLES LIKE 'character_set_database';")) {
+			Sql_ShowDebug(self);
+			break;
+		}
+		if (SQL_ERROR == Sql_NextRow(self) || SQL_ERROR == Sql_GetData(self, 1, &data, nullptr)) {
+			Sql_ShowDebug(self);
+			Sql_FreeResult(self);
+			break;
+		}
+		if (data == nullptr) {
+			Sql_FreeResult(self);
+			break;
+		}
+		current_codepage = data;
+		Sql_FreeResult(self);
+
+		if (connect_name != nullptr) {
+			ShowInfo("Detected the " CL_WHITE "%s" CL_RESET " database character set is " CL_WHITE "%s" CL_RESET ".\n", connect_name, current_codepage.c_str());
+		}
+
+		if (encoding && strlen(encoding) > 0 && strcmpi(encoding, "auto") != 0) {
+			break;
+		}
+
+		if (global_core->get_type() != e_core_type::WEB) {
+			size_t i = 0;
+			const char* non_ansi[] = { "utf8", "utf8mb4" };
+			ARR_FIND(0, ARRAYLENGTH(non_ansi), i, current_codepage == non_ansi[i]);
+			if (ARRAYLENGTH(non_ansi) > i) {
+				switch (PandasUtf8::systemLanguage) {
+				case PandasUtf8::PANDAS_LANGUAGE_CHS:
+					encoding = "gbk";
+					break;
+				case PandasUtf8::PANDAS_LANGUAGE_CHT:
+					encoding = "big5";
+					break;
+				default:
+					encoding = current_codepage.c_str();
+					break;
+				}
+				break;
+			}
+		}
+
+		encoding = current_codepage.c_str();
+	} while (false);
+
+	if (encoding && strlen(encoding) > 0 && stricmp(encoding, "auto") != 0) {
+		if (connect_name != nullptr) {
+			ShowInfo("Server will connect to " CL_WHITE "'%s'" CL_RESET " database using " CL_WHITE "'%s'" CL_RESET ".\n", connect_name, encoding);
+		}
+	}
+
+	if (no_set_encoding) {
+		return SQL_SUCCESS;
+	}
+
+	if (mysql_set_character_set(&self->handle, encoding) == 0) {
+		return SQL_SUCCESS;
+	}
+
+	ShowSQL("DB error - %s\n", mysql_error(&self->handle));
+	return SQL_ERROR;
+}
+#endif // Pandas_SQL_Configure_Optimization
 
 
 #ifdef Pandas_Database_SQL_GetEncoding

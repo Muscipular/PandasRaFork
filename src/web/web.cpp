@@ -49,24 +49,36 @@ uint16 login_server_port = 3306;
 std::string login_server_id = "ragnarok";
 std::string login_server_pw = "";
 std::string login_server_db = "ragnarok";
+#ifdef Pandas_SQL_Configure_Optimization
+char login_codepage[32] = "";
+#endif // Pandas_SQL_Configure_Optimization
 
 std::string char_server_ip = "127.0.0.1";
 uint16  char_server_port = 3306;
 std::string char_server_id = "ragnarok";
 std::string char_server_pw = "";
 std::string char_server_db = "ragnarok";
+#ifdef Pandas_SQL_Configure_Optimization
+char char_codepage[32] = "";
+#endif // Pandas_SQL_Configure_Optimization
 
 std::string map_server_ip = "127.0.0.1";
 uint16 map_server_port = 3306;
 std::string map_server_id = "ragnarok";
 std::string map_server_pw = "";
 std::string map_server_db = "ragnarok";
+#ifdef Pandas_SQL_Configure_Optimization
+char map_codepage[32] = "";
+#endif // Pandas_SQL_Configure_Optimization
 
 std::string web_server_ip = "127.0.0.1";
 uint16 web_server_port = 3306;
 std::string web_server_id = "ragnarok";
 std::string web_server_pw = "";
 std::string web_server_db = "ragnarok";
+#ifdef Pandas_SQL_Configure_Optimization
+char web_codepage[32] = "";
+#endif // Pandas_SQL_Configure_Optimization
 
 std::string default_codepage = "";
 
@@ -256,6 +268,16 @@ int32 inter_config_read(const char* cfgName)
 			web_server_db = w2;
 		else if(!strcmpi(w1,"default_codepage"))
 			default_codepage = w2;
+#ifdef Pandas_SQL_Configure_Optimization
+		else if(!strcmpi(w1,"login_codepage"))
+			safestrncpy(login_codepage, w2, sizeof(login_codepage));
+		else if(!strcmpi(w1,"char_codepage"))
+			safestrncpy(char_codepage, w2, sizeof(char_codepage));
+		else if(!strcmpi(w1,"map_codepage"))
+			safestrncpy(map_codepage, w2, sizeof(map_codepage));
+		else if(!strcmpi(w1,"web_codepage"))
+			safestrncpy(web_codepage, w2, sizeof(web_codepage));
+#endif // Pandas_SQL_Configure_Optimization
 		else if (!strcmpi(w1, "user_configs"))
 			safestrncpy(user_configs_table, w2, sizeof(user_configs_table));
 		else if (!strcmpi(w1, "char_configs"))
@@ -315,10 +337,15 @@ int32 web_sql_init(void) {
 	}
 	ShowStatus("Connect success! (Login Server Connection)\n");
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if (!default_codepage.empty()) {
 		if (SQL_ERROR == Sql_SetEncoding(login_handle, default_codepage.c_str()))
 			Sql_ShowDebug(login_handle);
 	}
+#else
+	if (SQL_ERROR == Sql_SetEncoding(login_handle, login_codepage, default_codepage.c_str(), "Login-Server"))
+		Sql_ShowDebug(login_handle);
+#endif // Pandas_SQL_Configure_Optimization
 
 	char_handle = Sql_Malloc();
 	ShowInfo("Connecting to the Char DB server.....\n");
@@ -332,10 +359,15 @@ int32 web_sql_init(void) {
 	}
 	ShowStatus("Connect success! (Char Server Connection)\n");
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if (!default_codepage.empty()) {
 		if (SQL_ERROR == Sql_SetEncoding(char_handle, default_codepage.c_str()))
 			Sql_ShowDebug(char_handle);
 	}
+#else
+	if (SQL_ERROR == Sql_SetEncoding(char_handle, char_codepage, default_codepage.c_str(), "Char-Server"))
+		Sql_ShowDebug(char_handle);
+#endif // Pandas_SQL_Configure_Optimization
 
 	map_handle = Sql_Malloc();
 	ShowInfo("Connecting to the Map DB server.....\n");
@@ -349,10 +381,15 @@ int32 web_sql_init(void) {
 	}
 	ShowStatus("Connect success! (Map Server Connection)\n");
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if (!default_codepage.empty()) {
 		if (SQL_ERROR == Sql_SetEncoding(map_handle, default_codepage.c_str()))
 			Sql_ShowDebug(map_handle);
 	}
+#else
+	if (SQL_ERROR == Sql_SetEncoding(map_handle, map_codepage, default_codepage.c_str(), "Map-Server"))
+		Sql_ShowDebug(map_handle);
+#endif // Pandas_SQL_Configure_Optimization
 
 	web_handle = Sql_Malloc();
 	ShowInfo("Connecting to the Web DB server.....\n");
@@ -366,10 +403,15 @@ int32 web_sql_init(void) {
 	}
 	ShowStatus("Connect success! (Web Server Connection)\n");
 
+#ifndef Pandas_SQL_Configure_Optimization
 	if (!default_codepage.empty()) {
 		if (SQL_ERROR == Sql_SetEncoding(web_handle, default_codepage.c_str()))
 			Sql_ShowDebug(web_handle);
 	}
+#else
+	if (SQL_ERROR == Sql_SetEncoding(web_handle, web_codepage, default_codepage.c_str(), "Web-Server"))
+		Sql_ShowDebug(web_handle);
+#endif // Pandas_SQL_Configure_Optimization
 
 
 	return 0;
