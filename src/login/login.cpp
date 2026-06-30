@@ -516,6 +516,14 @@ bool login_check_password( struct login_session_data& sd, struct mmo_account& ac
 }
 
 int32 login_get_usercount( int32 users ){
+#ifdef Pandas_Support_Hide_Online_Players_Count
+#if PACKETVER >= 20170726
+	if (login_config.hide_online_players_count) return 4;
+#else
+	if (login_config.hide_online_players_count) return 0;
+#endif
+#endif // Pandas_Support_Hide_Online_Players_Count
+
 #if PACKETVER >= 20170726
 	if( login_config.usercount_disable ){
 		return 4; // Removes count and colorization completely
@@ -744,6 +752,10 @@ bool login_config_read(const char* cfgName, bool normal) {
 		else if (!strcmpi(w1, "strict_new_account_userid"))
 			login_config.strict_new_account_userid = (bool)config_switch(w2);
 #endif // Pandas_Strict_Userid_Verification
+#ifdef Pandas_Support_Hide_Online_Players_Count
+		else if (!strcmpi(w1, "hide_online_players_count"))
+			login_config.hide_online_players_count = (bool)config_switch(w2);
+#endif // Pandas_Support_Hide_Online_Players_Count
 		else if(strcmpi(w1, "chars_per_account") == 0) { //maxchars per account [Sirius]
 			login_config.char_per_account = atoi(w2);
 			if( login_config.char_per_account > MAX_CHARS ) {
