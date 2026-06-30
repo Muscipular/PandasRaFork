@@ -2,6 +2,7 @@
 
 	#define Pandas_Basic
 	#define Pandas_DatabaseIncrease
+	#define Pandas_InternalConfigure
 	#define Pandas_StructIncrease
 	#define Pandas_FuncIncrease
 	#define Pandas_ScriptEngine
@@ -390,6 +391,15 @@
 	// 是否支持用于读取 SQL 连接编码的 Sql_GetEncoding 函数 [Sola丶小克]
 	#define Pandas_Database_SQL_GetEncoding
 #endif // Pandas_DatabaseIncrease
+
+// ============================================================================
+// 服务器通用配置组 - Pandas_InternalConfigure
+// ============================================================================
+
+#ifdef Pandas_InternalConfigure
+	// 是否启用 hide_server_ipaddress 配置选项及其功能 [Sola丶小克]
+	// 此选项用于确保服务端不主动返回服务器的 IP 地址给到客户端, 通常用于支持代理方式登录
+#endif // Pandas_InternalConfigure
 
 // ============================================================================
 // 战斗配置组 - Pandas_BattleConfigure
