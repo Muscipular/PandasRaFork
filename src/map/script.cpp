@@ -13291,6 +13291,49 @@ BUILDIN_FUNC(catchpet)
 	return SCRIPT_CMD_SUCCESS;
 }
 
+#ifdef Pandas_ScriptCommand_MultiCatchPet
+/* ===========================================================
+ * 指令: multicatchpet
+ * 描述: 与 catchpet 指令类似, 但可以指定更多支持捕捉的魔物编号
+ * 用法: multicatchpet <魔物编号>{,<魔物编号>...};
+ * 返回: 该指令无论成功失败, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(multicatchpet) {
+	TBL_PC* sd;
+	uint32 i = 2;
+
+	if (!script_rid2sd(sd))
+		return SCRIPT_CMD_SUCCESS;
+
+	if (!script_hasdata(st, i)) {
+		ShowError("buildin_%s: no arguments given!\n", script_getfuncname(st));
+		st->state = END;
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	sd->pandas.multi_catch_target_class.clear();
+
+	while (script_hasdata(st, i)) {
+		struct script_data* data = script_getdata(st, i);
+
+		if (data_isint(data)) {
+			sd->pandas.multi_catch_target_class.push_back(script_getnum(st, i));
+		} else {
+			ShowError("buildin_%s: The No.%d parameter is not integer type.\n", script_getfuncname(st), i - 1);
+			script_reportdata(data);
+			st->state = END;
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		i++;
+	}
+
+	pet_catch_process_start(*sd, 0, PET_CATCH_MULTI_TARGET);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_MultiCatchPet
+
 /*==========================================
  * [orn]
  *------------------------------------------*/
@@ -29044,6 +29087,10 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF2(catchpet,"pet","??"),
 	BUILDIN_DEF2(birthpet,"bpet",""),
 	BUILDIN_DEF(catchpet,"??"),
+#ifdef Pandas_ScriptCommand_MultiCatchPet
+	BUILDIN_DEF(multicatchpet, "*"), // 与 catchpet 指令类似, 但可以指定更多支持捕捉的魔物编号 [Sola丶小克]
+	BUILDIN_DEF2(multicatchpet, "mpet", "*"), // 指定一个别名, 以便简化编码工作量
+#endif // Pandas_ScriptCommand_MultiCatchPet
 	BUILDIN_DEF(birthpet,""),
 	BUILDIN_DEF(resetlvl,"i?"),
 	BUILDIN_DEF(resetstatus,"?"),

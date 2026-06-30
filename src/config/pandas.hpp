@@ -662,6 +662,9 @@
 	// 是否启用 multicatchpet 脚本指令 [Sola丶小克]
 	// 与 catchpet 指令类似, 但可以指定更多支持捕捉的魔物编号
 	// 此选项开关需要依赖 Pandas_Struct_Map_Session_Data_MultiCatchTargetClass 的拓展
+	#ifdef Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
+		#define Pandas_ScriptCommand_MultiCatchPet
+	#endif // Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
 	// 是否启用 selfdeletion 脚本指令 [Sola丶小克]
 	// 设置 NPC 的自毁策略, 用于配合 copynpc 实现在开宝箱/挖矿时进行自毁等场景
 	// 是否启用 npcexists 脚本指令 [Sola丶小克]
