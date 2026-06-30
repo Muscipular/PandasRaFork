@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstring>
 #include <regex>
 #include <sstream>
 #include <utility>
@@ -24,6 +25,38 @@ bool isRegexMatched(const std::string& content, const std::string& patterns) {
 	catch (const std::regex_error& e) {
 		ShowWarning("%s throw regex_error : %s\n", __func__, e.what());
 		return false;
+	}
+}
+
+void strReplace(std::string& str, const std::string& from, const std::string& to) {
+	if (from.empty())
+		return;
+
+	size_t start_pos = 0;
+	while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+		str.replace(start_pos, from.length(), to);
+		start_pos += to.length();
+	}
+}
+
+void strReplace(std::wstring& str, const std::wstring& from, const std::wstring& to) {
+	if (from.empty())
+		return;
+
+	size_t start_pos = 0;
+	while ((start_pos = str.find(from, start_pos)) != std::wstring::npos) {
+		str.replace(start_pos, from.length(), to);
+		start_pos += to.length();
+	}
+}
+
+void strReplace(char* str, const char* from, const char* to) {
+	size_t len = strlen(str);
+	size_t from_len = strlen(from), to_len = strlen(to);
+	for (char* p = str; (p = strstr(p, from)); ++p) {
+		if (from_len != to_len)
+			memmove(p + to_len, p + from_len, len - (p - str) + to_len);
+		memcpy(p, to, to_len);
 	}
 }
 

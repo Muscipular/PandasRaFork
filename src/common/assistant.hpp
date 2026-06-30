@@ -18,6 +18,9 @@
 #endif // _WIN32
 
 bool isRegexMatched(const std::string& content, const std::string& patterns);
+void strReplace(std::string& str, const std::string& from, const std::string& to);
+void strReplace(std::wstring& str, const std::wstring& from, const std::wstring& to);
+void strReplace(char* str, const char* from, const char* to);
 bool strContain(std::vector<std::string> needle, const std::string& str);
 bool strContain(std::string needle, const std::string& str);
 std::vector<std::string> strExplode(std::string const& s, char delim);
