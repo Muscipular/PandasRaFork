@@ -2975,7 +2975,17 @@ void clif_delitem( const map_session_data& sd, int32 index, int32 amount, int16 
 #endif
 }
 
+#ifndef Pandas_FuncParams_Clif_Item_Equip
 static void clif_item_equip( int16 idx, EQUIPITEM_INFO *p, const item *it, const item_data *id, int32 eqp_pos ){
+#else
+// 拓展 caller 参数的可选值:
+// 0 - 未知或者不关心的调用者
+// 1 - 调用者是 clif_inventorylist
+// 2 - 调用者是 clif_storagelist
+// 3 - 调用者是 clif_cartlist
+// 4 - 调用者是 clif_viewequip_ack
+static void clif_item_equip( int16 idx, EQUIPITEM_INFO *p, const item *it, const item_data *id, int32 eqp_pos, uint16 caller = 0 ){
+#endif // Pandas_FuncParams_Clif_Item_Equip
 	nullpo_retv( p );
 	nullpo_retv( it );
 	nullpo_retv( id );
@@ -3127,7 +3137,11 @@ void clif_inventorylist( map_session_data *sd ){
 
 		// Non-stackable (Equippable)
 		if( !itemdb_isstackable2( sd->inventory_data[i] ) ){
+#ifndef Pandas_FuncParams_Clif_Item_Equip
 			clif_item_equip( client_index( i ), &itemlist_equip.list[equip++], &sd->inventory.u.items_inventory[i], sd->inventory_data[i], pc_equippoint( sd, i ) );
+#else
+			clif_item_equip( client_index( i ), &itemlist_equip.list[equip++], &sd->inventory.u.items_inventory[i], sd->inventory_data[i], pc_equippoint( sd, i ), 1 );
+#endif // Pandas_FuncParams_Clif_Item_Equip
 
 			if( equip == MAX_INVENTORY_ITEM_PACKET_EQUIP ){
 				itemlist_equip.PacketType  = inventorylistequipType;
@@ -3222,7 +3236,11 @@ void clif_storagelist( map_session_data* sd, const struct item* items, int32 ite
 
 		// Non-stackable (Equippable)
 		if( !itemdb_isstackable2( id ) ){
+#ifndef Pandas_FuncParams_Clif_Item_Equip
 			clif_item_equip( client_storage_index( i ), &storage_itemlist_equip.list[equip++], &items[i], id, pc_equippoint_sub( sd, id ) );
+#else
+			clif_item_equip( client_storage_index( i ), &storage_itemlist_equip.list[equip++], &items[i], id, pc_equippoint_sub( sd, id ), 2 );
+#endif // Pandas_FuncParams_Clif_Item_Equip
 
 			if( equip == MAX_STORAGE_ITEM_PACKET_EQUIP ){
 				storage_itemlist_equip.PacketType  = storageListEquipType;
@@ -3310,7 +3328,11 @@ void clif_cartlist( map_session_data *sd ){
 
 		// Non-stackable (Equippable)
 		if( !itemdb_isstackable2(id) ){
+#ifndef Pandas_FuncParams_Clif_Item_Equip
 			clif_item_equip( client_index( i ), &itemlist_equip.list[equip++], &sd->cart.u.items_cart[i], id, id->equip );
+#else
+			clif_item_equip( client_index( i ), &itemlist_equip.list[equip++], &sd->cart.u.items_cart[i], id, id->equip, 3 );
+#endif // Pandas_FuncParams_Clif_Item_Equip
 		 // Stackable (Normal)
 		}else{
 			clif_item_normal( client_index( i ), &itemlist_normal.list[normal++], &sd->cart.u.items_cart[i], id );
@@ -10440,7 +10462,11 @@ void clif_viewequip_ack( const map_session_data& sd, const map_session_data& tsd
 				continue;
 			}
 
+#ifndef Pandas_FuncParams_Clif_Item_Equip
 			clif_item_equip( client_index( k ), &p->list[equip], &tsd.inventory.u.items_inventory[k], tsd.inventory_data[k], pc_equippoint( &tsd, k ) );
+#else
+			clif_item_equip( client_index( k ), &p->list[equip], &tsd.inventory.u.items_inventory[k], tsd.inventory_data[k], pc_equippoint( &tsd, k ), 4 );
+#endif // Pandas_FuncParams_Clif_Item_Equip
 
 			p->PacketLength += static_cast<decltype(p->PacketLength)>( sizeof( p->list[0] ) );
 			equip++;

@@ -588,6 +588,7 @@
 
 	// 调整 clif.cpp 中给 clif_item_equip 函数增加 caller 参数 [Sola丶小克]
 	// 新增的 caller 参数用来标记调用这个函数的调用者是谁, 以便在必要情况下能够调整返回给客户端的字段值
+	#define Pandas_FuncParams_Clif_Item_Equip
 
 	// 在 mob.cpp 中的 mob_once_spawn_sub 增加 spawn_flag 参数 [Sola丶小克]
 	// 新增的 spawn_flag 参数可以用来控制召唤出来的魔物是不是 BOSS (可以被 BOSS 雷达探测)
@@ -763,6 +764,11 @@
 	#define Pandas_Item_Properties
 	// 启用护身符道具系统 [Sola丶小克]
 	#define Pandas_Item_Amulet_System
+	// 启用道具外观控制机制 [Sola丶小克]
+	// 此选项开启后 item_properties.yml 数据库中 ControlViewID 才能发挥作用
+	// 此选项依赖 Pandas_FuncParams_Clif_Item_Equip 的拓展
+	#ifdef Pandas_FuncParams_Clif_Item_Equip
+	#endif // Pandas_FuncParams_Clif_Item_Equip
 	// 启用道具特殊公告策略 [Sola丶小克]
 	#define Pandas_Item_Special_Annouce
 #endif // Pandas_Struct_Item_Data_Properties
