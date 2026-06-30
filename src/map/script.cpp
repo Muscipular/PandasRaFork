@@ -8458,6 +8458,9 @@ BUILDIN_FUNC(getitem2)
 
 		item_tmp.nameid = nameid;
 		item_tmp.identify = iden;
+#ifdef Pandas_BattleConfig_Force_Identified
+		item_tmp.identify = (battle_config.force_identified & 128 ? 1 : item_tmp.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 		item_tmp.refine = ref;
 		item_tmp.attribute = attr;
 		item_tmp.card[0] = c1;
@@ -8632,6 +8635,9 @@ BUILDIN_FUNC(rentitem2) {
 
 	it.nameid = nameid;
 	it.identify = iden;
+#ifdef Pandas_BattleConfig_Force_Identified
+	it.identify = (battle_config.force_identified & 256 ? 1 : it.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 	it.refine = ref;
 	it.attribute = attr;
 	it.card[0] = c1;
@@ -8812,6 +8818,9 @@ BUILDIN_FUNC(makeitem) {
 		item_tmp.identify = 1;
 	else
 		item_tmp.identify = itemdb_isidentified(nameid);
+#ifdef Pandas_BattleConfig_Force_Identified
+	item_tmp.identify = (battle_config.force_identified & 32 ? 1 : item_tmp.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 
 	map_addflooritem(&item_tmp, amount, m, x, y, 0, 0, 0, 4, 0, canShowEffect);
 	return SCRIPT_CMD_SUCCESS;
@@ -8890,6 +8899,9 @@ BUILDIN_FUNC(makeitem2) {
 		}
 
 		item_tmp.identify = iden;
+#ifdef Pandas_BattleConfig_Force_Identified
+		item_tmp.identify = (battle_config.force_identified & 32 ? 1 : item_tmp.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 		item_tmp.refine = ref;
 		item_tmp.attribute = attr;
 		item_tmp.card[0] = script_getnum(st,10);
@@ -23965,6 +23977,9 @@ BUILDIN_FUNC(getrandgroupitem) {
 
 	item_tmp.nameid   = entry->nameid;
 	item_tmp.identify = identify ? 1 : itemdb_isidentified(entry->nameid);
+#ifdef Pandas_BattleConfig_Force_Identified
+	item_tmp.identify = (battle_config.force_identified & 64 ? 1 : item_tmp.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 
 	if (!qty)
 		qty = entry->amount;

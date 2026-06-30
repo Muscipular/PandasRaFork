@@ -7003,6 +7003,9 @@ bool pc_steal_item(map_session_data *sd,block_list *bl, uint16 skill_lv)
 	tmp_item.nameid = itemid;
 	tmp_item.amount = 1;
 	tmp_item.identify = itemdb_isidentified(itemid);
+#ifdef Pandas_BattleConfig_Force_Identified
+	tmp_item.identify = (battle_config.force_identified & 8 ? 1 : tmp_item.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 	if( battle_config.skill_steal_random_options ){
 		mob_setdropitem_option( tmp_item, drop );
 	}

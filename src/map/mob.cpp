@@ -2540,6 +2540,9 @@ static std::shared_ptr<s_item_drop> mob_setdropitem( const std::shared_ptr<s_mob
 	drop->item_data.nameid = mobdrop->nameid;
 	drop->item_data.amount = qty;
 	drop->item_data.identify = itemdb_isidentified( mobdrop->nameid );
+#ifdef Pandas_BattleConfig_Force_Identified
+	drop->item_data.identify = (battle_config.force_identified & 2 ? 1 : drop->item_data.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 	mob_setdropitem_option( drop->item_data, mobdrop );
 	drop->mob_id = mob_id;
 
@@ -3588,6 +3591,9 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 				struct item item = {};
 				item.nameid=entry->nameid;
 				item.identify= itemdb_isidentified(item.nameid);
+#ifdef Pandas_BattleConfig_Force_Identified
+				item.identify = (battle_config.force_identified & 4 ? 1 : item.identify);
+#endif // Pandas_BattleConfig_Force_Identified
 				clif_mvp_item(mvp_sd,item.nameid);
 				log_mvp_nameid = item.nameid;
 
