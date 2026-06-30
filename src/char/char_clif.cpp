@@ -908,6 +908,12 @@ void chclif_send_map_data( int32 fd, std::shared_ptr<struct mmo_charstatus> cd, 
 	uint32 subnet_map_ip = char_lan_subnetcheck( session[fd]->client_addr ); // Advanced subnet check [LuzZza]
 	p.ip = htonl( ( subnet_map_ip ) ? subnet_map_ip : map_server[map_server_index].ip );
 	p.port = ntows( htons( map_server[map_server_index].port ) ); // [!] LE byte order here [!]
+#ifdef Pandas_InterConfig_HideServerIpAddress
+	if (pandas_inter_hide_server_ipaddress) {
+		// 若希望不主动返回服务器的 IP 地址, 那么将此处的地图服务器 IP 重设为 0
+		p.ip = 0;
+	}
+#endif // Pandas_InterConfig_HideServerIpAddress
 #if PACKETVER >= 20170315
 	safestrncpy( p.domain, "", sizeof( p.domain ) );
 #endif

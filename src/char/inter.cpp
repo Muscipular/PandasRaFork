@@ -53,6 +53,10 @@ std::string char_server_pw = ""; // Allow user to send empty password (bugreport
 std::string char_server_db = "ragnarok";
 std::string default_codepage = ""; //Feature by irmin.
 uint32 party_share_level = 10;
+#ifdef Pandas_InterConfig_HideServerIpAddress
+// 是否不主动返回服务器的 IP 地址给到客户端
+int pandas_inter_hide_server_ipaddress = 0;
+#endif // Pandas_InterConfig_HideServerIpAddress
 
 /// Received packet Lengths from map-server
 int32 inter_recv_packet_length[] = {
@@ -854,6 +858,10 @@ int32 inter_config_read(const char* cfgName)
 			char_server_db = w2;
 		else if(!strcmpi(w1,"default_codepage"))
 			default_codepage = w2;
+#ifdef Pandas_InterConfig_HideServerIpAddress
+		else if(!strcmpi(w1, "hide_server_ipaddress"))
+			pandas_inter_hide_server_ipaddress = config_switch(w2);
+#endif // Pandas_InterConfig_HideServerIpAddress
 		else if(!strcmpi(w1,"party_share_level"))
 			party_share_level = (uint32)atof(w2);
 		else if(!strcmpi(w1,"log_inter"))

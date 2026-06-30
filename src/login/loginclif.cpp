@@ -140,6 +140,12 @@ static void logclif_auth_ok(struct login_session_data* sd) {
 		char_server.users = login_get_usercount( ch_server[i].users );
 		char_server.type = ch_server[i].type;
 		char_server.new_ = ch_server[i].new_;
+#ifdef Pandas_InterConfig_HideServerIpAddress
+		if (pandas_inter_hide_server_ipaddress) {
+			// 若希望不主动返回服务器的 IP 地址, 那么将此处的角色服务器 IP 重设为 0
+			char_server.ip = 0;
+		}
+#endif // Pandas_InterConfig_HideServerIpAddress
 #if PACKETVER >= 20170315
 		memset( &char_server.unknown, 0, sizeof( char_server.unknown ) );
 #endif

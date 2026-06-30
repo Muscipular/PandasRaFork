@@ -54,6 +54,10 @@ struct s_subnet {
 int32 subnet_count = 0; //number of subnet config
 
 int32 login_fd; // login server file descriptor socket
+#ifdef Pandas_InterConfig_HideServerIpAddress
+// 是否不主动返回服务器的 IP 地址给到客户端
+int pandas_inter_hide_server_ipaddress = 0;
+#endif // Pandas_InterConfig_HideServerIpAddress
 
 //early declaration
 bool login_check_password( struct login_session_data& sd, struct mmo_account& acc );
@@ -702,6 +706,10 @@ bool login_config_read(const char* cfgName, bool normal) {
 			login_config.usercount_medium = atoi(w2);
 		else if (!strcmpi(w1, "usercount_high"))
 			login_config.usercount_high = atoi(w2);
+#ifdef Pandas_InterConfig_HideServerIpAddress
+		else if (!strcmpi(w1, "hide_server_ipaddress"))
+			pandas_inter_hide_server_ipaddress = config_switch(w2);
+#endif // Pandas_InterConfig_HideServerIpAddress
 		else if(strcmpi(w1, "chars_per_account") == 0) { //maxchars per account [Sirius]
 			login_config.char_per_account = atoi(w2);
 			if( login_config.char_per_account > MAX_CHARS ) {

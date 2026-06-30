@@ -42,6 +42,10 @@ class MapServer : public Core{
 };
 }
 
+#ifdef Pandas_InterConfig_HideServerIpAddress
+extern int32 pandas_inter_hide_server_ipaddress;
+#endif // Pandas_InterConfig_HideServerIpAddress
+
 struct chat_data;
 struct homun_data;
 struct mob_data;

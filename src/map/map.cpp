@@ -61,6 +61,10 @@ using namespace rathena;
 using namespace rathena::server_map;
 
 std::string default_codepage = "";
+#ifdef Pandas_InterConfig_HideServerIpAddress
+// 是否不主动返回服务器的 IP 地址给到客户端
+int32 pandas_inter_hide_server_ipaddress = 0;
+#endif // Pandas_InterConfig_HideServerIpAddress
 
 int32 map_server_port = 3306;
 std::string map_server_ip = "127.0.0.1";
@@ -4435,6 +4439,11 @@ int32 inter_config_read(const char *cfgName)
 		else
 		if(strcmpi(w1,"default_codepage")==0)
 			default_codepage = w2;
+#ifdef Pandas_InterConfig_HideServerIpAddress
+		else
+		if(strcmpi(w1, "hide_server_ipaddress") == 0)
+			pandas_inter_hide_server_ipaddress = config_switch(w2);
+#endif // Pandas_InterConfig_HideServerIpAddress
 		else
 		if(strcmpi(w1,"use_sql_db")==0) {
 			db_use_sqldbs = config_switch(w2);
