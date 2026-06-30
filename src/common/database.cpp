@@ -96,6 +96,12 @@ bool YamlDatabase::reload(){
 }
 
 bool YamlDatabase::load(const std::string& path) {
+#ifdef Pandas_Console_Translate
+	if (path.empty()) {
+		return true;
+	}
+#endif // Pandas_Console_Translate
+
 	ShowStatus("Loading '" CL_WHITE "%s" CL_RESET "'..." CL_CLL "\r", path.c_str());
 	FILE* f = fopen(path.c_str(), "r");
 	if (f == nullptr) {

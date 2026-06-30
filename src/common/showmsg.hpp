@@ -4,9 +4,14 @@
 #ifndef SHOWMSG_HPP
 #define SHOWMSG_HPP
 
+#include <config/pandas.hpp>
 #include <libconfig.h>
 
 #include <common/cbasetypes.hpp>
+
+#ifdef Pandas_Console_Translate
+#include <string>
+#endif // Pandas_Console_Translate
 
 // for help with the console colors look here:
 // http://www.edoceo.com/liberum/?doc=printf-with-color
@@ -88,7 +93,11 @@ enum msg_type {
 };
 
 extern void ClearScreen(void);
+#ifndef Pandas_Console_Translate
 extern int32 _vShowMessage(enum msg_type flag, const char *string, va_list ap);
+#else
+extern int32 _vShowMessage(enum msg_type flag, std::string instr, va_list ap);
+#endif // Pandas_Console_Translate
 extern void ShowMessage(const char *, ...);
 extern void ShowStatus(const char *, ...);
 extern void ShowSQL(const char *, ...);

@@ -32,6 +32,9 @@
 	// 在启动时显示 Pandas 的版本号
 	#define Pandas_Show_Version
 
+	// 是否启用控制台信息翻译机制 [Sola丶小克]
+	#define Pandas_Console_Translate
+
 	// 是否启用 Google Breakpad 用于处理程序崩溃
 
 	// 是否启用一些杂乱的自定义辅助函数

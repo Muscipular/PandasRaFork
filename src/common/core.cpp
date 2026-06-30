@@ -30,6 +30,10 @@
 #include "strlib.hpp"
 #include "assistant.hpp"
 
+#ifdef Pandas_Console_Translate
+#include "translate.hpp"
+#endif // Pandas_Console_Translate
+
 #ifndef DEPRECATED_COMPILER_SUPPORT
 	#if defined( _MSC_VER ) && _MSC_VER < 1914
 		#error "Visual Studio versions older than Visual Studio 2017 are not officially supported anymore"
@@ -361,6 +365,10 @@ static void display_title(void) {
 		ShowInfo("Compiled from Git Hash: " CL_WHITE "'%s'" CL_RESET " at " CL_WHITE "'%s'" CL_RESET " branch.\n", hash.substr(0, 7).c_str(), branch.c_str());
 	}
 #endif // Pandas_Show_Version
+
+#ifdef Pandas_Console_Translate
+	translate_status();
+#endif // Pandas_Console_Translate
 }
 
 // Warning if executed as superuser (root)
@@ -404,6 +412,9 @@ int32 Core::start( int32 argc, char **argv ){
 	}
 
 	malloc_init();// needed for Show* in display_title() [FlavioJS]
+#ifdef Pandas_Console_Translate
+	do_init_translate();
+#endif // Pandas_Console_Translate
 	display_title();
 	usercheck();
 
@@ -456,6 +467,9 @@ int32 Core::start( int32 argc, char **argv ){
 	ers_final();
 #endif
 
+#ifdef Pandas_Console_Translate
+	do_final_translate();
+#endif // Pandas_Console_Translate
 	malloc_final();
 	this->set_status( e_core_status::CORE_FINALIZED );
 
