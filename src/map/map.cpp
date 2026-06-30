@@ -4684,6 +4684,26 @@ void map_skill_duration_add(struct map_data *mapd, uint16 skill_id, uint16 per) 
 		mapd->skill_duration.insert({ skill_id, per });
 }
 
+#ifdef Pandas_BattleConfig_MaxAspdForGVG
+static int32 map_mapflag_gvg_start_sub(block_list* bl, va_list ap)
+{
+	map_session_data* sd = map_id2sd(bl->id);
+
+	nullpo_retr(0, sd);
+	status_calc_pc(sd, SCO_NONE);
+	return 0;
+}
+
+static int32 map_mapflag_gvg_stop_sub(block_list* bl, va_list ap)
+{
+	map_session_data* sd = map_id2sd(bl->id);
+
+	nullpo_retr(0, sd);
+	status_calc_pc(sd, SCO_NONE);
+	return 0;
+}
+#endif // Pandas_BattleConfig_MaxAspdForGVG
+
 /**
  * PvP timer handling (starting)
  * @param bl: Player block object
@@ -4910,9 +4930,15 @@ bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, union u_ma
 			mapdata->setMapFlag(mapflag, status); // Must come first to properly set map property
 			if (!status) {
 				clif_map_property_mapall(m, MAPPROPERTY_NOTHING);
+#ifdef Pandas_BattleConfig_MaxAspdForGVG
+				map_foreachinmap(map_mapflag_gvg_stop_sub, m, BL_PC);
+#endif // Pandas_BattleConfig_MaxAspdForGVG
 				map_foreachinmap(unit_stopattack, m, BL_CHAR, 0);
 			} else {
 				clif_map_property_mapall(m, MAPPROPERTY_AGITZONE);
+#ifdef Pandas_BattleConfig_MaxAspdForGVG
+				map_foreachinmap(map_mapflag_gvg_start_sub, m, BL_PC);
+#endif // Pandas_BattleConfig_MaxAspdForGVG
 				if (mapdata->getMapFlag(MF_PVP)) {
 					mapdata->setMapFlag(MF_PVP, false);
 					if (!battle_config.pk_mode)

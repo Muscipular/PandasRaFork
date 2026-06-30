@@ -15559,6 +15559,11 @@ int16 pc_maxaspd( const map_session_data* sd ) {
 			(sd->class_&MAPID_FIRSTMASK) == MAPID_SUMMONER) ? battle_config.max_summoner_aspd : 
 			battle_config.max_aspd ));
 
+#ifdef Pandas_BattleConfig_MaxAspdForGVG
+	if (map_flag_gvg(sd->bl.m) && battle_config.max_aspd_for_gvg > 0)
+		return static_cast<int16>(max(aspd, battle_config.max_aspd_for_gvg));
+#endif // Pandas_BattleConfig_MaxAspdForGVG
+
 #ifdef Pandas_BattleConfig_MaxAspdForPVP
 	if (map_flag_vs(sd->bl.m) && battle_config.max_aspd_for_pvp > 0)
 		aspd = max(aspd, battle_config.max_aspd_for_pvp);

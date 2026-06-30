@@ -428,6 +428,10 @@
 	// 此选项用于限制玩家在 PVP 地图上的最大攻速
 	#define Pandas_BattleConfig_MaxAspdForPVP
 
+	// 是否启用 max_aspd_for_gvg 配置选项及其功能 [Sola丶小克]
+	// 此选项用于限制玩家在 GVG 地图上的最大攻速
+	#define Pandas_BattleConfig_MaxAspdForGVG
+
 // 是否启用 suspend_monsterignore 配置选项及其功能 [Sola丶小克]
 // 此选项用于指定当玩家使用挂机系列指令时, 哪些模式不会被魔物攻击 (掩码选项)
 #define Pandas_BattleConfig_Suspend_MonsterIgnore
