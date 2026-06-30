@@ -28775,6 +28775,44 @@ BUILDIN_FUNC(settrigger) {
 }
 #endif // Pandas_ScriptCommand_SetEventTrigger
 
+#ifdef Pandas_ScriptCommand_BattleRecordQuery
+/* ===========================================================
+ * 指令: batrec_query
+ * 描述: 查询指定单位的战斗记录, 查看与交互目标单位产生的具体记录值
+ * 用法: batrec_query <记录宿主的单位编号>,<交互目标的单位编号>,<记录类型>{,<聚合规则>};
+ * 返回: 返回 -1 表示查无记录或发生错误, 含 0 正整数表示伤害值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(batrec_query) {
+	struct block_list* bl = map_id2bl(script_getnum(st, 2));
+
+	if (bl == nullptr) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int32 rec_type = script_getnum(st, 4);
+
+	if (rec_type != BRT_DMG_RECEIVE && rec_type != BRT_DMG_CAUSE) {
+		ShowError("%s: The battle record type is invalid.\n", __func__);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int32 aggregation = BRA_COMBINE;
+
+	if (!script_get_optnum(st, 5, "Aggregation strategy", aggregation, true, BRA_COMBINE)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int64 damage = batrec_query(bl, script_getnum(st, 3), static_cast<e_batrec_type>(rec_type), static_cast<e_batrec_agg>(aggregation));
+
+	script_pushint(st, damage);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BattleRecordQuery
+
 #ifdef Pandas_ScriptCommand_UnlockCmd
 /* ===========================================================
  * 指令: unlockcmd
@@ -29218,6 +29256,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_SetEventTrigger
 	BUILDIN_DEF(settrigger, "ii"), // 使用该指令可以设置某个事件或过滤器的触发行为 [Sola丶小克]
 #endif // Pandas_ScriptCommand_SetEventTrigger
+#ifdef Pandas_ScriptCommand_BattleRecordQuery
+	BUILDIN_DEF(batrec_query, "iii?"), // 查询指定单位的战斗记录, 查看与交互目标单位产生的具体记录值 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BattleRecordQuery
 #ifdef Pandas_ScriptCommand_UnlockCmd
 	BUILDIN_DEF(unlockcmd, ""), // 解锁实时事件和过滤器事件的指令限制 [Sola丶小克]
 #endif // Pandas_ScriptCommand_UnlockCmd

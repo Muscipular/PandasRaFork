@@ -697,6 +697,7 @@
 	#ifdef Pandas_BattleRecord
 		// 是否启用 batrec_query 脚本指令 [Sola丶小克]
 		// 查询指定单位的战斗记录, 查看与交互目标单位产生的具体记录值
+		#define Pandas_ScriptCommand_BattleRecordQuery
 		// 是否启用 batrec_rank 脚本指令 [Sola丶小克]
 		// 查询指定单位的战斗记录并对记录的值进行排序, 返回排行榜单
 		// 是否启用 batrec_sortout 脚本指令 [Sola丶小克]
