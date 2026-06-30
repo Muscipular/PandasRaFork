@@ -30,6 +30,10 @@
 #include "strlib.hpp"
 #include "assistant.hpp"
 
+#ifdef Pandas_Support_Future_Execution
+#include "future.hpp"
+#endif // Pandas_Support_Future_Execution
+
 #ifdef Pandas_Console_Translate
 #include "translate.hpp"
 #endif // Pandas_Console_Translate
@@ -505,6 +509,13 @@ void Core::handle_main( t_tick next ){
 #ifndef MINICORE
 	// By default we handle all socket packets
 	do_sockets( next );
+
+#ifdef Pandas_Support_Future_Execution
+	// 如果是地图服务器的话那么顺带需要执行异步任务
+	if (this->get_type() == e_core_type::MAP) {
+		do_future();
+	}
+#endif // Pandas_Support_Future_Execution
 #endif
 }
 
