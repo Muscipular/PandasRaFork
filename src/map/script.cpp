@@ -7991,6 +7991,118 @@ BUILDIN_FUNC(storagecountitem)
 	return SCRIPT_CMD_SUCCESS;
 }
 
+#ifdef Pandas_ScriptCommand_StorageGetItem
+/* ===========================================================
+ * 指令: storagegetitem
+ * 描述: 往仓库直接创造一个指定的道具
+ * 用法: storagegetitem <物品编号>,<数量>{,<账号编号>};
+ * 用法: storagegetitem "<物品名称>",<数量>{,<账号编号>};
+ * 返回: 添加成功会返回 0, 返回小于 0 则表示有错误
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(storagegetitem)
+{
+	int32 get_count = 0, i = 0;
+	t_itemid nameid = 0;
+	uint16 amount = 0;
+	item it = {};
+	map_session_data* sd = nullptr;
+	std::shared_ptr<item_data> id;
+
+	if (script_isstring(st, 2)) {// "<item name>"
+		const char* name = script_getstr(st, 2);
+
+		id = item_db.searchname(name);
+
+		if (id == nullptr) {
+			ShowError("buildin_storagegetitem: Nonexistant item %s requested.\n", name);
+			script_pushint(st, -1);
+			return SCRIPT_CMD_SUCCESS; //No item created.
+		}
+
+		nameid = id->nameid;
+	} else {// <item id>
+		nameid = script_getnum(st, 2);
+
+		id = item_db.find(nameid);
+
+		if (id == nullptr) {
+			ShowError("buildin_storagegetitem: Nonexistant item %u requested.\n", nameid);
+			script_pushint(st, -1);
+			return SCRIPT_CMD_SUCCESS; //No item created.
+		}
+	}
+
+	// <amount>
+	if ((amount = script_getnum(st, 3)) <= 0) {
+		script_pushint(st, -2);
+		return SCRIPT_CMD_SUCCESS; //return if amount <=0, skip the useles iteration
+	}
+
+	it.nameid = nameid;
+	it.identify = 1;
+	it.bound = BOUND_NONE;
+
+	if (!strcmp(script_getfuncname(st), "storagegetitembound")) {
+		char bound = script_getnum(st, 4);
+
+		if (bound < BOUND_NONE || bound >= BOUND_MAX) {
+			ShowError("script_storagegetitembound: Not a correct bound type! Type=%d\n", bound);
+			script_pushint(st, -3);
+			return SCRIPT_CMD_SUCCESS;
+		}
+
+		script_mapid2sd(5, sd);
+		it.bound = bound;
+	} else {
+		script_mapid2sd(4, sd);
+	}
+
+	if (sd == nullptr) {
+		script_pushint(st, -4);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (sd->state.storage_flag == 1 || sd->state.storage_flag == 3) {
+		script_pushint(st, -5);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	//Check if it's stackable.
+	if (!itemdb_isstackable2(id.get()))
+		get_count = 1;
+	else
+		get_count = amount;
+
+	if (!itemdb_canstore(&it, pc_get_group_level(sd))) {
+		script_pushint(st, -6);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (pet_db_search(nameid, PET_EGG)) {
+		script_pushint(st, -7);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!sd->storage.state.put) {
+		script_pushint(st, -8);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	for (i = 0; i < amount; i += get_count) {
+		if (storage_additem(sd, &sd->storage, &it, get_count, true)) {
+			if (pc_candrop(sd, &it))
+				map_addflooritem(&it, get_count, sd->bl.m, sd->bl.x, sd->bl.y, 0, 0, 0, 0, 0);
+			else
+				script_pushint(st, -9);
+		}
+	}
+
+	script_pushint(st, 0);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_StorageGetItem
+
 /**
  * Returns number of items in guild storage
  * guildstoragecountitem(<nameID>{,<accountID>})
@@ -29601,6 +29713,10 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(rand,"i?"),
 	BUILDIN_DEF(countitem,"v?"),
 	BUILDIN_DEF(storagecountitem,"v?"),
+#ifdef Pandas_ScriptCommand_StorageGetItem
+	BUILDIN_DEF(storagegetitem, "vi?"),
+	BUILDIN_DEF2(storagegetitem, "storagegetitembound", "vii?"),
+#endif // Pandas_ScriptCommand_StorageGetItem
 	BUILDIN_DEF(guildstoragecountitem,"v?"),
 	BUILDIN_DEF(cartcountitem,"v?"),
 	BUILDIN_DEF2(countitem,"countitem2","viiiiiii?"),
