@@ -706,6 +706,7 @@
 		#define Pandas_ScriptCommand_BattleRecordSortout
 		// 是否启用 batrec_reset 脚本指令 [Sola丶小克]
 		// 清除指定单位的战斗记录
+		#define Pandas_ScriptCommand_BattleRecordReset
 		// 是否启用 enable_batrec 脚本指令 [Sola丶小克]
 		// 该指令用于启用指定单位的战斗记录
 		// 是否启用 disable_batrec 脚本指令 [Sola丶小克]
