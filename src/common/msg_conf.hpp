@@ -33,6 +33,10 @@ enum lang_types {
 #define ALL_EXTEND_MSG 4000
 #define ALL_EXTEND_FIRST_MSG 3000
 
+#ifndef Pandas_Message_Conf
+const char* disabled_msg_txt(int msg_number);
+#endif // Pandas_Message_Conf
+
 #ifndef LANG_ENABLE
 	// Multilanguage System.
 	// Define which languages to enable (bitmask).

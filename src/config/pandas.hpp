@@ -499,6 +499,8 @@
 #ifdef Pandas_CreativeWork
 	// 扩展信息配置文件 (Msg_conf) 的 ID 最大上限,
 	// 同时提供 msg_txt_cn 宏定义函数, 方便在工程中使用自定义信息 [Sola丶小克]
+	#define Pandas_Message_Conf
+
 	// PYHELP - CREATIVEWORK - INSERT POINT - <Section 1>
 #endif // Pandas_CreativeWork
 

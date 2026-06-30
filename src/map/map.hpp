@@ -60,6 +60,11 @@ struct Channel;
 struct map_data *map_getmapdata(int16 m);
 #define msg_config_read(cfgName,isnew) map_msg_config_read(cfgName,isnew)
 #define msg_txt(sd,msg_number) map_msg_txt(sd,msg_number)
+#ifdef Pandas_Message_Conf
+	#define msg_txt_cn(sd,msg_number) map_msg_txt(sd,msg_number + ALL_EXTEND_FIRST_MSG)
+#else
+	#define msg_txt_cn(sd,msg_number) disabled_msg_txt(msg_number + ALL_EXTEND_FIRST_MSG)
+#endif // Pandas_Message_Conf
 #define do_final_msg() map_do_final_msg()
 int32 map_msg_config_read(const char *cfgName,int32 lang);
 const char* map_msg_txt(const map_session_data* sd,int32 msg_number);

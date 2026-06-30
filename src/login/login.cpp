@@ -34,7 +34,12 @@
 using namespace rathena;
 using namespace rathena::server_login;
 
+#ifndef Pandas_Message_Conf
 #define LOGIN_MAX_MSG 30				/// Max number predefined in msg_conf
+#else
+// 此处根据 ALL_EXTEND_MSG 的定义重新修改 LOGIN_MAX_MSG
+#define LOGIN_MAX_MSG ALL_EXTEND_MSG	/// Max number predefined in msg_conf
+#endif // Pandas_Message_Conf
 static char* msg_table[LOGIN_MAX_MSG];	/// Login Server messages_conf
 
 //definition of exported var declared in header

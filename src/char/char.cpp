@@ -59,7 +59,12 @@ struct fame_list smith_fame_list[MAX_FAME_LIST];
 struct fame_list chemist_fame_list[MAX_FAME_LIST];
 struct fame_list taekwon_fame_list[MAX_FAME_LIST];
 
+#ifndef Pandas_Message_Conf
 #define CHAR_MAX_MSG 300	//max number of msg_conf
+#else
+// 此处根据 ALL_EXTEND_MSG 的定义重新修改 CHAR_MAX_MSG
+#define CHAR_MAX_MSG ALL_EXTEND_MSG  //max number of msg_conf
+#endif // Pandas_Message_Conf
 static char* msg_table[CHAR_MAX_MSG]; // Login Server messages_conf
 
 // check for exit signal

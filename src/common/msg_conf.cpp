@@ -11,6 +11,15 @@
 #include "showmsg.hpp"
 #include "strlib.hpp"
 
+#ifndef Pandas_Message_Conf
+// 当禁用 Pandas_Message_Conf 的时候
+// 能够显示出对应的警告信息出来, 告诉用户原因同时避免编译错误 [Sola丶小克]
+const char* disabled_msg_txt(int msg_number) {
+	ShowWarning("Program will return 'unknow' for msg_number : %d calling by 'msg_txt_cn' function, because the message conf improvements has been disabled.\n", msg_number);
+	return "unknow";
+}
+#endif // Pandas_Message_Conf
+
 /*
  * Return the message string of the specified number by [Yor]
  * (read in table msg_table, with specified length table in size)
@@ -68,8 +77,19 @@ int32 _msg_config_read(const char* cfgName,int32 size, char ** msg_table)
 				safestrncpy(msg_table[msg_number], w2, len);
 				msg_count++;
 			}
+			#ifdef Pandas_Message_Conf
 			else
 				ShowWarning("Invalid message ID '%s' at line %d from '%s' file.\n",w1,line_num,cfgName);
+			#else
+			// 若没有启用 Pandas_Message_Conf 宏定义的话
+			// 为了避免持续集成判定失败, 这里针对 >= ALL_EXTEND_FIRST_MSG 的 msg_number 降低报错等级
+			else {
+				if (msg_number < ALL_EXTEND_FIRST_MSG)
+					ShowWarning("Invalid message ID '%s' at line %d from '%s' file.\n", w1, line_num, cfgName);
+				else
+					ShowInfo("Invalid message ID '%s' at line %d from '%s' file.\n", w1, line_num, cfgName);
+			}
+			#endif // Pandas_Message_Conf
 		}
 	}
 
