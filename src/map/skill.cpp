@@ -11858,9 +11858,15 @@ int32 skill_delunit(skill_unit* unit)
 			break;
 		case SC_MANHOLE: // Note : Removing the unit don't remove the status (official info)
 			if( group->val2 ) { // Someone Traped
-				status_change *tsc = status_get_sc( map_id2bl(group->val2));
-				if( tsc && tsc->getSCE(SC__MANHOLE) )
+				block_list* target = map_id2bl(group->val2);
+				status_change *tsc = status_get_sc(target);
+				if( tsc && tsc->getSCE(SC__MANHOLE) ) {
 					tsc->getSCE(SC__MANHOLE)->val4 = 0; // Remove the Unit ID
+#ifdef Pandas_BattleConfig_Remove_Manhole_With_Status
+					if (battle_config.remove_manhole_with_status)
+						status_change_end(target, SC__MANHOLE, INVALID_TIMER);
+#endif // Pandas_BattleConfig_Remove_Manhole_With_Status
+				}
 			}
 			break;
 	}

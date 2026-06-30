@@ -509,6 +509,10 @@
 // 此选项用于设置魔物死亡封包将会发送给周围多少个格的玩家
 #define Pandas_BattleConfig_Dead_Area_Size
 
+// 是否启用 remove_manhole_with_status 配置选项及其功能 [Sola丶小克]
+// 此选项用于设置人孔陷阱被移除时是否同时使被捕获的玩家脱困
+#define Pandas_BattleConfig_Remove_Manhole_With_Status
+
 // 是否启用 mob_setunitdata_persistence 配置选项及其功能 [Sola丶小克]
 // 此选项用于高优先级持久化保存 setunitdata 对魔物的设置
 #define Pandas_BattleConfig_Mob_SetUnitData_Persistence
