@@ -2234,6 +2234,35 @@ int32 npc_globalmessage(const char* name, const char* mes)
 // MvP tomb [GreenBox]
 void run_tomb(map_session_data* sd, npc_data* nd)
 {
+#ifdef Pandas_NpcFilter_CLICKTOMB
+	if (sd && sd->bl.type == BL_PC && nd && nd->u.tomb.md) {
+		pc_setreg(sd, add_str("@tomb_mapid"), nd->bl.m);
+		pc_setreg(sd, add_str("@tomb_x"), nd->bl.x);
+		pc_setreg(sd, add_str("@tomb_y"), nd->bl.y);
+		pc_setregstr(sd, add_str("@tomb_mapname$"), map[nd->bl.m].name);
+		pc_setreg(sd, add_str("@tomb_gid"), nd->bl.id);
+		pc_setreg(sd, add_str("@tomb_createtime"), nd->u.tomb.kill_time);
+		pc_setreg(sd, add_str("@tomb_mob_gid"), nd->u.tomb.md->bl.id);
+		pc_setreg(sd, add_str("@tomb_mob_classid"), nd->u.tomb.md->mob_id);
+		pc_setreg(sd, add_str("@tomb_mob_respawnsecs"), -1);
+		t_tick respawntime = -1;
+		if (nd->u.tomb.md->spawn) {
+			respawntime = gettick_timer(nd->u.tomb.md->spawn_timer);
+			if (respawntime != -1) {
+				respawntime = DIFF_TICK(respawntime, gettick());
+				respawntime = respawntime / 1000;
+				pc_setreg(sd, add_str("@tomb_mob_respawnsecs"), respawntime);
+				respawntime = respawntime + (int)time(nullptr);
+			}
+		}
+		pc_setreg(sd, add_str("@tomb_mob_respawntime"), respawntime);
+		pc_setregstr(sd, add_str("@tomb_killer_name$"), nd->u.tomb.killer_name);
+		if (npc_script_filter(sd, NPCF_CLICKTOMB)) {
+			return;
+		}
+	}
+#endif // Pandas_NpcFilter_CLICKTOMB
+
 	char buffer[200];
 	char time[10];
 
@@ -6539,6 +6568,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCF_DROPITEM:
 		return script_config.dropitem_filter_name;
 #endif // Pandas_NpcFilter_DROPITEM
+#ifdef Pandas_NpcFilter_CLICKTOMB
+	case NPCF_CLICKTOMB:
+		return script_config.clicktomb_filter_name;
+#endif // Pandas_NpcFilter_CLICKTOMB
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;

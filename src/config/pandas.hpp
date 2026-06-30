@@ -183,6 +183,7 @@
 			// 当玩家点击魔物墓碑时触发过滤器 [人鱼姬的思念]
 			// 事件类型: Filter / 事件名称: OnPCClickTombFilter
 			// 常量名称: NPCF_CLICKTOMB / 变量名称: clicktomb_filter_name
+			#define Pandas_NpcFilter_CLICKTOMB
 
 			// 当玩家准备将道具存入仓库时触发过滤器 [香草]
 			// 事件类型: Filter / 事件名称: OnPCStorageAddFilter
