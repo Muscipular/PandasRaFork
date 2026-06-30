@@ -110,9 +110,21 @@ bool YamlDatabase::load(const std::string& path) {
 	}
 	fseek(f, 0, SEEK_END);
 	size_t size = ftell(f);
+#ifndef Pandas_Support_UTF8BOM_Files
 	char* buf = (char *)aMalloc(size+1);
 	rewind(f);
 	size_t real_size = fread(buf, sizeof(char), size, f);
+#else
+	// 潜在的编码转换需要, 将字节数与 wchar_t 的大小相乘
+	size = size * sizeof(wchar_t) + 1;
+	char* buf = (char *)aMalloc(size);
+	rewind(f);
+	// 加载终端翻译数据库的时候标记位需要传递为 0x2
+	// 表示在将其 UTF8 内容转换成 BIG5 编码的时候需要在低字节位为 0x5C 的字符后追加反斜杠
+	// 这样处理后在终端显示出对应的汉字，比如：連線成功 最末尾的【功】才能正常显示
+	int flag = (this->type == "CONSOLE_TRANSLATE_DB" ? 0x2 : 0);
+	size_t real_size = _fread(buf, sizeof(char), size, f, flag);
+#endif // Pandas_Support_UTF8BOM_Files
 	// Zero terminate
 	buf[real_size] = '\0';
 	fclose(f);

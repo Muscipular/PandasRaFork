@@ -5883,9 +5883,17 @@ int32 npc_parsesrcfile(const char* filepath)
 	}
 	fseek(fp, 0, SEEK_END);
 	size_t len = ftell(fp);
+#ifndef Pandas_Support_UTF8BOM_Files
 	char* buffer = (char*)aMalloc(len+1);
 	fseek(fp, 0, SEEK_SET);
 	len = fread(buffer, 1, len, fp);
+#else
+	// 潜在的编码转换需要, 将字节数与 wchar_t 的大小相乘
+	len = len * sizeof(wchar_t) + 1;
+	char* buffer = (char*)aMalloc(len);
+	fseek(fp, 0, SEEK_SET);
+	len = fread(buffer, 1, len, fp);
+#endif // Pandas_Support_UTF8BOM_Files
 	buffer[len] = '\0';
 	if (ferror(fp)) {
 		ShowError("npc_parsesrcfile: Failed to read file '%s' - %s\n", filepath, strerror(errno));
@@ -5895,6 +5903,7 @@ int32 npc_parsesrcfile(const char* filepath)
 	}
 	fclose(fp);
 
+#ifndef Pandas_Support_UTF8BOM_Files
 	if ((unsigned char)buffer[0] == 0xEF && (unsigned char)buffer[1] == 0xBB && (unsigned char)buffer[2] == 0xBF) {
 		// UTF-8 BOM. This is most likely an error on the user's part, because:
 		// - BOM is discouraged in UTF-8, and the only place where you see it is Notepad and such.
@@ -5905,6 +5914,7 @@ int32 npc_parsesrcfile(const char* filepath)
 		aFree(buffer);
 		return 0;
 	}
+#endif // Pandas_Support_UTF8BOM_Files
 
 	int32 lines = 0;
 
