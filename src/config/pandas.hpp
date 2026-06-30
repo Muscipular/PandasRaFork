@@ -305,6 +305,11 @@
 	// 使 s_mail.item 能有一个 details 字段用来记录附件道具更详细的信息 [Sola丶小克]
 	#define Pandas_Struct_S_Mail_With_Details
 
+	#ifdef Pandas_Struct_S_Mail_With_Details
+		// 修复邮件附件在发送前未复核物品状态导致的异常 [Sola丶小克]
+		#define Pandas_Fix_Mail_ItemAttachment_Check
+	#endif // Pandas_Struct_S_Mail_With_Details
+
 	// 使 s_random_opt_data 能保存脚本的明文 [Sola丶小克]
 	#define Pandas_Struct_S_Random_Opt_Data_With_Plaintext
 

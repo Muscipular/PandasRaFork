@@ -258,6 +258,11 @@ enum mail_attach_result mail_setitem(map_session_data *sd, int16 idx, uint32 amo
 			if( battle_config.mail_attachment_weight ){
 				// Only need to sum up all entries until the new entry
 				for( j = 0; j < i; j++ ){
+#ifdef Pandas_Fix_Mail_ItemAttachment_Check
+					if( sd->mail.item[j].nameid == 0 )
+						continue;
+#endif // Pandas_Fix_Mail_ItemAttachment_Check
+
 					if (sd->inventory_data[sd->mail.item[j].index] == nullptr) {
 						return MAIL_ATTACH_ERROR;
 					}
@@ -478,6 +483,54 @@ void mail_send(map_session_data *sd, const char *dest_name, const char *title, c
 
 	if( sd->state.trading )
 		return;
+
+#ifdef Pandas_Fix_Mail_ItemAttachment_Check
+	bool found_invalid_item = false;
+
+	for( int32 i = 0; i < MAIL_MAX_ITEM; i++ ){
+		bool need_send_delitem = false;
+		int32 idx = sd->mail.item[i].index;
+
+		if( sd->mail.item[i].nameid == 0 )
+			continue;
+
+		if( idx < 0 || idx >= MAX_INVENTORY ){
+			found_invalid_item = true;
+		}else{
+			const item& current_item = sd->inventory.u.items_inventory[idx];
+			const item& attached_item = sd->mail.item[i].details;
+
+			if( sd->mail.item[i].amount <= 0 || sd->mail.item[i].amount > current_item.amount ||
+				current_item.id != attached_item.id ||
+				current_item.nameid != attached_item.nameid ||
+				current_item.equip != attached_item.equip ||
+				current_item.identify != attached_item.identify ||
+				current_item.refine != attached_item.refine ||
+				current_item.attribute != attached_item.attribute ||
+				memcmp( current_item.card, attached_item.card, sizeof( attached_item.card ) ) != 0 ||
+				memcmp( current_item.option, attached_item.option, sizeof( attached_item.option ) ) != 0 ||
+				current_item.expire_time != attached_item.expire_time ||
+				current_item.favorite != attached_item.favorite ||
+				current_item.bound != attached_item.bound ||
+				current_item.unique_id != attached_item.unique_id ||
+				current_item.equipSwitch != attached_item.equipSwitch ||
+				current_item.enchantgrade != attached_item.enchantgrade ){
+				need_send_delitem = true;
+				found_invalid_item = true;
+			}
+		}
+
+		if( need_send_delitem )
+			clif_delitem( *sd, idx, sd->mail.item[i].amount, 0 );
+	}
+
+	if( found_invalid_item ){
+		mail_clear( sd );
+		clif_Mail_send( sd, WRITE_MAIL_FAILED_ITEM );
+		clif_inventorylist( sd );
+		return;
+	}
+#endif // Pandas_Fix_Mail_ItemAttachment_Check
 
 	if( DIFF_TICK(sd->cansendmail_tick, gettick()) > 0 ) {
 		clif_displaymessage(sd->fd,msg_txt(sd,675)); //"Cannot send mails too fast!!."
