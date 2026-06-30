@@ -102,6 +102,7 @@
 			// 当玩家准备使用非装备类道具时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCUseItemFilter
 			// 常量名称: NPCF_USE_ITEM / 变量名称: use_item_filter_name
+			#define Pandas_NpcFilter_USE_ITEM
 
 			// 当玩家准备使用技能时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCUseSkillFilter

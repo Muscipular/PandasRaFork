@@ -286,6 +286,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcFilter_INSERT_CARD
 	"OnPCInsertCardFilter", //insert_card_filter_name
 #endif // Pandas_NpcFilter_INSERT_CARD
+#ifdef Pandas_NpcFilter_USE_ITEM
+	"OnPCUseItemFilter", //use_item_filter_name
+#endif // Pandas_NpcFilter_USE_ITEM
 	// NPC related
 	"OnTouch_",	//ontouch_event_name (runs on first visible char to enter area, picks another char if the first char leaves)
 	"OnTouch",	//ontouch2_event_name (run whenever a char walks into the OnTouch area)
