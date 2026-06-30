@@ -689,6 +689,9 @@ enum e_mapflag : int16 {
 	MF_NORENEWALEXPPENALTY,
 	MF_NORENEWALDROPPENALTY,
 	MF_NOPETCAPTURE,
+#ifdef Pandas_MapFlag_NoCapture
+	MF_NOCAPTURE,
+#endif // Pandas_MapFlag_NoCapture
 	MF_NOBUYINGSTORE,
 	MF_NODYNAMICNPC,
 	MF_NOBANK,

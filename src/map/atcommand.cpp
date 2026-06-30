@@ -9127,6 +9127,12 @@ ACMD_FUNC(mapflag) {
 		for( i = MF_MIN; i < MF_MAX; i++ ){
 			union u_mapflag_args args = {};
 
+#ifdef Pandas_MapFlag_NoCapture
+			if (i == MF_NOCAPTURE) {
+				continue;
+			}
+#endif // Pandas_MapFlag_NoCapture
+
 			if( map_getmapflag_name(static_cast<e_mapflag>(i), flag_name) && map_getmapflag_sub( sd->m, static_cast<e_mapflag>(i), &args ) ){
 				clif_displaymessage(sd->fd, flag_name);
 			}

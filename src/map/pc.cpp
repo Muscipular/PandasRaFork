@@ -6600,7 +6600,11 @@ int32 pc_useitem(map_session_data *sd,int32 n)
 		return 0;/* regardless, effect is not run */
 	}
 
-	if (pet_db_search(id->nameid, PET_CATCH) != nullptr && map_getmapflag(sd->m, MF_NOPETCAPTURE)) {
+	if ((pet_db_search(id->nameid, PET_CATCH) != nullptr
+#ifdef Pandas_MapFlag_NoCapture
+		|| id->pandas.taming_mobid.size()
+#endif // Pandas_MapFlag_NoCapture
+		) && map_getmapflag(sd->m, MF_NOPETCAPTURE)) {
 		clif_displaymessage(sd->fd, msg_txt(sd, 669)); // You can't catch any pet on this map.
 		return 0;
 	}
