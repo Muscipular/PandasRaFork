@@ -7095,6 +7095,24 @@ bool pc_steal_item(map_session_data *sd,block_list *bl, uint16 skill_lv)
 	return true;
 }
 
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+void pc_mark_multitransfer(block_list* bl)
+{
+	if (bl == nullptr || bl->type != BL_PC)
+		return;
+
+	pc_mark_multitransfer(static_cast<map_session_data*>(bl));
+}
+
+void pc_mark_multitransfer(map_session_data* sd)
+{
+	if (sd == nullptr)
+		return;
+
+	sd->pandas.multitransfer = true;
+}
+#endif // Pandas_Support_Transfer_Autotrade_Player
+
 /*==========================================
  * Set's a player position.
  * @param sd
@@ -7111,13 +7129,24 @@ enum e_setpos pc_setpos(map_session_data* sd, uint16 mapindex, int32 x, int32 y,
 {
 	nullpo_retr(SETPOS_OK,sd);
 
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+	bool multitransfer = sd->pandas.multitransfer;
+	sd->pandas.multitransfer = false;
+#endif // Pandas_Support_Transfer_Autotrade_Player
+
 	if( !mapindex || !mapindex_id2name(mapindex) ) {
 		ShowDebug("pc_setpos: Passed mapindex(%d) is invalid!\n", mapindex);
 		return SETPOS_MAPINDEX;
 	}
 
+#ifndef Pandas_Support_Transfer_Autotrade_Player
 	if ( sd->state.autotrade && (sd->vender_id || sd->buyer_id) ) // Player with autotrade just causes clif glitch! @ FIXME
 		return SETPOS_AUTOTRADE;
+#else
+	// 离线挂店 + 开设了出售或采购摊位 + 多人召唤 = 放弃被召唤
+	if (sd->state.autotrade && (sd->vender_id || sd->buyer_id) && multitransfer)
+		return SETPOS_AUTOTRADE;
+#endif // Pandas_Support_Transfer_Autotrade_Player
 
 	if( battle_config.revive_onwarp && pc_isdead(sd) ) { //Revive dead people before warping them
 		pc_setstand(sd, true);
@@ -7350,6 +7379,28 @@ enum e_setpos pc_setpos(map_session_data* sd, uint16 mapindex, int32 x, int32 y,
 		sd->ed->y = sd->ed->ud.to_y = y;
 		sd->ed->ud.dir = sd->ud.dir;
 	}
+
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+	if (!sd->state.connect_new && sd->state.autotrade) {
+		sd->pandas.skip_loadendack_npc_event_dequeue = true;
+		clif_parse_LoadEndAck(sd->fd, sd);
+		sd->pandas.skip_loadendack_npc_event_dequeue = false;
+
+		if (pc_autotrade_suspend(sd)) {
+			suspend_recall_postfix(sd);
+		} else {
+			pc_setdir(sd, sd->pandas.at_dir, sd->pandas.at_head_dir);
+			clif_changed_dir(*sd, AREA_WOS);
+			if (sd->pandas.at_sit) {
+				pc_setsit(sd);
+				skill_sit(sd, true);
+				clif_sitting(*sd);
+			}
+		}
+
+		chrif_save(sd, CSAVE_AUTOTRADE);
+	}
+#endif // Pandas_Support_Transfer_Autotrade_Player
 
 	pc_cell_basilica(sd);
 

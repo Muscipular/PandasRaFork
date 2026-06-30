@@ -4218,6 +4218,9 @@ ACMD_FUNC(recallall)
 			if (pl_sd->m >= 0 && map_getmapflag(pl_sd->m, MF_NOWARP) && !pc_has_permission(sd, PC_PERM_WARP_ANYWHERE))
 				count++;
 			else {
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+				pc_mark_multitransfer(pl_sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 				if( pc_setpos(pl_sd, sd->mapindex, sd->x, sd->y, CLR_RESPAWN) == SETPOS_AUTOTRADE ){
 					count++;
 				}
@@ -4277,6 +4280,9 @@ ACMD_FUNC(guildrecall)
 			if (pl_sd->m >= 0 && map_getmapflag(pl_sd->m, MF_NOWARP) && !pc_has_permission(sd, PC_PERM_WARP_ANYWHERE))
 				count++;
 			else{
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+				pc_mark_multitransfer(pl_sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 				if( pc_setpos(pl_sd, sd->mapindex, sd->x, sd->y, CLR_RESPAWN) == SETPOS_AUTOTRADE ){
 					count++;
 				}
@@ -4339,6 +4345,9 @@ ACMD_FUNC(partyrecall)
 			if (pl_sd->m >= 0 && map_getmapflag(pl_sd->m, MF_NOWARP) && !pc_has_permission(sd, PC_PERM_WARP_ANYWHERE))
 				count++;
 			else{
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+				pc_mark_multitransfer(pl_sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 				if( pc_setpos(pl_sd, sd->mapindex, sd->x, sd->y, CLR_RESPAWN) == SETPOS_AUTOTRADE ){
 					count++;
 				}

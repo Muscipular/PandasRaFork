@@ -11192,6 +11192,13 @@ void clif_parse_LoadEndAck(int32 fd,map_session_data *sd)
 		clif_openvending( *sd );
 		clif_showvendingboard( *sd );
 	}
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+	else if (sd->state.buyingstore) {
+		clif_buyingstore_open(sd);
+		clif_buyingstore_myitemlist(*sd);
+		clif_buyingstore_entry(*sd);
+	}
+#endif // Pandas_Support_Transfer_Autotrade_Player
 
 	// Don't trigger NPC event or opening vending/buyingstore will be failed
 #ifndef Pandas_BattleConfig_Force_LoadEvent

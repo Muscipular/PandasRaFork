@@ -6259,6 +6259,10 @@ static int32 buildin_areawarp_sub(block_list *bl,va_list ap)
 	x3 = va_arg(ap,int32);
 	y3 = va_arg(ap,int32);
 
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+	pc_mark_multitransfer(bl);
+#endif // Pandas_Support_Transfer_Autotrade_Player
+
 	if(index == 0)
 		pc_randomwarp((TBL_PC *)bl,CLR_TELEPORT,true);
 	else if(x3 && y3) {
@@ -6463,6 +6467,10 @@ BUILDIN_FUNC(warpparty)
 		if( pc_isdead(pl_sd) )
 			continue;
 
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+		pc_mark_multitransfer(pl_sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
+
 		e_setpos ret = SETPOS_OK;
 
 		switch( type )
@@ -6568,6 +6576,10 @@ BUILDIN_FUNC(warpguild)
 	{
 		if( pl_sd->status.guild_id != gid )
 			continue;
+
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+		pc_mark_multitransfer(pl_sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 
 		switch( type )
 		{
@@ -13977,6 +13989,10 @@ BUILDIN_FUNC(warpwaitingpc)
 
 		mapreg_setreg(reference_uid(add_str("$@warpwaitingpc"), i), sd->id);
 
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+		pc_mark_multitransfer(sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
+
 		if( strcmp(map_name,"Random") == 0 )
 			pc_randomwarp(sd,CLR_TELEPORT,true);
 		else if( strcmp(map_name,"SavePoint") == 0 )
@@ -14999,6 +15015,9 @@ BUILDIN_FUNC(mapwarp)	// Added by RoVeRT
 				for( i=0; i < g->guild.max_member; i++)
 				{
 					if(g->guild.member[i].sd && g->guild.member[i].sd->m==m){
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+						pc_mark_multitransfer(g->guild.member[i].sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 						pc_setpos(g->guild.member[i].sd,index,x,y,CLR_TELEPORT);
 					}
 				}
@@ -15009,6 +15028,9 @@ BUILDIN_FUNC(mapwarp)	// Added by RoVeRT
 			if(p){
 				for(i=0;i<MAX_PARTY; i++){
 					if(p->data[i].sd && p->data[i].sd->m == m){
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+						pc_mark_multitransfer(p->data[i].sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 						pc_setpos(p->data[i].sd,index,x,y,CLR_TELEPORT);
 					}
 				}
@@ -22724,6 +22746,9 @@ static int32 buildin_instance_warpall_sub(block_list *bl, va_list ap)
 			break;
 	}
 
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+	pc_mark_multitransfer(sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 	pc_setpos(sd, m, x, y, CLR_TELEPORT);
 
 	return 1;

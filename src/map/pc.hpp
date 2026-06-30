@@ -1504,6 +1504,10 @@ enum e_setpos{
 	SETPOS_AUTOTRADE = 3
 };
 
+#ifdef Pandas_Support_Transfer_Autotrade_Player
+void pc_mark_multitransfer(block_list* bl);
+void pc_mark_multitransfer(map_session_data* sd);
+#endif // Pandas_Support_Transfer_Autotrade_Player
 enum e_setpos pc_setpos(map_session_data* sd, uint16 mapindex, int32 x, int32 y, clr_type clrtype);
 enum e_setpos pc_setpos_savepoint( map_session_data& sd, clr_type clrtype = CLR_TELEPORT );
 void pc_setsavepoint(map_session_data *sd, int16 mapindex,int32 x,int32 y);

@@ -517,6 +517,28 @@
 	// 同时提供 msg_txt_cn 宏定义函数, 方便在工程中使用自定义信息 [Sola丶小克]
 	#define Pandas_Message_Conf
 
+	// 是否支持使用 @recall 等指令单独召唤离线挂店 / 离线挂机的角色
+	// 主要用于管理员调整挂机单位的站位, 避免阻挡到其他的 NPC 或者传送点等 [Sola丶小克]
+	// 此选项依赖以下拓展, 任意一个不成立则将会 undef 此选项的定义
+	// - Pandas_Struct_Map_Session_Data_MultiTransfer
+	// - Pandas_Struct_Map_Session_Data_Autotrade_Configure
+	// - Pandas_Struct_Map_Session_Data_Skip_LoadEndAck_NPC_Event_Dequeue
+	// - Pandas_Player_Suspend_System
+	#define Pandas_Support_Transfer_Autotrade_Player
+
+	#ifndef Pandas_Struct_Map_Session_Data_MultiTransfer
+		#undef Pandas_Support_Transfer_Autotrade_Player
+	#endif // Pandas_Struct_Map_Session_Data_MultiTransfer
+	#ifndef Pandas_Struct_Map_Session_Data_Autotrade_Configure
+		#undef Pandas_Support_Transfer_Autotrade_Player
+	#endif // Pandas_Struct_Map_Session_Data_Autotrade_Configure
+	#ifndef Pandas_Struct_Map_Session_Data_Skip_LoadEndAck_NPC_Event_Dequeue
+		#undef Pandas_Support_Transfer_Autotrade_Player
+	#endif // Pandas_Struct_Map_Session_Data_Skip_LoadEndAck_NPC_Event_Dequeue
+	#ifndef Pandas_Player_Suspend_System
+		#undef Pandas_Support_Transfer_Autotrade_Player
+	#endif // Pandas_Player_Suspend_System
+
 	// PYHELP - CREATIVEWORK - INSERT POINT - <Section 1>
 #endif // Pandas_CreativeWork
 
