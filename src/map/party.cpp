@@ -1047,6 +1047,9 @@ int32 party_changeleader(map_session_data *sd, map_session_data *tsd, struct par
 	// Update info.
 	intif_party_leaderchange(p->party.party_id,p->party.member[tmi].account_id,p->party.member[tmi].char_id);
 	clif_party_info( *p );
+#ifdef Pandas_Fix_Dungeon_Command_Status_Refresh
+	instance_refresh_status(p->instance_id);
+#endif // Pandas_Fix_Dungeon_Command_Status_Refresh
 
 	return 1;
 }

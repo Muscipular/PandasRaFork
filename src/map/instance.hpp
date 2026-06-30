@@ -126,6 +126,9 @@ bool instance_destroy(int32 instance_id);
 bool instance_destroy(int32 instance_id, bool skip_erase = false);
 #endif // Pandas_FuncDefine_Instance_Destory
 void instance_destroy_command(map_session_data *sd);
+#ifdef Pandas_Fix_Dungeon_Command_Status_Refresh
+void instance_refresh_status(int32 instance_id);
+#endif // Pandas_Fix_Dungeon_Command_Status_Refresh
 e_instance_enter instance_enter(map_session_data *sd, int32 instance_id, const char *name, int16 x, int16 y);
 bool instance_reqinfo(map_session_data *sd, int32 instance_id);
 bool instance_addusers(int32 instance_id);

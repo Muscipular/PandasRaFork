@@ -973,6 +973,42 @@ void instance_destroy_command(map_session_data *sd) {
 }
 #endif // !defined(Pandas_FuncLogic_Instance_Destroy_Command) || !defined(Pandas_FuncDefine_Instance_Destory)
 
+#ifdef Pandas_Fix_Dungeon_Command_Status_Refresh
+void instance_refresh_status(int32 instance_id)
+{
+	if (instance_id <= 0)
+		return;
+
+	std::shared_ptr<s_instance_data> idata = util::umap_find(instances, instance_id);
+
+	if (idata == nullptr)
+		return;
+
+	switch (idata->mode) {
+		case IM_NONE:
+			break;
+		case IM_CHAR:
+			if (map_charid2sd(idata->owner_id))
+				clif_instance_status(instance_id, static_cast<uint32>(idata->keep_limit), static_cast<uint32>(idata->idle_limit));
+			break;
+		case IM_PARTY:
+			if (party_search(idata->owner_id))
+				clif_instance_status(instance_id, static_cast<uint32>(idata->keep_limit), static_cast<uint32>(idata->idle_limit));
+			break;
+		case IM_GUILD:
+			if (guild_search(idata->owner_id))
+				clif_instance_status(instance_id, static_cast<uint32>(idata->keep_limit), static_cast<uint32>(idata->idle_limit));
+			break;
+		case IM_CLAN:
+			if (clan_search(idata->owner_id))
+				clif_instance_status(instance_id, static_cast<uint32>(idata->keep_limit), static_cast<uint32>(idata->idle_limit));
+			break;
+		default:
+			return;
+	}
+}
+#endif // Pandas_Fix_Dungeon_Command_Status_Refresh
+
 /**
  * Removes an instance, all its maps, and NPCs.
  * @param instance_id: Instance to remove

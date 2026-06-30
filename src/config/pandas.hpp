@@ -577,6 +577,11 @@
 	// 重写 instance.cpp -> instance_destroy_command 函数
 	// 因为 rAthena 官方实现的该函数在切换队长后的处理并不友好 [Sola丶小克]
 	#define Pandas_FuncLogic_Instance_Destroy_Command
+	// 修正更换队长后, 新队长无法看到销毁副本按钮的问题
+	// 此选项开关需要依赖 Pandas_FuncLogic_Instance_Destroy_Command 的拓展 [Sola丶小克]
+	#ifdef Pandas_FuncLogic_Instance_Destroy_Command
+		#define Pandas_Fix_Dungeon_Command_Status_Refresh
+	#endif // Pandas_FuncLogic_Instance_Destroy_Command
 
 	// 当某个 IP 地址被判定为可以连接的时候, 不再将其列入 DDoS 攻击的判定范围 [Sola丶小克]
 	// 在默认 rAthena 的逻辑下, 就算某个 IP 地址就算被判定成允许连接,
