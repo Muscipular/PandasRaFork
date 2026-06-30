@@ -7148,6 +7148,15 @@ enum e_setpos pc_setpos(map_session_data* sd, uint16 mapindex, int32 x, int32 y,
 		return SETPOS_AUTOTRADE;
 #endif // Pandas_Support_Transfer_Autotrade_Player
 
+#ifdef Pandas_BattleConfig_Multiplayer_Recall_Behavior
+	// 开设了出售摊位 + 设为不能被召唤 + 多人召唤 = 放弃被召唤
+	if (sd->vender_id && (battle_config.multiplayer_recall_behavior & 1) == 1 && multitransfer)
+		return SETPOS_AUTOTRADE;
+	// 开设了采购摊位 + 设为不能被召唤 + 多人召唤 = 放弃被召唤
+	if (sd->buyer_id && (battle_config.multiplayer_recall_behavior & 2) == 2 && multitransfer)
+		return SETPOS_AUTOTRADE;
+#endif // Pandas_BattleConfig_Multiplayer_Recall_Behavior
+
 	if( battle_config.revive_onwarp && pc_isdead(sd) ) { //Revive dead people before warping them
 		pc_setstand(sd, true);
 		pc_setrestartvalue(sd,1);

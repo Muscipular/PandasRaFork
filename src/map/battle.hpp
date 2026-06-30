@@ -806,6 +806,10 @@ struct Battle_Config
 	int32 atcmd_no_permission; // 当没有权限的玩家执行 GM 指令时的处理策略
 #endif // Pandas_BattleConfig_AtCmd_No_Permission
 
+#ifdef Pandas_BattleConfig_Multiplayer_Recall_Behavior
+	int32 multiplayer_recall_behavior; // 控制多人召唤时是否避开在线摆摊玩家
+#endif // Pandas_BattleConfig_Multiplayer_Recall_Behavior
+
 #ifdef Pandas_BattleConfig_Suspend_MonsterIgnore
 	int32 suspend_monsterignore; // 当玩家使用挂机系列指令时, 处于哪些模式不会被魔物攻击
 #endif // Pandas_BattleConfig_Suspend_MonsterIgnore

@@ -8413,6 +8413,9 @@ static const struct _battle_data {
 #ifdef Pandas_BattleConfig_AtCmd_No_Permission
 	{ "atcmd_no_permission",                &battle_config.atcmd_no_permission,             1,      0,      2,              },
 #endif // Pandas_BattleConfig_AtCmd_No_Permission
+#ifdef Pandas_BattleConfig_Multiplayer_Recall_Behavior
+	{ "multiplayer_recall_behavior",        &battle_config.multiplayer_recall_behavior,     3,      0,      3,              },
+#endif // Pandas_BattleConfig_Multiplayer_Recall_Behavior
 	{ "max_walk_speed",                     &battle_config.max_walk_speed,                  300,    100,    100*DEFAULT_WALK_SPEED, },
 	{ "max_lv",                             &battle_config.max_lv,                          99,     0,      MAX_LEVEL,      },
 	{ "aura_lv",                            &battle_config.aura_lv,                         99,     0,      INT_MAX,        },

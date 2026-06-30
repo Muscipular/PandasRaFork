@@ -436,6 +436,10 @@
 	// 此选项用于控制普通玩家无权执行 GM 指令时的处理策略
 	#define Pandas_BattleConfig_AtCmd_No_Permission
 
+	// 是否启用 multiplayer_recall_behavior 配置选项及其功能 [Sola丶小克]
+	// 此选项用于控制多人召回时是否避开在线摆摊或采购的玩家
+	#define Pandas_BattleConfig_Multiplayer_Recall_Behavior
+
 // 是否启用 suspend_monsterignore 配置选项及其功能 [Sola丶小克]
 // 此选项用于指定当玩家使用挂机系列指令时, 哪些模式不会被魔物攻击 (掩码选项)
 #define Pandas_BattleConfig_Suspend_MonsterIgnore
@@ -541,6 +545,10 @@
 
 	// PYHELP - CREATIVEWORK - INSERT POINT - <Section 1>
 #endif // Pandas_CreativeWork
+
+#ifndef Pandas_Support_Transfer_Autotrade_Player
+	#undef Pandas_BattleConfig_Multiplayer_Recall_Behavior
+#endif // Pandas_Support_Transfer_Autotrade_Player
 
 // ============================================================================
 // 脚本引擎修改组 - Pandas_ScriptEngine
