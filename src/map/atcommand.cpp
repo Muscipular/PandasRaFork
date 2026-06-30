@@ -11730,6 +11730,39 @@ ACMD_FUNC(title) {
 }
 #endif // Pandas_AtCommand_Title
 
+#ifdef Pandas_AtCommand_Aura
+/* ===========================================================
+ * 指令: aura
+ * 描述: 激活指定的光环组合
+ * 用法: @aura
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(aura) {
+	int32 input_aura_id = 0;
+
+	if (!message || !*message || sscanf(message, "%11d", &input_aura_id) < 1) {
+		clif_displaymessage(fd, msg_txt_cn(sd, 101));	// 使用方法: @aura <光环编号, 若设为 0 则取消光环>
+		clif_displaymessage(fd, msg_txt_cn(sd, 102));	// 光环编号定义在 db/aura_db.yml 的光环组合数据库中, 更多信息请查看数据库顶部的注释.
+		return -1;
+	}
+
+	if (input_aura_id < 0)
+		input_aura_id = 0;
+
+	uint32 aura_id = static_cast<uint32>(input_aura_id);
+
+	if (aura_id && !aura_search(aura_id)) {
+		clif_displaymessage(fd, msg_txt_cn(sd, 105));	// 很抱歉, 指定的光环编号无效, 请检查后重新输入.
+		return -1;
+	}
+
+	aura_make_effective(&sd->bl, aura_id);
+	clif_displaymessage(fd, msg_txt_cn(sd, aura_id ? 103 : 104));
+
+	return 0;
+}
+#endif // Pandas_AtCommand_Aura
+
 /**
  * Fills the reference of available commands in atcommand DBMap
  **/
@@ -11750,6 +11783,9 @@ void atcommand_basecommands(void) {
 #ifdef Pandas_AtCommand_Title
 		ACMD_DEF(title),				// 给角色设置一个指定的称号ID [Sola丶小克]
 #endif // Pandas_AtCommand_Title
+#ifdef Pandas_AtCommand_Aura
+		ACMD_DEF(aura),					// 激活指定的光环组合 [Sola丶小克]
+#endif // Pandas_AtCommand_Aura
 #include <custom/atcommand_def.inc>
 		ACMD_DEF(mapmove),
 		ACMD_DEF(where),
