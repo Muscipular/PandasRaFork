@@ -304,6 +304,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcFilter_UNEQUIP
 	"OnPCUnequipFilter", //unequip_filter_name
 #endif // Pandas_NpcFilter_UNEQUIP
+#ifdef Pandas_NpcFilter_SC_START
+	"OnPCBuffStartFilter", //sc_start_filter_name
+#endif // Pandas_NpcFilter_SC_START
 	// NPC related
 	"OnTouch_",	//ontouch_event_name (runs on first visible char to enter area, picks another char if the first char leaves)
 	"OnTouch",	//ontouch2_event_name (run whenever a char walks into the OnTouch area)

@@ -10413,6 +10413,30 @@ bool status_change_start(block_list* src, block_list* bl, sc_type type, int32 ra
 
 	int32 tick = (int32)duration;
 
+#ifdef Pandas_NpcFilter_SC_START
+	if (map_session_data* sd = BL_CAST(BL_PC, bl); sd != nullptr && sd->bl.type == BL_PC) {
+		pc_setreg(sd, add_str("@about2start_sc_id"), static_cast<int64>(type));
+		pc_setreg(sd, add_str("@about2start_sc_rate"), rate);
+		pc_setreg(sd, add_str("@about2start_sc_tick"), tick);
+		pc_setreg(sd, add_str("@about2start_sc_val1"), val1);
+		pc_setreg(sd, add_str("@about2start_sc_val2"), val2);
+		pc_setreg(sd, add_str("@about2start_sc_val3"), val3);
+		pc_setreg(sd, add_str("@about2start_sc_val4"), val4);
+
+		if (npc_script_filter(sd, NPCF_SC_START))
+			return false;
+
+		rate = static_cast<int32>(cap_value(pc_readreg(sd, add_str("@about2start_sc_rate")), 0, INT_MAX));
+		tick = static_cast<int32>(cap_value(pc_readreg(sd, add_str("@about2start_sc_tick")), -1, INT_MAX));
+		val1 = static_cast<int32>(cap_value(pc_readreg(sd, add_str("@about2start_sc_val1")), INT_MIN, INT_MAX));
+		val2 = static_cast<int32>(cap_value(pc_readreg(sd, add_str("@about2start_sc_val2")), INT_MIN, INT_MAX));
+		val3 = static_cast<int32>(cap_value(pc_readreg(sd, add_str("@about2start_sc_val3")), INT_MIN, INT_MAX));
+		val4 = static_cast<int32>(cap_value(pc_readreg(sd, add_str("@about2start_sc_val4")), INT_MIN, INT_MAX));
+
+		if (!rate || !tick)
+			return false;
+	}
+#endif // Pandas_NpcFilter_SC_START
 	// Type-specific checks that need to happen before the delay
 	switch (type) {
 		case SC_STONE:

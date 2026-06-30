@@ -195,7 +195,9 @@ struct Script_Config {
 #ifdef Pandas_NpcFilter_UNEQUIP
 	const char* unequip_filter_name;
 #endif // Pandas_NpcFilter_UNEQUIP
-
+#ifdef Pandas_NpcFilter_SC_START
+	const char* sc_start_filter_name;
+#endif // Pandas_NpcFilter_SC_START
 	// NPC related
 	const char* ontouch_event_name;
 	const char* ontouch2_event_name;

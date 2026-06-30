@@ -133,6 +133,7 @@
 			// 当玩家准备获得一个状态(Buff)时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCBuffStartFilter
 			// 常量名称: NPCF_SC_START / 变量名称: sc_start_filter_name
+			#define Pandas_NpcFilter_SC_START
 
 			// 当玩家使用菜单中的原地复活之证时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCUseReviveTokenFilter

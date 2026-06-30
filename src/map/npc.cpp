@@ -6499,6 +6499,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCF_UNEQUIP:
 		return script_config.unequip_filter_name;
 #endif // Pandas_NpcFilter_UNEQUIP
+#ifdef Pandas_NpcFilter_SC_START
+	case NPCF_SC_START:
+		return script_config.sc_start_filter_name;
+#endif // Pandas_NpcFilter_SC_START
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;
