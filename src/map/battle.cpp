@@ -8734,7 +8734,10 @@ static const struct _battle_data {
 	{ "revive_onwarp",                      &battle_config.revive_onwarp,                   1,      0,      1,              },
 	{ "fame_taekwon_mission",               &battle_config.fame_taekwon_mission,            1,      0,      INT_MAX,        },
 	{ "fame_refine_lv1",                    &battle_config.fame_refine_lv1,                 1,      0,      INT_MAX,        },
+#ifndef Pandas_BattleConfig_Verification
+	// 出现了重复定义, 这里先简单注释掉, 如果 rAthena 官方很久不改的话, 找个时间再提交个 PullRequest 修正下 [Sola丶小克]
 	{ "fame_refine_lv1",                    &battle_config.fame_refine_lv1,                 1,      0,      INT_MAX,        },
+#endif // Pandas_BattleConfig_Verification
 	{ "fame_refine_lv2",                    &battle_config.fame_refine_lv2,                 25,     0,      INT_MAX,        },
 	{ "fame_refine_lv3",                    &battle_config.fame_refine_lv3,                 1000,   0,      INT_MAX,        },
 	{ "fame_forge",                         &battle_config.fame_forge,                      10,     0,      INT_MAX,        },
@@ -8972,6 +8975,10 @@ static const struct _battle_data {
 #include <custom/battle_config_init.inc>
 };
 
+#ifdef Pandas_BattleConfig_Verification
+bool battle_data_isset[ARRAYLENGTH(battle_data)];
+#endif // Pandas_BattleConfig_Verification
+
 /*==========================
  * Set battle settings
  *--------------------------*/
@@ -8989,6 +8996,9 @@ int32 battle_set_value(const char* w1, const char* w2)
 		val = battle_data[i].defval;
 	}
 
+#ifdef Pandas_BattleConfig_Verification
+	battle_data_isset[i] = true;
+#endif // Pandas_BattleConfig_Verification
 	*battle_data[i].val = val;
 	return 1;
 }
@@ -9012,8 +9022,15 @@ int32 battle_get_value(const char* w1)
 void battle_set_defaults()
 {
 	int32 i;
+#ifndef Pandas_BattleConfig_Verification
 	for (i = 0; i < ARRAYLENGTH(battle_data); i++)
 		*battle_data[i].val = battle_data[i].defval;
+#else
+	for (i = 0; i < ARRAYLENGTH(battle_data); i++) {
+		*battle_data[i].val = battle_data[i].defval;
+		battle_data_isset[i] = false;
+	}
+#endif // Pandas_BattleConfig_Verification
 }
 
 /*==================================
@@ -9257,13 +9274,46 @@ int32 battle_config_read(const char* cfgName)
 					*symbol != atcommand_symbol)
 					charcommand_symbol = *symbol;
 			}else if( battle_set_value(w1, w2) == 0 )
+#ifndef Pandas_BattleConfig_Verification
 				ShowWarning("Unknown setting '%s' in file %s\n", w1, cfgName);
+#else
+				ShowWarning("Unknown battle configuration option '%s' in file %s\n", w1, cfgName);
+#endif // Pandas_BattleConfig_Verification
 		}
 
 		fclose(fp);
 	}
 
 	count--;
+
+#ifdef Pandas_BattleConfig_Verification
+	if (count == 0) {
+		int32 i = 0;
+
+		static const struct _battle_config_check_whitelist {
+			const char* name;
+		} bc_whitelist[] = {
+			{ "traps_setting" },
+			{ "item_enabled_npc" },
+			{ "guild_skill_relog_type" },				// 不同工作模式下拥有不同的默认值, 选项默认处于注释状态
+			{ "feature.instance_allow_reconnect" },		// 不同工作模式下拥有不同的默认值, 选项默认处于注释状态
+			{ "pet_hungry_friendly_decrease" },			// rAthena 对是否弃用此选项不明确, 先忽略检测
+			{ "hom_delay_reset_vaporize" },				// 不同工作模式下拥有不同的默认值, 选项默认处于注释状态
+			{ "hom_delay_reset_warp" },					// 不同工作模式下拥有不同的默认值, 选项默认处于注释状态
+			{ "alchemist_summon_setting" },				// 不同工作模式下拥有不同的默认值, 选项默认处于注释状态
+			{ "open_box_weight_rate" },					// 不同工作模式下拥有不同的默认值, 选项默认处于注释状态
+			{ "natural_heal_weight_rate" },				// 不同工作模式下拥有不同的默认值, 选项默认处于注释状态
+		};
+
+		for (i = 0; i < ARRAYLENGTH(battle_data); i++) {
+			int32 whiteidx = 0;
+			ARR_FIND(0, ARRAYLENGTH(bc_whitelist), whiteidx, strcmpi(bc_whitelist[whiteidx].name, battle_data[i].str) == 0);
+			if (!battle_data_isset[i] && whiteidx == ARRAYLENGTH(bc_whitelist)) {
+				ShowWarning("battle_config_read: '%s' can not be found in battle configuration files, defaulting to %d.\n", battle_data[i].str, battle_data[i].defval);
+			}
+		}
+	}
+#endif // Pandas_BattleConfig_Verification
 
 	if (count == 0)
 		battle_adjust_conf();
