@@ -20001,8 +20001,16 @@ void clif_parse_MoveItem( int32 fd, map_session_data* sd ){
 
 	if ( sd->inventory.u.items_inventory[index].favorite != 0 && p->favorite == true )
 		sd->inventory.u.items_inventory[index].favorite = 0;
-	else if( p->favorite == false )
+	else if( p->favorite == false ) {
+#ifdef Pandas_NpcFilter_FAVORITE_ADD
+		pc_setreg(sd, add_str("@favorite_nameid"), sd->inventory.u.items_inventory[index].nameid);
+		pc_setreg(sd, add_str("@favorite_amount"), sd->inventory.u.items_inventory[index].amount);
+		pc_setreg(sd, add_str("@favorite_idx"), index);
+		if (npc_script_filter(sd, NPCF_FAVORITE_ADD))
+			return;
+#endif // Pandas_NpcFilter_FAVORITE_ADD
 		sd->inventory.u.items_inventory[index].favorite = 1;
+	}
 	else
 		return;/* nothing to do. */
 

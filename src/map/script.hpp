@@ -240,6 +240,9 @@ struct Script_Config {
 #ifdef Pandas_NpcFilter_CART_DEL
 	const char* cart_del_filter_name;
 #endif // Pandas_NpcFilter_CART_DEL
+#ifdef Pandas_NpcFilter_FAVORITE_ADD
+	const char* favorite_add_filter_name;
+#endif // Pandas_NpcFilter_FAVORITE_ADD
 	// NPC related
 	const char* ontouch_event_name;
 	const char* ontouch2_event_name;

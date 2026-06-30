@@ -208,6 +208,7 @@
 			// 当玩家准备将道具移入收藏栏位时触发过滤器 [香草]
 			// 事件类型: Filter / 事件名称: OnPCFavoriteAddFilter
 			// 常量名称: NPCF_FAVORITE_ADD / 变量名称: favorite_add_filter_name
+			#define Pandas_NpcFilter_FAVORITE_ADD
 
 			// 当玩家准备将道具从收藏栏位移出时触发过滤器 [香草]
 			// 事件类型: Filter / 事件名称: OnPCFavoriteDelFilter

@@ -1693,6 +1693,9 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcFilter_CART_DEL
 	NPCF_CART_DEL,
 #endif // Pandas_NpcFilter_CART_DEL
+#ifdef Pandas_NpcFilter_FAVORITE_ADD
+	NPCF_FAVORITE_ADD,
+#endif // Pandas_NpcFilter_FAVORITE_ADD
 	NPCE_MAX
 };
 
