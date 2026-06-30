@@ -2968,7 +2968,11 @@ e_purchase_result npc_buylist( map_session_data* sd, std::vector<s_npc_buy_list>
 	struct npc_item_list *shop = nullptr;
 	double z;
 	int32 j,k,w,skill,new_;
+#ifndef Pandas_FuncExtend_Increase_Inventory
 	uint8 market_index[MAX_INVENTORY];
+#else
+	int32 market_index[MAX_INVENTORY];
+#endif // Pandas_FuncExtend_Increase_Inventory
 
 	nullpo_retr(e_purchase_result::PURCHASE_FAIL_COUNT, sd);
 

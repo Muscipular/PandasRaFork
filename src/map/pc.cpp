@@ -5804,10 +5804,18 @@ char pc_checkadditem( const map_session_data* sd, t_itemid nameid, int32 amount 
  * @param sd
  * @return Number of empty slots
  *------------------------------------------*/
+#ifndef Pandas_FuncExtend_Increase_Inventory
 uint8 pc_inventoryblank( const map_session_data* sd )
+#else
+uint16 pc_inventoryblank( const map_session_data* sd )
+#endif // Pandas_FuncExtend_Increase_Inventory
 {
 	uint16 i;
+#ifndef Pandas_FuncExtend_Increase_Inventory
 	uint8 b;
+#else
+	uint16 b;
+#endif // Pandas_FuncExtend_Increase_Inventory
 
 	nullpo_ret(sd);
 

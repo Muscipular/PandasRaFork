@@ -568,6 +568,7 @@
 	// 以便能够支持将背包的最大上限设置成超过 128 的值 [Sola丶小克]
 	// 提示: 根据目前的 struct item 和 struct s_storage 的体积情况,
 	// 应该可支持将 MAX_INVENTORY 调整到 800 左右, 但设置越大对性能影响会越大
+	#define Pandas_FuncExtend_Increase_Inventory
 
 	// 调整 atcommand.cpp 中 atcommand_reload 配置重载指令的逻辑 [Sola丶小克]
 	// 我们希望在执行某些 reload 指令 (@reloadbattleconf) 时能重新计算全服玩家的属性和能力值
