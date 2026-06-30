@@ -3,6 +3,7 @@
 	#define Pandas_Basic
 	#define Pandas_DatabaseIncrease
 	#define Pandas_InternalConfigure
+	#define Pandas_BattleConfigure
 	#define Pandas_StructIncrease
 	#define Pandas_FuncIncrease
 	#define Pandas_ScriptEngine
@@ -406,6 +407,7 @@
 // 战斗配置组 - Pandas_BattleConfigure
 // ============================================================================
 
+#ifdef Pandas_BattleConfigure
 // 是否启用 suspend_monsterignore 配置选项及其功能 [Sola丶小克]
 // 此选项用于指定当玩家使用挂机系列指令时, 哪些模式不会被魔物攻击 (掩码选项)
 #define Pandas_BattleConfig_Suspend_MonsterIgnore
@@ -461,6 +463,9 @@
 // 是否启用 mob_setunitdata_persistence 配置选项及其功能 [Sola丶小克]
 // 此选项用于高优先级持久化保存 setunitdata 对魔物的设置
 #define Pandas_BattleConfig_Mob_SetUnitData_Persistence
+
+	// PYHELP - BATTLECONFIG - INSERT POINT - <Section 1>
+#endif // Pandas_BattleConfigure
 
 // ============================================================================
 // 函数修改组 - Pandas_FuncIncrease
