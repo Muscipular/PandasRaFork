@@ -709,6 +709,7 @@
 		#define Pandas_ScriptCommand_BattleRecordReset
 		// 是否启用 enable_batrec 脚本指令 [Sola丶小克]
 		// 该指令用于启用指定单位的战斗记录
+		#define Pandas_ScriptCommand_EnableBattleRecord
 		// 是否启用 disable_batrec 脚本指令 [Sola丶小克]
 		// 该指令用于禁用指定单位的战斗记录
 	#endif // Pandas_BattleRecord
