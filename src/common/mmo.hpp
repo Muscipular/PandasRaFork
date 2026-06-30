@@ -610,7 +610,7 @@ struct s_elemental {
 	int16 class_;
 	int32 mode;
 	int32 hp, sp, max_hp, max_sp, matk, atk, atk2;
-	int16 hit, flee, amotion, def, mdef;
+	pec_int16 hit, flee, amotion, def, mdef;
 	t_tick life_time;
 };
 
@@ -662,8 +662,8 @@ struct mmo_charstatus {
 
 	char name[NAME_LENGTH];
 	uint32 base_level,job_level;
-	uint16 str,agi,vit,int_,dex,luk;
-	uint16 pow,sta,wis,spl,con,crt;
+	pec_uint16 str,agi,vit,int_,dex,luk;
+	pec_uint16 pow,sta,wis,spl,con,crt;
 	unsigned char slot,sex;
 
 	uint32 mapip;

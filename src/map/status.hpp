@@ -3359,11 +3359,11 @@ enum e_refine_chance_type {
 * Required because players have two of these, one in status_data
 * and another for their left hand weapon. */
 struct weapon_atk {
-	uint16 atk, atk2;
+	pec_uint16 atk, atk2;
 	uint16 range;
 	unsigned char ele;
 #ifdef RENEWAL
-	uint16 matk;
+	pec_uint16 matk;
 	unsigned char wlv;
 #endif
 };
@@ -3377,12 +3377,12 @@ struct status_data {
 	uint32 max_hp;
 	uint32 max_sp;
 	uint32 max_ap;
-	int16
+	pec_uint16	// 原始类型为: int16, 我们改成 uint16
 		str, agi, vit, int_, dex, luk,
 		pow, sta, wis, spl, con, crt,
 		eatk;
 	int32 batk;
-	uint16
+	pec_uint16
 #ifdef RENEWAL
 		watk,
 		watk2,
@@ -3391,7 +3391,7 @@ struct status_data {
 		speed,
 		amotion, clientamotion, adelay, dmotion;
 	int32 mode;
-	int16
+	pec_int16
 		hit, flee, cri, flee2,
 		def2, mdef2,
 #ifdef RENEWAL_ASPD
@@ -3404,7 +3404,7 @@ struct status_data {
 	/**
 	 * defType is RENEWAL dependent and defined in src/config/const.hpp
 	 **/
-	defType def,mdef;
+	pec_defType def,mdef;
 
 	unsigned char
 		def_ele, ele_lv,
@@ -3603,7 +3603,7 @@ int32 status_get_lv(const block_list *bl);
 #define status_get_crt(bl) status_get_status_data(*bl)->crt
 #define status_get_hit(bl) status_get_status_data(*bl)->hit
 #define status_get_flee(bl) status_get_status_data(*bl)->flee
-defType status_get_def( const block_list* bl );
+pec_defType status_get_def( const block_list* bl );
 #define status_get_mdef(bl) status_get_status_data(*bl)->mdef
 #define status_get_flee2(bl) status_get_status_data(*bl)->flee2
 #define status_get_def2(bl) status_get_status_data(*bl)->def2
@@ -3732,18 +3732,18 @@ bool status_check_visibility(const block_list* src, const block_list* target, bo
 int32 status_change_spread(block_list *src, block_list *bl);
 
 #ifndef RENEWAL
-uint16 status_base_matk_min(const struct status_data* status);
-uint16 status_base_matk_max(const struct status_data* status);
+pec_uint16 status_base_matk_min(const struct status_data* status);
+pec_uint16 status_base_matk_max(const struct status_data* status);
 #else
-uint16 status_base_atk_min( const block_list* bl, const status_data* status, int32 level );
-uint16 status_base_atk_max( const block_list* bl, const status_data* status, int32 level );
-uint16 status_base_matk_min( const block_list* bl, const status_data* status, int32 level );
-uint16 status_base_matk_max( const block_list* bl, const status_data* status, int32 level );
+pec_uint16 status_base_atk_min( const block_list* bl, const status_data* status, int32 level );
+pec_uint16 status_base_atk_max( const block_list* bl, const status_data* status, int32 level );
+pec_uint16 status_base_matk_min( const block_list* bl, const status_data* status, int32 level );
+pec_uint16 status_base_matk_max( const block_list* bl, const status_data* status, int32 level );
 #endif
-uint16 status_calc_consumablematk( status_change *sc, int32 matk );
-uint16 status_calc_pseudobuff_matk( map_session_data *sd, status_change *sc, int32 matk );
+pec_uint16 status_calc_consumablematk( status_change *sc, int32 matk );
+pec_uint16 status_calc_pseudobuff_matk( map_session_data *sd, status_change *sc, int32 matk );
 
-uint16 status_base_atk(const block_list *bl, const struct status_data *status, int32 level);
+pec_uint16 status_base_atk(const block_list *bl, const struct status_data *status, int32 level);
 
 // Status changes accessors for StatusChange database
 uint16 status_efst_get_bl_type(enum efst_type efst);

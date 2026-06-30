@@ -80,40 +80,40 @@ int16 current_equip_opt_index; /// Contains random option index of an equipped i
 
 uint16 SCDisabled[SC_MAX]; ///< List of disabled SC on map zones. [Cydh]
 
-static uint16 status_calc_str(block_list *,status_change *,int32);
-static uint16 status_calc_agi(block_list *,status_change *,int32);
-static uint16 status_calc_vit(block_list *,status_change *,int32);
-static uint16 status_calc_int(block_list *,status_change *,int32);
-static uint16 status_calc_dex(block_list *,status_change *,int32);
-static uint16 status_calc_luk(block_list *,status_change *,int32);
-static uint16 status_calc_pow(block_list *, status_change *, int32);
-static uint16 status_calc_sta(block_list *, status_change *, int32);
-static uint16 status_calc_wis(block_list *, status_change *, int32);
-static uint16 status_calc_spl(block_list *, status_change *, int32);
-static uint16 status_calc_con(block_list *, status_change *, int32);
-static uint16 status_calc_crt(block_list *, status_change *, int32);
+static pec_uint16 status_calc_str(block_list *,status_change *,int32);
+static pec_uint16 status_calc_agi(block_list *,status_change *,int32);
+static pec_uint16 status_calc_vit(block_list *,status_change *,int32);
+static pec_uint16 status_calc_int(block_list *,status_change *,int32);
+static pec_uint16 status_calc_dex(block_list *,status_change *,int32);
+static pec_uint16 status_calc_luk(block_list *,status_change *,int32);
+static pec_uint16 status_calc_pow(block_list *, status_change *, int32);
+static pec_uint16 status_calc_sta(block_list *, status_change *, int32);
+static pec_uint16 status_calc_wis(block_list *, status_change *, int32);
+static pec_uint16 status_calc_spl(block_list *, status_change *, int32);
+static pec_uint16 status_calc_con(block_list *, status_change *, int32);
+static pec_uint16 status_calc_crt(block_list *, status_change *, int32);
 static int32 status_calc_batk(block_list *, status_change *, int32);
-static uint16 status_calc_watk(block_list *,status_change *,int32);
-static int16 status_calc_hit(block_list *,status_change *,int32);
-static int16 status_calc_critical(block_list *,status_change *,int32);
-static int16 status_calc_flee(block_list *,status_change *,int32);
-static int16 status_calc_flee2(block_list *,status_change *,int32);
-static defType status_calc_def(block_list *bl, status_change *sc, int32);
-static int16 status_calc_def2(block_list *,status_change *,int32);
-static defType status_calc_mdef(block_list *bl, status_change *sc, int32);
-static int16 status_calc_mdef2(block_list *,status_change *,int32);
-static uint16 status_calc_speed(block_list *,status_change *,int32);
-static int16 status_calc_aspd_rate(block_list *,status_change *,int32);
+static pec_uint16 status_calc_watk(block_list *,status_change *,int32);
+static pec_int16 status_calc_hit(block_list *,status_change *,int32);
+static pec_int16 status_calc_critical(block_list *,status_change *,int32);
+static pec_int16 status_calc_flee(block_list *,status_change *,int32);
+static pec_int16 status_calc_flee2(block_list *,status_change *,int32);
+static pec_defType status_calc_def(block_list *bl, status_change *sc, int32);
+static pec_int16 status_calc_def2(block_list *,status_change *,int32);
+static pec_defType status_calc_mdef(block_list *bl, status_change *sc, int32);
+static pec_int16 status_calc_mdef2(block_list *,status_change *,int32);
+static pec_uint16 status_calc_speed(block_list *,status_change *,int32);
+static pec_int16 status_calc_aspd_rate(block_list *,status_change *,int32);
 #ifdef RENEWAL_ASPD
 static int16 status_calc_aspd(block_list *bl, status_change *sc, bool fixed);
 #endif
 static int16 status_calc_fix_aspd(block_list *bl, status_change *sc, int32);
-static int16 status_calc_patk(block_list *, status_change *, int32);
-static int16 status_calc_smatk(block_list *, status_change *, int32);
-static int16 status_calc_res(block_list *, status_change *, int32);
-static int16 status_calc_mres(block_list *, status_change *, int32);
-static int16 status_calc_hplus(block_list *, status_change *, int32);
-static int16 status_calc_crate(block_list *, status_change *, int32);
+static pec_int16 status_calc_patk(block_list *, status_change *, int32);
+static pec_int16 status_calc_smatk(block_list *, status_change *, int32);
+static pec_int16 status_calc_res(block_list *, status_change *, int32);
+static pec_int16 status_calc_mres(block_list *, status_change *, int32);
+static pec_int16 status_calc_hplus(block_list *, status_change *, int32);
+static pec_int16 status_calc_crate(block_list *, status_change *, int32);
 static uint32 status_calc_maxhp(block_list *bl, uint64 maxhp);
 static uint32 status_calc_maxsp(block_list *bl, uint64 maxsp);
 static uint32 status_calc_maxap(block_list *bl, uint64 maxap);
@@ -2444,7 +2444,7 @@ int32 status_base_amotion_pc(map_session_data* sd, struct status_data* status)
  * @param status: Object status
  * @return base attack
  */
-uint16 status_base_atk(const block_list *bl, const struct status_data *status, int32 level)
+pec_uint16 status_base_atk(const block_list *bl, const struct status_data *status, int32 level)
 {
 	int32 flag = 0, str, dex, dstr;
 
@@ -2515,7 +2515,7 @@ uint16 status_base_atk(const block_list *bl, const struct status_data *status, i
 			break;
 	}
 
-	return cap_value(str, 0, USHRT_MAX);
+	return cap_value(str, 0, PEC_USHRT_MAX);
 }
 
 #ifdef RENEWAL
@@ -2531,10 +2531,10 @@ uint32 status_weapon_atk( const weapon_atk& wa ){
 #endif
 
 #ifndef RENEWAL
-uint16 status_base_matk_min( const status_data* status ) {
+pec_uint16 status_base_matk_min( const status_data* status ) {
 	return status->int_ + (status->int_ / 7) * (status->int_ / 7);
 }
-uint16 status_base_matk_max( const status_data* status ) {
+pec_uint16 status_base_matk_max( const status_data* status ) {
 	return status->int_ + (status->int_ / 5) * (status->int_ / 5);
 }
 #else
@@ -2542,7 +2542,7 @@ uint16 status_base_matk_max( const status_data* status ) {
 * Calculates minimum attack variance 80% from db's ATK1 for non BL_PC
 * status->batk (base attack) will be added in battle_calc_base_damage
 */
-uint16 status_base_atk_min( const block_list* bl, const status_data* status, int32 level )
+pec_uint16 status_base_atk_min( const block_list* bl, const status_data* status, int32 level )
 {
 	switch (bl->type) {
 		case BL_PET:
@@ -2561,7 +2561,7 @@ uint16 status_base_atk_min( const block_list* bl, const status_data* status, int
 * Calculates maximum attack variance 120% from db's ATK1 for non BL_PC
 * status->batk (base attack) will be added in battle_calc_base_damage
 */
-uint16 status_base_atk_max( const block_list* bl, const status_data* status, int32 level )
+pec_uint16 status_base_atk_max( const block_list* bl, const status_data* status, int32 level )
 {
 	switch (bl->type) {
 		case BL_PET:
@@ -2579,7 +2579,7 @@ uint16 status_base_atk_max( const block_list* bl, const status_data* status, int
 /*
 * Calculates minimum magic attack
 */
-uint16 status_base_matk_min( const block_list* bl, const status_data* status, int32 level )
+pec_uint16 status_base_matk_min( const block_list* bl, const status_data* status, int32 level )
 {
 	switch (bl->type) {
 		case BL_PET:
@@ -2598,7 +2598,7 @@ uint16 status_base_matk_min( const block_list* bl, const status_data* status, in
 /*
 * Calculates maximum magic attack
 */
-uint16 status_base_matk_max( const block_list* bl, const status_data* status, int32 level )
+pec_uint16 status_base_matk_max( const block_list* bl, const status_data* status, int32 level )
 {
 	switch (bl->type) {
 		case BL_PET:
@@ -2641,34 +2641,34 @@ void status_calc_misc(block_list *bl, struct status_data *status, int32 level)
 	if (bl->type == BL_HOM) {
 		// Def2
 		stat = status_get_homvit(bl) + status_get_homagi(bl) / 2;
-		status->def2 = cap_value(stat, 0, SHRT_MAX);
+		status->def2 = cap_value(stat, 0, PEC_SHRT_MAX);
 		// Mdef2
 		stat = (status_get_homvit(bl) + status_get_homint(bl)) / 2;
-		status->mdef2 = cap_value(stat, 0, SHRT_MAX);
+		status->mdef2 = cap_value(stat, 0, PEC_SHRT_MAX);
 		// Def
 		stat = status->def;
 		stat += status_get_homvit(bl) + level / 2;
-		status->def = cap_value(stat, 0, SHRT_MAX);
+		status->def = cap_value(stat, 0, PEC_SHRT_MAX);
 		// Mdef
 		stat = (int32)(((float)status_get_homvit(bl) + level) / 4 + (float)status_get_homint(bl) / 2);
-		status->mdef = cap_value(stat, 0, SHRT_MAX);
+		status->mdef = cap_value(stat, 0, PEC_SHRT_MAX);
 		// Hit
 		stat = level + status->dex + 150;
-		status->hit = cap_value(stat, 1, SHRT_MAX);
+		status->hit = cap_value(stat, 1, PEC_SHRT_MAX);
 		// Flee
 		stat = level + status_get_homagi(bl);
-		status->flee = cap_value(stat, 1, SHRT_MAX);
+		status->flee = cap_value(stat, 1, PEC_SHRT_MAX);
 	} else {
 		// Hit
 		stat = status->hit;
 		stat += level + status->dex + (bl->type == BL_PC ? status->luk / 3 + 175 : 150); //base level + ( every 1 dex = +1 hit ) + (every 3 luk = +1 hit) + 175
 		stat += 2 * status->con;
-		status->hit = cap_value(stat, 1, SHRT_MAX);
+		status->hit = cap_value(stat, 1, PEC_SHRT_MAX);
 		// Flee
 		stat = status->flee;
 		stat += level + status->agi + (bl->type == BL_MER ? 0 : bl->type == BL_PC ? status->luk / 5 : 0) + 100; //base level + ( every 1 agi = +1 flee ) + (every 5 luk = +1 flee) + 100
 		stat += 2 * status->con;
-		status->flee = cap_value(stat, 1, SHRT_MAX);
+		status->flee = cap_value(stat, 1, PEC_SHRT_MAX);
 		// Def2
 		if (bl->type == BL_MER)
 			stat = (int32)(status->vit + ((float)level / 10) + ((float)status->vit / 5));
@@ -2676,7 +2676,7 @@ void status_calc_misc(block_list *bl, struct status_data *status, int32 level)
 			stat = status->def2;
 			stat += (int32)(((float)level + status->vit) / 2 + (bl->type == BL_PC ? ((float)status->agi / 5) : 0)); //base level + (every 2 vit = +1 def) + (every 5 agi = +1 def)
 		}
-		status->def2 = cap_value(stat, 0, SHRT_MAX);
+		status->def2 = cap_value(stat, 0, PEC_SHRT_MAX);
 		// Mdef2
 		if (bl->type == BL_MER)
 			stat = (int32)(((float)level / 10) + ((float)status->int_ / 5));
@@ -2684,31 +2684,31 @@ void status_calc_misc(block_list *bl, struct status_data *status, int32 level)
 			stat = status->mdef2;
 			stat += (int32)(bl->type == BL_PC ? (status->int_ + ((float)level / 4) + ((float)(status->dex + status->vit) / 5)) : ((float)(status->int_ + level) / 4)); //(every 4 base level = +1 mdef) + (every 1 int32 = +1 mdef) + (every 5 dex = +1 mdef) + (every 5 vit = +1 mdef)
 		}
-		status->mdef2 = cap_value(stat, 0, SHRT_MAX);
+		status->mdef2 = cap_value(stat, 0, PEC_SHRT_MAX);
 		// PAtk
 		stat = status->patk;
 		stat += status->pow / 3 + status->con / 5;
-		status->patk = cap_value(stat, 0, SHRT_MAX);
+		status->patk = cap_value(stat, 0, PEC_SHRT_MAX);
 		// SMatk
 		stat = status->smatk;
 		stat += status->spl / 3 + status->con / 5;
-		status->smatk = cap_value(stat, 0, SHRT_MAX);
+		status->smatk = cap_value(stat, 0, PEC_SHRT_MAX);
 		// Res
 		stat = status->res;
 		stat += status->sta + status->sta / 3 * 5;
-		status->res = cap_value(stat, 0, SHRT_MAX);
+		status->res = cap_value(stat, 0, PEC_SHRT_MAX);
 		// Mres
 		stat = status->mres;
 		stat += status->wis + status->wis / 3 * 5;
-		status->mres = cap_value(stat, 0, SHRT_MAX);
+		status->mres = cap_value(stat, 0, PEC_SHRT_MAX);
 		// HPlus
 		stat = status->hplus;
 		stat += status->crt;
-		status->hplus = cap_value(stat, 0, SHRT_MAX);
+		status->hplus = cap_value(stat, 0, PEC_SHRT_MAX);
 		// CRate
 		stat = status->crate;
 		stat += status->crt / 3;
-		status->crate = cap_value(stat, 0, SHRT_MAX);
+		status->crate = cap_value(stat, 0, PEC_SHRT_MAX);
 	}
 
 	// ATK
@@ -2727,19 +2727,19 @@ void status_calc_misc(block_list *bl, struct status_data *status, int32 level)
 	// Hit
 	stat = status->hit;
 	stat += level + status->dex;
-	status->hit = cap_value(stat, 1, SHRT_MAX);
+	status->hit = cap_value(stat, 1, PEC_SHRT_MAX);
 	// Flee
 	stat = status->flee;
 	stat += level + status->agi;
-	status->flee = cap_value(stat, 1, SHRT_MAX);
+	status->flee = cap_value(stat, 1, PEC_SHRT_MAX);
 	// Def2
 	stat = status->def2;
 	stat += status->vit;
-	status->def2 = cap_value(stat, 0, SHRT_MAX);
+	status->def2 = cap_value(stat, 0, PEC_SHRT_MAX);
 	// Mdef2
 	stat = status->mdef2;
 	stat += status->int_ + (status->vit / 2);
-	status->mdef2 = cap_value(stat, 0, SHRT_MAX);
+	status->mdef2 = cap_value(stat, 0, PEC_SHRT_MAX);
 #endif
 
 	//Critical
@@ -2751,14 +2751,14 @@ void status_calc_misc(block_list *bl, struct status_data *status, int32 level)
 #else
 		stat += 10 + (status->luk*10/3); // (every 1 luk = +0.3 critical)
 #endif
-		status->cri = cap_value(stat, 1, SHRT_MAX);
+		status->cri = cap_value(stat, 1, PEC_SHRT_MAX);
 	} else
 		status->cri = 0;
 
 	if (bl->type&battle_config.enable_perfect_flee) {
 		stat = status->flee2;
 		stat += status->luk + 10; // (every 10 luk = +1 perfect flee)
-		status->flee2 = cap_value(stat, 0, SHRT_MAX);
+		status->flee2 = cap_value(stat, 0, PEC_SHRT_MAX);
 	} else
 		status->flee2 = 0;
 
@@ -2768,7 +2768,7 @@ void status_calc_misc(block_list *bl, struct status_data *status, int32 level)
 		switch (bl->type) {
 			case BL_MOB:
 				if(battle_config.mob_critical_rate != 100)
-					status->cri = cap_value(status->cri*battle_config.mob_critical_rate/100,1,SHRT_MAX);
+					status->cri = cap_value(status->cri*battle_config.mob_critical_rate/100,1,PEC_SHRT_MAX);
 				if(!status->cri && battle_config.mob_critical_rate)
 					status->cri = 10;
 				break;
@@ -2777,7 +2777,7 @@ void status_calc_misc(block_list *bl, struct status_data *status, int32 level)
 				break;
 			default:
 				if(battle_config.critical_rate != 100)
-					status->cri = cap_value(status->cri*battle_config.critical_rate/100,1,SHRT_MAX);
+					status->cri = cap_value(status->cri*battle_config.critical_rate/100,1,PEC_SHRT_MAX);
 				if (!status->cri && battle_config.critical_rate)
 					status->cri = 10;
 		}
@@ -4315,29 +4315,29 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 
 	// Bonuses from cards and equipment as well as base stat, remember to avoid overflows.
 	i = base_status->str + sd->status.str + sd->indexed_bonus.param_bonus[PARAM_STR] + sd->indexed_bonus.param_equip[PARAM_STR];
-	base_status->str = cap_value(i,0,USHRT_MAX);
+	base_status->str = cap_value(i,0,PEC_USHRT_MAX);
 	i = base_status->agi + sd->status.agi + sd->indexed_bonus.param_bonus[PARAM_AGI] + sd->indexed_bonus.param_equip[PARAM_AGI];
-	base_status->agi = cap_value(i,0,USHRT_MAX);
+	base_status->agi = cap_value(i,0,PEC_USHRT_MAX);
 	i = base_status->vit + sd->status.vit + sd->indexed_bonus.param_bonus[PARAM_VIT] + sd->indexed_bonus.param_equip[PARAM_VIT];
-	base_status->vit = cap_value(i,0,USHRT_MAX);
+	base_status->vit = cap_value(i,0,PEC_USHRT_MAX);
 	i = base_status->int_+ sd->status.int_+ sd->indexed_bonus.param_bonus[PARAM_INT] + sd->indexed_bonus.param_equip[PARAM_INT];
-	base_status->int_ = cap_value(i,0,USHRT_MAX);
+	base_status->int_ = cap_value(i,0,PEC_USHRT_MAX);
 	i = base_status->dex + sd->status.dex + sd->indexed_bonus.param_bonus[PARAM_DEX] + sd->indexed_bonus.param_equip[PARAM_DEX];
-	base_status->dex = cap_value(i,0,USHRT_MAX);
+	base_status->dex = cap_value(i,0,PEC_USHRT_MAX);
 	i = base_status->luk + sd->status.luk + sd->indexed_bonus.param_bonus[PARAM_LUK] + sd->indexed_bonus.param_equip[PARAM_LUK];
-	base_status->luk = cap_value(i,0,USHRT_MAX);
+	base_status->luk = cap_value(i,0,PEC_USHRT_MAX);
 	i = base_status->pow + sd->status.pow + sd->indexed_bonus.param_bonus[PARAM_POW] + sd->indexed_bonus.param_equip[PARAM_POW];
-	base_status->pow = cap_value(i, 0, USHRT_MAX);
+	base_status->pow = cap_value(i, 0, PEC_USHRT_MAX);
 	i = base_status->sta + sd->status.sta + sd->indexed_bonus.param_bonus[PARAM_STA] + sd->indexed_bonus.param_equip[PARAM_STA];
-	base_status->sta = cap_value(i, 0, USHRT_MAX);
+	base_status->sta = cap_value(i, 0, PEC_USHRT_MAX);
 	i = base_status->wis + sd->status.wis + sd->indexed_bonus.param_bonus[PARAM_WIS] + sd->indexed_bonus.param_equip[PARAM_WIS];
-	base_status->wis = cap_value(i, 0, USHRT_MAX);
+	base_status->wis = cap_value(i, 0, PEC_USHRT_MAX);
 	i = base_status->spl + sd->status.spl + sd->indexed_bonus.param_bonus[PARAM_SPL] + sd->indexed_bonus.param_equip[PARAM_SPL];
-	base_status->spl = cap_value(i, 0, USHRT_MAX);
+	base_status->spl = cap_value(i, 0, PEC_USHRT_MAX);
 	i = base_status->con + sd->status.con + sd->indexed_bonus.param_bonus[PARAM_CON] + sd->indexed_bonus.param_equip[PARAM_CON];
-	base_status->con = cap_value(i, 0, USHRT_MAX);
+	base_status->con = cap_value(i, 0, PEC_USHRT_MAX);
 	i = base_status->crt + sd->status.crt + sd->indexed_bonus.param_bonus[PARAM_CRT] + sd->indexed_bonus.param_equip[PARAM_CRT];
-	base_status->crt = cap_value(i, 0, USHRT_MAX);
+	base_status->crt = cap_value(i, 0, PEC_USHRT_MAX);
 
 	if (sd->special_state.no_walk_delay) {
 		if (sc->getSCE(SC_ENDURE)) {
@@ -4462,7 +4462,7 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 	if(sd->critical_rate < 0)
 		sd->critical_rate = 0;
 	if(sd->critical_rate != 100)
-		base_status->cri = cap_value(base_status->cri * sd->critical_rate/100,SHRT_MIN,SHRT_MAX);
+		base_status->cri = cap_value(base_status->cri * sd->critical_rate/100,PEC_SHRT_MIN,PEC_SHRT_MAX);
 	if (pc_checkskill(sd, SU_POWEROFLIFE) > 0)
 		base_status->cri += 200;
 
@@ -4603,7 +4603,7 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 		sd->def_rate = 0;
 	if(sd->def_rate != 100) {
 		i = base_status->def * sd->def_rate/100;
-		base_status->def = cap_value(i, DEFTYPE_MIN, DEFTYPE_MAX);
+		base_status->def = cap_value(i, PEC_DEFTYPE_MIN, PEC_DEFTYPE_MAX);
 	}
 
 	if(pc_ismadogear(sd) && pc_checkskill(sd, NC_MAINFRAME) > 0)
@@ -4623,7 +4623,7 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 		sd->mdef_rate = 0;
 	if(sd->mdef_rate != 100) {
 		i =  base_status->mdef * sd->mdef_rate/100;
-		base_status->mdef = cap_value(i, DEFTYPE_MIN, DEFTYPE_MAX);
+		base_status->mdef = cap_value(i, PEC_DEFTYPE_MIN, PEC_DEFTYPE_MAX);
 	}
 
 #ifndef RENEWAL
@@ -6306,8 +6306,8 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 			matk_max += 3 * sd->soulball;
 		}
 
-		status->matk_min = static_cast<uint16>( cap_value(matk_min,0,USHRT_MAX) );
-		status->matk_max = static_cast<uint16>( cap_value(matk_max,0,USHRT_MAX) );
+		status->matk_min = static_cast<pec_uint16>( cap_value(matk_min,0,PEC_USHRT_MAX) );
+		status->matk_max = static_cast<pec_uint16>( cap_value(matk_max,0,PEC_USHRT_MAX) );
 #else
 		// MATK = StatusMATK + WeaponMATK + ExtraMATK
 		int32 lv = status_get_lv(&bl);
@@ -6391,8 +6391,8 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 			matk_max = matk_max * sd->matk_rate / 100;
 		}
 
-		status->matk_min = static_cast<uint16>( cap_value(matk_min,0,USHRT_MAX) );
-		status->matk_max = static_cast<uint16>( cap_value(matk_max,0,USHRT_MAX) );
+		status->matk_min = static_cast<pec_uint16>( cap_value(matk_min,0,PEC_USHRT_MAX) );
+		status->matk_max = static_cast<pec_uint16>( cap_value(matk_max,0,PEC_USHRT_MAX) );
 #endif
 	}
 
@@ -6878,14 +6878,14 @@ void status_calc_bl_(block_list* bl, std::bitset<SCB_MAX> flag, uint8 opt)
  * @param str: Initial str
  * @return modified str with cap_value(str,0,USHRT_MAX)
  */
-static uint16 status_calc_str(block_list *bl, status_change *sc, int32 str)
+static pec_uint16 status_calc_str(block_list *bl, status_change *sc, int32 str)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(str,0,USHRT_MAX);
+		return cap_value(str,0,PEC_USHRT_MAX);
 
 	if(sc->getSCE(SC_HARMONIZE)) {
 		str -= sc->getSCE(SC_HARMONIZE)->val2;
-		return (uint16)cap_value(str,0,USHRT_MAX);
+		return (pec_uint16)cap_value(str,0,PEC_USHRT_MAX);
 	}
 	if(sc->getSCE(SC_INCALLSTATUS))
 		str += sc->getSCE(SC_INCALLSTATUS)->val1;
@@ -6943,7 +6943,7 @@ static uint16 status_calc_str(block_list *bl, status_change *sc, int32 str)
 		str -= sc->getSCE(SC_ALL_STAT_DOWN)->val2;
 
 	//TODO: Stat points should be able to be decreased below 0
-	return (uint16)cap_value(str,0,USHRT_MAX);
+	return (pec_uint16)cap_value(str,0,PEC_USHRT_MAX);
 }
 
 /**
@@ -6953,14 +6953,14 @@ static uint16 status_calc_str(block_list *bl, status_change *sc, int32 str)
  * @param agi: Initial agi
  * @return modified agi with cap_value(agi,0,USHRT_MAX)
  */
-static uint16 status_calc_agi(block_list *bl, status_change *sc, int32 agi)
+static pec_uint16 status_calc_agi(block_list *bl, status_change *sc, int32 agi)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(agi,0,USHRT_MAX);
+		return cap_value(agi,0,PEC_USHRT_MAX);
 
 	if(sc->getSCE(SC_HARMONIZE)) {
 		agi -= sc->getSCE(SC_HARMONIZE)->val2;
-		return (uint16)cap_value(agi,0,USHRT_MAX);
+		return (pec_uint16)cap_value(agi,0,PEC_USHRT_MAX);
 	}
 	if(sc->getSCE(SC_CONCENTRATE) && !sc->getSCE(SC_QUAGMIRE))
 		agi += (agi-sc->getSCE(SC_CONCENTRATE)->val3)*sc->getSCE(SC_CONCENTRATE)->val2/100;
@@ -7016,7 +7016,7 @@ static uint16 status_calc_agi(block_list *bl, status_change *sc, int32 agi)
 		agi -= sc->getSCE(SC_ALL_STAT_DOWN)->val2;
 
 	//TODO: Stat points should be able to be decreased below 0
-	return (uint16)cap_value(agi,0,USHRT_MAX);
+	return (pec_uint16)cap_value(agi,0,PEC_USHRT_MAX);
 }
 
 /**
@@ -7026,14 +7026,14 @@ static uint16 status_calc_agi(block_list *bl, status_change *sc, int32 agi)
  * @param vit: Initial vit
  * @return modified vit with cap_value(vit,0,USHRT_MAX)
  */
-static uint16 status_calc_vit(block_list *bl, status_change *sc, int32 vit)
+static pec_uint16 status_calc_vit(block_list *bl, status_change *sc, int32 vit)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(vit,0,USHRT_MAX);
+		return cap_value(vit,0,PEC_USHRT_MAX);
 
 	if(sc->getSCE(SC_HARMONIZE)) {
 		vit -= sc->getSCE(SC_HARMONIZE)->val2;
-		return (uint16)cap_value(vit,0,USHRT_MAX);
+		return (pec_uint16)cap_value(vit,0,PEC_USHRT_MAX);
 	}
 	if(sc->getSCE(SC_INCALLSTATUS))
 		vit += sc->getSCE(SC_INCALLSTATUS)->val1;
@@ -7077,7 +7077,7 @@ static uint16 status_calc_vit(block_list *bl, status_change *sc, int32 vit)
 		vit -= sc->getSCE(SC_ALL_STAT_DOWN)->val2;
 
 	//TODO: Stat points should be able to be decreased below 0
-	return (uint16)cap_value(vit,0,USHRT_MAX);
+	return (pec_uint16)cap_value(vit,0,PEC_USHRT_MAX);
 }
 
 /**
@@ -7087,14 +7087,14 @@ static uint16 status_calc_vit(block_list *bl, status_change *sc, int32 vit)
  * @param int_: Initial int32
  * @return modified int32 with cap_value(int_,0,USHRT_MAX)
  */
-static uint16 status_calc_int(block_list *bl, status_change *sc, int32 int_)
+static pec_uint16 status_calc_int(block_list *bl, status_change *sc, int32 int_)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(int_,0,USHRT_MAX);
+		return cap_value(int_,0,PEC_USHRT_MAX);
 
 	if(sc->getSCE(SC_HARMONIZE)) {
 		int_ -= sc->getSCE(SC_HARMONIZE)->val2;
-		return (uint16)cap_value(int_,0,USHRT_MAX);
+		return (pec_uint16)cap_value(int_,0,PEC_USHRT_MAX);
 	}
 	if(sc->getSCE(SC_INCALLSTATUS))
 		int_ += sc->getSCE(SC_INCALLSTATUS)->val1;
@@ -7155,7 +7155,7 @@ static uint16 status_calc_int(block_list *bl, status_change *sc, int32 int_)
 		int_ -= sc->getSCE(SC_ALL_STAT_DOWN)->val2;
 
 	//TODO: Stat points should be able to be decreased below 0
-	return (uint16)cap_value(int_,0,USHRT_MAX);
+	return (pec_uint16)cap_value(int_,0,PEC_USHRT_MAX);
 }
 
 /**
@@ -7165,14 +7165,14 @@ static uint16 status_calc_int(block_list *bl, status_change *sc, int32 int_)
  * @param dex: Initial dex
  * @return modified dex with cap_value(dex,0,USHRT_MAX)
  */
-static uint16 status_calc_dex(block_list *bl, status_change *sc, int32 dex)
+static pec_uint16 status_calc_dex(block_list *bl, status_change *sc, int32 dex)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(dex,0,USHRT_MAX);
+		return cap_value(dex,0,PEC_USHRT_MAX);
 
 	if(sc->getSCE(SC_HARMONIZE)) {
 		dex -= sc->getSCE(SC_HARMONIZE)->val2;
-		return (uint16)cap_value(dex,0,USHRT_MAX);
+		return (pec_uint16)cap_value(dex,0,PEC_USHRT_MAX);
 	}
 	if(sc->getSCE(SC_CONCENTRATE) && !sc->getSCE(SC_QUAGMIRE))
 		dex += (dex-sc->getSCE(SC_CONCENTRATE)->val4)*sc->getSCE(SC_CONCENTRATE)->val2/100;
@@ -7230,7 +7230,7 @@ static uint16 status_calc_dex(block_list *bl, status_change *sc, int32 dex)
 		dex -= sc->getSCE(SC_ALL_STAT_DOWN)->val2;
 
 	//TODO: Stat points should be able to be decreased below 0
-	return (uint16)cap_value(dex,0,USHRT_MAX);
+	return (pec_uint16)cap_value(dex,0,PEC_USHRT_MAX);
 }
 
 /**
@@ -7240,14 +7240,14 @@ static uint16 status_calc_dex(block_list *bl, status_change *sc, int32 dex)
  * @param luk: Initial luk
  * @return modified luk with cap_value(luk,0,USHRT_MAX)
  */
-static uint16 status_calc_luk(block_list *bl, status_change *sc, int32 luk)
+static pec_uint16 status_calc_luk(block_list *bl, status_change *sc, int32 luk)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(luk,0,USHRT_MAX);
+		return cap_value(luk,0,PEC_USHRT_MAX);
 
 	if(sc->getSCE(SC_HARMONIZE)) {
 		luk -= sc->getSCE(SC_HARMONIZE)->val2;
-		return (uint16)cap_value(luk,0,USHRT_MAX);
+		return (pec_uint16)cap_value(luk,0,PEC_USHRT_MAX);
 	}
 	if(sc->getSCE(SC_CURSE))
 		return 0;
@@ -7291,7 +7291,7 @@ static uint16 status_calc_luk(block_list *bl, status_change *sc, int32 luk)
 		luk -= sc->getSCE(SC_ALL_STAT_DOWN)->val2;
 
 	//TODO: Stat points should be able to be decreased below 0
-	return (uint16)cap_value(luk,0,USHRT_MAX);
+	return (pec_uint16)cap_value(luk,0,PEC_USHRT_MAX);
 }
 
 /**
@@ -7301,17 +7301,17 @@ static uint16 status_calc_luk(block_list *bl, status_change *sc, int32 luk)
 * @param pow: Initial pow
 * @return modified pow with cap_value(pow,0,USHRT_MAX)
 */
-static uint16 status_calc_pow(block_list *bl, status_change *sc, int32 pow)
+static pec_uint16 status_calc_pow(block_list *bl, status_change *sc, int32 pow)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(pow, 0, USHRT_MAX);
+		return cap_value(pow, 0, PEC_USHRT_MAX);
 
 	if (sc->getSCE(SC_BENEDICTUM))
 		pow += sc->getSCE(SC_BENEDICTUM)->val2;
 	if (sc->getSCE(SC_MARINE_FESTIVAL) != nullptr)
 		pow += sc->getSCE(SC_MARINE_FESTIVAL)->val2;
 
-	return (uint16)cap_value(pow, 0, USHRT_MAX);
+	return (pec_uint16)cap_value(pow, 0, PEC_USHRT_MAX);
 }
 
 /**
@@ -7321,17 +7321,17 @@ static uint16 status_calc_pow(block_list *bl, status_change *sc, int32 pow)
 * @param sta: Initial sta
 * @return modified sta with cap_value(sta,0,USHRT_MAX)
 */
-static uint16 status_calc_sta(block_list *bl, status_change *sc, int32 sta)
+static pec_uint16 status_calc_sta(block_list *bl, status_change *sc, int32 sta)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(sta, 0, USHRT_MAX);
+		return cap_value(sta, 0, PEC_USHRT_MAX);
 
 	if (sc->getSCE(SC_RELIGIO))
 		sta += sc->getSCE(SC_RELIGIO)->val2;
 	if (sc->getSCE(SC_SANDY_FESTIVAL) != nullptr)
 		sta += sc->getSCE(SC_SANDY_FESTIVAL)->val2;
 
-	return (uint16)cap_value(sta, 0, USHRT_MAX);
+	return (pec_uint16)cap_value(sta, 0, PEC_USHRT_MAX);
 }
 
 /**
@@ -7341,17 +7341,17 @@ static uint16 status_calc_sta(block_list *bl, status_change *sc, int32 sta)
 * @param wis: Initial wis
 * @return modified wis with cap_value(wis,0,USHRT_MAX)
 */
-static uint16 status_calc_wis(block_list *bl, status_change *sc, int32 wis)
+static pec_uint16 status_calc_wis(block_list *bl, status_change *sc, int32 wis)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(wis, 0, USHRT_MAX);
+		return cap_value(wis, 0, PEC_USHRT_MAX);
 
 	if (sc->getSCE(SC_RELIGIO))
 		wis += sc->getSCE(SC_RELIGIO)->val2;
 	if (sc->getSCE(SC_SANDY_FESTIVAL) != nullptr)
 		wis += sc->getSCE(SC_SANDY_FESTIVAL)->val2;
 
-	return (uint16)cap_value(wis, 0, USHRT_MAX);
+	return (pec_uint16)cap_value(wis, 0, PEC_USHRT_MAX);
 }
 
 /**
@@ -7361,17 +7361,17 @@ static uint16 status_calc_wis(block_list *bl, status_change *sc, int32 wis)
 * @param spl: Initial spl
 * @return modified spl with cap_value(spl,0,USHRT_MAX)
 */
-static uint16 status_calc_spl(block_list *bl, status_change *sc, int32 spl)
+static pec_uint16 status_calc_spl(block_list *bl, status_change *sc, int32 spl)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(spl, 0, USHRT_MAX);
+		return cap_value(spl, 0, PEC_USHRT_MAX);
 
 	if (sc->getSCE(SC_RELIGIO))
 		spl += sc->getSCE(SC_RELIGIO)->val2;
 	if (sc->getSCE(SC_SANDY_FESTIVAL) != nullptr)
 		spl += sc->getSCE(SC_SANDY_FESTIVAL)->val2;
 
-	return (uint16)cap_value(spl, 0, USHRT_MAX);
+	return (pec_uint16)cap_value(spl, 0, PEC_USHRT_MAX);
 }
 
 /**
@@ -7381,17 +7381,17 @@ static uint16 status_calc_spl(block_list *bl, status_change *sc, int32 spl)
 * @param con: Initial con
 * @return modified con with cap_value(con,0,USHRT_MAX)
 */
-static uint16 status_calc_con(block_list *bl, status_change *sc, int32 con)
+static pec_uint16 status_calc_con(block_list *bl, status_change *sc, int32 con)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(con, 0, USHRT_MAX);
+		return cap_value(con, 0, PEC_USHRT_MAX);
 
 	if (sc->getSCE(SC_BENEDICTUM))
 		con += sc->getSCE(SC_BENEDICTUM)->val2;
 	if (sc->getSCE(SC_MARINE_FESTIVAL) != nullptr)
 		con += sc->getSCE(SC_MARINE_FESTIVAL)->val2;
 
-	return (uint16)cap_value(con, 0, USHRT_MAX);
+	return (pec_uint16)cap_value(con, 0, PEC_USHRT_MAX);
 }
 
 /**
@@ -7401,17 +7401,17 @@ static uint16 status_calc_con(block_list *bl, status_change *sc, int32 con)
 * @param crt: Initial crt
 * @return modified crt with cap_value(crt,0,USHRT_MAX)
 */
-static uint16 status_calc_crt(block_list *bl, status_change *sc, int32 crt)
+static pec_uint16 status_calc_crt(block_list *bl, status_change *sc, int32 crt)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(crt, 0, USHRT_MAX);
+		return cap_value(crt, 0, PEC_USHRT_MAX);
 
 	if (sc->getSCE(SC_BENEDICTUM))
 		crt += sc->getSCE(SC_BENEDICTUM)->val2;
 	if (sc->getSCE(SC_MARINE_FESTIVAL) != nullptr)
 		crt += sc->getSCE(SC_MARINE_FESTIVAL)->val2;
 
-	return (uint16)cap_value(crt, 0, USHRT_MAX);
+	return (pec_uint16)cap_value(crt, 0, PEC_USHRT_MAX);
 }
 
 /**
@@ -7465,10 +7465,10 @@ static int32 status_calc_batk(block_list *bl, status_change *sc, int32 batk)
  * @param watk: Initial watk
  * @return modified watk with cap_value(watk,0,USHRT_MAX)
  */
-static uint16 status_calc_watk(block_list *bl, status_change *sc, int32 watk)
+static pec_uint16 status_calc_watk(block_list *bl, status_change *sc, int32 watk)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(watk,0,USHRT_MAX);
+		return cap_value(watk,0,PEC_USHRT_MAX);
 
 #ifndef RENEWAL
 	if(sc->getSCE(SC_DRUMBATTLE))
@@ -7547,7 +7547,7 @@ static uint16 status_calc_watk(block_list *bl, status_change *sc, int32 watk)
 	if (sc->getSCE(SC_GUARD_STANCE))
 		watk -= sc->getSCE(SC_GUARD_STANCE)->val3;
 
-	return (uint16)cap_value(watk,0,USHRT_MAX);
+	return (pec_uint16)cap_value(watk,0,PEC_USHRT_MAX);
 }
 
 /**
@@ -7557,14 +7557,14 @@ static uint16 status_calc_watk(block_list *bl, status_change *sc, int32 watk)
  * @param matk: Initial matk
  * @return modified matk with cap_value(matk,0,USHRT_MAX)
  */
-uint16 status_calc_pseudobuff_matk( map_session_data* sd, status_change *sc, int32 matk ){
+pec_uint16 status_calc_pseudobuff_matk( map_session_data* sd, status_change *sc, int32 matk ){
 	// Flat MATK bonus from skills without sc
 	if (uint16 skill_lv = pc_checkskill(sd, NV_TRANSCENDENCE); skill_lv > 0) {
 		matk += 15 * skill_lv + (skill_lv > 4 ? 25 : 0);
 	}
 
 	if (sc == nullptr || sc->empty())
-		return static_cast<uint16>( cap_value(matk,0,USHRT_MAX) );
+		return static_cast<pec_uint16>( cap_value(matk,0,PEC_USHRT_MAX) );
 
 	struct status_change_entry* sce;
 
@@ -7605,7 +7605,7 @@ uint16 status_calc_pseudobuff_matk( map_session_data* sd, status_change *sc, int
 	if (sc->getSCE(SC_CLIMAX_DES_HU))
 		matk += 100;
 
-	return static_cast<uint16>( cap_value(matk,0,USHRT_MAX) );
+	return static_cast<pec_uint16>( cap_value(matk,0,PEC_USHRT_MAX) );
 }
 
 /**
@@ -7614,13 +7614,13 @@ uint16 status_calc_pseudobuff_matk( map_session_data* sd, status_change *sc, int
  * @param matk: Initial matk
  * @return modified matk with cap_value(matk,0,USHRT_MAX)
  */
-uint16 status_calc_consumablematk( status_change *sc, int32 matk ){
+pec_uint16 status_calc_consumablematk( status_change *sc, int32 matk ){
 	if (sc == nullptr || sc->empty())
-		return static_cast<uint16>( cap_value(matk,0,USHRT_MAX) );
+		return static_cast<pec_uint16>( cap_value(matk,0, PEC_USHRT_MAX) );
 
 	// struct status_change_entry* sce;
 
-	return static_cast<uint16>( cap_value(matk,0,USHRT_MAX) );
+	return static_cast<pec_uint16>( cap_value(matk,0, PEC_USHRT_MAX) );
 }
 
 /**
@@ -7630,10 +7630,10 @@ uint16 status_calc_consumablematk( status_change *sc, int32 matk ){
  * @param critical: Initial critical
  * @return modified critical with cap_value(critical,10,USHRT_MAX)
  */
-static int16 status_calc_critical(block_list *bl, status_change *sc, int32 critical)
+static pec_int16 status_calc_critical(block_list *bl, status_change *sc, int32 critical)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(critical,10,SHRT_MAX);
+		return cap_value(critical,10,PEC_SHRT_MAX);
 
 	if (sc->getSCE(SC_EXPLOSIONSPIRITS))
 		critical += sc->getSCE(SC_EXPLOSIONSPIRITS)->val2;
@@ -7660,7 +7660,7 @@ static int16 status_calc_critical(block_list *bl, status_change *sc, int32 criti
 	if (sc->getSCE(SC_INTENSIVE_AIM))
 		critical += 300;
 
-	return (int16)cap_value(critical,10,SHRT_MAX);
+	return (pec_int16)cap_value(critical,10,PEC_SHRT_MAX);
 }
 
 /**
@@ -7670,10 +7670,10 @@ static int16 status_calc_critical(block_list *bl, status_change *sc, int32 criti
  * @param hit: Initial hit
  * @return modified hit with cap_value(hit,1,USHRT_MAX)
  */
-static int16 status_calc_hit(block_list *bl, status_change *sc, int32 hit)
+static pec_int16 status_calc_hit(block_list *bl, status_change *sc, int32 hit)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(hit,1,SHRT_MAX);
+		return cap_value(hit,1,PEC_SHRT_MAX);
 
 	if(sc->getSCE(SC_INCHIT))
 		hit += sc->getSCE(SC_INCHIT)->val1;
@@ -7728,7 +7728,7 @@ static int16 status_calc_hit(block_list *bl, status_change *sc, int32 hit)
 	if (sc->getSCE(SC_INTENSIVE_AIM))
 		hit += 250;
 
-	return (int16)cap_value(hit,1,SHRT_MAX);
+	return (pec_int16)cap_value(hit,1,PEC_SHRT_MAX);
 }
 
 /**
@@ -7738,7 +7738,7 @@ static int16 status_calc_hit(block_list *bl, status_change *sc, int32 hit)
  * @param flee: Initial flee
  * @return modified flee with cap_value(flee,1,USHRT_MAX)
  */
-static int16 status_calc_flee(block_list *bl, status_change *sc, int32 flee)
+static pec_int16 status_calc_flee(block_list *bl, status_change *sc, int32 flee)
 {
 	if( bl->type == BL_PC ) {
 		struct map_data *mapdata = map_getmapdata(bl->m);
@@ -7750,7 +7750,7 @@ static int16 status_calc_flee(block_list *bl, status_change *sc, int32 flee)
 	}
 
 	if(sc == nullptr || sc->empty())
-		return cap_value(flee,1,SHRT_MAX);
+		return cap_value(flee,1,PEC_SHRT_MAX);
 	if (sc->getSCE(SC_POISON_MIST))
 		return 0;
 	if(sc->getSCE(SC_OVERED_BOOST)) //Should be final and unmodifiable by any means
@@ -7840,7 +7840,7 @@ static int16 status_calc_flee(block_list *bl, status_change *sc, int32 flee)
 	if (sc->getSCE(SC_GROOMING))
 		flee += sc->getSCE(SC_GROOMING)->val2;
 
-	return (int16)cap_value(flee,1,SHRT_MAX);
+	return (pec_int16)cap_value(flee,1,PEC_SHRT_MAX);
 }
 
 /**
@@ -7850,10 +7850,10 @@ static int16 status_calc_flee(block_list *bl, status_change *sc, int32 flee)
  * @param flee2: Initial flee2
  * @return modified flee2 with cap_value(flee2,10,USHRT_MAX)
  */
-static int16 status_calc_flee2(block_list *bl, status_change *sc, int32 flee2)
+static pec_int16 status_calc_flee2(block_list *bl, status_change *sc, int32 flee2)
 {
 	if(sc == nullptr || sc->empty())
-		return cap_value(flee2,10,SHRT_MAX);
+		return cap_value(flee2,10,PEC_SHRT_MAX);
 
 	if(sc->getSCE(SC_WHISTLE))
 		flee2 += sc->getSCE(SC_WHISTLE)->val3;
@@ -7864,7 +7864,7 @@ static int16 status_calc_flee2(block_list *bl, status_change *sc, int32 flee2)
 	if (sc->getSCE(SC_DORAM_FLEE2))
 		flee2 += sc->getSCE(SC_DORAM_FLEE2)->val1;
 
-	return (int16)cap_value(flee2,10,SHRT_MAX);
+	return (pec_int16)cap_value(flee2,10,PEC_SHRT_MAX);
 }
 
 /**
@@ -7874,10 +7874,10 @@ static int16 status_calc_flee2(block_list *bl, status_change *sc, int32 flee2)
  * @param def: Initial def
  * @return modified def with cap_value(def,DEFTYPE_MIN,DEFTYPE_MAX)
  */
-static defType status_calc_def(block_list *bl, status_change *sc, int32 def)
+static pec_defType status_calc_def(block_list *bl, status_change *sc, int32 def)
 {
 	if(sc == nullptr || sc->empty())
-		return (defType)cap_value(def,DEFTYPE_MIN,DEFTYPE_MAX);
+		return (pec_defType)cap_value(def,PEC_DEFTYPE_MIN,PEC_DEFTYPE_MAX);
 
 	if(sc->getSCE(SC_BERSERK))
 		return 0;
@@ -7973,7 +7973,7 @@ static defType status_calc_def(block_list *bl, status_change *sc, int32 def)
 	if (sc->getSCE(SC_ATTACK_STANCE))
 		def -= sc->getSCE(SC_ATTACK_STANCE)->val2;
 
-	return (defType)cap_value(def,DEFTYPE_MIN,DEFTYPE_MAX);
+	return (pec_defType)cap_value(def,PEC_DEFTYPE_MIN,PEC_DEFTYPE_MAX);
 }
 
 /**
@@ -7983,13 +7983,13 @@ static defType status_calc_def(block_list *bl, status_change *sc, int32 def)
  * @param def2: Initial def2
  * @return modified def2 with cap_value(def2,SHRT_MIN,SHRT_MAX)
  */
-static int16 status_calc_def2(block_list *bl, status_change *sc, int32 def2)
+static pec_int16 status_calc_def2(block_list *bl, status_change *sc, int32 def2)
 {
 	if(sc == nullptr || sc->empty())
 #ifdef RENEWAL
-		return (int16)cap_value(def2,SHRT_MIN,SHRT_MAX);
+		return (pec_int16)cap_value(def2,PEC_SHRT_MIN,PEC_SHRT_MAX);
 #else
-		return (int16)cap_value(def2,1,SHRT_MAX);
+		return (pec_int16)cap_value(def2,1,PEC_SHRT_MAX);
 #endif
 
 	if(sc->getSCE(SC_BERSERK))
@@ -8036,9 +8036,9 @@ static int16 status_calc_def2(block_list *bl, status_change *sc, int32 def2)
 		def2 -= def2 * 5 * sc->getSCE(SC_CAMOUFLAGE)->val3 / 100;
 
 #ifdef RENEWAL
-	return (int16)cap_value(def2,SHRT_MIN,SHRT_MAX);
+	return (pec_int16)cap_value(def2,PEC_SHRT_MIN,PEC_SHRT_MAX);
 #else
-	return (int16)cap_value(def2,1,SHRT_MAX);
+	return (pec_int16)cap_value(def2,1,PEC_SHRT_MAX);
 #endif
 }
 
@@ -8049,10 +8049,10 @@ static int16 status_calc_def2(block_list *bl, status_change *sc, int32 def2)
  * @param mdef: Initial mdef
  * @return modified mdef with cap_value(mdef,DEFTYPE_MIN,DEFTYPE_MAX)
  */
-static defType status_calc_mdef(block_list *bl, status_change *sc, int32 mdef)
+static pec_defType status_calc_mdef(block_list *bl, status_change *sc, int32 mdef)
 {
 	if(sc == nullptr || sc->empty())
-		return (defType)cap_value(mdef,DEFTYPE_MIN,DEFTYPE_MAX);
+		return (pec_defType)cap_value(mdef,PEC_DEFTYPE_MIN,PEC_DEFTYPE_MAX);
 
 	if(sc->getSCE(SC_BERSERK))
 		return 0;
@@ -8097,7 +8097,7 @@ static defType status_calc_mdef(block_list *bl, status_change *sc, int32 mdef)
 	if (sc->getSCE(SC_CLIMAX_CRYIMP))
 		mdef += 100;
 
-	return (defType)cap_value(mdef,DEFTYPE_MIN,DEFTYPE_MAX);
+	return (pec_defType)cap_value(mdef,PEC_DEFTYPE_MIN,PEC_DEFTYPE_MAX);
 }
 
 /**
@@ -8107,13 +8107,13 @@ static defType status_calc_mdef(block_list *bl, status_change *sc, int32 mdef)
  * @param mdef2: Initial mdef2
  * @return modified mdef2 with cap_value(mdef2,SHRT_MIN,SHRT_MAX)
  */
-static int16 status_calc_mdef2(block_list *bl, status_change *sc, int32 mdef2)
+static pec_int16 status_calc_mdef2(block_list *bl, status_change *sc, int32 mdef2)
 {
 	if(sc == nullptr || sc->empty())
 #ifdef RENEWAL
-		return (int16)cap_value(mdef2,SHRT_MIN,SHRT_MAX);
+		return (pec_int16)cap_value(mdef2,PEC_SHRT_MIN,PEC_SHRT_MAX);
 #else
-		return (int16)cap_value(mdef2,1,SHRT_MAX);
+		return (pec_int16)cap_value(mdef2,1,PEC_SHRT_MAX);
 #endif
 
 	if(sc->getSCE(SC_BERSERK))
@@ -8131,9 +8131,9 @@ static int16 status_calc_mdef2(block_list *bl, status_change *sc, int32 mdef2)
 		mdef2 -= mdef2 * (14 * sc->getSCE(SC_ANALYZE)->val1) / 100;
 
 #ifdef RENEWAL
-	return (int16)cap_value(mdef2,SHRT_MIN,SHRT_MAX);
+	return (pec_int16)cap_value(mdef2,PEC_SHRT_MIN,PEC_SHRT_MAX);
 #else
-	return (int16)cap_value(mdef2,1,SHRT_MAX);
+	return (pec_int16)cap_value(mdef2,1,PEC_SHRT_MAX);
 #endif
 }
 
@@ -8144,13 +8144,13 @@ static int16 status_calc_mdef2(block_list *bl, status_change *sc, int32 mdef2)
  * @param speed: Initial speed
  * @return modified speed with cap_value(speed,10,USHRT_MAX)
  */
-static uint16 status_calc_speed(block_list *bl, status_change *sc, int32 speed)
+static pec_uint16 status_calc_speed(block_list *bl, status_change *sc, int32 speed)
 {
 	TBL_PC* sd = BL_CAST(BL_PC, bl);
 	int32 speed_rate = 100;
 
 	if (sc == nullptr || (sd && sd->state.permanent_speed))
-		return (uint16)cap_value(speed, MIN_WALK_SPEED, MAX_WALK_SPEED);
+		return (pec_uint16)cap_value(speed, MIN_WALK_SPEED, MAX_WALK_SPEED);
 
 	if (sd && pc_ismadogear(sd)) { // Mado speed is not affected by other statuses
 		int32 val = 0;
@@ -8163,7 +8163,7 @@ static uint16 status_calc_speed(block_list *bl, status_change *sc, int32 speed)
 			val -= 25;
 		speed += speed * val / 100;
 
-		return (uint16)cap_value(speed, MIN_WALK_SPEED, MAX_WALK_SPEED);
+		return (pec_uint16)cap_value(speed, MIN_WALK_SPEED, MAX_WALK_SPEED);
 	}
 
 	if( sd && sd->ud.skilltimer != INVALID_TIMER && (pc_checkskill(sd,SA_FREECAST) > 0 || sd->ud.skill_id == LG_EXEEDBREAK) ) {
@@ -8350,7 +8350,7 @@ static uint16 status_calc_speed(block_list *bl, status_change *sc, int32 speed)
 	if( sc->getSCE(SC_WALKSPEED) && sc->getSCE(SC_WALKSPEED)->val1 > 0 ) // ChangeSpeed
 		speed = speed * 100 / sc->getSCE(SC_WALKSPEED)->val1;
 
-	return (uint16)cap_value(speed, MIN_WALK_SPEED, MAX_WALK_SPEED);
+	return (pec_uint16)cap_value(speed, MIN_WALK_SPEED, MAX_WALK_SPEED);
 }
 
 #ifdef RENEWAL_ASPD
@@ -8532,12 +8532,12 @@ static int16 status_calc_fix_aspd(block_list *bl, status_change *sc, int32 aspd)
  * @param aspd_rate: Object's current ASPD
  * @return modified aspd_rate
  */
-static int16 status_calc_aspd_rate(block_list *bl, status_change *sc, int32 aspd_rate)
+static pec_int16 status_calc_aspd_rate(block_list *bl, status_change *sc, int32 aspd_rate)
 {
 	int32 i;
 
 	if(sc == nullptr || sc->empty())
-		return cap_value(aspd_rate,0,SHRT_MAX);
+		return cap_value(aspd_rate,0,PEC_SHRT_MAX);
 
 	int32 max = 0;
 	if (sc->getSCE(SC_STAR_COMFORT))
@@ -8664,7 +8664,7 @@ static int16 status_calc_aspd_rate(block_list *bl, status_change *sc, int32 aspd
 	if (sc->getSCE(SC_STARSTANCE))
 		aspd_rate -= 10 * sc->getSCE(SC_STARSTANCE)->val2;
 
-	return (int16)cap_value(aspd_rate,0,SHRT_MAX);
+	return (pec_int16)cap_value(aspd_rate,0,PEC_SHRT_MAX);
 }
 
 /**
@@ -8674,10 +8674,10 @@ static int16 status_calc_aspd_rate(block_list *bl, status_change *sc, int32 aspd
 * @param patk: Initial patk
 * @return modified patk with cap_value(patk,0,USHRT_MAX)
 */
-static int16 status_calc_patk(block_list *bl, status_change *sc, int32 patk)
+static pec_int16 status_calc_patk(block_list *bl, status_change *sc, int32 patk)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(patk, 0, SHRT_MAX);
+		return cap_value(patk, 0, PEC_SHRT_MAX);
 
 	if (sc->getSCE(SC_POWERFUL_FAITH))
 		patk += sc->getSCE(SC_POWERFUL_FAITH)->val3;
@@ -8703,7 +8703,7 @@ static int16 status_calc_patk(block_list *bl, status_change *sc, int32 patk)
 	if (sc->getSCE(SC_OVERCOMING_CRISIS))
 		patk += sc->getSCE(SC_OVERCOMING_CRISIS)->val2;
 
-	return (int16)cap_value(patk, 0, SHRT_MAX);
+	return (pec_int16)cap_value(patk, 0, PEC_SHRT_MAX);
 }
 
 /**
@@ -8713,10 +8713,10 @@ static int16 status_calc_patk(block_list *bl, status_change *sc, int32 patk)
 * @param smatk: Initial smatk
 * @return modified smatk with cap_value(smatk,0,USHRT_MAX)
 */
-static int16 status_calc_smatk(block_list *bl, status_change *sc, int32 smatk)
+static pec_int16 status_calc_smatk(block_list *bl, status_change *sc, int32 smatk)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(smatk, 0, SHRT_MAX);
+		return cap_value(smatk, 0, PEC_SHRT_MAX);
 
 	if (sc->getSCE(SC_COMPETENTIA))
 		smatk += sc->getSCE(SC_COMPETENTIA)->val2;
@@ -8740,7 +8740,7 @@ static int16 status_calc_smatk(block_list *bl, status_change *sc, int32 smatk)
 	if (sc->getSCE(SC_OVERCOMING_CRISIS))
 		smatk += sc->getSCE(SC_OVERCOMING_CRISIS)->val2;
 
-	return (int16)cap_value(smatk, 0, SHRT_MAX);
+	return (pec_int16)cap_value(smatk, 0, PEC_SHRT_MAX);
 }
 
 /**
@@ -8750,10 +8750,10 @@ static int16 status_calc_smatk(block_list *bl, status_change *sc, int32 smatk)
 * @param res: Initial res
 * @return modified res with cap_value(res,0,USHRT_MAX)
 */
-static int16 status_calc_res(block_list *bl, status_change *sc, int32 res)
+static pec_int16 status_calc_res(block_list *bl, status_change *sc, int32 res)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(res, 0, SHRT_MAX);
+		return cap_value(res, 0, PEC_SHRT_MAX);
 
 	if (sc->getSCE(SC_FIRM_FAITH))
 		res += sc->getSCE(SC_FIRM_FAITH)->val3;
@@ -8770,7 +8770,7 @@ static int16 status_calc_res(block_list *bl, status_change *sc, int32 res)
 	if (sc->getSCE(SC_TOXIN_OF_MANDARA))
 		res -= sc->getSCE(SC_TOXIN_OF_MANDARA)->val2;
 
-	return (int16)cap_value(res, 0, SHRT_MAX);
+	return (pec_int16)cap_value(res, 0, PEC_SHRT_MAX);
 }
 
 /**
@@ -8780,10 +8780,10 @@ static int16 status_calc_res(block_list *bl, status_change *sc, int32 res)
 * @param mres: Initial mres
 * @return modified mres with cap_value(mres,0,USHRT_MAX)
 */
-static int16 status_calc_mres(block_list *bl, status_change *sc, int32 mres)
+static pec_int16 status_calc_mres(block_list *bl, status_change *sc, int32 mres)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(mres, 0, SHRT_MAX);
+		return cap_value(mres, 0, PEC_SHRT_MAX);
 
 	if (sc->getSCE(SC_GOLDENE_TONE))
 		mres += sc->getSCE(SC_GOLDENE_TONE)->val2;
@@ -8792,7 +8792,7 @@ static int16 status_calc_mres(block_list *bl, status_change *sc, int32 mres)
 	if (sc->getSCE(SC_GEF_NOCTURN))
 		mres -= sc->getSCE(SC_GEF_NOCTURN)->val2;
 
-	return (int16)cap_value(mres, 0, SHRT_MAX);
+	return (pec_int16)cap_value(mres, 0, PEC_SHRT_MAX);
 }
 
 /**
@@ -8802,15 +8802,15 @@ static int16 status_calc_mres(block_list *bl, status_change *sc, int32 mres)
 * @param hplus: Initial hplus
 * @return modified hplus with cap_value(hplus,0,USHRT_MAX)
 */
-static int16 status_calc_hplus(block_list *bl, status_change *sc, int32 hplus)
+static pec_int16 status_calc_hplus(block_list *bl, status_change *sc, int32 hplus)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(hplus, 0, SHRT_MAX);
+		return cap_value(hplus, 0, PEC_SHRT_MAX);
 
 	if (sc->getSCE(SC_TEMPORARY_COMMUNION) != nullptr)
 		hplus += sc->getSCE(SC_TEMPORARY_COMMUNION)->val2;
 
-	return (int16)cap_value(hplus, 0, SHRT_MAX);
+	return (pec_int16)cap_value(hplus, 0, PEC_SHRT_MAX);
 }
 
 /**
@@ -8820,15 +8820,15 @@ static int16 status_calc_hplus(block_list *bl, status_change *sc, int32 hplus)
 * @param crate: Initial crate
 * @return modified crate with cap_value(crate,0,USHRT_MAX)
 */
-static int16 status_calc_crate(block_list *bl, status_change *sc, int32 crate)
+static pec_int16 status_calc_crate(block_list *bl, status_change *sc, int32 crate)
 {
 	if (sc == nullptr || sc->empty())
-		return cap_value(crate, 0, SHRT_MAX);
+		return cap_value(crate, 0, PEC_SHRT_MAX);
 
 	if (sc->getSCE(SC_PRE_ACIES))
 		crate += sc->getSCE(SC_PRE_ACIES)->val2;
 
-	return (int16)cap_value(crate, 0, SHRT_MAX);
+	return (pec_int16)cap_value(crate, 0, PEC_SHRT_MAX);
 }
 
 /**
@@ -9212,7 +9212,7 @@ const status_data* status_get_base_status(const block_list* bl){
  * @param bl: Object whose defense to get [PC|MOB|HOM|MER|ELEM]
  * @return defense with cap_value(def, DEFTYPE_MIN, DEFTYPE_MAX)
  */
-defType status_get_def( const block_list* bl )
+pec_defType status_get_def( const block_list* bl )
 {
 	const unit_data* ud;
 	const status_data* status = status_get_status_data(*bl);
@@ -9222,7 +9222,7 @@ defType status_get_def( const block_list* bl )
 	if (ud && ud->skilltimer != INVALID_TIMER)
 		def -= def * skill_get_castdef(ud->skill_id)/100;
 
-	return cap_value(def, DEFTYPE_MIN, DEFTYPE_MAX);
+	return cap_value(def, PEC_DEFTYPE_MIN, PEC_DEFTYPE_MAX);
 }
 
 /**
