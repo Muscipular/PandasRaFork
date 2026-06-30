@@ -310,6 +310,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcFilter_UNEQUIP
 	"OnPCUnequipFilter", //unequip_filter_name
 #endif // Pandas_NpcFilter_UNEQUIP
+#ifdef Pandas_NpcFilter_CHANGETITLE
+	"OnPCChangeTitleFilter", //changetitle_filter_name
+#endif // Pandas_NpcFilter_CHANGETITLE
 #ifdef Pandas_NpcFilter_SC_START
 	"OnPCBuffStartFilter", //sc_start_filter_name
 #endif // Pandas_NpcFilter_SC_START

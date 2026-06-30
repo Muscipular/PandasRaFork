@@ -228,6 +228,7 @@
 			// 当玩家试图变更称号时将触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCChangeTitleFilter
 			// 常量名称: NPCF_CHANGETITLE / 变量名称: changetitle_filter_name
+			#define Pandas_NpcFilter_CHANGETITLE
 		#endif // Pandas_Character_Title_Controller
 
 			// PYHELP - NPCEVENT - INSERT POINT - <Section 1>

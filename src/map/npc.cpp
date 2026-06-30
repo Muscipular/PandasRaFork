@@ -6700,6 +6700,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCF_UNEQUIP:
 		return script_config.unequip_filter_name;
 #endif // Pandas_NpcFilter_UNEQUIP
+#ifdef Pandas_NpcFilter_CHANGETITLE
+	case NPCF_CHANGETITLE:
+		return script_config.changetitle_filter_name;
+#endif // Pandas_NpcFilter_CHANGETITLE
 #ifdef Pandas_NpcFilter_SC_START
 	case NPCF_SC_START:
 		return script_config.sc_start_filter_name;
@@ -7093,6 +7097,21 @@ int32* get_npc_warp_ptr() {
 // Author:      Sola丶小克(CairoLee)  2019/12/02 00:02
 bool npc_change_title_event(map_session_data* sd, uint32 title_id, int mode) {
 	nullpo_retr(false, sd);
+
+#ifdef Pandas_NpcFilter_CHANGETITLE
+	int var_title_id = add_str("@target_title_id");
+	pc_setreg(sd, add_str("@trigger_mode"), mode);
+	pc_setreg(sd, add_str("@pre_title_id"), sd->status.title_id);
+	pc_setreg(sd, var_title_id, title_id);
+
+	if (npc_script_filter(sd, NPCF_CHANGETITLE)) {
+		return false;
+	}
+
+	if (title_id != static_cast<uint32>(pc_readreg(sd, var_title_id))) {
+		title_id = static_cast<uint32>(pc_readreg(sd, var_title_id));
+	}
+#endif // Pandas_NpcFilter_CHANGETITLE
 
 	// 修改方式若为 0 则 clif_parse_change_title 后续会执行类似代码, 此处不用再处理
 	// 这里仅处理 setchartitle 脚本指令和 @title 指令的修改请求
