@@ -10324,6 +10324,12 @@ void clif_name( const block_list* src, const block_list* bl, send_target target 
 
 				int option = battle_config.show_mob_info;
 
+#ifdef Pandas_MapFlag_MobInfo
+				if (md->bl.m >= 0 && map_getmapflag(md->bl.m, MF_MOBINFO)) {
+					option = map_getmapflag_param(md->bl.m, MF_MOBINFO, 1);
+				}
+#endif // Pandas_MapFlag_MobInfo
+
 				char mobhp[50] = { 0 }, *str_p = mobhp;
 
 				if (option & 4) {

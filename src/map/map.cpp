@@ -3896,6 +3896,18 @@ int32 map_delmap(char* mapname){
 
 /// Initializes map flags and adjusts them depending on configuration.
 void map_flags_init(void){
+#ifdef Pandas_MapFlag_MobInfo
+	mapflag_config.insert(std::make_pair(MF_MOBINFO, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "MobInfo",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ true,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */
+		{
+			{0, 0, 1|2|4|8|16|32|64}
+		}
+	}));
+#endif // Pandas_MapFlag_MobInfo
+
 	for (int32 i = 0; i < map_num; i++) {
 		struct map_data *mapdata = &map[i];
 		pds_mapflag_args args = {};
