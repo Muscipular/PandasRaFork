@@ -28990,6 +28990,38 @@ BUILDIN_FUNC(enable_batrec) {
 }
 #endif // Pandas_ScriptCommand_EnableBattleRecord
 
+#ifdef Pandas_ScriptCommand_DisableBattleRecord
+/* ===========================================================
+ * 指令: disable_batrec
+ * 描述: 禁用指定单位的战斗记录
+ * 用法: disable_batrec {<游戏单位编号>};
+ * 返回: 该指令无论成功与否, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(disable_batrec) {
+	int32 unit_id = st->rid;
+
+	if (script_hasdata(st, 2)) {
+		unit_id = script_getnum(st, 2);
+	}
+
+	struct block_list* bl = map_id2bl(unit_id);
+
+	if (bl == nullptr) {
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	struct s_unit_common_data* ucd = status_get_ucd(bl);
+
+	if (ucd == nullptr) {
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	ucd->batrec.dorecord = false;
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_DisableBattleRecord
+
 #ifdef Pandas_ScriptCommand_UnlockCmd
 /* ===========================================================
  * 指令: unlockcmd
@@ -29448,6 +29480,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_EnableBattleRecord
 	BUILDIN_DEF(enable_batrec, "?"), // 启用指定单位的战斗记录 [Sola丶小克]
 #endif // Pandas_ScriptCommand_EnableBattleRecord
+#ifdef Pandas_ScriptCommand_DisableBattleRecord
+	BUILDIN_DEF(disable_batrec, "?"), // 禁用指定单位的战斗记录 [Sola丶小克]
+#endif // Pandas_ScriptCommand_DisableBattleRecord
 #ifdef Pandas_ScriptCommand_UnlockCmd
 	BUILDIN_DEF(unlockcmd, ""), // 解锁实时事件和过滤器事件的指令限制 [Sola丶小克]
 #endif // Pandas_ScriptCommand_UnlockCmd

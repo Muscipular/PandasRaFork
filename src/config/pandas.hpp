@@ -712,6 +712,7 @@
 		#define Pandas_ScriptCommand_EnableBattleRecord
 		// 是否启用 disable_batrec 脚本指令 [Sola丶小克]
 		// 该指令用于禁用指定单位的战斗记录
+		#define Pandas_ScriptCommand_DisableBattleRecord
 	#endif // Pandas_BattleRecord
 	// 是否启用 login 脚本指令 [Sola丶小克]
 	// 该指令用于将指定的角色以特定的登录模式拉上线
