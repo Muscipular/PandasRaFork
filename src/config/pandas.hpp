@@ -638,6 +638,69 @@
 	// 同时提供 msg_txt_cn 宏定义函数, 方便在工程中使用自定义信息 [Sola丶小克]
 	#define Pandas_Message_Conf
 
+	// 对消息文件进行清理, 移除几乎用不到的其他国家语言
+	// 同时也暂时移除掉 langtype 管理员指令, 这个指令目前不太合适熊猫模拟器
+	// 主要留下: 英文, 简体中文, 繁体中文 这三种. [Sola丶小克]
+	#define Pandas_Message_Reorganize
+
+	// 将部分硬编码的字符串提取到消息文件中 [Sola丶小克]
+	// 这么做的主要目的是在有需要的时候, 可以将内容进行汉化或者其他处理
+	#define Pandas_Message_Hardcode_Extract
+
+	// 是否支持在 map_athena.conf 中设定封包混淆密钥 [Sola丶小克]
+	#ifdef PACKET_OBFUSCATION
+		#define Pandas_Support_Specify_PacketKeys
+	#endif // PACKET_OBFUSCATION
+
+	// 是否支持读取 UTF8-BOM 编码的配置或者数据文件 [Sola丶小克]
+	#define Pandas_Support_UTF8BOM_Files
+
+	// 在使用 _M/_F 注册的时候, 能够限制使用中文等字符作为游戏账号 [Sola丶小克]
+	// 这里的 PCRE_SUPPORT 在"项目属性 -> C/C++ -> 预处理器"中定义
+	#ifdef PCRE_SUPPORT
+		#define Pandas_Strict_Userid_Verification
+	#endif // PCRE_SUPPORT
+
+	// 是否支持隐藏角色服务器的在线人数 [Sola丶小克]
+	#define Pandas_Support_Hide_Online_Players_Count
+
+	// 是否扩展魔物名称能展现的信息, 比如体型、种族、属性 [Sola丶小克 改进]
+	#define Pandas_MobInfomation_Extend
+
+	// 是否加强 2013-12-23 以及 2013-08-07 客户端的混淆密钥 [Sola丶小克]
+	#define Pandas_Packet_Obfuscation_Keys
+
+	// 使影子装备可以支持插卡, 而不会被强制转换成普通道具 [Sola丶小克]
+	#define Pandas_Shadowgear_Support_Card
+
+	// 使 pointshop 类型的商店能支持指定变量别名, 用于展现给玩家 [Sola丶小克]
+	#define Pandas_Support_Pointshop_Variable_DisplayName
+
+	// 使墓碑中的魔物名称能尊重 override_mob_names 战斗配置选项的设置 [Sola丶小克]
+	#define Pandas_Make_Tomb_Mobname_Follow_Override_Mob_Names
+
+	// 检测 import 目录是否存在, 若不存在能够从 import-tmpl 复制一份 [Sola丶小克]
+	#define Pandas_Deploy_Import_Directories
+
+	// 是否对数据库配置相关的一系列逻辑进行优化 [Sola丶小克]
+	#define Pandas_SQL_Configure_Optimization
+
+	// 是否启用一列用于控制角色称号的指令、事件等等 [Sola丶小克]
+	#define Pandas_Character_Title_Controller
+
+	#ifndef _WIN32
+		// 在 Linux 环境下输出信息时, 能转换成终端自适应编码 [Sola丶小克]
+		#define Pandas_Console_Charset_SmartConvert
+	#endif // _WIN32
+
+	// 建立 MySQL 连接的时候主动禁止 SSL 模式 [Sola丶小克]
+	#ifdef _WIN32
+		#define Pandas_MySQL_SSL_Mode_Disabled
+	#endif // _WIN32
+
+	// 使公会的初始化人数以及“扩充组合体制”(GD_EXTENSION)每级增加人数可被宏定义 [Sola丶小克]
+	#define Pandas_Guild_Extension_Configure
+
 	// 是否支持使用 @recall 等指令单独召唤离线挂店 / 离线挂机的角色
 	// 主要用于管理员调整挂机单位的站位, 避免阻挡到其他的 NPC 或者传送点等 [Sola丶小克]
 	// 此选项依赖以下拓展, 任意一个不成立则将会 undef 此选项的定义
@@ -659,6 +722,54 @@
 	#ifndef Pandas_Player_Suspend_System
 		#undef Pandas_Support_Transfer_Autotrade_Player
 	#endif // Pandas_Player_Suspend_System
+
+	// 是否支持根据系统语言读取对应的消息数据库文件 [Sola丶小克]
+	// 此选项依赖 Pandas_Support_UTF8BOM_Files 的拓展
+	#ifdef Pandas_Support_UTF8BOM_Files
+		#define Pandas_Adaptive_Importing_Message_Database
+	#endif // Pandas_Support_UTF8BOM_Files
+
+	// 是否支持处理 Windows 10 编码选项带来的中文乱码问题 [Sola丶小克]
+	#ifdef _WIN32
+		#define Pandas_Setup_Console_Output_Codepage
+	#endif // _WIN32
+
+	// 实验性读取 SSO 登录封包传递的 MAC 地址和客户端内网 IP 地址信息 [Sola丶小克]
+	#define Pandas_Extract_SSOPacket_MacAddress
+
+	// 是否启用角色光环机制 [Sola丶小克]
+	// 此选项依赖 Pandas_Struct_Unit_CommonData_Aura 的拓展
+	#define Pandas_Aura_Mechanism
+
+	#ifndef Pandas_Struct_Unit_CommonData_Aura
+		#undef Pandas_Aura_Mechanism
+	#endif // Pandas_Struct_Unit_CommonData_Aura
+
+	// 优化对极端计算的支持 (AKA: 变态服拓展包) [Sola丶小克]
+	#define Pandas_Extreme_Computing
+
+	// 是否启用 bonus_script 的唯一编号机制 [Sola丶小克]
+	// 此选项依赖 Pandas_Struct_BonusScriptData_Extend 与 Pandas_Struct_Map_Session_Data_BonusScript_Counter
+	#define Pandas_BonusScript_Unique_ID
+
+	#ifndef Pandas_Struct_BonusScriptData_Extend
+		#undef Pandas_BonusScript_Unique_ID
+	#endif // Pandas_Struct_BonusScriptData_Extend
+	#ifndef Pandas_Struct_Map_Session_Data_BonusScript_Counter
+		#undef Pandas_BonusScript_Unique_ID
+	#endif // Pandas_Struct_Map_Session_Data_BonusScript_Counter
+
+	// 是否启用对负载均衡的友好处理支持 [Sola丶小克]
+	#define Pandas_Health_Monitors_Silent
+
+	// 解锁仓库以及背包的最大容量限制 [Sola丶小克]
+	#define Pandas_Unlock_Storage_Capacity_Limit
+
+	// 是否扩展 e_job_types 枚举类型的可选值 [Sola丶小克]
+	#define Pandas_Update_NPC_Identity_Information
+
+	// 是否支持 future 封装以便执行异步任务 [Sola丶小克]
+	#define Pandas_Support_Future_Execution
 
 	// PYHELP - CREATIVEWORK - INSERT POINT - <Section 1>
 #endif // Pandas_CreativeWork
