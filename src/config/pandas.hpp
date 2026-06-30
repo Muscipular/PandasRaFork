@@ -603,6 +603,7 @@
 
 	// 在 map.cpp 中的 map_getmob_boss 增加 alive_first 参数 [Sola丶小克]
 	// 新增的 alive_first 参数可以指定优先返回存活着的 BOSS 魔物
+	#define Pandas_FuncDefine_Mob_Getmob_Boss
 
 	// 在 mob.cpp 中的 mvptomb_create 增加 killer_gid 参数 [Sola丶小克]
 	// 新增的 killer_gid 参数用于传递杀死 MVP 玩家的游戏单位编号

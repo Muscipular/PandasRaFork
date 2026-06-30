@@ -1238,7 +1238,11 @@ void map_foreachnpc(int32 (*func)(npc_data* nd, va_list args), ...);
 void map_foreachregen(int32 (*func)(block_list* bl, va_list args), ...);
 void map_foreachiddb(int32 (*func)(block_list* bl, va_list args), ...);
 map_session_data * map_nick2sd(const char* nick, bool allow_partial);
+#ifndef Pandas_FuncDefine_Mob_Getmob_Boss
 mob_data * map_getmob_boss(int16 m);
+#else
+mob_data * map_getmob_boss(int16 m, bool alive_first = false);
+#endif // Pandas_FuncDefine_Mob_Getmob_Boss
 mob_data * map_id2boss(int32 id);
 
 // reload config file looking only for npcs

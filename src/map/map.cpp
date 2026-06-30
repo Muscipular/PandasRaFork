@@ -2539,15 +2539,30 @@ bool map_blid_exists( int32 id ) {
 /*==========================================
  * Convex Mirror
  *------------------------------------------*/
+#ifndef Pandas_FuncDefine_Mob_Getmob_Boss
 mob_data * map_getmob_boss(int16 m)
+#else
+mob_data * map_getmob_boss(int16 m, bool alive_first)
+#endif // Pandas_FuncDefine_Mob_Getmob_Boss
 {
 	DBIterator* iter;
 	mob_data *md = nullptr;
 	bool found = false;
+#ifdef Pandas_FuncDefine_Mob_Getmob_Boss
+	mob_data* default_md = nullptr;
+#endif // Pandas_FuncDefine_Mob_Getmob_Boss
 
 	iter = db_iterator(bossid_db);
 	for( md = (mob_data*)dbi_first(iter); dbi_exists(iter); md = (mob_data*)dbi_next(iter) )
 	{
+#ifdef Pandas_FuncDefine_Mob_Getmob_Boss
+		if( alive_first ){
+			if( !default_md && md->m == m )
+				default_md = md;
+			if( md->spawn_timer != INVALID_TIMER )
+				continue;
+		}
+#endif // Pandas_FuncDefine_Mob_Getmob_Boss
 		if( md->m == m )
 		{
 			found = true;
@@ -2555,6 +2570,11 @@ mob_data * map_getmob_boss(int16 m)
 		}
 	}
 	dbi_destroy(iter);
+
+#ifdef Pandas_FuncDefine_Mob_Getmob_Boss
+	if( alive_first && !found && default_md )
+		return default_md;
+#endif // Pandas_FuncDefine_Mob_Getmob_Boss
 
 	return (found)? md : nullptr;
 }
