@@ -319,6 +319,11 @@
 	// 使 status_change 能保存 cloak 是否正在进行中的状态 [Sola丶小克]
 	#define Pandas_Struct_Status_Change_Cloak_Reverting
 
+	#ifdef Pandas_Struct_Status_Change_Cloak_Reverting
+		// 修复 NPC cloak 翻转过程中的可见状态混淆 [Sola丶小克]
+		#define Pandas_Fix_Cloak_Status_Baffling
+	#endif // Pandas_Struct_Status_Change_Cloak_Reverting
+
 	// 使 map_data 能保存全部魔物的刷新点信息 [Sola丶小克]
 	#define Pandas_Struct_Map_Data_Mob_Spawns
 #endif // Pandas_StructIncrease

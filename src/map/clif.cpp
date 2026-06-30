@@ -1124,8 +1124,15 @@ static void clif_set_unit_idle( const block_list* bl, bool walking, send_target 
 		map_session_data* sd = (map_session_data*)tbl;
 		npc_data* nd = (npc_data*)bl;
 		int32 option = (sc) ? sc->option : 0;
+#ifdef Pandas_Fix_Cloak_Status_Baffling
+		uint16 cloak_reverting = (sc) ? sc->cloak_reverting : 0;
+#endif // Pandas_Fix_Cloak_Status_Baffling
 
-		if( !nd->vd.dead_sit ){
+		if( !nd->vd.dead_sit
+#ifdef Pandas_Fix_Cloak_Status_Baffling
+			&& !cloak_reverting
+#endif // Pandas_Fix_Cloak_Status_Baffling
+		){
 			if( std::find( sd->cloaked_npc.begin(), sd->cloaked_npc.end(), nd->id ) != sd->cloaked_npc.end() ){
 				option ^= OPTION_CLOAK;
 			}

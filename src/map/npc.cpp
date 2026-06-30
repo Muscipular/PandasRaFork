@@ -1093,6 +1093,10 @@ bool npc_enable_target(npc_data& nd, uint32 char_id, e_npcv_status flag)
 		else if (it != sd->cloaked_npc.end() && option == nd.sc.option)
 			sd->cloaked_npc.erase(it);
 
+#ifdef Pandas_Fix_Cloak_Status_Baffling
+		nd.sc.cloak_reverting = 1;
+#endif // Pandas_Fix_Cloak_Status_Baffling
+
 		if (nd.class_ != JT_WARPNPC && nd.class_ != JT_GUILD_FLAG)
 			clif_changeoption_target(&nd, sd);
 		else {
@@ -1102,6 +1106,9 @@ bool npc_enable_target(npc_data& nd, uint32 char_id, e_npcv_status flag)
 				clif_spawn(&nd);
 		}
 		nd.sc.option = option;
+#ifdef Pandas_Fix_Cloak_Status_Baffling
+		nd.sc.cloak_reverting = 0;
+#endif // Pandas_Fix_Cloak_Status_Baffling
 	}
 	else {
 		if (flag & NPCVIEW_ENABLE) {

@@ -1191,6 +1191,9 @@ status_change::status_change(){
 #ifndef RENEWAL
 	this->sg_counter = 0;
 #endif
+#ifdef Pandas_Struct_Status_Change_Cloak_Reverting
+	this->cloak_reverting = 0;
+#endif // Pandas_Struct_Status_Change_Cloak_Reverting
 	this->data = {};
 	this->lastStatus = { SC_NONE, nullptr };
 }
@@ -9709,7 +9712,11 @@ bool status_ishiding(struct block_list* bl, struct block_list* observer_bl) {
 
 	int option = sc->option;
 
-	if (bl->type == BL_NPC && observer_bl != nullptr && observer_bl->type == BL_PC) {
+	if (bl->type == BL_NPC && observer_bl != nullptr && observer_bl->type == BL_PC
+#ifdef Pandas_Fix_Cloak_Status_Baffling
+		&& !sc->cloak_reverting
+#endif // Pandas_Fix_Cloak_Status_Baffling
+	) {
 		npc_data* nd = reinterpret_cast<npc_data*>(bl);
 		map_session_data* sd = reinterpret_cast<map_session_data*>(observer_bl);
 
