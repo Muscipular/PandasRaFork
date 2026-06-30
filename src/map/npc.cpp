@@ -240,9 +240,14 @@ bool npc_event_exists(struct npc_data* nd, const char* eventname) {
 }
 #endif // Pandas_Helper_Common_Function
 
+#ifndef Pandas_ScriptCommand_Copynpc
 // Static functions
 static npc_data* npc_create_npc( int16 m, int16 x, int16 y );
 static void npc_parsename( npc_data* nd, const char* name, const char* start, const char* buffer, const char* filepath );
+#else
+npc_data* npc_create_npc( int16 m, int16 x, int16 y );
+void npc_parsename( npc_data* nd, const char* name, const char* start, const char* buffer, const char* filepath );
+#endif // Pandas_ScriptCommand_Copynpc
 
 const std::string StylistDatabase::getDefaultLocation(){
 	return std::string(db_path) + "/stylist.yml";
@@ -1342,7 +1347,11 @@ int32 npc_event_dequeue(map_session_data* sd,bool free_script_stack)
  * exports a npc event label
  * called from npc_parse_script
  *------------------------------------------*/
+#ifndef Pandas_ScriptCommand_Copynpc
 static int32 npc_event_export(npc_data *nd, int32 i)
+#else
+int32 npc_event_export(npc_data *nd, int32 i)
+#endif // Pandas_ScriptCommand_Copynpc
 {
 	char* lname = nd->u.scr.label_list[i].name;
 	int32 pos = nd->u.scr.label_list[i].pos;
@@ -3845,7 +3854,11 @@ void npc_loadsrcfiles() {
 
 /// Parses and sets the name and exname of a npc.
 /// Assumes that m, x and y are already set in nd.
+#ifndef Pandas_ScriptCommand_Copynpc
 static void npc_parsename(npc_data* nd, const char* name, const char* start, const char* buffer, const char* filepath)
+#else
+void npc_parsename(npc_data* nd, const char* name, const char* start, const char* buffer, const char* filepath)
+#endif // Pandas_ScriptCommand_Copynpc
 {
 	const char* p;
 	npc_data* dnd;// duplicate npc
@@ -7002,6 +7015,24 @@ void do_clear_npc(void) {
 	db_clear(npcname_db);
 	db_clear(ev_db);
 }
+
+#ifdef Pandas_ScriptCommand_Copynpc
+DBMap* get_npcname_db_ptr() {
+	return npcname_db;
+}
+
+int32* get_npc_script_ptr() {
+	return &npc_script;
+}
+
+int32* get_npc_shop_ptr() {
+	return &npc_shop;
+}
+
+int32* get_npc_warp_ptr() {
+	return &npc_warp;
+}
+#endif // Pandas_ScriptCommand_Copynpc
 
 /*==========================================
  * Destructor

@@ -28863,6 +28863,214 @@ BUILDIN_FUNC(deactivatepset);
 BUILDIN_FUNC(deletepset);
 #endif
 
+#ifdef Pandas_ScriptCommand_Copynpc
+/* ===========================================================
+ * 指令: copynpc
+ * 描述: 复制指定的 NPC 到一个新的位置
+ * 用法: copynpc "<复制出来的新NPC所在地图名称>,<X坐标>,<Y坐标>,<朝向编号>","duplicate(<来源NPC名称>)","<复制出来的新NPC名称>","<图档外观编号>";
+ * 用法: copynpc "<复制出来的新NPC所在地图名称>",<X坐标>,<Y坐标>,<朝向编号>,"<来源NPC名称>","<复制出来的新NPC名称>",<图档外观编号>;
+ * 返回: 复制成功则返回新 NPC 的 GID, 复制失败则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(copynpc) {
+	const char *w1 = nullptr, *w2 = nullptr, *w3 = nullptr, *w4 = nullptr;
+	char w1buf[256] = { 0 }, w2buf[256] = { 0 }, w3buf[256] = { 0 }, w4buf[256] = { 0 };
+	DBMap* npcname_db = get_npcname_db_ptr();
+	int32* npc_script = get_npc_script_ptr();
+	int32* npc_shop = get_npc_shop_ptr();
+	int32* npc_warp = get_npc_warp_ptr();
+	npc_data* local_nd = map_id2nd(st->oid);
+	const char* filepath = local_nd ? local_nd->path : "Unable to confirm the file path where the NPC executes 'copynpc' command.";
+	const char *start = nullptr, *buffer = nullptr;
+
+	if (filepath == nullptr) {
+		filepath = __func__;
+	}
+
+	do {
+		if (script_lastdata(st) == 5) {
+			if (script_isstring(st, 2) && script_isstring(st, 3) &&
+				script_isstring(st, 4) && (script_isstring(st, 5) || script_isint(st, 5))) {
+				w1 = script_getstr(st, 2);
+				w2 = script_getstr(st, 3);
+				w3 = script_getstr(st, 4);
+				w4 = script_getstr(st, 5);
+				break;
+			}
+		} else if (script_lastdata(st) == 8) {
+			if (script_isstring(st, 2) && script_isint(st, 3) &&
+				script_isint(st, 4) && script_isint(st, 5) &&
+				script_isstring(st, 6) && script_isstring(st, 7) && script_isint(st, 8)) {
+				snprintf(w1buf, sizeof(w1buf), "%s,%d,%d,%d", script_getstr(st, 2), script_getnum(st, 3), script_getnum(st, 4), script_getnum(st, 5));
+				snprintf(w2buf, sizeof(w2buf), "%s", script_getstr(st, 6));
+				snprintf(w3buf, sizeof(w3buf), "%s", script_getstr(st, 7));
+				snprintf(w4buf, sizeof(w4buf), "%d", script_getnum(st, 8));
+				w1 = w1buf;
+				w2 = w2buf;
+				w3 = w3buf;
+				w4 = w4buf;
+				break;
+			}
+		}
+
+		ShowError("buildin_copynpc: Invalid parameters, please read the manual for copynpc.\n");
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	} while (false);
+
+	int16 x, y, m, xs = -1, ys = -1;
+	int16 dir;
+	char srcname[128];
+	size_t length = strlen(w2);
+
+	if (strncmpi(w2, "duplicate(", 10) == 0) {
+		if (w2[length - 1] != ')' || length <= 11 || length - 11 >= sizeof(srcname)) {
+			ShowError("buildin_copynpc: bad duplicate name in file '%s' : %s\n", filepath, w2);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_FAILURE;
+		}
+		safestrncpy(srcname, w2 + 10, length - 10);
+	} else {
+		safestrncpy(srcname, w2, sizeof(srcname));
+	}
+
+	npc_data* dnd = npc_name2id(srcname);
+	if (dnd == nullptr) {
+		ShowError("buildin_copynpc: original npc not found for duplicate in file '%s' : %s\n", filepath, srcname);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int32 src_id = dnd->src_id ? dnd->src_id : dnd->id;
+	int32 type = dnd->subtype;
+
+	if ((type == NPCTYPE_SHOP || type == NPCTYPE_CASHSHOP || type == NPCTYPE_ITEMSHOP || type == NPCTYPE_POINTSHOP || type == NPCTYPE_SCRIPT || type == NPCTYPE_MARKETSHOP) && strcmp(w1, "-") == 0) {
+		x = y = dir = 0;
+		m = -1;
+	} else {
+		char mapname[MAP_NAME_LENGTH_EXT];
+
+		if (sscanf(w1, "%15[^,],%6hd,%6hd,%4hd", mapname, &x, &y, &dir) != 4) {
+			ShowError("buildin_copynpc: Invalid placement format for duplicate in file '%s'\n * w1=%s\n * w2=%s\n * w3=%s\n * w4=%s\n", filepath, w1, w2, w3, w4);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_FAILURE;
+		}
+		m = map_mapname2mapid(mapname);
+	}
+
+	map_data* mapdata = map_getmapdata(m);
+
+	if (m != -1 && (x < 0 || x >= mapdata->xs || y < 0 || y >= mapdata->ys)) {
+		ShowError("buildin_copynpc: coordinates %d/%d are out of bounds in map %s(%dx%d), in file '%s'\n", x, y, mapdata->name, mapdata->xs, mapdata->ys, filepath);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (type == NPCTYPE_WARP && sscanf(w4, "%6hd,%6hd", &xs, &ys) == 2);
+	else if (type == NPCTYPE_SCRIPT && sscanf(w4, "%*[^,],%6hd,%6hd", &xs, &ys) == 2);
+	else if (type == NPCTYPE_WARP) {
+		ShowError("buildin_copynpc: Invalid span format for duplicate warp in file '%s'\n * w1=%s\n * w2=%s\n * w3=%s\n * w4=%s\n", filepath, w1, w2, w3, w4);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	npc_data* nd = npc_create_npc(m, x, y);
+	npc_parsename(nd, w3, start, buffer, filepath);
+	nd->class_ = m == -1 ? JT_FAKENPC : npc_parseview(w4, start, buffer, filepath);
+	nd->speed = DEFAULT_NPC_WALK_SPEED;
+	nd->src_id = src_id;
+	nd->type = BL_NPC;
+	nd->subtype = static_cast<npc_subtype>(type);
+
+	switch (type) {
+		case NPCTYPE_SCRIPT:
+			++(*npc_script);
+			nd->u.scr.xs = xs;
+			nd->u.scr.ys = ys;
+			nd->u.scr.script = dnd->u.scr.script;
+			nd->u.scr.label_list = dnd->u.scr.label_list;
+			nd->u.scr.label_list_num = dnd->u.scr.label_list_num;
+			break;
+
+		case NPCTYPE_SHOP:
+		case NPCTYPE_CASHSHOP:
+		case NPCTYPE_ITEMSHOP:
+		case NPCTYPE_POINTSHOP:
+		case NPCTYPE_MARKETSHOP:
+			++(*npc_shop);
+			safestrncpy(nd->u.shop.pointshop_str, dnd->u.shop.pointshop_str, strlen(dnd->u.shop.pointshop_str));
+			nd->u.shop.itemshop_nameid = dnd->u.shop.itemshop_nameid;
+			nd->u.shop.shop_item = dnd->u.shop.shop_item;
+			nd->u.shop.count = dnd->u.shop.count;
+			nd->u.shop.discount = dnd->u.shop.discount;
+			break;
+
+		case NPCTYPE_WARP:
+			++(*npc_warp);
+			if (!battle_config.warp_point_debug)
+				nd->class_ = JT_WARPNPC;
+			else
+				nd->class_ = JT_GUILD_FLAG;
+			nd->u.warp.xs = xs;
+			nd->u.warp.ys = ys;
+			nd->u.warp.mapindex = dnd->u.warp.mapindex;
+			nd->u.warp.x = dnd->u.warp.x;
+			nd->u.warp.y = dnd->u.warp.y;
+			nd->trigger_on_hidden = dnd->trigger_on_hidden;
+			break;
+	}
+
+	if (m >= 0) {
+		map_addnpc(m, nd);
+		unit_dataset(nd);
+		nd->ud.dir = static_cast<uint8>(dir);
+		npc_setcells(nd);
+		if (map_addblock(nd)) {
+			script_pushint(st, 0);
+			return SCRIPT_CMD_FAILURE;
+		}
+#ifdef Pandas_BattleRecord
+		batrec_new(nd);
+#endif // Pandas_BattleRecord
+		if (nd->class_ != JT_FAKENPC) {
+			status_set_viewdata(nd, nd->class_);
+			if (map_getmapdata(nd->m)->users)
+				clif_spawn(nd);
+		}
+	} else {
+		map_addiddb(nd);
+#ifdef Pandas_BattleRecord
+		batrec_new(nd);
+#endif // Pandas_BattleRecord
+	}
+
+	strdb_put(npcname_db, nd->exname, nd);
+
+	if (dnd->state != NPCVIEW_ENABLE)
+		npc_enable_target(*nd, 0, dnd->state);
+	nd->state = dnd->state;
+
+	if (type != NPCTYPE_SCRIPT) {
+		script_pushint(st, nd->id);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	for (int32 i = 0; i < nd->u.scr.label_list_num; i++) {
+		if (npc_event_export(nd, i)) {
+			ShowWarning("buildin_copynpc: duplicate event %s::%s (%s)\n", nd->exname, nd->u.scr.label_list[i].name, filepath);
+		}
+		npc_timerevent_export(nd, i);
+	}
+
+	if (m >= 0 && mapdata->instance_id > 0)
+		nd->instance_id = mapdata->instance_id;
+
+	nd->u.scr.timerid = INVALID_TIMER;
+	script_pushint(st, nd->id);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_Copynpc
+
 /** Regular expression matching
  * preg_match(<pattern>,<string>{,<offset>})
  */
@@ -30006,6 +30214,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_SetEventTrigger
 	BUILDIN_DEF(settrigger, "ii"), // 使用该指令可以设置某个事件或过滤器的触发行为 [Sola丶小克]
 #endif // Pandas_ScriptCommand_SetEventTrigger
+#ifdef Pandas_ScriptCommand_Copynpc
+	BUILDIN_DEF(copynpc, "???????"), // 复制指定的 NPC 到一个新的位置 [Sola丶小克]
+#endif // Pandas_ScriptCommand_Copynpc
 #ifdef Pandas_ScriptCommand_BattleRecordQuery
 	BUILDIN_DEF(batrec_query, "iii?"), // 查询指定单位的战斗记录, 查看与交互目标单位产生的具体记录值 [Sola丶小克]
 #endif // Pandas_ScriptCommand_BattleRecordQuery

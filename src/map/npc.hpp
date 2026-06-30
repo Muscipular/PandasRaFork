@@ -1767,6 +1767,19 @@ bool isAllowTriggerEvent(map_session_data* sd, enum npce_event event);
 npc_data* npc_duplicate_npc( npc_data& nd, char name[NPC_NAME_LENGTH + 1], int16 mapid, int16 x, int16 y, int32 class_, uint8 dir, int16 xs, int16 ys, map_session_data* owner = nullptr );
 npc_data* npc_duplicate_npc_for_player( npc_data& nd, map_session_data& sd );
 
+#ifdef Pandas_ScriptCommand_Copynpc
+struct DBMap* get_npcname_db_ptr();
+int32* get_npc_script_ptr();
+int32* get_npc_shop_ptr();
+int32* get_npc_warp_ptr();
+
+npc_data* npc_create_npc(int16 m, int16 x, int16 y);
+int32 npc_event_export(npc_data* nd, int32 i);
+int32 npc_timerevent_export(npc_data* nd, int32 i);
+void npc_parsename(npc_data* nd, const char* name, const char* start, const char* buffer, const char* filepath);
+int32 npc_parseview(const char* w4, const char* start, const char* buffer, const char* filepath);
+#endif // Pandas_ScriptCommand_Copynpc
+
 void npc_setcells(npc_data* nd);
 void npc_unsetcells(npc_data* nd);
 bool npc_movenpc(npc_data* nd, int16 x, int16 y);

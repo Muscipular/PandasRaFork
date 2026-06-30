@@ -1011,6 +1011,7 @@
 	// 使用该指令可以发送指定颜色的消息文本到聊天窗口中
 	// 是否启用 copynpc 脚本指令 [Sola丶小克]
 	// 使用该指令可以复制指定的 NPC 到一个新的位置 (坐标等相对可以灵活设置)
+	#define Pandas_ScriptCommand_Copynpc
 	// 是否启用 gettimefmt 脚本指令 [Sola丶小克]
 	// 将当前时间格式化输出成字符串, 是 gettimestr 的改进版
 	// 是否启用 multicatchpet 脚本指令 [Sola丶小克]
