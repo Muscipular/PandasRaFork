@@ -4914,6 +4914,55 @@ ACMD_FUNC(mapinfo) {
 		strcat(atcmd_output, "  Displays Night |");
 	clif_displaymessage(fd, atcmd_output);
 
+#ifdef Pandas_Mapflags
+	std::string atcmd_output_str(msg_txt_cn(sd, 100)); // 熊猫地图标记:
+	for (const auto& it : mapflag_config) {
+		size_t args_count = it.second.args.size();
+
+		if (map_getmapflag(m_id, it.first)) {
+			if (args_count == 0) {
+				std::string temp_str = atcmd_output_str + " " + it.second.name + " |";
+
+				if (temp_str.size() < CHAT_SIZE_MAX - 1) {
+					atcmd_output_str = temp_str;
+				} else {
+					strncpy(atcmd_output, atcmd_output_str.c_str(), sizeof(atcmd_output) - 1);
+					atcmd_output[sizeof(atcmd_output) - 1] = '\0';
+					clif_displaymessage(fd, atcmd_output);
+					atcmd_output_str.clear();
+					atcmd_output_str = std::string(it.second.name) + " |";
+				}
+			} else {
+				std::string args_mes;
+				for (size_t i = 0; i < args_count; i++) {
+					const char* unit = it.second.args[i].unit;
+					if (unit == nullptr) {
+						unit = "";
+					}
+					args_mes += std::to_string(map_getmapflag_param(m_id, it.first, i + 1)) + unit;
+					if (i != args_count - 1) {
+						args_mes += ", ";
+					}
+				}
+
+				std::string temp_str = atcmd_output_str + " " + it.second.name + ": " + args_mes + " |";
+				if (temp_str.size() < CHAT_SIZE_MAX - 1) {
+					atcmd_output_str = temp_str;
+				} else {
+					strncpy(atcmd_output, atcmd_output_str.c_str(), sizeof(atcmd_output) - 1);
+					atcmd_output[sizeof(atcmd_output) - 1] = '\0';
+					clif_displaymessage(fd, atcmd_output);
+					atcmd_output_str.clear();
+					atcmd_output_str = std::string(it.second.name) + ": " + args_mes + " |";
+				}
+			}
+		}
+	}
+	strncpy(atcmd_output, atcmd_output_str.c_str(), sizeof(atcmd_output) - 1);
+	atcmd_output[sizeof(atcmd_output) - 1] = '\0';
+	clif_displaymessage(fd, atcmd_output);
+#endif // Pandas_Mapflags
+
 	strcpy(atcmd_output,msg_txt(sd,1050)); // Other Flags:
 	if (map_getmapflag(m_id, MF_NOBRANCH))
 		strcat(atcmd_output, " NoBranch |");
@@ -9168,7 +9217,7 @@ ACMD_FUNC(mapflag) {
 		clif_displaymessage(sd->fd,msg_txt(sd,1311)); // Enabled Mapflags in this map:
 		clif_displaymessage(sd->fd,"----------------------------------");
 		for( i = MF_MIN; i < MF_MAX; i++ ){
-			union u_mapflag_args args = {};
+			pds_mapflag_args args = {};
 
 #ifdef Pandas_MapFlag_NoCapture
 			if (i == MF_NOCAPTURE) {
@@ -9203,6 +9252,14 @@ ACMD_FUNC(mapflag) {
 												MF_BATTLEGROUND,
 												MF_SKILL_DAMAGE,
 												MF_SKILL_DURATION };
+
+#ifdef Pandas_Mapflags
+			for (const auto& it : mapflag_config) {
+				if (it.second.block_atcmd) {
+					disabled_mf.insert(disabled_mf.begin(), it.first);
+				}
+			}
+#endif // Pandas_Mapflags
 
 			if (flag > 0 && util::vector_exists(disabled_mf, mapflag)) {
 				sprintf(atcmd_output,"[ @mapflag ] %s flag cannot be enabled as it requires unique values.", flag_name);

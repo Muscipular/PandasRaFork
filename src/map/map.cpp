@@ -65,6 +65,10 @@
 using namespace rathena;
 using namespace rathena::server_map;
 
+#ifdef Pandas_Mapflags
+std::unordered_map<e_mapflag, s_mapflag_item> mapflag_config;
+#endif // Pandas_Mapflags
+
 std::string default_codepage = "";
 #ifdef Pandas_SQL_Configure_Optimization
 char map_codepage[32] = "";
@@ -3894,7 +3898,7 @@ int32 map_delmap(char* mapname){
 void map_flags_init(void){
 	for (int32 i = 0; i < map_num; i++) {
 		struct map_data *mapdata = &map[i];
-		union u_mapflag_args args = {};
+		pds_mapflag_args args = {};
 
 		mapdata->initMapFlags(); // Resize and define default values
 		mapdata->drop_list.clear();
@@ -4742,7 +4746,7 @@ int32 cleanup_sub(block_list *bl, va_list ap)
  * @param skill_id: Skill ID
  * @param args: Mapflag arguments
  */
-void map_skill_damage_add(struct map_data *m, uint16 skill_id, union u_mapflag_args *args) {
+void map_skill_damage_add(struct map_data *m, uint16 skill_id, pds_mapflag_args *args) {
 	nullpo_retv(m);
 	nullpo_retv(args);
 
@@ -4888,6 +4892,170 @@ bool map_getmapflag_name( enum e_mapflag mapflag, char* output ){
 	return true;
 }
 
+#ifdef Pandas_Mapflags
+bool map_mapflag_valid_index(e_mapflag mapflag, size_t index) {
+	#define MAX_ARGS_COUNT 4
+	auto conf = util::umap_find(mapflag_config, mapflag);
+	if (conf == nullptr) {
+		return false;
+	}
+	return (index >= 0 && index < conf->args.size() && index < MAX_ARGS_COUNT);
+}
+
+int map_getmapflag_param(int16 m, enum e_mapflag mapflag, size_t index, int default_val) {
+	if (m < 0 || m >= MAX_MAP_PER_SERVER) {
+		ShowWarning("map_getmapflag_param: Invalid map ID %d.\n", m);
+		return default_val;
+	}
+
+	struct map_data *mapdata = &map[m];
+
+	if (mapflag < MF_MIN || mapflag >= MF_MAX) {
+		ShowWarning("map_getmapflag_param: Invalid mapflag %d on map %s.\n", mapflag, mapdata->name);
+		return default_val;
+	}
+
+	if (index == 0) {
+		return mapdata->getMapFlag(mapflag);
+	}
+
+	index = index - 1;
+
+	auto conf = util::umap_find(mapflag_config, mapflag);
+	if (conf == nullptr) {
+		ShowWarning("map_getmapflag_param: No config data for mapflag %d on map %s.\n", mapflag, mapdata->name);
+		return default_val;
+	}
+
+	if (!map_mapflag_valid_index(mapflag, index)) {
+		ShowWarning("map_getmapflag_param: Invalid param index %d of mapflag '%s' on map %s.\n", index, conf->name, mapdata->name);
+		return default_val;
+	}
+
+	std::vector<int>* params = util::umap_find(mapdata->mapflag_values, mapflag);
+	if (params == nullptr) {
+		return default_val;
+	}
+
+	if (params->size() < index || index >= params->size()) {
+		return default_val;
+	}
+
+	return params->at(index);
+}
+
+int map_getmapflag_param(int16 m, enum e_mapflag mapflag, size_t index) {
+	int default_val = 0;
+	auto conf = util::umap_find(mapflag_config, mapflag);
+	if (conf && map_mapflag_valid_index(mapflag, index - 1)) {
+		default_val = conf->args[index - 1].def_val;
+	}
+	return map_getmapflag_param(m, mapflag, index, default_val);
+}
+
+void map_setmapflag_param(int16 m, enum e_mapflag mapflag, size_t index, int value) {
+	if (m < 0 || m >= MAX_MAP_PER_SERVER) {
+		ShowWarning("map_setmapflag_param: Invalid map ID %d.\n", m);
+		return;
+	}
+
+	struct map_data *mapdata = &map[m];
+
+	if (mapflag < MF_MIN || mapflag >= MF_MAX) {
+		ShowWarning("map_setmapflag_param: Invalid mapflag %d on map %s.\n", mapflag, mapdata->name);
+		return;
+	}
+
+	if (index == 0) {
+		mapdata->setMapFlag(mapflag, static_cast<bool>(value));
+		return;
+	}
+
+	index = index - 1;
+
+	auto conf = util::umap_find(mapflag_config, mapflag);
+	if (conf == nullptr) {
+		ShowWarning("map_setmapflag_param: No config data for mapflag %d on map %s.\n", mapflag, mapdata->name);
+		return;
+	}
+
+	if (!map_mapflag_valid_index(mapflag, index)) {
+		ShowWarning("map_setmapflag_param: Invalid param index %d of mapflag '%s' on map %s.\n", index, conf->name, mapdata->name);
+		return;
+	}
+
+	std::vector<int> *current_values = util::umap_find(mapdata->mapflag_values, mapflag);
+	bool exists = (current_values != nullptr);
+	std::vector<int> new_values = {};
+	if (!exists) {
+		current_values = &new_values;
+	}
+
+	size_t args_count = conf->args.size();
+	if (current_values->size() != args_count) {
+		current_values->resize(args_count);
+	}
+
+	if (value < conf->args[index].min || value > conf->args[index].max) {
+		ShowWarning("map_setmapflag_param: Attempt to assign %d to the %d parameter, but exceeds %d~%d range (Mapflag: %s | Mapname: %s), defaulting to %d\n",
+			value, index + 1, conf->args[index].min, conf->args[index].max, conf->name, mapdata->name, conf->args[index].def_val);
+		value = conf->args[index].def_val;
+	}
+
+	(*current_values)[index] = value;
+
+	if (!exists) {
+		mapdata->mapflag_values.insert({mapflag, *current_values});
+	}
+}
+
+void map_setmapflag_param(int16 m, enum e_mapflag mapflag, const std::vector<int>& values) {
+	for (int i = 0; i < values.size(); i++) {
+		map_setmapflag_param(m, mapflag, i + 1, values[i]);
+	}
+}
+
+void map_setmapflag_param_reset(int16 m, enum e_mapflag mapflag) {
+	if (m < 0 || m >= MAX_MAP_PER_SERVER) {
+		ShowWarning("map_setmapflag_param_reset: Invalid map ID %d.\n", m);
+		return;
+	}
+
+	struct map_data* mapdata = &map[m];
+
+	if (mapflag < MF_MIN || mapflag >= MF_MAX) {
+		ShowWarning("map_setmapflag_param_reset: Invalid mapflag %d on map %s.\n", mapflag, mapdata->name);
+		return;
+	}
+
+	auto conf = util::umap_find(mapflag_config, mapflag);
+	if (conf == nullptr) {
+		ShowWarning("map_setmapflag_param_reset: No config data for mapflag %d on map %s.\n", mapflag, mapdata->name);
+		return;
+	}
+
+	std::vector<int>* current_values = util::umap_find(mapdata->mapflag_values, mapflag);
+	bool exists = (current_values != nullptr);
+	std::vector<int> new_values = {};
+	if (!exists) {
+		current_values = &new_values;
+	}
+
+	size_t args_count = conf->args.size();
+	if (current_values->size() != args_count) {
+		current_values->resize(args_count);
+	}
+
+	for (size_t i = 0; i < args_count; ++i) {
+		(*current_values)[i] = conf->args[i].def_val;
+	}
+
+	if (!exists) {
+		mapdata->mapflag_values.insert({ mapflag, *current_values });
+	}
+}
+#endif // Pandas_Mapflags
+
 /**
  * Get a mapflag value
  * @param m: Map ID
@@ -4895,7 +5063,7 @@ bool map_getmapflag_name( enum e_mapflag mapflag, char* output ){
  * @param args: Arguments for special flags
  * @return Mapflag value on success or -1 on failure
  */
-int32 map_getmapflag_sub(int16 m, enum e_mapflag mapflag, union u_mapflag_args *args)
+int32 map_getmapflag_sub(int16 m, enum e_mapflag mapflag, pds_mapflag_args *args)
 {
 	if (m < 0 || m >= MAX_MAP_PER_SERVER) {
 		ShowWarning("map_getmapflag: Invalid map ID %d.\n", m);
@@ -4908,6 +5076,12 @@ int32 map_getmapflag_sub(int16 m, enum e_mapflag mapflag, union u_mapflag_args *
 		ShowWarning("map_getmapflag: Invalid mapflag %d on map %s.\n", mapflag, mapdata->name);
 		return -1;
 	}
+
+#ifdef Pandas_Mapflags
+	if (args && util::umap_find(mapflag_config, mapflag) != nullptr) {
+		return map_getmapflag_param(m, mapflag, args->flag_val);
+	}
+#endif // Pandas_Mapflags
 
 	switch(mapflag) {
 		case MF_RESTRICTED:
@@ -4949,7 +5123,7 @@ int32 map_getmapflag_sub(int16 m, enum e_mapflag mapflag, union u_mapflag_args *
  * @param args: Arguments for special flags
  * @return True on success or false on failure
  */
-bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, union u_mapflag_args *args)
+bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, pds_mapflag_args *args)
 {
 	if (m < 0 || m >= MAX_MAP_PER_SERVER) {
 		ShowWarning("map_setmapflag: Invalid map ID %d.\n", m);
@@ -5224,6 +5398,40 @@ bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, union u_ma
 			mapdata->setMapFlag(mapflag, status);
 			break;
 	}
+
+#ifdef Pandas_Mapflags
+	auto conf = util::umap_find(mapflag_config, mapflag);
+	if (conf != nullptr) {
+		if (!status) {
+			map_setmapflag_param_reset(m, mapflag);
+		} else if (args) {
+			map_setmapflag_param(m, mapflag, args->input);
+
+			if (conf->turn_off_default) {
+				std::vector<int>* current_values = util::umap_find(mapdata->mapflag_values, mapflag);
+
+				if (current_values) {
+					bool all_equal = true;
+					for (size_t i = 0; i < conf->args.size(); i++) {
+						if ((*current_values)[i] != conf->args[i].def_val) {
+							all_equal = false;
+							break;
+						}
+					}
+
+					if (all_equal) {
+						map_setmapflag_param_reset(m, mapflag);
+						status = false;
+					}
+				}
+			}
+		}
+		mapdata->setMapFlag(mapflag, status);
+	}
+
+	switch (mapflag) {
+	}
+#endif // Pandas_Mapflags
 
 	return true;
 }
@@ -5571,6 +5779,10 @@ void map_data::initMapFlags() {
 
 void map_data::copyFlags(const map_data& other) {
 	flags = other.flags;
+
+#ifdef Pandas_Mapflags
+	mapflag_values.insert(other.mapflag_values.begin(), other.mapflag_values.end());
+#endif // Pandas_Mapflags
 }
 
 /// Called when a terminate signal is received.

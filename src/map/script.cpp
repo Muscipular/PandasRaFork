@@ -14393,7 +14393,7 @@ BUILDIN_FUNC(setmapflagnosave)
 	int16 m,x,y;
 	uint16 mapindex;
 	const char *str,*str2;
-	union u_mapflag_args args = {};
+	pds_mapflag_args args = {};
 
 	str=script_getstr(st,2);
 	str2=script_getstr(st,3);
@@ -14436,7 +14436,7 @@ BUILDIN_FUNC(getmapflag)
 		return SCRIPT_CMD_FAILURE;
 	}
 
-	union u_mapflag_args args = {};
+	pds_mapflag_args args = {};
 
 	if (mf == MF_SKILL_DAMAGE && !script_hasdata(st, 4))
 		args.flag_val = SKILLDMG_MAX;
@@ -14469,7 +14469,7 @@ BUILDIN_FUNC(setmapflag)
 		return SCRIPT_CMD_FAILURE;
 	}
 
-	union u_mapflag_args args = {};
+	pds_mapflag_args args = {};
 
 	switch(mf) {
 		case MF_SKILL_DAMAGE:
@@ -14509,6 +14509,39 @@ BUILDIN_FUNC(setmapflag)
 			break;
 	}
 
+#ifdef Pandas_Mapflags
+	auto conf = util::umap_find(mapflag_config, static_cast<e_mapflag>(mf));
+	if (conf != nullptr) {
+		size_t args_count = conf->args.size();
+		args.input.resize(args_count);
+
+		switch (args_count) {
+		case 0:
+			break;
+		case 1:
+			FETCH(4, args.input[0]);
+			break;
+		case 2:
+			FETCH(4, args.input[0]);
+			FETCH(5, args.input[1]);
+			break;
+		case 3:
+			FETCH(4, args.input[0]);
+			FETCH(5, args.input[1]);
+			FETCH(6, args.input[2]);
+			break;
+		case 4:
+			FETCH(4, args.input[0]);
+			FETCH(5, args.input[1]);
+			FETCH(6, args.input[2]);
+			FETCH(7, args.input[3]);
+			break;
+		default:
+			ShowError("buildin_setmapflag: Unsupported mapflag '%s' with %d arguments.\n", conf->name, args_count);
+			break;
+		}
+	}
+#endif // Pandas_Mapflags
 	map_setmapflag_sub(m, static_cast<e_mapflag>(mf), true, &args);
 
 	return SCRIPT_CMD_SUCCESS;
@@ -14519,7 +14552,7 @@ BUILDIN_FUNC(removemapflag)
 	int16 m;
 	int32 mf;
 	const char *str;
-	union u_mapflag_args args = {};
+	pds_mapflag_args args = {};
 
 	str = script_getstr(st, 2);
 	m = map_mapname2mapid(str);
@@ -30140,7 +30173,12 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(isloggedin,"i?"),
 	BUILDIN_DEF(setmapflagnosave,"ssii"),
 	BUILDIN_DEF(getmapflag,"si?"),
+#ifndef Pandas_Mapflags
 	BUILDIN_DEF(setmapflag,"si??"),
+#else
+	// setmapflag "<map name>",<flag>{,<val1>{,<val2>{,<val3>{,<val4>}}}};
+	BUILDIN_DEF(setmapflag,"si????"),
+#endif // Pandas_Mapflags
 	BUILDIN_DEF(removemapflag,"si?"),
 	BUILDIN_DEF(pvpon,"s"),
 	BUILDIN_DEF(pvpoff,"s"),

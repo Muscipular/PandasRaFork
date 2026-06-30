@@ -750,14 +750,45 @@ struct s_drop_list {
 	enum e_nightmare_drop_type drop_type;
 };
 
+#ifdef Pandas_Mapflags
+struct s_mapflag_item_args {
+	int def_val;
+	int min;
+	int max;
+	const char* unit = nullptr;
+};
+
+struct s_mapflag_item {
+	const char* name;
+	bool turn_off_default;
+	bool block_atcmd;
+	std::vector<s_mapflag_item_args> args;
+};
+
+extern std::unordered_map<e_mapflag, s_mapflag_item> mapflag_config;
+#endif // Pandas_Mapflags
+
 /// Union for mapflag values
+#ifndef Pandas_Mapflags
 union u_mapflag_args {
+#else
+struct u_mapflag_args {
+#endif // Pandas_Mapflags
 	struct point nosave;
 	struct s_drop_list nightmaredrop;
 	struct s_skill_damage skill_damage;
 	struct s_skill_duration skill_duration;
+#ifdef Pandas_Mapflags
+	std::vector<int32> input;
+#endif // Pandas_Mapflags
 	int32 flag_val;
 };
+
+#ifndef Pandas_Mapflags
+typedef union u_mapflag_args pds_mapflag_args;
+#else
+typedef struct u_mapflag_args pds_mapflag_args;
+#endif // Pandas_Mapflags
 
 // used by map_setcell()
 enum cell_t{
@@ -872,6 +903,10 @@ struct map_data {
 
 	/* ShowEvent Data Cache */
 	std::vector<int32> qi_npc;
+
+#ifdef Pandas_Mapflags
+	std::unordered_map<e_mapflag, std::vector<int>> mapflag_values;
+#endif // Pandas_Mapflags
 
 	/* speeds up clif_updatestatus processing by causing hpmeter to run only when someone with the permission can view it */
 	uint16 hpmeter_visible;
@@ -1294,13 +1329,13 @@ void map_removemobs(int16 m); // [Wizputer]
 void map_addmap2db(struct map_data *m);
 void map_removemapdb(struct map_data *m);
 
-void map_skill_damage_add(map_data* m, uint16 skill_id, union u_mapflag_args *args);
+void map_skill_damage_add(map_data* m, uint16 skill_id, pds_mapflag_args *args);
 void map_skill_duration_add(map_data* mapd, uint16 skill_id, uint16 per);
 
 enum e_mapflag map_getmapflag_by_name(const char* name);
 bool map_getmapflag_name(enum e_mapflag mapflag, char* output);
-int32 map_getmapflag_sub(int16 m, enum e_mapflag mapflag, union u_mapflag_args *args);
-bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, union u_mapflag_args *args);
+int32 map_getmapflag_sub(int16 m, enum e_mapflag mapflag, pds_mapflag_args *args);
+bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, pds_mapflag_args *args);
 #define map_getmapflag(m, mapflag) map_getmapflag_sub(m, mapflag, nullptr)
 #define map_setmapflag(m, mapflag, status) map_setmapflag_sub(m, mapflag, status, nullptr)
 
@@ -1379,6 +1414,12 @@ extern char suspend_table[32];
 // 备注: 该变量真正的声明定义, 位于 map.cpp 中
 extern uint32 clif_cryptKey_custom[3];
 #endif // Pandas_Support_Specify_PacketKeys
+
+#ifdef Pandas_Mapflags
+int map_getmapflag_param(int16 m, enum e_mapflag mapflag, size_t index);
+void map_setmapflag_param(int16 m, enum e_mapflag mapflag, size_t index, int value);
+void map_setmapflag_param(int16 m, enum e_mapflag mapflag, const std::vector<int>& values);
+#endif // Pandas_Mapflags
 
 void do_shutdown(void);
 

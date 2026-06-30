@@ -8,6 +8,7 @@
 	#define Pandas_FuncIncrease
 	#define Pandas_PacketFunction
 	#define Pandas_CreativeWork
+	#define Pandas_Mapflags
 	#define Pandas_ScriptEngine
 	#define Pandas_NpcEvent
 	#define Pandas_AtCommands
@@ -790,6 +791,89 @@
 #ifndef Pandas_Support_Transfer_Autotrade_Player
 	#undef Pandas_BattleConfig_Multiplayer_Recall_Behavior
 #endif // Pandas_Support_Transfer_Autotrade_Player
+
+// ============================================================================
+// 地图标记组 - Pandas_Mapflags
+// ============================================================================
+
+#ifdef Pandas_Mapflags
+	// 是否启用 mobinfo 地图标记 [Sola丶小克]
+	// 该标记用于指定某地图的 show_mob_info 值, 以此控制该地图魔物名称的展现信息
+	// 此地图标记依赖 Pandas_MobInfomation_Extend 的拓展
+
+	// 是否启用 noautoloot 地图标记 [Sola丶小克]
+	// 该标记用于在给定此标记的地图上禁止玩家使用自动拾取功能, 或使已激活的自动拾取功能失效
+
+	// 是否启用 notoken 地图标记 [Sola丶小克]
+	// 该标记用于禁止玩家在指定的地图上使用“原地复活之证”道具
+
+	// 是否启用 nocapture 地图标记 [Sola丶小克]
+	// 该标记用于禁止玩家在地图上使用宠物捕捉道具或贤者的"随机技能"来捕捉宠物
+	// 此地图标记依赖 Pandas_Struct_Item_Data_Taming_Mobid 的拓展
+
+	// 是否启用 hideguildinfo 地图标记 [Sola丶小克]
+	// 使当前地图上的玩家无法见到其他人的公会图标、公会名称、职位等信息 (自己依然可见)
+
+	// 是否启用 hidepartyinfo 地图标记 [Sola丶小克]
+	// 使当前地图上的玩家无法见到其他人的队伍名称 (自己依然可见)
+
+	// 是否启用 nomail 地图标记 [Sola丶小克]
+	// 该标记用于禁止玩家在地图上打开邮件界面或进行邮件系统的相关操作
+
+	// 是否启用 nopet 地图标记 [Sola丶小克]
+	// 该标记用于禁止玩家在地图上召唤宠物, 宠物进入该地图会自动变回宠物蛋
+
+	// 是否启用 nohomun 地图标记 [Sola丶小克]
+	// 该标记用于禁止玩家在地图上召唤人工生命体, 生命体进入该地图会自动安息
+
+	// 是否启用 nomerc 地图标记 [Sola丶小克]
+	// 该标记用于禁止玩家在地图上召唤佣兵, 佣兵进入该地图会自动隐藏
+
+	// 是否启用 mobdroprate 地图标记 [Sola丶小克]
+	// 该标记用于额外调整此地图上普通魔物的物品掉落倍率
+
+	// 是否启用 mvpdroprate 地图标记 [Sola丶小克]
+	// 该标记用于额外调整此地图上 MVP 魔物的物品掉落倍率
+
+	// 是否启用 maxheal 地图标记 [Sola丶小克]
+	// 该标记用于限制此地图上单位的治愈系技能最大的 HP 治愈量
+
+	// 是否启用 maxdmg_skill 地图标记 [Sola丶小克]
+	// 该标记用于限制此地图上单位的最大技能伤害 (不含治愈系技能)
+
+	// 是否启用 maxdmg_normal 地图标记 [Sola丶小克]
+	// 该标记用于限制此地图上单位的最大平砍伤害 (包括二刀连击和刺客拳刃平砍)
+
+	// 是否启用 noskill2 地图标记 [Sola丶小克]
+	// 该标记用于禁止此地图上的指定单位使用技能 (支持掩码指定多种类型的单位)
+
+	// 是否启用 noaura 地图标记 [Sola丶小克]
+	// 该标记用于在当前地图上禁用角色的光环效果
+	// 此地图标记依赖 Pandas_Aura_Mechanism 的拓展
+
+	// 是否启用 maxaspd 地图标记 [Sola丶小克]
+	// 该标记用于限制此地图上单位的最大攻击速度 (ASDP: 1~199)
+
+	// 是否启用 noslave 地图标记 [HongShin]
+	// 该标记用于禁止此地图上的魔物召唤随从
+
+	// 是否启用 nobank 地图标记 [聽風]
+	// rAthena 官方已经实现此标记, 当前宏定义所包含的代码用于处理体验细节
+
+	// 是否启用 nouseitem 地图标记 [HongShin]
+	// 该标记用于禁止玩家在地图上使用消耗型物品道具
+
+	// 是否启用 hidedamage 地图标记 [HongShin]
+	// 该标记用于隐藏此地图上任何攻击的实际伤害数值 (无论什么单位, 无论是否 MISS)
+
+	// 是否启用 noattack 地图标记 [HongShin]
+	// 该标记用于禁止此地图上的任何单位进行普通攻击
+
+	// 是否启用 noattack2 地图标记 [HongShin]
+	// 该标记用于禁止此地图上指定单位进行普通攻击 (支持掩码指定多种类型的单位)
+
+	// PYHELP - MAPFLAG - INSERT POINT - <Section 1>
+#endif // Pandas_Mapflags
 
 // ============================================================================
 // 脚本引擎修改组 - Pandas_ScriptEngine
