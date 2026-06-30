@@ -790,6 +790,10 @@ struct Battle_Config
 	int32 force_identified; // 强制特定渠道获得的装备自动变成已鉴定
 #endif // Pandas_BattleConfig_Force_Identified
 
+#ifdef Pandas_BattleConfig_CashMounting_UseitemLimit
+	int32 cashmount_useitem_limit; // 乘坐“商城坐骑”时禁止使用特定类型的物品
+#endif // Pandas_BattleConfig_CashMounting_UseitemLimit
+
 #ifdef Pandas_BattleConfig_Suspend_MonsterIgnore
 	int32 suspend_monsterignore; // 当玩家使用挂机系列指令时, 处于哪些模式不会被魔物攻击
 #endif // Pandas_BattleConfig_Suspend_MonsterIgnore

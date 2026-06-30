@@ -7113,6 +7113,26 @@ void clif_use_card( const map_session_data* sd,int32 idx)
 	if (!sd->inventory_data[idx] || sd->inventory_data[idx]->type != IT_CARD)
 		return; //Avoid parsing invalid item indexes (no card/no item)
 
+#ifdef Pandas_BattleConfig_CashMounting_UseitemLimit
+	// 当玩家双击卡片时先判定是否乘坐了“商城坐骑”,
+	// 如果是那么再根据 cashmount_useitem_limit 设置决定是否拒绝 [Sola丶小克]
+	if (sd && !sd->sc.empty() && sd->sc.getSCE(SC_ALL_RIDING)) {
+		bool isblocked = false;
+		switch (sd->inventory_data[idx]->type) {
+			case IT_CARD: {
+				isblocked = (battle_config.cashmount_useitem_limit & 16) == 16;
+				break;
+			}
+		}
+		if (isblocked) {
+			char message[128] = { 0 };
+			safesnprintf(message, sizeof(message), msg_txt_cn(sd, 3), sd->inventory_data[idx]->ename.c_str()); // 很抱歉, 当您坐上“商城坐骑”时, 无法使用: %s
+			clif_displaymessage(sd->fd, message);
+			return;
+		}
+	}
+#endif // Pandas_BattleConfig_CashMounting_UseitemLimit
+
 	ep=sd->inventory_data[idx]->equip;
 	WFIFOHEAD(fd,MAX_INVENTORY * 2 + 4);
 	WFIFOW(fd,0)=0x17b;

@@ -8980,6 +8980,10 @@ static const struct _battle_data {
 	{ "force_identified",                   &battle_config.force_identified,                0,      0,      511,            },
 #endif // Pandas_BattleConfig_Force_Identified
 
+#ifdef Pandas_BattleConfig_CashMounting_UseitemLimit
+	{ "cashmount_useitem_limit",            &battle_config.cashmount_useitem_limit,         64,     0,      511,            },
+#endif // Pandas_BattleConfig_CashMounting_UseitemLimit
+
 #include <custom/battle_config_init.inc>
 };
 
