@@ -11763,6 +11763,31 @@ ACMD_FUNC(aura) {
 }
 #endif // Pandas_AtCommand_Aura
 
+#ifdef Pandas_AtCommand_ReloadAuraDB
+/* ===========================================================
+ * 指令: reloadauradb
+ * 描述: 重新加载光环数据库 (aura_db.yml)
+ * 用法: @reloadauradb
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(reloadauradb) {
+	aura_reload();
+
+	struct block_list* bl = nullptr;
+	struct s_mapiterator* iter = mapit_geteachiddb();
+
+	for (bl = (struct block_list*)mapit_first(iter); mapit_exists(iter); bl = (struct block_list*)mapit_next(iter)) {
+		aura_effects_refill(bl);
+		aura_refresh_client(bl);
+	}
+
+	mapit_free(iter);
+
+	clif_displaymessage(fd, msg_txt_cn(sd, 106)); // Aura database has been reloaded.
+	return 0;
+}
+#endif // Pandas_AtCommand_ReloadAuraDB
+
 /**
  * Fills the reference of available commands in atcommand DBMap
  **/
@@ -11786,6 +11811,9 @@ void atcommand_basecommands(void) {
 #ifdef Pandas_AtCommand_Aura
 		ACMD_DEF(aura),					// 激活指定的光环组合 [Sola丶小克]
 #endif // Pandas_AtCommand_Aura
+#ifdef Pandas_AtCommand_ReloadAuraDB
+		ACMD_DEF(reloadauradb),			// 重新加载光环数据库 [Sola丶小克]
+#endif // Pandas_AtCommand_ReloadAuraDB
 #include <custom/atcommand_def.inc>
 		ACMD_DEF(mapmove),
 		ACMD_DEF(where),
