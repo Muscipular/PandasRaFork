@@ -11695,6 +11695,41 @@ ACMD_FUNC(recallmap) {
 }
 #endif // Pandas_AtCommand_RecallMap
 
+#ifdef Pandas_AtCommand_Title
+/* ===========================================================
+ * 指令: title
+ * 描述: 给角色设置一个指定的称号ID
+ * 用法: @title <称号ID>
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(title) {
+	nullpo_retr(-1, sd);
+
+#if PACKETVER < 20150513
+	clif_displaymessage(fd, msg_txt_cn(sd, 16));		// 很抱歉, 您的客户端版本低于 20150513, 无法使用该指令.
+	return -1;
+#else
+	int32 input_title_id = 0;
+
+	if (!message || !*message || sscanf(message, "%11d", &input_title_id) < 1) {
+		clif_displaymessage(fd, msg_txt_cn(sd, 12));	// 使用方法: @title <称号ID, 若设为 0 则取消称号>
+		clif_displaymessage(fd, msg_txt_cn(sd, 13));	// 称号ID与称号的对照表位于客户端: data\luafiles514\lua files\datainfo\titletable.lub
+		return -1;
+	}
+
+	if (input_title_id < 0)
+		input_title_id = 0;
+
+	uint32 title_id = static_cast<uint32>(input_title_id);
+
+	npc_change_title_event(sd, title_id, 2);
+	clif_displaymessage(fd, msg_txt_cn(sd, title_id ? 14 : 15));
+
+	return 0;
+#endif
+}
+#endif // Pandas_AtCommand_Title
+
 /**
  * Fills the reference of available commands in atcommand DBMap
  **/
@@ -11712,6 +11747,9 @@ void atcommand_basecommands(void) {
 #ifdef Pandas_AtCommand_RecallMap
 		ACMD_DEF(recallmap),			// 召唤当前(或指定)地图的玩家来到身边 [Sola丶小克]
 #endif // Pandas_AtCommand_RecallMap
+#ifdef Pandas_AtCommand_Title
+		ACMD_DEF(title),				// 给角色设置一个指定的称号ID [Sola丶小克]
+#endif // Pandas_AtCommand_Title
 #include <custom/atcommand_def.inc>
 		ACMD_DEF(mapmove),
 		ACMD_DEF(where),
