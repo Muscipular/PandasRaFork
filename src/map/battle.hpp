@@ -870,6 +870,10 @@ struct Battle_Config
 	int32 batrec_autoenabled_unit; // 有哪些单位默认开启战斗记录
 #endif // Pandas_BattleConfig_BattleRecord_AutoEnabled_Unit
 
+#ifdef Pandas_BattleConfig_Repeat_ClearUnit_Interval
+	int32 repeat_clearunit_interval; // 重发魔物死亡封包的间隔时间
+#endif // Pandas_BattleConfig_Repeat_ClearUnit_Interval
+
 #ifdef Pandas_BattleConfig_Mob_SetUnitData_Persistence
 	int32 mob_setunitdata_persistence; // 是否高优先级持久化保存 setunitdata 对魔物的设置
 #endif // Pandas_BattleConfig_Mob_SetUnitData_Persistence

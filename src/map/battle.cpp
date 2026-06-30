@@ -8986,6 +8986,10 @@ static const struct _battle_data {
 	{ "batrec_autoenabled_unit",            &battle_config.batrec_autoenabled_unit,         542,    0,      BL_ALL,         },
 #endif // Pandas_BattleConfig_BattleRecord_AutoEnabled_Unit
 
+#ifdef Pandas_BattleConfig_Repeat_ClearUnit_Interval
+	{ "repeat_clearunit_interval",          &battle_config.repeat_clearunit_interval,       0,      0,      1000,           },
+#endif // Pandas_BattleConfig_Repeat_ClearUnit_Interval
+
 #ifdef Pandas_BattleConfig_Mob_SetUnitData_Persistence
 	{ "mob_setunitdata_persistence",        &battle_config.mob_setunitdata_persistence,     1,      0,      1,              },
 #endif // Pandas_BattleConfig_Mob_SetUnitData_Persistence
