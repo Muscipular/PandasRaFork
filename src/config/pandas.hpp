@@ -547,6 +547,53 @@
 
 	// 调整 pc.cpp 中 pc_equipitem 执行道具绑定的时机 [Sola丶小克]
 	#define Pandas_FuncLogic_PC_EQUIPITEM_BOUND_OPPORTUNITY
+
+	// 调整 storage.cpp 中 storage_additem 的函数定义, 移除 static 关键字 [Sola丶小克]
+
+	// 调整 instance.cpp 中 instance_destroy 的定义
+	// 增加 skip_erase 参数用于控制成功销毁副本后不 erase 掉 instance 对象
+	// 以便交由外部来进行 erase, 这样才能获取下一个指针的正确位置 (C++11) [Sola丶小克]
+
+	// 调整各单位的死亡处理函数, 以便支持更多参数信息 [Sola丶小克]
+	// 玩家单位	: pc.cpp -> pc_dead
+	// 魔物单位	: mob.cpp -> mob_dead
+	// 生命体单位	: homunculus.cpp -> hom_dead
+	// 佣兵单位	: mercenary.cpp -> mercenary_dead
+	// 元素精灵	: elemental.cpp -> elemental_dead
+
+	// 调整用于计算 MAX_INVENTORY 相关的变量
+	// 以便能够支持将背包的最大上限设置成超过 128 的值 [Sola丶小克]
+	// 提示: 根据目前的 struct item 和 struct s_storage 的体积情况,
+	// 应该可支持将 MAX_INVENTORY 调整到 800 左右, 但设置越大对性能影响会越大
+
+	// 调整 atcommand.cpp 中 atcommand_reload 配置重载指令的逻辑 [Sola丶小克]
+	// 我们希望在执行某些 reload 指令 (@reloadbattleconf) 时能重新计算全服玩家的属性和能力值
+
+	// 重写 instance.cpp -> instance_destroy_command 函数
+	// 因为 rAthena 官方实现的该函数在切换队长后的处理并不友好 [Sola丶小克]
+
+	// 当某个 IP 地址被判定为可以连接的时候, 不再将其列入 DDoS 攻击的判定范围 [Sola丶小克]
+	// 在默认 rAthena 的逻辑下, 就算某个 IP 地址就算被判定成允许连接,
+	// 只要他连接频度过高也依然会在终端呈现出: 发现来自 %d.%d.%d.%d 的 DDoS 攻击!
+	// 虽然有提示, 但是根据白名单规则却又进行了放行操作.. 因此这个提示是很没意义的.
+	// 启用此选项将改变判断逻辑, 变成如下:
+	// 只要 IP 地址被判定为无条件放行, 那么他将不会因为高频连接而被判定为发起了 DDoS 攻击.
+
+	// 调整 clif.cpp 中给 clif_item_equip 函数增加 caller 参数 [Sola丶小克]
+	// 新增的 caller 参数用来标记调用这个函数的调用者是谁, 以便在必要情况下能够调整返回给客户端的字段值
+
+	// 在 mob.cpp 中的 mob_once_spawn_sub 增加 spawn_flag 参数 [Sola丶小克]
+	// 新增的 spawn_flag 参数可以用来控制召唤出来的魔物是不是 BOSS (可以被 BOSS 雷达探测)
+
+	// 在 mob.cpp 中的 mob_once_spawn 增加 spawn_flag 参数 [Sola丶小克]
+	// 新增的 spawn_flag 参数可以用来控制召唤出来的魔物是不是 BOSS (可以被 BOSS 雷达探测)
+	// 此选项依赖 Pandas_FuncDefine_Mob_Once_Spawn_Sub 的拓展
+
+	// 在 map.cpp 中的 map_getmob_boss 增加 alive_first 参数 [Sola丶小克]
+	// 新增的 alive_first 参数可以指定优先返回存活着的 BOSS 魔物
+
+	// 在 mob.cpp 中的 mvptomb_create 增加 killer_gid 参数 [Sola丶小克]
+	// 新增的 killer_gid 参数用于传递杀死 MVP 玩家的游戏单位编号
 #endif // Pandas_FuncIncrease
 
 // ============================================================================
