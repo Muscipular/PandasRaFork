@@ -1203,6 +1203,16 @@ bool guild_leave( map_session_data& sd, int32 guild_id, uint32 account_id, uint3
 		return false;
 	}
 
+#ifdef Pandas_NpcFilter_GUILDLEAVE
+	pc_setreg(&sd, add_str("@left_guild_id"), sd.guild->guild.guild_id);
+	pc_setregstr(&sd, add_str("@left_guild_name$"), sd.guild->guild.name);
+	pc_setreg(&sd, add_str("@left_guild_kick"), 0);
+	pc_setreg(&sd, add_str("@left_guild_aid"), sd.status.account_id);
+	if (npc_script_filter(&sd, NPCF_GUILDLEAVE)) {
+		return false;
+	}
+#endif // Pandas_NpcFilter_GUILDLEAVE
+
 	guild_trade_bound_cancel(sd);
 
 	return intif_guild_leave( sd.status.guild_id, sd.status.account_id, sd.status.char_id, 0, mes );
@@ -1249,6 +1259,18 @@ bool guild_expulsion( map_session_data& sd, int32 guild_id, uint32 account_id, u
 	if( i < 0 ){
 		return false;
 	}
+
+#ifdef Pandas_NpcFilter_GUILDLEAVE
+	if (g) {
+		pc_setreg(&sd, add_str("@left_guild_id"), g->guild.guild_id);
+		pc_setregstr(&sd, add_str("@left_guild_name$"), g->guild.name);
+		pc_setreg(&sd, add_str("@left_guild_kick"), 1);
+		pc_setreg(&sd, add_str("@left_guild_aid"), g->guild.member[i].account_id);
+		if (npc_script_filter(&sd, NPCF_GUILDLEAVE)) {
+			return false;
+		}
+	}
+#endif // Pandas_NpcFilter_GUILDLEAVE
 
 	// Can't expel the guild leader
 	if( strcmp( g->guild.member[i].name, g->guild.master ) == 0 ){

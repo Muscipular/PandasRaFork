@@ -319,6 +319,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcFilter_GUILDJOIN
 	"OnPCGuildJoinFilter", //guildjoin_filter_name
 #endif // Pandas_NpcFilter_GUILDJOIN
+#ifdef Pandas_NpcFilter_GUILDLEAVE
+	"OnPCGuildLeaveFilter", //guildleave_filter_name
+#endif // Pandas_NpcFilter_GUILDLEAVE
 	// NPC related
 	"OnTouch_",	//ontouch_event_name (runs on first visible char to enter area, picks another char if the first char leaves)
 	"OnTouch",	//ontouch2_event_name (run whenever a char walks into the OnTouch area)

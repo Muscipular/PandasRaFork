@@ -158,6 +158,7 @@
 			// 当玩家准备离开公会时触发过滤器 [聽風]
 			// 事件类型: Filter / 事件名称: OnPCGuildLeaveFilter
 			// 常量名称: NPCF_GUILDLEAVE / 变量名称: guildleave_filter_name
+			#define Pandas_NpcFilter_GUILDLEAVE
 
 			// 当玩家准备创建队伍时触发过滤器 [聽風]
 			// 事件类型: Filter / 事件名称: OnPCPartyCreateFilter
