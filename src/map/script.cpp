@@ -29177,6 +29177,75 @@ BUILDIN_FUNC(mobremove) {
 }
 #endif // Pandas_ScriptCommand_MobRemove
 
+#ifdef Pandas_ScriptCommand_GetMapSpawns
+/* ===========================================================
+ * 指令: getmapspawns
+ * 描述: 获取指定地图的魔物刷新点信息
+ * 用法: getmapspawns "<地图名称>"{,<角色编号>};
+ * 返回: 成功则返回找到的刷新点数量, 失败则返回 -1
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getmapspawns) {
+	int32 mapindex = -1;
+	std::string mapname = script_getstr(st, 2);
+	int32 char_id = script_hasdata(st, 3) ? script_getnum(st, 3) : 0;
+
+	script_both_setreg(st, "spawn_count", 0, false, -1, char_id);
+
+	if (!script_get_mapindex(st, mapname.c_str(), mapindex, char_id)) {
+		ShowError("buildin_getmapspawns: Could not found valid map by map name '%s'\n", mapname.c_str());
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	struct map_data* mapdata = map_getmapdata(mapindex);
+
+	if (mapdata == nullptr) {
+		script_reportsrc(st);
+		script_reportfunc(st);
+		ShowError("buildin_getmapspawns: Could not found valid map by map name '%s'\n", mapname.c_str());
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int32 j = 0;
+
+	for (const auto& data : mapdata->mobspawns) {
+		if (data == nullptr) {
+			continue;
+		}
+
+		std::shared_ptr<s_mob_db> mob = mob_db.find(data->id);
+		if (mob == nullptr) {
+			continue;
+		}
+
+		script_both_setreg(st, "spawn_mobid", data->id, true, j, char_id);
+		script_both_setregstr(st, "spawn_name$", data->name, true, j, char_id);
+		script_both_setreg(st, "spawn_num", data->num, true, j, char_id);
+		script_both_setreg(st, "spawn_active", data->active, true, j, char_id);
+		script_both_setreg(st, "spawn_size", data->state.size, true, j, char_id);
+		script_both_setreg(st, "spawn_isboss", data->state.boss, true, j, char_id);
+		script_both_setreg(st, "spawn_ai", data->state.ai, true, j, char_id);
+		script_both_setreg(st, "spawn_level", data->level > 0 ? data->level : mob->lv, true, j, char_id);
+		script_both_setreg(st, "spawn_delay1", data->delay1, true, j, char_id);
+		script_both_setreg(st, "spawn_delay2", data->delay2, true, j, char_id);
+		script_both_setregstr(st, "spawn_eventname$", data->eventname, true, j, char_id);
+		script_both_setreg(st, "spawn_mapid", data->m, true, j, char_id);
+		script_both_setregstr(st, "spawn_mapname$", mapdata->name, true, j, char_id);
+		script_both_setreg(st, "spawn_x", data->x, true, j, char_id);
+		script_both_setreg(st, "spawn_y", data->y, true, j, char_id);
+		script_both_setreg(st, "spawn_xs", data->xs, true, j, char_id);
+		script_both_setreg(st, "spawn_ys", data->ys, true, j, char_id);
+		j++;
+	}
+
+	script_both_setreg(st, "spawn_count", j, false, -1, char_id);
+	script_pushint(st, j);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetMapSpawns
+
 /// script command definitions
 /// for an explanation on args, see add_buildin_func
 struct script_function buildin_func[] = {
@@ -29541,6 +29610,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_MobRemove
 	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
 #endif // Pandas_ScriptCommand_MobRemove
+#ifdef Pandas_ScriptCommand_GetMapSpawns
+	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(dispbottom,"s??"), //added from jA [Lupus]
 	BUILDIN_DEF(recovery,"i???"),
 	BUILDIN_DEF(getpetinfo,"i?"),
