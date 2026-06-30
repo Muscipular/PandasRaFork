@@ -6,6 +6,7 @@
 	#define Pandas_BattleConfigure
 	#define Pandas_StructIncrease
 	#define Pandas_FuncIncrease
+	#define Pandas_PacketFunction
 	#define Pandas_CreativeWork
 	#define Pandas_ScriptEngine
 	#define Pandas_NpcEvent
@@ -619,6 +620,14 @@
 	// 新增的 killer_gid 参数用于传递杀死 MVP 玩家的游戏单位编号
 	#define Pandas_FuncParams_Mob_MvpTomb_Create
 #endif // Pandas_FuncIncrease
+
+// ============================================================================
+// 封包修改组 - Pandas_PacketFunction
+// ============================================================================
+
+#ifdef Pandas_PacketFunction
+	// 没有什么需要修改
+#endif // Pandas_PacketFunction
 
 // ============================================================================
 // 原创功能组 - Pandas_CreativeWork
