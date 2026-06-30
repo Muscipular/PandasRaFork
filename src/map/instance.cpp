@@ -1405,7 +1405,17 @@ void do_init_instance(void) {
  * Finalizes the instances and instance database
  */
 void do_final_instance(void) {
+#ifndef Pandas_Crashfix_UnorderedMap_Erase
 	// Since instance_destroy() modifies the unordered_map, make sure iteration always restarts.
 	for (auto it = instances.begin(); it != instances.end(); it = instances.begin())
 		instance_destroy(it->first);
+#else
+	for (auto it = instances.begin(); it != instances.end(); ) {
+		if (instance_destroy(it->first, true)) {
+			it = instances.erase(it);
+			continue;
+		}
+		++it;
+	}
+#endif // Pandas_Crashfix_UnorderedMap_Erase
 }

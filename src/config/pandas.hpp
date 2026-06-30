@@ -555,6 +555,11 @@
 	// 增加 skip_erase 参数用于控制成功销毁副本后不 erase 掉 instance 对象
 	// 以便交由外部来进行 erase, 这样才能获取下一个指针的正确位置 (C++11) [Sola丶小克]
 	#define Pandas_FuncDefine_Instance_Destory
+	// 修正在 C++11 标准下使用不正确的 unordered_map::erase 方法会导致地图服务器崩溃的问题
+	// 此选项开关需要依赖 Pandas_FuncDefine_Instance_Destory 的拓展 [Sola丶小克]
+	#ifdef Pandas_FuncDefine_Instance_Destory
+		#define Pandas_Crashfix_UnorderedMap_Erase
+	#endif // Pandas_FuncDefine_Instance_Destory
 
 	// 调整各单位的死亡处理函数, 以便支持更多参数信息 [Sola丶小克]
 	// 玩家单位	: pc.cpp -> pc_dead
