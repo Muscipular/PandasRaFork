@@ -722,7 +722,12 @@
 	#endif // Pandas_Player_Suspend_System
 	// 是否启用 checksuspend 脚本指令 [Sola丶小克]
 	// 该指令用于获取指定角色或指定账号当前在线角色的挂机模式
-	// 此选项开关需要依赖 Pandas_Struct_Autotrade_Extend 的拓展
+	// 此选项开关需要依赖 Pandas_Struct_Autotrade_Extend 和 Pandas_Player_Suspend_System 的拓展
+	#ifdef Pandas_Struct_Autotrade_Extend
+		#ifdef Pandas_Player_Suspend_System
+			#define Pandas_ScriptCommand_CheckSuspend
+		#endif // Pandas_Player_Suspend_System
+	#endif // Pandas_Struct_Autotrade_Extend
 	// 是否启用 bonus_script_remove 脚本指令 [Sola丶小克]
 	// 该指令用于移除指定的 bonus_script 效果脚本
 	// 是否启用 bonus_script_list 脚本指令 [Sola丶小克]

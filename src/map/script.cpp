@@ -29100,6 +29100,52 @@ BUILDIN_FUNC(login) {
 }
 #endif // Pandas_ScriptCommand_Login
 
+#ifdef Pandas_ScriptCommand_CheckSuspend
+/* ===========================================================
+ * 指令: checksuspend
+ * 描述: 获取指定角色或指定账号当前在线角色的挂机模式
+ * 用法: checksuspend {<角色编号|账号编号|"角色名称">};
+ * 返回: 角色不存在返回 -1, 否则返回当前的挂机状态
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(checksuspend) {
+	map_session_data* sd = nullptr;
+
+	if (script_hasdata(st, 2)) {
+		if (script_isstring(st, 2)) {
+			sd = map_nick2sd(script_getstr(st, 2), false);
+		} else {
+			int32 id = script_getnum(st, 2);
+
+			sd = map_id2sd(id);
+			if (sd == nullptr) {
+				sd = map_charid2sd(id);
+			}
+		}
+	} else if (!script_rid2sd(sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (sd == nullptr) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if ((sd->state.autotrade & AUTOTRADE_OFFLINE) == AUTOTRADE_OFFLINE) {
+		script_pushint(st, SUSPEND_MODE_OFFLINE);
+	} else if ((sd->state.autotrade & AUTOTRADE_AFK) == AUTOTRADE_AFK) {
+		script_pushint(st, SUSPEND_MODE_AFK);
+	} else if ((sd->state.autotrade & AUTOTRADE_NORMAL) == AUTOTRADE_NORMAL) {
+		script_pushint(st, SUSPEND_MODE_NORMAL);
+	} else {
+		script_pushint(st, SUSPEND_MODE_NONE);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_CheckSuspend
+
 #ifdef Pandas_ScriptCommand_MobRemove
 /* ===========================================================
  * 指令: mobremove
@@ -29489,6 +29535,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_Login
 	BUILDIN_DEF(login, "i????"), // 将指定的角色以特定的登录模式拉上线 [Sola丶小克]
 #endif // Pandas_ScriptCommand_Login
+#ifdef Pandas_ScriptCommand_CheckSuspend
+	BUILDIN_DEF(checksuspend, "?"), // 获取指定角色或指定账号当前在线角色的挂机模式 [Sola丶小克]
+#endif // Pandas_ScriptCommand_CheckSuspend
 #ifdef Pandas_ScriptCommand_MobRemove
 	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
 #endif // Pandas_ScriptCommand_MobRemove
