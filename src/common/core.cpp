@@ -369,6 +369,10 @@ static void display_title(void) {
 #ifdef Pandas_Console_Translate
 	translate_status();
 #endif // Pandas_Console_Translate
+
+#ifdef Pandas_Deploy_Import_Directories
+	deployImportDirectories();
+#endif // Pandas_Deploy_Import_Directories
 }
 
 // Warning if executed as superuser (root)
