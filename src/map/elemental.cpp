@@ -452,7 +452,11 @@ void elemental_heal(s_elemental_data *ed, int32 hp, int32 sp) {
 		clif_elemental_updatestatus(*ed->master, SP_SP);
 }
 
+#ifndef Pandas_FuncDefine_UnitDead_With_ExtendInfo
 int32 elemental_dead(s_elemental_data *ed) {
+#else
+int32 elemental_dead(s_elemental_data *ed, block_list *src, uint16 skill_id) {
+#endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
 	elemental_delete(ed);
 	return 0;
 }

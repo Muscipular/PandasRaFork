@@ -209,7 +209,11 @@ int32 hom_recv_data(uint32 account_id, struct s_homunculus *sh, int32 flag); //a
 struct view_data* hom_get_viewdata(int32 class_);
 int32 hom_class2mapid(int32 hom_class);
 enum homun_type hom_class2type(int32 class_);
+#ifndef Pandas_FuncDefine_UnitDead_With_ExtendInfo
 int32 hom_dead(homun_data *hd);
+#else
+int32 hom_dead(homun_data *hd, block_list *src, uint16 skill_id);
+#endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
 void hom_skillup(homun_data *hd,uint16 skill_id);
 void hom_calc_skilltree(homun_data *hd);
 int16 hom_checkskill(homun_data *hd,uint16 skill_id);

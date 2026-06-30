@@ -10008,7 +10008,11 @@ void pc_close_npc(map_session_data *sd,int32 flag)
 /*==========================================
  * Invoked when a player has negative current hp
  *------------------------------------------*/
+#ifndef Pandas_FuncDefine_UnitDead_With_ExtendInfo
 int32 pc_dead(map_session_data *sd,block_list *src)
+#else
+int32 pc_dead(map_session_data *sd,block_list *src, uint16 skill_id)
+#endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
 {
 	int32 i=0,k=0;
 	t_tick tick = gettick();

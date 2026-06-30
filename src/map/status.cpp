@@ -1705,11 +1705,19 @@ int32 status_damage(block_list *src,block_list *target,int64 dhp, int64 dsp, int
 	* &4: Delete object from memory. (One time spawn mobs)
 	**/
 	switch (target->type) {
+#ifndef Pandas_FuncDefine_UnitDead_With_ExtendInfo
 		case BL_PC:  flag = pc_dead((TBL_PC*)target,src); break;
 		case BL_MOB: flag = mob_dead((TBL_MOB*)target, src, flag&4?3:0); break;
 		case BL_HOM: flag = hom_dead((TBL_HOM*)target); break;
 		case BL_MER: flag = mercenary_dead((TBL_MER*)target); break;
 		case BL_ELEM: flag = elemental_dead((TBL_ELEM*)target); break;
+#else
+		case BL_PC:  flag = pc_dead((TBL_PC*)target, src, skill_id); break;
+		case BL_MOB: flag = mob_dead((TBL_MOB*)target, src, flag&4?3:0, skill_id); break;
+		case BL_HOM: flag = hom_dead((TBL_HOM*)target, src, skill_id); break;
+		case BL_MER: flag = mercenary_dead((TBL_MER*)target, src, skill_id); break;
+		case BL_ELEM: flag = elemental_dead((TBL_ELEM*)target, src, skill_id); break;
+#endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
 		default:	// Unhandled case, do nothing to object.
 			flag = 0;
 			break;

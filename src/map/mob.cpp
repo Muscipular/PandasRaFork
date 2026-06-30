@@ -2975,7 +2975,11 @@ map_session_data* mob_data::get_mvp_player(map_session_data* first_sd) {
  * Signals death of mob.
  * type&1 -> no drops, type&2 -> no exp
  *------------------------------------------*/
+#ifndef Pandas_FuncDefine_UnitDead_With_ExtendInfo
 int32 mob_dead(mob_data *md, block_list *src, int32 type)
+#else
+int32 mob_dead(mob_data *md, block_list *src, int32 type, uint16 skill_id)
+#endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
 {
 	struct status_data *status;
 	map_session_data *sd = nullptr, *tmpsd[DAMAGELOG_SIZE];

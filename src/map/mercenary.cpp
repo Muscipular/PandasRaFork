@@ -447,7 +447,11 @@ void mercenary_heal(s_mercenary_data *md, int32 hp, int32 sp) {
  * @param md: Mercenary
  * @return false for status_damage
  */
+#ifndef Pandas_FuncDefine_UnitDead_With_ExtendInfo
 bool mercenary_dead(s_mercenary_data *md) {
+#else
+bool mercenary_dead(s_mercenary_data *md, block_list *src, uint16 skill_id) {
+#endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
 	mercenary_delete(md, 1);
 	return false;
 }

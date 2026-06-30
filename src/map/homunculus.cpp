@@ -234,7 +234,11 @@ void hom_delspiritball(TBL_HOM *hd, int32 count, int32 type) {
 * @param hd
 * @return flag &1 - Standard dead, &2 - Remove object from map, &4 - Delete object from memory
 */
+#ifndef Pandas_FuncDefine_UnitDead_With_ExtendInfo
 int32 hom_dead(homun_data *hd)
+#else
+int32 hom_dead(homun_data *hd, block_list *src, uint16 skill_id)
+#endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
 {
 	//There's no intimacy penalties on death (from Tharis)
 	map_session_data *sd = hd->master;

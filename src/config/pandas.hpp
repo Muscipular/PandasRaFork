@@ -562,6 +562,7 @@
 	// 生命体单位	: homunculus.cpp -> hom_dead
 	// 佣兵单位	: mercenary.cpp -> mercenary_dead
 	// 元素精灵	: elemental.cpp -> elemental_dead
+	#define Pandas_FuncDefine_UnitDead_With_ExtendInfo
 
 	// 调整用于计算 MAX_INVENTORY 相关的变量
 	// 以便能够支持将背包的最大上限设置成超过 128 的值 [Sola丶小克]

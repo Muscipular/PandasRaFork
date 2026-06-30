@@ -1627,7 +1627,11 @@ int32 pc_skillheal_bonus(map_session_data *sd, uint16 skill_id);
 int32 pc_skillheal2_bonus(map_session_data *sd, uint16 skill_id);
 
 void pc_damage(map_session_data *sd,block_list *src,uint32 hp, uint32 sp, uint32 ap);
+#ifndef Pandas_FuncDefine_UnitDead_With_ExtendInfo
 int32 pc_dead(map_session_data *sd,block_list *src);
+#else
+int32 pc_dead(map_session_data *sd,block_list *src, uint16 skill_id);
+#endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
 void pc_revive(map_session_data *sd,uint32 hp, uint32 sp, uint32 ap = 0);
 bool pc_revive_item(map_session_data *sd);
 void pc_heal(map_session_data *sd,uint32 hp,uint32 sp, uint32 ap, int32 type);
