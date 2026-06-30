@@ -6523,6 +6523,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCF_GUILDLEAVE:
 		return script_config.guildleave_filter_name;
 #endif // Pandas_NpcFilter_GUILDLEAVE
+#ifdef Pandas_NpcFilter_PARTYCREATE
+	case NPCF_PARTYCREATE:
+		return script_config.partycreate_filter_name;
+#endif // Pandas_NpcFilter_PARTYCREATE
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;

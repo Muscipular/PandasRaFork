@@ -163,6 +163,7 @@
 			// 当玩家准备创建队伍时触发过滤器 [聽風]
 			// 事件类型: Filter / 事件名称: OnPCPartyCreateFilter
 			// 常量名称: NPCF_PARTYCREATE / 变量名称: partycreate_filter_name
+			#define Pandas_NpcFilter_PARTYCREATE
 
 			// 当玩家即将加入队伍时触发过滤器 [聽風]
 			// 事件类型: Filter / 事件名称: OnPCPartyJoinFilter
