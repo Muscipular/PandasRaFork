@@ -882,6 +882,10 @@ struct Battle_Config
 	int32 remove_manhole_with_status; // 当"人孔/黑洞陷阱"地面陷阱被移除的时候, 是否同时使被捕获的玩家立即脱困
 #endif // Pandas_BattleConfig_Remove_Manhole_With_Status
 
+#ifdef Pandas_BattleConfig_Restore_Mes_Logic
+	int32 restore_mes_logic; // 使 2021-11-03 及更新版本的客户端在执行 mes 指令时使用经典换行策略
+#endif // Pandas_BattleConfig_Restore_Mes_Logic
+
 #ifdef Pandas_BattleConfig_Mob_SetUnitData_Persistence
 	int32 mob_setunitdata_persistence; // 是否高优先级持久化保存 setunitdata 对魔物的设置
 #endif // Pandas_BattleConfig_Mob_SetUnitData_Persistence

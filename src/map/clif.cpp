@@ -2502,6 +2502,22 @@ void clif_scriptmes( const map_session_data& sd, uint32 npcid, const char *mes )
 
 	int16 length = (int16)( strlen( mes ) + 1 );
 
+#if defined(Pandas_BattleConfig_Restore_Mes_Logic) && PACKETVER >= 20211103
+	if( battle_config.restore_mes_logic && strlen( mes ) != 0 && mes[0] == ' ' ){
+		std::string strMessage( mes );
+		strMessage = '\n' + strMessage;
+		int16 dwMessageLen = (int16)( strlen( strMessage.c_str() ) + 1 );
+
+		p->PacketType = HEADER_ZC_SAY_DIALOG;
+		p->PacketLength = sizeof( *p ) + dwMessageLen;
+		p->NpcID = npcid;
+		safestrncpy( p->message, strMessage.c_str(), dwMessageLen );
+
+		clif_send( p, p->PacketLength, &sd, SELF );
+		return;
+	}
+#endif // defined(Pandas_BattleConfig_Restore_Mes_Logic) && PACKETVER >= 20211103
+
 	p->PacketType = HEADER_ZC_SAY_DIALOG;
 	p->PacketLength = sizeof( *p ) + length;
 	p->NpcID = npcid;
