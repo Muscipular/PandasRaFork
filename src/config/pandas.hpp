@@ -417,6 +417,9 @@
 	// 在 pc.cpp 中的 pc_equipitem 增加 swapping 参数 [Sola丶小克]
 	// 新增的 swapping 用于判断当前的装备穿戴调用是否由装备切换机制引发, 默认为 false
 	#define Pandas_FuncParams_PC_EQUIPITEM
+
+	// 调整 pc.cpp 中 pc_equipitem 执行道具绑定的时机 [Sola丶小克]
+	#define Pandas_FuncLogic_PC_EQUIPITEM_BOUND_OPPORTUNITY
 #endif // Pandas_FuncIncrease
 
 // ============================================================================

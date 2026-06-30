@@ -12186,10 +12186,12 @@ bool pc_equipitem(map_session_data *sd,int16 n,int32 req_pos,bool equipswitch, b
 
 	equip_index = equipswitch ? sd->equip_switch_index : sd->equip_index;
 
+#ifndef Pandas_FuncLogic_PC_EQUIPITEM_BOUND_OPPORTUNITY
 	if ( !equipswitch && id->flag.bindOnEquip && !sd->inventory.u.items_inventory[n].bound) {
 		sd->inventory.u.items_inventory[n].bound = (char)battle_config.default_bind_on_equip;
 		clif_notify_bindOnEquip( *sd, n );
 	}
+#endif // Pandas_FuncLogic_PC_EQUIPITEM_BOUND_OPPORTUNITY
 
 	if(pos == EQP_ACC) { //Accessories should only go in one of the two.
 		pos = req_pos&EQP_ACC;
@@ -12237,6 +12239,13 @@ bool pc_equipitem(map_session_data *sd,int16 n,int32 req_pos,bool equipswitch, b
 		else
 			flag = id->range != sd->inventory_data[i]->range;
 	}
+
+#ifdef Pandas_FuncLogic_PC_EQUIPITEM_BOUND_OPPORTUNITY
+	if ( !equipswitch && id->flag.bindOnEquip && !sd->inventory.u.items_inventory[n].bound) {
+		sd->inventory.u.items_inventory[n].bound = (char)battle_config.default_bind_on_equip;
+		clif_notify_bindOnEquip( *sd, n );
+	}
+#endif // Pandas_FuncLogic_PC_EQUIPITEM_BOUND_OPPORTUNITY
 
 	if( equipswitch ){
 		for( i = 0; i < EQI_MAX; i++ ){
