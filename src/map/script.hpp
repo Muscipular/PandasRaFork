@@ -234,6 +234,9 @@ struct Script_Config {
 #ifdef Pandas_NpcFilter_STORAGE_DEL
 	const char* storage_del_filter_name;
 #endif // Pandas_NpcFilter_STORAGE_DEL
+#ifdef Pandas_NpcFilter_CART_ADD
+	const char* cart_add_filter_name;
+#endif // Pandas_NpcFilter_CART_ADD
 	// NPC related
 	const char* ontouch_event_name;
 	const char* ontouch2_event_name;

@@ -6796,6 +6796,16 @@ void pc_putitemtocart(map_session_data *sd,int32 idx,int32 amount)
 		return;
 	}
 
+#ifdef Pandas_NpcFilter_CART_ADD
+	pc_setreg(sd, add_str("@storeitem_nameid"), item_data->nameid);
+	pc_setreg(sd, add_str("@storeitem_amount"), amount);
+	pc_setreg(sd, add_str("@storeitem_idx"), idx);
+	if (npc_script_filter(sd, NPCF_CART_ADD)) {
+		clif_delitem(*sd, idx, 0, 0);
+		return;
+	}
+#endif // Pandas_NpcFilter_CART_ADD
+
 	enum e_additem_result flag = pc_cart_additem(sd,item_data,amount,LOG_TYPE_NONE);
 
 	if (flag == ADDITEM_SUCCESS)
