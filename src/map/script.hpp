@@ -219,6 +219,9 @@ struct Script_Config {
 #ifdef Pandas_NpcFilter_PARTYJOIN
 	const char* partyjoin_filter_name;
 #endif // Pandas_NpcFilter_PARTYJOIN
+#ifdef Pandas_NpcFilter_PARTYLEAVE
+	const char* partyleave_filter_name;
+#endif // Pandas_NpcFilter_PARTYLEAVE
 	// NPC related
 	const char* ontouch_event_name;
 	const char* ontouch2_event_name;

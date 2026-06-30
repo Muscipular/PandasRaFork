@@ -1672,6 +1672,9 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcFilter_PARTYJOIN
 	NPCF_PARTYJOIN,
 #endif // Pandas_NpcFilter_PARTYJOIN
+#ifdef Pandas_NpcFilter_PARTYLEAVE
+	NPCF_PARTYLEAVE,
+#endif // Pandas_NpcFilter_PARTYLEAVE
 	NPCE_MAX
 };
 
