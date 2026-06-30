@@ -159,6 +159,15 @@ struct auth_node* login_add_auth_node( struct login_session_data* sd, uint32 ip 
 	node->sex = sd->sex;
 	node->ip = ip;
 	node->clienttype = sd->clienttype;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	if( sd != nullptr && session[sd->fd] != nullptr ){
+		safestrncpy(node->mac_address, session[sd->fd]->mac_address, MACADDRESS_LENGTH);
+		safestrncpy(node->lan_address, session[sd->fd]->lan_address, IP4ADDRESS_LENGTH);
+	}else{
+		safestrncpy(node->mac_address, "", MACADDRESS_LENGTH);
+		safestrncpy(node->lan_address, "", IP4ADDRESS_LENGTH);
+	}
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	return node;
 }
@@ -453,6 +462,12 @@ int32 login_mmo_auth(struct login_session_data* sd, bool isServer) {
 	safestrncpy(sd->lastlogin, acc.lastlogin, sizeof(sd->lastlogin));
 	sd->sex = acc.sex;
 	sd->group_id = acc.group_id;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	if( sd != nullptr && session[sd->fd] != nullptr ){
+		safestrncpy(acc.mac_address, session[sd->fd]->mac_address, MACADDRESS_LENGTH);
+		safestrncpy(acc.lan_address, session[sd->fd]->lan_address, IP4ADDRESS_LENGTH);
+	}
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	// update account data
 	timestamp2string(acc.lastlogin, sizeof(acc.lastlogin), time(nullptr), "%Y-%m-%d %H:%M:%S");

@@ -866,6 +866,10 @@ int32 chclif_parse_reqtoconnect(int32 fd, struct char_session_data* sd,uint32 ip
 			node->login_id2  == login_id2 /*&&
 			node->ip         == ipl*/ )
 		{// authentication found (coming from map server)
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+			safestrncpy(session[fd]->mac_address, node->mac_address, MACADDRESS_LENGTH);
+			safestrncpy(session[fd]->lan_address, node->lan_address, IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 			char_get_authdb().erase(account_id);
 			char_auth_ok(fd, sd);
 			sd->pincode_correct = true; // already entered pincode correctly yet
@@ -1039,6 +1043,10 @@ bool chclif_parse_select_accessible_map( int32 fd, struct char_session_data& sd 
 	node->expiration_time = sd.expiration_time;
 	node->group_id = sd.group_id;
 	node->ip = session[fd]->client_addr;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	safestrncpy(node->mac_address, session[fd]->mac_address, MACADDRESS_LENGTH);
+	safestrncpy(node->lan_address, session[fd]->lan_address, IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	char_get_authdb()[node->account_id] = node;
 
@@ -1205,6 +1213,11 @@ bool chclif_parse_charselect( int32 fd, struct char_session_data& sd ){
 	node->expiration_time = sd.expiration_time;
 	node->group_id = sd.group_id;
 	node->ip = session[fd]->client_addr;
+
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	safestrncpy(node->mac_address, session[fd]->mac_address, MACADDRESS_LENGTH);
+	safestrncpy(node->lan_address, session[fd]->lan_address, IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	char_get_authdb()[node->account_id] = node;
 

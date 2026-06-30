@@ -231,6 +231,10 @@ struct auth_node {
 	int32 group_id;
 	unsigned changing_mapservers : 1;
 	uint8 version;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	char mac_address[MACADDRESS_LENGTH];
+	char lan_address[IP4ADDRESS_LENGTH];
+#endif // Pandas_Extract_SSOPacket_MacAddress
 };
 
 std::unordered_map<uint32, std::shared_ptr<struct auth_node>>& char_get_authdb();

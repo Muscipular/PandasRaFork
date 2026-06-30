@@ -347,6 +347,10 @@ static bool logclif_parse_reqauth_sso( int32 fd, login_session_data& sd ){
 	ShowStatus( "Request for connection (SSO mode) of %s (ip: %s)\n", sd.userid, ip );
 	// Shinryo: For the time being, just use token as password.
 	safestrncpy( sd.passwd, p->token, std::min( sizeof( sd.passwd ), token_length + 1 ) );
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	safestrncpy( session[fd]->mac_address, p->mac, MACADDRESS_LENGTH );
+	safestrncpy( session[fd]->lan_address, p->ip, IP4ADDRESS_LENGTH );
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	if( login_config.use_md5_passwds ){
 		MD5_String( sd.passwd, sd.passwd );

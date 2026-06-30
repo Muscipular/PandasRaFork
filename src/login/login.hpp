@@ -177,6 +177,10 @@ struct auth_node {
 	uint32 ip;
 	char sex;
 	uint8 clienttype;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	char mac_address[MACADDRESS_LENGTH];
+	char lan_address[IP4ADDRESS_LENGTH];
+#endif // Pandas_Extract_SSOPacket_MacAddress
 };
 
 ///Accessors

@@ -163,6 +163,11 @@ enum e_enchantgrade : uint16{
 const t_itemid WEDDING_RING_M = 2634;
 const t_itemid WEDDING_RING_F = 2635;
 
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+#define MACADDRESS_LENGTH (17 + 1)
+#define IP4ADDRESS_LENGTH (15 + 1)
+#endif // Pandas_Extract_SSOPacket_MacAddress
+
 //For character names, title names, guilds, maps, etc.
 //Includes null-terminator as it is the length of the array.
 #define NAME_LENGTH (23 + 1)

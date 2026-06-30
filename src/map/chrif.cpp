@@ -430,7 +430,11 @@ int32 chrif_changemapserver(map_session_data* sd, uint32 ip, uint16 port) {
 
 	chrif_check(-1);
 
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	WFIFOHEAD( char_fd, 37 + MAP_NAME_LENGTH_EXT );
+#else
+	WFIFOHEAD( char_fd, 37 + MAP_NAME_LENGTH_EXT + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH );
+#endif // Pandas_Extract_SSOPacket_MacAddress
 	WFIFOW(char_fd, 0) = 0x2b05;
 	WFIFOL(char_fd, 2) = sd->id;
 	WFIFOL(char_fd, 6) = sd->login_id1;
@@ -445,7 +449,13 @@ int32 chrif_changemapserver(map_session_data* sd, uint32 ip, uint16 port) {
 	WFIFOB( char_fd, offset + 10 ) = sd->status.sex;
 	WFIFOL( char_fd, offset + 11 ) = htonl( session[sd->fd]->client_addr );
 	WFIFOL( char_fd, offset + 15 ) = sd->group_id;
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	WFIFOSET( char_fd, 37 + MAP_NAME_LENGTH_EXT );
+#else
+	memcpy(WFIFOCP(char_fd, offset + 19), session[sd->fd]->mac_address, MACADDRESS_LENGTH);
+	memcpy(WFIFOCP(char_fd, offset + 19 + MACADDRESS_LENGTH), session[sd->fd]->lan_address, IP4ADDRESS_LENGTH);
+	WFIFOSET( char_fd, 37 + MAP_NAME_LENGTH_EXT + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH );
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	return 0;
 }
@@ -661,8 +671,13 @@ void chrif_authok(int32 fd) {
 	TBL_PC* sd;
 
 	//Check if both servers agree on the struct's size
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	if( RFIFOW(fd,2) - 25 != sizeof(struct mmo_charstatus) ) {
 		ShowError("chrif_authok: Data size mismatch! %d != %" PRIuPTR "\n", RFIFOW(fd,2) - 25, sizeof(struct mmo_charstatus));
+#else
+	if( RFIFOW(fd,2) - (25 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH) != sizeof(struct mmo_charstatus) ) {
+		ShowError("chrif_authok: Data size mismatch! %d != %" PRIuPTR "\n", RFIFOW(fd,2) - (25 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH), sizeof(struct mmo_charstatus));
+#endif // Pandas_Extract_SSOPacket_MacAddress
 		return;
 	}
 
@@ -672,7 +687,15 @@ void chrif_authok(int32 fd) {
 	expiration_time = (time_t)(int32)RFIFOL(fd,16);
 	group_id = RFIFOL(fd,20);
 	changing_mapservers = (RFIFOB(fd,24)) > 0;
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	status = (struct mmo_charstatus*)RFIFOP(fd,25);
+#else
+	char macaddress[MACADDRESS_LENGTH] = { 0 };
+	char lanaddress[IP4ADDRESS_LENGTH] = { 0 };
+	safestrncpy(macaddress, RFIFOCP(fd,25), MACADDRESS_LENGTH);
+	safestrncpy(lanaddress, RFIFOCP(fd,25 + MACADDRESS_LENGTH), IP4ADDRESS_LENGTH);
+	status = (struct mmo_charstatus*)RFIFOP(fd,25 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 	char_id = status->char_id;
 
 	//Check if we don't already have player data in our server
@@ -696,6 +719,12 @@ void chrif_authok(int32 fd) {
 	}
 
 	sd = node->sd;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	if( sd != nullptr && session[sd->fd] != nullptr ){
+		safestrncpy(session[sd->fd]->mac_address, macaddress, MACADDRESS_LENGTH);
+		safestrncpy(session[sd->fd]->lan_address, lanaddress, IP4ADDRESS_LENGTH);
+	}
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	if( global_core->is_running() &&
 		node->char_dat == nullptr &&
@@ -784,13 +813,23 @@ int32 chrif_charselectreq(map_session_data* sd, uint32 s_ip) {
 
 	chrif_check(-1);
 
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	WFIFOHEAD(char_fd,18);
+#else
+	WFIFOHEAD(char_fd,18 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 	WFIFOW(char_fd, 0) = 0x2b02;
 	WFIFOL(char_fd, 2) = sd->id;
 	WFIFOL(char_fd, 6) = sd->login_id1;
 	WFIFOL(char_fd,10) = sd->login_id2;
 	WFIFOL(char_fd,14) = htonl(s_ip);
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	WFIFOSET(char_fd,18);
+#else
+	memcpy(WFIFOCP(char_fd,18), session[sd->fd]->mac_address, MACADDRESS_LENGTH);
+	memcpy(WFIFOCP(char_fd,18 + MACADDRESS_LENGTH), session[sd->fd]->lan_address, IP4ADDRESS_LENGTH);
+	WFIFOSET(char_fd,18 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	return 0;
 }

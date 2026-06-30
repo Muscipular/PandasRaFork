@@ -290,7 +290,11 @@ int32 chlogif_parse_ackconnect(int32 fd){
 }
 
 int32 chlogif_parse_ackaccreq(int32 fd){
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	if (RFIFOREST(fd) < 21)
+#else
+	if (RFIFOREST(fd) < 21 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH)
+#endif // Pandas_Extract_SSOPacket_MacAddress
 		return 0;
 	{
 		struct char_session_data* sd;
@@ -301,13 +305,25 @@ int32 chlogif_parse_ackaccreq(int32 fd){
 		uint8 result = RFIFOB(fd,15);
 		int32 request_id = RFIFOL(fd,16);
 		uint8 clienttype = RFIFOB(fd,20);
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 		RFIFOSKIP(fd,21);
+#else
+		char macaddress[MACADDRESS_LENGTH] = { 0 };
+		char lanaddress[IP4ADDRESS_LENGTH] = { 0 };
+		safestrncpy(macaddress, RFIFOCP(fd, 21), MACADDRESS_LENGTH);
+		safestrncpy(lanaddress, RFIFOCP(fd, 21 + MACADDRESS_LENGTH), IP4ADDRESS_LENGTH);
+		RFIFOSKIP(fd,21 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 		if( session_isActive(request_id) && (sd=(struct char_session_data*)session[request_id]->session_data) &&
 			!sd->auth && sd->account_id == account_id && sd->login_id1 == login_id1 && sd->login_id2 == login_id2 && sd->sex == sex )
 		{
 			int32 client_fd = request_id;
 			sd->clienttype = clienttype;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+			safestrncpy(session[client_fd]->mac_address, macaddress, MACADDRESS_LENGTH);
+			safestrncpy(session[client_fd]->lan_address, lanaddress, IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 			switch( result )
 			{

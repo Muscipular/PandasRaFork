@@ -8,6 +8,10 @@
 
 #include <config/core.hpp>
 
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	#include "mmo.hpp"
+#endif // Pandas_Extract_SSOPacket_MacAddress
+
 #ifdef WIN32
 	#include "winapi.hpp"
 	typedef long in_addr_t;
@@ -98,6 +102,11 @@ struct socket_data
 	} flag;
 
 	uint32 client_addr; // remote client address
+
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+	char mac_address[MACADDRESS_LENGTH];
+	char lan_address[IP4ADDRESS_LENGTH];
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 	uint8 *rdata, *wdata;
 	size_t max_rdata, max_wdata;

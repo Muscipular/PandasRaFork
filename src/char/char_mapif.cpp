@@ -465,14 +465,26 @@ void chmapif_charselres(int32 fd, uint32 aid, uint8 res){
  * @return : 0 not enough data received, 1 success
  */
 int32 chmapif_parse_authok(int32 fd){
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	if( RFIFOREST(fd) < 18 )
+#else
+	if( RFIFOREST(fd) < 18 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH )
+#endif // Pandas_Extract_SSOPacket_MacAddress
 		return 0;
 	else{
 		uint32 account_id = RFIFOL(fd,2);
 		uint32 login_id1 = RFIFOL(fd,6);
 		uint32 login_id2 = RFIFOL(fd,10);
 		uint32 ip = RFIFOL(fd,14);
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 		RFIFOSKIP(fd,18);
+#else
+		char macaddress[MACADDRESS_LENGTH] = { 0 };
+		char lanaddress[IP4ADDRESS_LENGTH] = { 0 };
+		safestrncpy(macaddress, RFIFOCP(fd,18), MACADDRESS_LENGTH);
+		safestrncpy(lanaddress, RFIFOCP(fd,18 + MACADDRESS_LENGTH), IP4ADDRESS_LENGTH);
+		RFIFOSKIP(fd,18 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 		if( !global_core->is_running() ){
 			chmapif_charselres(fd,account_id,0);
@@ -486,6 +498,12 @@ int32 chmapif_parse_authok(int32 fd){
 			node->login_id2 = login_id2;
 			//node->sex = 0;
 			node->ip = ntohl(ip);
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+			safestrncpy(node->mac_address, macaddress, MACADDRESS_LENGTH);
+			safestrncpy(node->lan_address, lanaddress, IP4ADDRESS_LENGTH);
+			safestrncpy(session[fd]->mac_address, node->mac_address, MACADDRESS_LENGTH);
+			safestrncpy(session[fd]->lan_address, node->lan_address, IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 			//node->expiration_time = 0; // unlimited/unknown time by default (not display in map-server)
 			//node->gmlevel = 0;
 
@@ -607,7 +625,11 @@ void chmapif_changemapserv_ack(int32 fd, bool nok){
  * @return : 0 not enough data received, 1 success
  */
 int32 chmapif_parse_reqchangemapserv(int32 fd){
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 	if( RFIFOREST( fd ) < ( 37 + MAP_NAME_LENGTH_EXT ) ){
+#else
+	if( RFIFOREST( fd ) < ( 37 + MAP_NAME_LENGTH_EXT + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH ) ){
+#endif // Pandas_Extract_SSOPacket_MacAddress
 		return 0;
 	}
 	else {
@@ -654,6 +676,10 @@ int32 chmapif_parse_reqchangemapserv(int32 fd){
 			node->ip = ntohl( RFIFOL( fd, offset + 11 ) );
 			node->group_id = RFIFOL( fd, offset + 15 );
 			node->changing_mapservers = 1;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+			safestrncpy(node->mac_address, RFIFOCP(fd, offset + 19), MACADDRESS_LENGTH);
+			safestrncpy(node->lan_address, RFIFOCP(fd, offset + 19 + MACADDRESS_LENGTH), IP4ADDRESS_LENGTH);
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 			char_get_authdb()[node->account_id] = node;
 
@@ -672,7 +698,11 @@ int32 chmapif_parse_reqchangemapserv(int32 fd){
 		} else { //Reply with nak
 			chmapif_changemapserv_ack(fd,1);
 		}
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 		RFIFOSKIP( fd, 37 + MAP_NAME_LENGTH_EXT );
+#else
+		RFIFOSKIP( fd, 37 + MAP_NAME_LENGTH_EXT + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH );
+#endif // Pandas_Extract_SSOPacket_MacAddress
 	}
 	return 1;
 }
@@ -1032,6 +1062,9 @@ int32 chmapif_parse_reqauth(int32 fd, int32 id){
 
 		if( global_core->is_running() && autotrade && cd ){
 			uint16 mmo_charstatus_len = sizeof(struct mmo_charstatus) + 25;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+			mmo_charstatus_len += MACADDRESS_LENGTH + IP4ADDRESS_LENGTH;
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 			WFIFOHEAD(fd,mmo_charstatus_len);
 			WFIFOW(fd,0) = 0x2afd;
@@ -1042,7 +1075,13 @@ int32 chmapif_parse_reqauth(int32 fd, int32 id){
 			WFIFOL(fd,16) = 0;
 			WFIFOL(fd,20) = 0;
 			WFIFOB(fd,24) = 0;
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 			memcpy( WFIFOP( fd, 25 ), cd.get(), sizeof(struct mmo_charstatus));
+#else
+			safestrncpy(WFIFOCP(fd, 25), "", MACADDRESS_LENGTH);
+			safestrncpy(WFIFOCP(fd, 25 + MACADDRESS_LENGTH), "", IP4ADDRESS_LENGTH);
+			memcpy( WFIFOP( fd, 25 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH ), cd.get(), sizeof(struct mmo_charstatus));
+#endif // Pandas_Extract_SSOPacket_MacAddress
 			WFIFOSET(fd, WFIFOW(fd,2));
 
 			char_set_char_online(id, char_id, account_id);
@@ -1059,6 +1098,9 @@ int32 chmapif_parse_reqauth(int32 fd, int32 id){
 			)
 		{// auth ok
 			uint16 mmo_charstatus_len = sizeof(struct mmo_charstatus) + 25;
+#ifdef Pandas_Extract_SSOPacket_MacAddress
+			mmo_charstatus_len += MACADDRESS_LENGTH + IP4ADDRESS_LENGTH;
+#endif // Pandas_Extract_SSOPacket_MacAddress
 
 			WFIFOHEAD(fd,mmo_charstatus_len);
 			WFIFOW(fd,0) = 0x2afd;
@@ -1069,7 +1111,13 @@ int32 chmapif_parse_reqauth(int32 fd, int32 id){
 			WFIFOL(fd,16) = (uint32)node->expiration_time; // FIXME: will wrap to negative after "19-Jan-2038, 03:14:07 AM GMT"
 			WFIFOL(fd,20) = node->group_id;
 			WFIFOB(fd,24) = node->changing_mapservers;
+#ifndef Pandas_Extract_SSOPacket_MacAddress
 			memcpy( WFIFOP( fd, 25 ), cd.get(), sizeof( struct mmo_charstatus ) );
+#else
+			safestrncpy(WFIFOCP(fd, 25), node->mac_address, MACADDRESS_LENGTH);
+			safestrncpy(WFIFOCP(fd, 25 + MACADDRESS_LENGTH), node->lan_address, IP4ADDRESS_LENGTH);
+			memcpy( WFIFOP( fd, 25 + MACADDRESS_LENGTH + IP4ADDRESS_LENGTH ), cd.get(), sizeof( struct mmo_charstatus ) );
+#endif // Pandas_Extract_SSOPacket_MacAddress
 			WFIFOSET(fd, WFIFOW(fd,2));
 
 			// only use the auth once and mark user online
