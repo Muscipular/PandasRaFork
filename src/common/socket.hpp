@@ -208,6 +208,10 @@ void send_shortlist_add_fd(int32 fd);
 void send_shortlist_do_sends();
 #endif
 
+#ifdef Pandas_Health_Monitors_Silent
+bool suppresses_close_mes(uint32 ip);
+#endif // Pandas_Health_Monitors_Silent
+
 // Reuseable global packet buffer to prevent too many allocations
 // Take socket.cpp::socket_max_client_packet into consideration
 extern int8 packet_buffer[UINT16_MAX];

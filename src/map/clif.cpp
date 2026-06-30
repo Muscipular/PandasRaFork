@@ -26207,6 +26207,9 @@ static int32 clif_parse(int32 fd)
 				map_quit(sd);
 			}
 		} else {
+#ifdef Pandas_Health_Monitors_Silent
+			if (!suppresses_close_mes(session[fd]->client_addr))
+#endif // Pandas_Health_Monitors_Silent
 			ShowInfo("Closed connection from '" CL_WHITE "%s" CL_RESET "'.\n", ip2str(session[fd]->client_addr, nullptr));
 		}
 		do_close(fd);

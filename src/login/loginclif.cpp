@@ -522,6 +522,9 @@ int32 logclif_parse(int32 fd) {
 
 	if( session[fd]->flag.eof )
 	{
+#ifdef Pandas_Health_Monitors_Silent
+		if (!suppresses_close_mes(ipl))
+#endif // Pandas_Health_Monitors_Silent
 		ShowInfo("Closed connection from '" CL_WHITE "%s" CL_RESET "'.\n", ip);
 		do_close(fd);
 		return 0;

@@ -278,6 +278,9 @@ static int32 create_session(int32 fd, RecvFunc func_recv, SendFunc func_send, Pa
 #ifndef MINICORE
 	int32 ip_rules = 1;
 	static int32 connect_check(uint32 ip);
+#ifdef Pandas_Health_Monitors_Silent
+	static int32 hm_silent = 1;
+#endif // Pandas_Health_Monitors_Silent
 #endif
 
 const char* error_msg(void)
@@ -1104,6 +1107,10 @@ static int32 ddos_autoreset  = 10*60*1000;
 /// Connection history, an array of linked lists.
 /// The array's index for any ip is ip&0xFFFF
 static ConnectHistory* connect_history[0x10000];
+#ifdef Pandas_Health_Monitors_Silent
+static AccessControl* health_monitors = nullptr;
+static int32 health_monitorsnum = 0;
+#endif // Pandas_Health_Monitors_Silent
 
 static int32 connect_check_(uint32 ip);
 
@@ -1118,6 +1125,32 @@ static int32 connect_check(uint32 ip)
 	return result;
 }
 
+#ifdef Pandas_Health_Monitors_Silent
+static int32 check_iplist(uint32 ip, AccessControl* iplist, int32 list_cnt, const char* list_name) {
+	if (iplist == nullptr || list_cnt <= 0)
+		return 0;
+
+	for (int32 i = 0; i < list_cnt; ++i) {
+		if ((ip & iplist[i].mask) == (iplist[i].ip & iplist[i].mask)) {
+			if (access_debug && list_name != nullptr) {
+				ShowInfo("connect_check: Found match from %s list:%d.%d.%d.%d IP:%d.%d.%d.%d Mask:%d.%d.%d.%d\n",
+					list_name,
+					CONVIP(ip),
+					CONVIP(iplist[i].ip),
+					CONVIP(iplist[i].mask));
+			}
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+bool suppresses_close_mes(uint32 ip) {
+	return hm_silent && check_iplist(ip, health_monitors, health_monitorsnum, nullptr) == 1;
+}
+#endif // Pandas_Health_Monitors_Silent
+
 /// Verifies if the IP can connect.
 ///  0      : Connection Rejected
 ///  1 or 2 : Connection Accepted
@@ -1128,6 +1161,9 @@ static int32 connect_check_(uint32 ip)
 	int32 is_allowip = 0;
 	int32 is_denyip = 0;
 	int32 connect_ok = 0;
+#ifdef Pandas_Health_Monitors_Silent
+	int32 is_healthip = check_iplist(ip, health_monitors, health_monitorsnum, "health");
+#endif // Pandas_Health_Monitors_Silent
 
 	// Search the allow list
 	for( i=0; i < access_allownum; ++i ){
@@ -1184,6 +1220,11 @@ static int32 connect_check_(uint32 ip)
 			connect_ok = 0; // Reject
 		break;
 	}
+
+#ifdef Pandas_Health_Monitors_Silent
+	if (hm_silent && is_healthip)
+		connect_ok = 2;
+#endif // Pandas_Health_Monitors_Silent
 
 	// Inspect connection history
 	while( hist ) {
@@ -1365,6 +1406,17 @@ int32 socket_config_read(const char* cfgName)
 			ddos_autoreset = atoi(w2);
 		else if (!strcmpi(w1,"debug"))
 			access_debug = config_switch(w2);
+#ifdef Pandas_Health_Monitors_Silent
+		else if (!strcmpi(w1, "make_hm_silent"))
+			hm_silent = config_switch(w2);
+		else if (!strcmpi(w1, "health")) {
+			RECREATE(health_monitors, AccessControl, health_monitorsnum + 1);
+			if (access_ipmask(w2, &health_monitors[health_monitorsnum]))
+				++health_monitorsnum;
+			else
+				ShowError("socket_config_read: Invalid ip or ip range '%s'!\n", line);
+		}
+#endif // Pandas_Health_Monitors_Silent
 #ifdef SOCKET_EPOLL
 		else if( !strcmpi( w1, "epoll_maxevents" ) ){
 			epoll_maxevents = atoi(w2);
@@ -1407,6 +1459,10 @@ void socket_final(void)
 		aFree(access_allow);
 	if( access_deny )
 		aFree(access_deny);
+#ifdef Pandas_Health_Monitors_Silent
+	if( health_monitors )
+		aFree(health_monitors);
+#endif // Pandas_Health_Monitors_Silent
 #endif
 
 	for( i = 1; i < fd_max; i++ )
