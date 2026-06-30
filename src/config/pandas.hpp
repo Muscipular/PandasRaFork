@@ -554,6 +554,7 @@
 	// 调整 instance.cpp 中 instance_destroy 的定义
 	// 增加 skip_erase 参数用于控制成功销毁副本后不 erase 掉 instance 对象
 	// 以便交由外部来进行 erase, 这样才能获取下一个指针的正确位置 (C++11) [Sola丶小克]
+	#define Pandas_FuncDefine_Instance_Destory
 
 	// 调整各单位的死亡处理函数, 以便支持更多参数信息 [Sola丶小克]
 	// 玩家单位	: pc.cpp -> pc_dead

@@ -843,6 +843,7 @@ int16 instance_mapid(int16 m, int32 instance_id)
 	return m;
 }
 
+#if !defined(Pandas_FuncLogic_Instance_Destroy_Command) || !defined(Pandas_FuncDefine_Instance_Destory)
 /**
  * Removes an instance, all its maps, and NPCs invoked by the client button.
  * @param sd: Player data
@@ -925,13 +926,63 @@ void instance_destroy_command(map_session_data *sd) {
 		instance_reqinfo(sd, gd->instance_id);
 	}
 }
+#else
+void instance_destroy_command(map_session_data *sd) {
+	nullpo_retv(sd);
+
+	for (auto it = instances.begin(); it != instances.end(); ++it) {
+		std::shared_ptr<s_instance_data> idata = it->second;
+
+		if (idata->owner_id == 0)
+			continue;
+
+		switch (idata->mode) {
+			case IM_CHAR:
+				if (idata->owner_id != sd->status.char_id)
+					continue;
+				break;
+			case IM_PARTY: {
+				party_data *pd = party_search(idata->owner_id);
+				if (!pd || pd->party.party_id != sd->status.party_id)
+					continue;
+
+				int32 i;
+				ARR_FIND(0, MAX_PARTY, i, pd->party.member[i].leader);
+				if (i == MAX_PARTY || pd->party.member[i].char_id != sd->status.char_id)
+					continue;
+				break;
+			}
+			case IM_GUILD: {
+				auto gd = guild_search(idata->owner_id);
+				if (!gd || gd->guild.guild_id != sd->status.guild_id || !sd->state.gmaster_flag)
+					continue;
+				break;
+			}
+			default:
+				continue;
+		}
+
+		if (!instance_db.find(idata->id)->destroyable)
+			return;
+
+		if (instance_destroy(it->first, true)) {
+			it = instances.erase(it);
+			return;
+		}
+	}
+}
+#endif // !defined(Pandas_FuncLogic_Instance_Destroy_Command) || !defined(Pandas_FuncDefine_Instance_Destory)
 
 /**
  * Removes an instance, all its maps, and NPCs.
  * @param instance_id: Instance to remove
  * @return True on success or false on failure
  */
+#ifndef Pandas_FuncDefine_Instance_Destory
 bool instance_destroy(int32 instance_id)
+#else
+bool instance_destroy(int32 instance_id, bool skip_erase)
+#endif // Pandas_FuncDefine_Instance_Destory
 {
 	std::shared_ptr<s_instance_data> idata = util::umap_find(instances, instance_id);
 
@@ -1034,6 +1085,9 @@ bool instance_destroy(int32 instance_id)
 
 	ShowInfo("[Instance] Destroyed: %s (%d)\n", instance_db.find(idata->id)->name.c_str(), instance_id);
 
+#ifdef Pandas_FuncDefine_Instance_Destory
+	if (!skip_erase)
+#endif // Pandas_FuncDefine_Instance_Destory
 	instances.erase(instance_id);
 
 	return true;

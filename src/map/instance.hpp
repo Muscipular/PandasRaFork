@@ -120,7 +120,11 @@ std::shared_ptr<s_instance_db> instance_search_db_name(const char* name);
 void instance_getsd(int32 instance_id, map_session_data *&sd, enum send_target *target);
 
 int32 instance_create(int32 owner_id, const char *name, e_instance_mode mode);
+#ifndef Pandas_FuncDefine_Instance_Destory
 bool instance_destroy(int32 instance_id);
+#else
+bool instance_destroy(int32 instance_id, bool skip_erase = false);
+#endif // Pandas_FuncDefine_Instance_Destory
 void instance_destroy_command(map_session_data *sd);
 e_instance_enter instance_enter(map_session_data *sd, int32 instance_id, const char *name, int16 x, int16 y);
 bool instance_reqinfo(map_session_data *sd, int32 instance_id);
