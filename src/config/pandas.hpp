@@ -168,6 +168,7 @@
 			// 当玩家即将加入队伍时触发过滤器 [聽風]
 			// 事件类型: Filter / 事件名称: OnPCPartyJoinFilter
 			// 常量名称: NPCF_PARTYJOIN / 变量名称: partyjoin_filter_name
+			#define Pandas_NpcFilter_PARTYJOIN
 
 			// 当玩家准备离开队伍时触发过滤器 [聽風]
 			// 事件类型: Filter / 事件名称: OnPCPartyLeaveFilter

@@ -25637,6 +25637,16 @@ void clif_parse_partybooking_reply( int32 fd, map_session_data* sd ){
 	}
 
 	if( p->accept ){
+#ifdef Pandas_NpcFilter_PARTYJOIN
+		if (sd && tsd) {
+			pc_setreg(tsd, add_str("@join_party_id"), sd->status.party_id);
+			pc_setreg(tsd, add_str("@join_party_aid"), sd->status.account_id);
+			if (npc_script_filter(tsd, NPCF_PARTYJOIN)) {
+				clif_partybooking_reply(tsd, sd, 0);
+				return;
+			}
+		}
+#endif // Pandas_NpcFilter_PARTYJOIN
 		party_join( *tsd, sd->status.party_id );
 	}
 

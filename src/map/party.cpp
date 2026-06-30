@@ -591,6 +591,20 @@ bool party_reply_invite( map_session_data& sd, int32 party_id, int32 flag ){
 		return false;
 	}
 
+#ifdef Pandas_NpcFilter_PARTYJOIN
+	map_session_data* pre_tsd = map_id2sd( sd.party_invite_account );
+	if (flag == 1 && pre_tsd) {
+		pc_setreg(&sd, add_str("@join_party_id"), party_id);
+		pc_setreg(&sd, add_str("@join_party_aid"), pre_tsd->status.account_id);
+		if (npc_script_filter(&sd, NPCF_PARTYJOIN)) {
+			sd.party_invite = 0;
+			sd.party_invite_account = 0;
+			clif_party_invite_reply(*pre_tsd, sd.status.name, PARTY_REPLY_REJECTED);
+			return false;
+		}
+	}
+#endif // Pandas_NpcFilter_PARTYJOIN
+
 	// accepted and allowed
 	if( flag == 1 && !sd.party_creating && !sd.party_joining ) {
 		struct party_data* party = party_search( party_id );
