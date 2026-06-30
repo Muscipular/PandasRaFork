@@ -188,6 +188,7 @@ char motd_txt[256] = "conf/motd.txt";
 char charhelp_txt[256] = "conf/charhelp.txt";
 char channel_conf[256] = "conf/channels.conf";
 
+#ifndef Pandas_Message_Reorganize
 const char *MSG_CONF_NAME_RUS;
 const char *MSG_CONF_NAME_SPN;
 const char *MSG_CONF_NAME_GRM;
@@ -197,6 +198,10 @@ const char *MSG_CONF_NAME_IDN;
 const char *MSG_CONF_NAME_FRN;
 const char *MSG_CONF_NAME_POR;
 const char *MSG_CONF_NAME_THA;
+#else
+const char* MSG_CONF_NAME_CHS;	// 简体中文
+const char* MSG_CONF_NAME_CHT;	// 繁体中文
+#endif // Pandas_Message_Reorganize
 
 char wisp_server_name[NAME_LENGTH] = "Server"; // can be modified in char-server configuration file
 
@@ -5353,6 +5358,7 @@ struct msg_data *map_lang2msgdb(uint8 lang){
 
 void map_do_init_msg(void){
 	int32 test=0, i=0, size;
+#ifndef Pandas_Message_Reorganize
 	const char * listelang[] = {
 		MSG_CONF_NAME_EN,	//default
 		MSG_CONF_NAME_RUS,
@@ -5365,6 +5371,13 @@ void map_do_init_msg(void){
 		MSG_CONF_NAME_POR,
 		MSG_CONF_NAME_THA
 	};
+#else
+	const char * listelang[] = {
+		MSG_CONF_NAME_EN,	// 英文
+		MSG_CONF_NAME_CHS,	// 简体中文
+		MSG_CONF_NAME_CHT	// 繁体中文
+	};
+#endif // Pandas_Message_Reorganize
 
 	map_msg_db = idb_alloc(DB_OPT_BASE);
 	size = ARRAYLENGTH(listelang); //avoid recalc
@@ -5409,6 +5422,7 @@ const char* map_msg_txt(const map_session_data* sd, int32 msg_number){
 	uint8 lang = 0; //default
 	if(sd && sd->langtype) lang = sd->langtype;
 
+#ifndef Pandas_Message_Reorganize
 	if( (mdb = map_lang2msgdb(lang)) != nullptr){
 		const char *tmp = _msg_txt(msg_number,MAP_MAX_MSG,mdb->msg);
 		if(strcmp(tmp,"??")) //to verify result
@@ -5416,6 +5430,16 @@ const char* map_msg_txt(const map_session_data* sd, int32 msg_number){
 		ShowDebug("Message #%d not found for langtype %d.\n",msg_number,lang);
 	}
 	ShowDebug("Selected langtype %d not loaded, trying fallback...\n",lang);
+#else
+	if( (mdb = map_lang2msgdb(lang)) != nullptr){
+		const char *tmp = _msg_txt(msg_number,MAP_MAX_MSG,mdb->msg);
+		if(strcmp(tmp,"??")) //to verify result
+			return tmp;
+		ShowDebug("Message #%d not found for langtype %d [%s], trying fallback...\n", msg_number, lang, msg_langtype2langstr(lang));
+	}
+	else
+		ShowDebug("Selected langtype %d not loaded, trying fallback...\n", lang);
+#endif // Pandas_Message_Reorganize
 	if(lang != 0 && (mdb = map_lang2msgdb(0)) != nullptr) //fallback
 		return _msg_txt(msg_number,MAP_MAX_MSG,mdb->msg);
 	return "??";
@@ -5512,6 +5536,7 @@ bool MapServer::initialize( int32 argc, char *argv[] ){
 	safestrncpy(console_log_filepath, "./log/map-msg_log.log", sizeof(console_log_filepath));
 
 	/* Multilanguage */
+#ifndef Pandas_Message_Reorganize
 	MSG_CONF_NAME_EN = "conf/msg_conf/map_msg.conf"; // English (default)
 	MSG_CONF_NAME_RUS = "conf/msg_conf/map_msg_rus.conf";	// Russian
 	MSG_CONF_NAME_SPN = "conf/msg_conf/map_msg_spn.conf";	// Spanish
@@ -5522,6 +5547,11 @@ bool MapServer::initialize( int32 argc, char *argv[] ){
 	MSG_CONF_NAME_FRN = "conf/msg_conf/map_msg_frn.conf";	// French
 	MSG_CONF_NAME_POR = "conf/msg_conf/map_msg_por.conf";	// Brazilian Portuguese
 	MSG_CONF_NAME_THA = "conf/msg_conf/map_msg_tha.conf";	// Thai
+#else
+	MSG_CONF_NAME_EN = "conf/msg_conf/map_msg.conf";		// English (default)
+	MSG_CONF_NAME_CHS = "conf/msg_conf/map_msg_chs.conf";	// Chinese Simplified
+	MSG_CONF_NAME_CHT = "conf/msg_conf/map_msg_cht.conf";	// Chinese Traditional
+#endif // Pandas_Message_Reorganize
 	/* Multilanguage */
 
 	// default inter_config

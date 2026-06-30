@@ -108,6 +108,7 @@ void _do_final_msg(int32 size, char ** msg_table){
 		aFree(msg_table[i]);
 }
 
+#ifndef Pandas_Message_Reorganize
 /*
  * lookup a langtype string into his associate langtype number
  * return -1 if not found
@@ -147,6 +148,33 @@ const char* msg_langtype2langstr(int32 langtype){
 		default: return "??";
 	}
 }
+#else
+/*
+ * lookup a langtype string into his associate langtype number
+ * return -1 if not found
+ */
+int32 msg_langstr2langtype(char* langtype) {
+	int32 lang = -1;
+	if (!strcmpi(langtype, "eng")) lang = 0;		// 英文
+	else if (!strcmpi(langtype, "chs")) lang = 1;	// 简体中文
+	else if (!strcmpi(langtype, "chn")) lang = 2;	// 繁体中文的别名
+	else if (!strcmpi(langtype, "cht")) lang = 2;	// 繁体中文
+	return lang;
+}
+
+/*
+ * lookup a langtype into his associate lang string
+ * return ?? if not found
+ */
+const char* msg_langtype2langstr(int32 langtype) {
+	switch (langtype) {
+	case 0: return "English (ENG)";						// 英文
+	case 1: return "Chinese Simplified (CHS)";			// 简体中文
+	case 2: return "Chinese Traditional (CHT)";			// 繁体中文
+	default: return "??";
+	}
+}
+#endif // Pandas_Message_Reorganize
 
 /*
  * verify that the choosen langtype is enable

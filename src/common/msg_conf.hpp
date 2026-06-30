@@ -6,6 +6,7 @@
 
 #include <config/core.hpp>
 
+#ifndef Pandas_Message_Reorganize
 enum lang_types {
 	LANG_RUS = 0x01,
 	LANG_SPN = 0x02,
@@ -18,6 +19,17 @@ enum lang_types {
 	LANG_THA = 0x100,
 	LANG_MAX
 };
+#else
+enum lang_types {
+	LANG_CHS = 0x01,
+	LANG_CHT = 0x02,
+	LANG_MAX
+};
+#ifndef LANG_ENABLE
+	// 除了英语, 我们额外启用两种语言, 分别是: 简体中文, 繁体中文 [Sola丶小克]
+	#define LANG_ENABLE (LANG_CHS | LANG_CHT)
+#endif
+#endif // Pandas_Message_Reorganize
 
 // =================================================================================
 // 追加一部分消息区间给 Pandas 扩展使用 [Sola丶小克]
