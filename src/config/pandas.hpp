@@ -1197,6 +1197,9 @@
 	// 是否启用 aura 脚本指令 [Sola丶小克]
 	// 该指令用于为角色激活特定组合的光环效果, 光环效果会一直跟随角色
 	// 此选项开关需要依赖 Pandas_Aura_Mechanism 的拓展
+	#ifdef Pandas_Aura_Mechanism
+		#define Pandas_ScriptCommand_Aura
+	#endif // Pandas_Aura_Mechanism
 	// 是否启用 unitaura 脚本指令 [Sola丶小克]
 	// 该指令用于调整七种单位的光环组合 (但仅 BL_PC 会被持久化)
 	// 七种单位分别是: 玩家/魔物/佣兵/宠物/NPC/精灵/人工生命体

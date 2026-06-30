@@ -30026,6 +30026,40 @@ BUILDIN_FUNC(getchartitle) {
 }
 #endif // Pandas_ScriptCommand_GetCharTitle
 
+#ifdef Pandas_ScriptCommand_Aura
+/* ===========================================================
+ * 指令: aura
+ * 描述: 激活指定的光环组合
+ * 用法: aura <光环编号>{,<角色编号>};
+ * 返回: 成功返回 1 失败返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(aura) {
+	TBL_PC* sd = nullptr;
+	int64 input_aura_id = script_getnum(st, 2);
+
+	if (input_aura_id < 0)
+		input_aura_id = 0;
+
+	uint32 aura_id = static_cast<uint32>(input_aura_id);
+
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (aura_id && !aura_search(aura_id)) {
+		ShowError("buildin_aura: The specified aura id '%d' is invalid.\n", static_cast<int32>(aura_id));
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	aura_make_effective(&sd->bl, aura_id);
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_Aura
+
 /// script command definitions
 /// for an explanation on args, see add_buildin_func
 struct script_function buildin_func[] = {
@@ -30060,6 +30094,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_GetCharTitle
 	BUILDIN_DEF(getchartitle, "?"),					// 获得指定玩家的称号ID [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetCharTitle
+#ifdef Pandas_ScriptCommand_Aura
+	BUILDIN_DEF(aura, "i?"),							// 激活指定的光环组合 [Sola丶小克]
+#endif // Pandas_ScriptCommand_Aura
 	BUILDIN_DEF(changelook,"ii?"), // Simulates but don't Store it
 	BUILDIN_DEF2(setr,"set","rv?"),
 	BUILDIN_DEF(setr,"rv??"), // Not meant to be used directly, required for var++/var--
