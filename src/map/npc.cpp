@@ -165,6 +165,40 @@ bool npc_event_aide_storage_add(map_session_data* sd, struct s_storage* store, i
 }
 #endif // Pandas_NpcFilter_STORAGE_ADD
 
+#ifdef Pandas_NpcFilter_STORAGE_DEL
+bool npc_event_aide_storage_del(map_session_data* sd, struct s_storage* store, int32 idx, int32 amount, int32 item_to) {
+	nullpo_retr(false, sd);
+	nullpo_retr(false, store);
+
+	struct item* idata = nullptr;
+
+	switch (store->type) {
+		case TABLE_STORAGE:
+			if (idx >= 0 && idx < MAX_STORAGE) {
+				idata = &store->u.items_storage[idx];
+			}
+			break;
+		case TABLE_GUILD_STORAGE:
+			if (idx >= 0 && idx < MAX_GUILD_STORAGE) {
+				idata = &store->u.items_guild[idx];
+			}
+			break;
+	}
+
+	if (idata == nullptr) {
+		return false;
+	}
+
+	pc_setreg(sd, add_str("@removeitem_src_from"), static_cast<int32>(store->type - 2));
+	pc_setreg(sd, add_str("@removeitem_src_storeid"), store->stor_id);
+	pc_setreg(sd, add_str("@removeitem_src_idx"), idx);
+	pc_setreg(sd, add_str("@removeitem_src_nameid"), idata->nameid);
+	pc_setreg(sd, add_str("@removeitem_src_amount"), amount);
+	pc_setreg(sd, add_str("@removeitem_dst_type"), item_to);
+	return npc_script_filter(sd, NPCF_STORAGE_DEL);
+}
+#endif // Pandas_NpcFilter_STORAGE_DEL
+
 #ifdef Pandas_Helper_Common_Function
 struct event_data* npc_event_data(const char* eventname) {
 	return static_cast<struct event_data*>(strdb_get(ev_db, eventname));
@@ -6610,6 +6644,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCF_STORAGE_ADD:
 		return script_config.storage_add_filter_name;
 #endif // Pandas_NpcFilter_STORAGE_ADD
+#ifdef Pandas_NpcFilter_STORAGE_DEL
+	case NPCF_STORAGE_DEL:
+		return script_config.storage_del_filter_name;
+#endif // Pandas_NpcFilter_STORAGE_DEL
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;

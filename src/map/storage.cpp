@@ -20,9 +20,9 @@
 #include "itemdb.hpp"
 #include "log.hpp"
 #include "map.hpp" // map_session_data
-#ifdef Pandas_NpcFilter_STORAGE_ADD
+#if defined(Pandas_NpcFilter_STORAGE_ADD) || defined(Pandas_NpcFilter_STORAGE_DEL)
 #include "npc.hpp"
-#endif // Pandas_NpcFilter_STORAGE_ADD
+#endif // Pandas_NpcFilter_STORAGE_ADD || Pandas_NpcFilter_STORAGE_DEL
 #include "packets.hpp"
 #include "pc.hpp"
 #include "pc_groups.hpp"
@@ -386,6 +386,13 @@ void storage_storageget(map_session_data *sd, struct s_storage *stor, int32 inde
 	if (result != STORAGE_ADD_OK)
 		return;
 
+#ifdef Pandas_NpcFilter_STORAGE_DEL
+	if (npc_event_aide_storage_del(sd, stor, index, amount, TABLE_INVENTORY)) {
+		clif_storageitemremoved(*sd, index, 0);
+		return;
+	}
+#endif // Pandas_NpcFilter_STORAGE_DEL
+
 	if ((flag = pc_additem(sd,&stor->u.items_storage[index],amount,LOG_TYPE_STORAGE, favorite)) == ADDITEM_SUCCESS)
 		storage_delitem(sd,stor,index,amount);
 	else {
@@ -461,6 +468,13 @@ void storage_storagegettocart(map_session_data* sd, struct s_storage *stor, int3
 	result = storage_canGetItem(stor, index, amount);
 	if (result != STORAGE_ADD_OK)
 		return;
+
+#ifdef Pandas_NpcFilter_STORAGE_DEL
+	if (npc_event_aide_storage_del(sd, stor, index, amount, TABLE_CART)) {
+		clif_storageitemremoved(*sd, index, 0);
+		return;
+	}
+#endif // Pandas_NpcFilter_STORAGE_DEL
 
 	if ((flag = pc_cart_additem(sd,&stor->u.items_storage[index],amount,LOG_TYPE_STORAGE)) == 0)
 		storage_delitem(sd,stor,index,amount);
@@ -963,6 +977,13 @@ void storage_guild_storageget(map_session_data* sd, int32 index, int32 amount, b
 		return;
 	}
 
+#ifdef Pandas_NpcFilter_STORAGE_DEL
+	if (npc_event_aide_storage_del(sd, stor, index, amount, TABLE_INVENTORY)) {
+		clif_storageitemremoved(*sd, index, 0);
+		return;
+	}
+#endif // Pandas_NpcFilter_STORAGE_DEL
+
 	if((flag = pc_additem(sd,&stor->u.items_guild[index],amount,LOG_TYPE_GSTORAGE,favorite)) == 0)
 		storage_guild_delitem(sd,stor,index,amount);
 	else { // inform fail
@@ -1038,6 +1059,13 @@ void storage_guild_storagegettocart(map_session_data* sd, int32 index, int32 amo
 
 	if(amount < 1 || amount > stor->u.items_guild[index].amount)
 		return;
+
+#ifdef Pandas_NpcFilter_STORAGE_DEL
+	if (npc_event_aide_storage_del(sd, stor, index, amount, TABLE_CART)) {
+		clif_storageitemremoved(*sd, index, 0);
+		return;
+	}
+#endif // Pandas_NpcFilter_STORAGE_DEL
 
 	if((flag = pc_cart_additem(sd,&stor->u.items_guild[index],amount,LOG_TYPE_GSTORAGE)) == 0)
 		storage_guild_delitem(sd,stor,index,amount);
