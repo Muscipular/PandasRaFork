@@ -15554,10 +15554,17 @@ uint16 pc_maxparameter( const map_session_data* sd, e_params param ) {
 int16 pc_maxaspd( const map_session_data* sd ) {
 	nullpo_ret(sd);
 
-	return (( sd->class_&JOBL_THIRD) ? battle_config.max_third_aspd : (
+	int32 aspd = (( sd->class_&JOBL_THIRD) ? battle_config.max_third_aspd : (
 			((sd->class_&MAPID_SECONDMASK) == MAPID_KAGEROUOBORO || (sd->class_&MAPID_SECONDMASK) == MAPID_REBELLION) ? battle_config.max_extended_aspd : (
 			(sd->class_&MAPID_FIRSTMASK) == MAPID_SUMMONER) ? battle_config.max_summoner_aspd : 
 			battle_config.max_aspd ));
+
+#ifdef Pandas_BattleConfig_MaxAspdForPVP
+	if (map_flag_vs(sd->bl.m) && battle_config.max_aspd_for_pvp > 0)
+		aspd = max(aspd, battle_config.max_aspd_for_pvp);
+#endif // Pandas_BattleConfig_MaxAspdForPVP
+
+	return static_cast<int16>(aspd);
 }
 
 /**

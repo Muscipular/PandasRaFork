@@ -51,8 +51,10 @@
 #include "pet.hpp"
 #include "quest.hpp"
 #include "storage.hpp"
-#ifdef Pandas_BattleRecord
+#if defined(Pandas_BattleRecord) || defined(Pandas_BattleConfig_MaxAspdForPVP) || defined(Pandas_BattleConfig_MaxAspdForGVG)
 #include "status.hpp"
+#endif
+#ifdef Pandas_BattleRecord
 #include "unit.hpp"
 #endif // Pandas_BattleRecord
 #include "trade.hpp"
@@ -4703,6 +4705,10 @@ static int32 map_mapflag_pvp_start_sub(block_list *bl, va_list ap)
 		sd->pvp_lost = 0;
 	}
 
+#ifdef Pandas_BattleConfig_MaxAspdForPVP
+	status_calc_pc(sd, SCO_NONE);
+#endif // Pandas_BattleConfig_MaxAspdForPVP
+
 	clif_map_property(sd, MAPPROPERTY_FREEPVPZONE, SELF);
 	return 0;
 }
@@ -4723,6 +4729,10 @@ static int32 map_mapflag_pvp_stop_sub(block_list *bl, va_list ap)
 		delete_timer(sd->pvp_timer, pc_calc_pvprank_timer);
 		sd->pvp_timer = INVALID_TIMER;
 	}
+
+#ifdef Pandas_BattleConfig_MaxAspdForPVP
+	status_calc_pc(sd, SCO_NONE);
+#endif // Pandas_BattleConfig_MaxAspdForPVP
 
 	return 0;
 }

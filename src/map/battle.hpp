@@ -794,6 +794,10 @@ struct Battle_Config
 	int32 cashmount_useitem_limit; // 乘坐“商城坐骑”时禁止使用特定类型的物品
 #endif // Pandas_BattleConfig_CashMounting_UseitemLimit
 
+#ifdef Pandas_BattleConfig_MaxAspdForPVP
+	int32 max_aspd_for_pvp; // 限制玩家在 PVP 地图上的最大攻速
+#endif // Pandas_BattleConfig_MaxAspdForPVP
+
 #ifdef Pandas_BattleConfig_Suspend_MonsterIgnore
 	int32 suspend_monsterignore; // 当玩家使用挂机系列指令时, 处于哪些模式不会被魔物攻击
 #endif // Pandas_BattleConfig_Suspend_MonsterIgnore

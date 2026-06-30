@@ -8404,6 +8404,9 @@ static const struct _battle_data {
 	{ "max_aspd",                           &battle_config.max_aspd,                        190,    100,    199,            },
 	{ "max_third_aspd",                     &battle_config.max_third_aspd,                  193,    100,    199,            },
 	{ "max_summoner_aspd",                  &battle_config.max_summoner_aspd,               193,    100,    199,            },
+#ifdef Pandas_BattleConfig_MaxAspdForPVP
+	{ "max_aspd_for_pvp",                   &battle_config.max_aspd_for_pvp,                0,      0,      199,            },
+#endif // Pandas_BattleConfig_MaxAspdForPVP
 	{ "max_walk_speed",                     &battle_config.max_walk_speed,                  300,    100,    100*DEFAULT_WALK_SPEED, },
 	{ "max_lv",                             &battle_config.max_lv,                          99,     0,      MAX_LEVEL,      },
 	{ "aura_lv",                            &battle_config.aura_lv,                         99,     0,      INT_MAX,        },
@@ -9055,6 +9058,11 @@ void battle_adjust_conf()
 	battle_config.max_third_aspd = (AMOTION_ZERO_ASPD - battle_config.max_third_aspd * AMOTION_INTERVAL) * AMOTION_DIVIDER_PC;
 	battle_config.max_summoner_aspd = (AMOTION_ZERO_ASPD - battle_config.max_summoner_aspd * AMOTION_INTERVAL) * AMOTION_DIVIDER_PC;
 	battle_config.max_extended_aspd = (AMOTION_ZERO_ASPD - battle_config.max_extended_aspd * AMOTION_INTERVAL) * AMOTION_DIVIDER_PC;
+#ifdef Pandas_BattleConfig_MaxAspdForPVP
+	// Convert visible ASPD into the internal attack motion interval.
+	if (battle_config.max_aspd_for_pvp > 0)
+		battle_config.max_aspd_for_pvp = (AMOTION_ZERO_ASPD - battle_config.max_aspd_for_pvp * AMOTION_INTERVAL) * AMOTION_DIVIDER_PC;
+#endif // Pandas_BattleConfig_MaxAspdForPVP
 	battle_config.max_walk_speed = 100 * DEFAULT_WALK_SPEED / battle_config.max_walk_speed;
 	battle_config.max_cart_weight *= 10;
 
