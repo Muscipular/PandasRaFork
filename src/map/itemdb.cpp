@@ -1302,12 +1302,18 @@ void ItemDatabase::loadingFinished(){
 			item->value_sell = item->value_buy / 2;
 
 		if (item->value_buy / 124. < item->value_sell / 75.) {
+#ifdef Pandas_BattleConfig_ItemDB_Warning_Policy
+			if (!(battle_config.itemdb_warning_policy & 1))
+#endif // Pandas_BattleConfig_ItemDB_Warning_Policy
 			ShowWarning("Buying/Selling [%d/%d] price of %s (%u) allows Zeny making exploit through buying/selling at discounted/overcharged prices! Defaulting Sell to 1 Zeny.\n", item->value_buy, item->value_sell, item->name.c_str(), item->nameid);
 			item->value_sell = 1;
 		}
 
 		// Shields need to have a view ID to be able to be recognized by ST_SHIELD check in skill.cpp
 		if( item->type == IT_ARMOR && ( item->equip & EQP_SHIELD ) != 0 && item->look == 0 ){
+#ifdef Pandas_BattleConfig_ItemDB_Warning_Policy
+			if (!(battle_config.itemdb_warning_policy & 2))
+#endif // Pandas_BattleConfig_ItemDB_Warning_Policy
 			ShowWarning( "Item %s (%u) is a shield and should have a view id. Defaulting to Guard...\n", item->name.c_str(), item->nameid );
 			item->look = 1;
 		}
