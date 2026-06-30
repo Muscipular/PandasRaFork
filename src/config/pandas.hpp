@@ -598,6 +598,7 @@
 	// 新增的 spawn_flag 参数可以用来控制召唤出来的魔物是不是 BOSS (可以被 BOSS 雷达探测)
 	// 此选项依赖 Pandas_FuncDefine_Mob_Once_Spawn_Sub 的拓展
 	#ifdef Pandas_FuncDefine_Mob_Once_Spawn_Sub
+		#define Pandas_FuncDefine_Mob_Once_Spawn
 	#endif // Pandas_FuncDefine_Mob_Once_Spawn_Sub
 
 	// 在 map.cpp 中的 map_getmob_boss 增加 alive_first 参数 [Sola丶小克]
@@ -986,6 +987,8 @@
 	// 是否启用 boss_monster 脚本指令 [人鱼姬的思念]
 	// 该指令用于召唤魔物并使之能被 BOSS 雷达探测 (哪怕被召唤魔物本身不是 BOSS)
 	// 此选项依赖 Pandas_FuncDefine_Mob_Once_Spawn 的拓展
+	#ifdef Pandas_FuncDefine_Mob_Once_Spawn
+	#endif // Pandas_FuncDefine_Mob_Once_Spawn
 	// 是否启用 sleep3 脚本指令 [人鱼姬的思念]
 	// 该指令用于休眠一段时间再执行后续脚本, 与 sleep2 类似但忽略报错
 	// 是否启用 getquesttime 脚本指令 [Sola丶小克]

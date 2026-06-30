@@ -526,8 +526,13 @@ mob_data *mob_once_spawn_sub(block_list *bl, int16 m, int16 x, int16 y, const ch
 mob_data *mob_once_spawn_sub(block_list *bl, int16 m, int16 x, int16 y, const char *mobname, int32 mob_id, const char *event, uint32 size, enum mob_ai ai, uint16 spawn_flag = 0);
 #endif // Pandas_FuncDefine_Mob_Once_Spawn_Sub
 
+#ifndef Pandas_FuncDefine_Mob_Once_Spawn
 int32 mob_once_spawn(map_session_data* sd, int16 m, int16 x, int16 y,
 	const char* mobname, int32 mob_id, int32 amount, const char* event, uint32 size, enum mob_ai ai);
+#else
+int32 mob_once_spawn(map_session_data* sd, int16 m, int16 x, int16 y,
+	const char* mobname, int32 mob_id, int32 amount, const char* event, uint32 size, enum mob_ai ai, uint16 spawn_flag = 0);
+#endif // Pandas_FuncDefine_Mob_Once_Spawn
 
 int32 mob_once_spawn_area(map_session_data* sd, int16 m,
 	int16 x0, int16 y0, int16 x1, int16 y1, const char* mobname, int32 mob_id, int32 amount, const char* event, uint32 size, enum mob_ai ai);
