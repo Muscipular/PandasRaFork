@@ -782,6 +782,10 @@ struct Battle_Config
 	int32 hide_cloaked_units;
 	int32 oridecon_research_fix;
 
+#ifdef Pandas_BattleConfig_Force_LoadEvent
+	int32 force_loadevent; // 强制触发 OnPCLoadMapEvent 事件
+#endif // Pandas_BattleConfig_Force_LoadEvent
+
 #ifdef Pandas_BattleConfig_Suspend_MonsterIgnore
 	int32 suspend_monsterignore; // 当玩家使用挂机系列指令时, 处于哪些模式不会被魔物攻击
 #endif // Pandas_BattleConfig_Suspend_MonsterIgnore

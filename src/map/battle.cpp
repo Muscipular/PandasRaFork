@@ -8972,6 +8972,10 @@ static const struct _battle_data {
 	{ "mob_setunitdata_persistence",        &battle_config.mob_setunitdata_persistence,     1,      0,      1,              },
 #endif // Pandas_BattleConfig_Mob_SetUnitData_Persistence
 
+#ifdef Pandas_BattleConfig_Force_LoadEvent
+	{ "force_loadevent",                    &battle_config.force_loadevent,                 0,      0,      1,              },
+#endif // Pandas_BattleConfig_Force_LoadEvent
+
 #include <custom/battle_config_init.inc>
 };
 
