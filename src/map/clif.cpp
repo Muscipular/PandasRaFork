@@ -44,6 +44,9 @@
 #ifdef Pandas_Item_Amulet_System
 #include "itemamulet.hpp"
 #endif // Pandas_Item_Amulet_System
+#ifdef Pandas_Item_ControlViewID
+#include "itemprops.hpp"
+#endif // Pandas_Item_ControlViewID
 #include "log.hpp"
 #include "mail.hpp"
 #include "map.hpp"
@@ -3020,6 +3023,22 @@ static void clif_item_equip( int16 idx, EQUIPITEM_INFO *p, const item *it, const
 #if PACKETVER >= 20100629
 	// TODO: WBUFW(buf,n+8) = (equip == -2 && id->equip == EQP_AMMO) ? id->equip : 0;
 	p->wItemSpriteNumber = ( id->equip&EQP_VISIBLE ) ? id->look : 0;
+#ifdef Pandas_Item_ControlViewID
+	switch (caller) {
+		case 1:
+			if (id->look && ITEM_PROPERTIES_HASFLAG(id, noview_mask, ITEM_NOVIEW_WHEN_I_SEE) && caller == 1) {
+				p->wItemSpriteNumber = 0;
+			}
+			break;
+		case 4:
+			if (id->look && ITEM_PROPERTIES_HASFLAG(id, noview_mask, ITEM_NOVIEW_WHEN_T_SEE) && caller == 4) {
+				p->wItemSpriteNumber = 0;
+			}
+			break;
+		default:
+			break;
+	}
+#endif // Pandas_Item_ControlViewID
 #endif
 
 #if PACKETVER >= 20120925
@@ -4389,6 +4408,13 @@ void clif_equipitemack( const map_session_data& sd, uint8 flag, int32 index, int
 	}else{
 		p.wItemSpriteNumber = 0;
 	}
+#ifdef Pandas_Item_ControlViewID
+	if (flag == ITEM_EQUIP_ACK_OK && sd.inventory_data[index]->look != 0) {
+		if (ITEM_PROPERTIES_HASFLAG(sd.inventory_data[index], noview_mask, ITEM_NOVIEW_WHEN_I_SEE)) {
+			p.wItemSpriteNumber = 0;
+		}
+	}
+#endif // Pandas_Item_ControlViewID
 #endif
 	p.result = flag;
 

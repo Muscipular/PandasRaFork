@@ -774,6 +774,7 @@
 	// 此选项开启后 item_properties.yml 数据库中 ControlViewID 才能发挥作用
 	// 此选项依赖 Pandas_FuncParams_Clif_Item_Equip 的拓展
 	#ifdef Pandas_FuncParams_Clif_Item_Equip
+		#define Pandas_Item_ControlViewID
 	#endif // Pandas_FuncParams_Clif_Item_Equip
 	// 启用道具特殊公告策略 [Sola丶小克]
 	#define Pandas_Item_Special_Annouce
