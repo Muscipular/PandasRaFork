@@ -172,6 +172,24 @@ int32 Sql_SetEncoding(Sql* self, const char* encoding)
 }
 
 
+#ifdef Pandas_Database_SQL_GetEncoding
+//************************************
+// Method:      Sql_GetEncoding
+// Description: 查询指定 SQL 连接并返回它的连接编码
+// Access:      public
+// Parameter:   Sql * self
+// Parameter:   char * retv_encoding
+// Returns:     void
+// Author:      Sola丶小克(CairoLee)  2021/09/30 11:22
+//************************************
+void Sql_GetEncoding(Sql* self, char* retv_encoding) {
+	MY_CHARSET_INFO cs;
+	mysql_get_character_set_info(&self->handle, &cs);
+	safestrncpy(retv_encoding, cs.csname, 32);
+}
+#endif // Pandas_Database_SQL_GetEncoding
+
+
 
 /// Pings the connection.
 int32 Sql_Ping(Sql* self)

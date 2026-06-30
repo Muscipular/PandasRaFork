@@ -105,6 +105,11 @@ int32 Sql_GetColumnNames(Sql* self, const char* table, char* out_buf, size_t buf
 int32 Sql_SetEncoding(Sql* self, const char* encoding);
 
 
+#ifdef Pandas_Database_SQL_GetEncoding
+void Sql_GetEncoding(Sql* self, char* retv_encoding);
+#endif // Pandas_Database_SQL_GetEncoding
+
+
 
 /// Pings the connection.
 ///

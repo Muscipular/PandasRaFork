@@ -383,6 +383,9 @@
 
 	// 是否拓展 Yaml 的 Database 操作类使之能抑制错误信息 [Sola丶小克]
 	#define Pandas_Database_Yaml_BeQuiet
+
+	// 是否支持用于读取 SQL 连接编码的 Sql_GetEncoding 函数 [Sola丶小克]
+	#define Pandas_Database_SQL_GetEncoding
 #endif // Pandas_DatabaseIncrease
 
 // ============================================================================
