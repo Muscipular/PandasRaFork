@@ -1660,6 +1660,9 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcFilter_GUILDCREATE
 	NPCF_GUILDCREATE,
 #endif // Pandas_NpcFilter_GUILDCREATE
+#ifdef Pandas_NpcFilter_GUILDJOIN
+	NPCF_GUILDJOIN,
+#endif // Pandas_NpcFilter_GUILDJOIN
 	NPCE_MAX
 };
 

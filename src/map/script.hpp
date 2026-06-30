@@ -207,6 +207,9 @@ struct Script_Config {
 #ifdef Pandas_NpcFilter_GUILDCREATE
 	const char* guildcreate_filter_name;
 #endif // Pandas_NpcFilter_GUILDCREATE
+#ifdef Pandas_NpcFilter_GUILDJOIN
+	const char* guildjoin_filter_name;
+#endif // Pandas_NpcFilter_GUILDJOIN
 	// NPC related
 	const char* ontouch_event_name;
 	const char* ontouch2_event_name;

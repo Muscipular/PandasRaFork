@@ -1065,6 +1065,23 @@ bool guild_reply_invite( map_session_data& sd, int32 guild_id, int32 flag ){
 		return true;
 	}
 
+#ifdef Pandas_NpcFilter_GUILDJOIN
+	if (tsd) {
+		pc_setreg(&sd, add_str("@join_guild_id"), guild_id);
+		pc_setreg(&sd, add_str("@join_guild_aid"), tsd->status.account_id);
+		if (npc_script_filter(&sd, NPCF_GUILDJOIN)) {
+			sd.guild_invite = 0;
+			sd.guild_invite_account = 0;
+
+			if (tsd != nullptr) {
+				clif_guild_inviteack(*tsd, 1);
+			}
+
+			return false;
+		}
+	}
+#endif // Pandas_NpcFilter_GUILDJOIN
+
 	struct guild_member m = {};
 
 	guild_makemember( m, sd );
