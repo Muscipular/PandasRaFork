@@ -14683,7 +14683,7 @@ void JobDatabase::loadingFinished() {
 		uint64 class_ = pc_jobid2mapid( job_id );
 
 		// Set normal status limits
-		uint16 max = battle_config.max_parameter;
+		pec_ushort max = battle_config.max_parameter;
 
 		do{
 			// Always check babies first
@@ -15612,7 +15612,7 @@ void pc_cell_basilica(map_session_data *sd) {
  * @param param: Max parameter to check
  * @return max_param
  */
-uint16 pc_maxparameter( const map_session_data* sd, e_params param ) {
+pec_uint16 pc_maxparameter( const map_session_data* sd, e_params param ) {
 	nullpo_retr(0, sd);
 
 	std::shared_ptr<s_job_info> job = job_db.find(pc_mapid2jobid(sd->class_,sd->status.sex));

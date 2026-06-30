@@ -1168,7 +1168,7 @@ struct s_job_info {
 	std::vector<int16> aspd_base;
 	t_exp base_exp[MAX_LEVEL], job_exp[MAX_LEVEL];
 	uint16 max_base_level, max_job_level;
-	uint16 max_param[PARAM_MAX];
+	pec_ushort max_param[PARAM_MAX];
 	struct s_job_noenter_map {
 		uint32 zone;
 		uint8 group_lv;
@@ -1265,7 +1265,7 @@ static inline bool pc_hasprogress(map_session_data *sd, enum e_wip_block progres
 	return sd == nullptr || (sd->state.workinprogress&progress) == progress;
 }
 
-uint16 pc_maxparameter( const map_session_data* sd, e_params param );
+pec_uint16 pc_maxparameter( const map_session_data* sd, e_params param );
 int16 pc_maxaspd( const map_session_data* sd );
 
 /**
