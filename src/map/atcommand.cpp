@@ -11977,6 +11977,33 @@ static void atcommand_get_suggestions(map_session_data* sd, const char *name, bo
 	dbi_destroy(atcommand_iter);
 }
 
+#ifdef Pandas_BattleConfig_AtCmd_No_Permission
+static bool atcommand_noperm_halt(int32 fd, map_session_data* sd, const char* command, int32 fromtype, bool is_atcommand)
+{
+	nullpo_retr(false, sd);
+
+	if (fd < 0 || fromtype != 1)
+		return false;
+
+	AtCommandInfo* info = get_atcommandinfo_byname(atcommand_alias_db.checkAlias(command + 1));
+
+	if (info == nullptr)
+		return false;
+
+	if ((is_atcommand && info->at_groups[sd->group->index] == 0) ||
+		(!is_atcommand && info->char_groups[sd->group->index] == 0)) {
+		if (battle_config.atcmd_no_permission == 1) {
+			clif_displaymessage(fd, msg_txt_cn(sd, 0));
+			return true;
+		}
+		if (battle_config.atcmd_no_permission == 2)
+			return true;
+	}
+
+	return false;
+}
+#endif // Pandas_BattleConfig_AtCmd_No_Permission
+
 /**
  * Executes an at-command
  * @param fd
@@ -12050,6 +12077,11 @@ bool is_atcommand(const int32 fd, map_session_data* sd, const char* message, int
 				if (n < 1)
 					return false; // No command found. Display as normal message.
 
+#ifdef Pandas_BattleConfig_AtCmd_No_Permission
+				if (atcommand_noperm_halt(fd, sd, command, type, is_atcommand))
+					return true;
+#endif // Pandas_BattleConfig_AtCmd_No_Permission
+
 				info = get_atcommandinfo_byname(atcommand_alias_db.checkAlias(command + 1));
 				if (!info || info->char_groups[sd->group->index] == 0)  // If we can't use or doesn't exist: don't even display the command failed message
 					return false;
@@ -12062,6 +12094,11 @@ bool is_atcommand(const int32 fd, map_session_data* sd, const char* message, int
 
 		ssd = map_nick2sd(charname,true);
 		if (ssd == nullptr) {
+#ifdef Pandas_BattleConfig_AtCmd_No_Permission
+			if (atcommand_noperm_halt(fd, sd, command, type, is_atcommand))
+				return true;
+#endif // Pandas_BattleConfig_AtCmd_No_Permission
+
 			sprintf(output, msg_txt(sd,1389), command); // %s failed. Player not found.
 			clif_displaymessage(fd, output);
 			return true;
@@ -12131,6 +12168,11 @@ bool is_atcommand(const int32 fd, map_session_data* sd, const char* message, int
 			&& ((is_atcommand && sd && sd->state.autotrade) || (ssd && ssd->state.autotrade)))
 			return true;
 	}
+
+#ifdef Pandas_BattleConfig_AtCmd_No_Permission
+	if (atcommand_noperm_halt(fd, sd, command, type, is_atcommand))
+		return true;
+#endif // Pandas_BattleConfig_AtCmd_No_Permission
 
 	// type == 1 : player invoked
 	if (type == 1) {

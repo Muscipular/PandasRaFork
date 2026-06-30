@@ -432,6 +432,10 @@
 	// 此选项用于限制玩家在 GVG 地图上的最大攻速
 	#define Pandas_BattleConfig_MaxAspdForGVG
 
+	// 是否启用 atcmd_no_permission 配置选项及其功能 [Sola丶小克]
+	// 此选项用于控制普通玩家无权执行 GM 指令时的处理策略
+	#define Pandas_BattleConfig_AtCmd_No_Permission
+
 // 是否启用 suspend_monsterignore 配置选项及其功能 [Sola丶小克]
 // 此选项用于指定当玩家使用挂机系列指令时, 哪些模式不会被魔物攻击 (掩码选项)
 #define Pandas_BattleConfig_Suspend_MonsterIgnore
