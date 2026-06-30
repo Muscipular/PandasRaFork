@@ -894,6 +894,10 @@ struct Battle_Config
 	int32 mob_default_damagemotion; // 当魔物被攻击时受伤动画的默认播放时长, 值越小看起来越快 (单位为: 毫秒)
 #endif // Pandas_BattleConfig_MobDB_DamageMotion_Min
 
+#ifdef Pandas_BattleConfig_Strict_Parameters_Of_Rand
+	int32 strict_parameters_of_rand; // 是否对 rand 脚本指令进行严格的参数检查
+#endif // Pandas_BattleConfig_Strict_Parameters_Of_Rand
+
 #ifdef Pandas_BattleConfig_Mob_SetUnitData_Persistence
 	int32 mob_setunitdata_persistence; // 是否高优先级持久化保存 setunitdata 对魔物的设置
 #endif // Pandas_BattleConfig_Mob_SetUnitData_Persistence

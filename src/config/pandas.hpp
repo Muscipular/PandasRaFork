@@ -525,6 +525,10 @@
 // 此选项用于设置魔物被攻击时受伤动画的默认播放时长
 #define Pandas_BattleConfig_MobDB_DamageMotion_Min
 
+// 是否启用 strict_parameters_of_rand 配置选项及其功能 [Sola丶小克]
+// 此选项用于对 rand 脚本指令进行严格的参数检查
+#define Pandas_BattleConfig_Strict_Parameters_Of_Rand
+
 // 是否启用 mob_setunitdata_persistence 配置选项及其功能 [Sola丶小克]
 // 此选项用于高优先级持久化保存 setunitdata 对魔物的设置
 #define Pandas_BattleConfig_Mob_SetUnitData_Persistence

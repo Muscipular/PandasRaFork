@@ -9010,6 +9010,10 @@ static const struct _battle_data {
 	{ "mob_default_damagemotion",           &battle_config.mob_default_damagemotion,        0,      0,      UINT16_MAX,     },
 #endif // Pandas_BattleConfig_MobDB_DamageMotion_Min
 
+#ifdef Pandas_BattleConfig_Strict_Parameters_Of_Rand
+	{ "strict_parameters_of_rand",          &battle_config.strict_parameters_of_rand,       1,      0,      1,              },
+#endif // Pandas_BattleConfig_Strict_Parameters_Of_Rand
+
 #ifdef Pandas_BattleConfig_Mob_SetUnitData_Persistence
 	{ "mob_setunitdata_persistence",        &battle_config.mob_setunitdata_persistence,     1,      0,      1,              },
 #endif // Pandas_BattleConfig_Mob_SetUnitData_Persistence
