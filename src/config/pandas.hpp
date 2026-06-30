@@ -3,6 +3,7 @@
 	#define Pandas_Basic
 	#define Pandas_DatabaseIncrease
 	#define Pandas_StructIncrease
+	#define Pandas_FuncIncrease
 	#define Pandas_ScriptEngine
 	#define Pandas_ScriptCommands
 
@@ -407,6 +408,16 @@
 // 是否启用 mob_setunitdata_persistence 配置选项及其功能 [Sola丶小克]
 // 此选项用于高优先级持久化保存 setunitdata 对魔物的设置
 #define Pandas_BattleConfig_Mob_SetUnitData_Persistence
+
+// ============================================================================
+// 函数修改组 - Pandas_FuncIncrease
+// ============================================================================
+
+#ifdef Pandas_FuncIncrease
+	// 在 pc.cpp 中的 pc_equipitem 增加 swapping 参数 [Sola丶小克]
+	// 新增的 swapping 用于判断当前的装备穿戴调用是否由装备切换机制引发, 默认为 false
+	#define Pandas_FuncParams_PC_EQUIPITEM
+#endif // Pandas_FuncIncrease
 
 // ============================================================================
 // 脚本引擎修改组 - Pandas_ScriptEngine

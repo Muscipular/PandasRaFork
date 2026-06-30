@@ -12114,7 +12114,11 @@ int32 pc_load_combo(map_session_data *sd) {
  * Equip item on player sd at req_pos from inventory index n
  * return: false - fail; true - success
  *------------------------------------------*/
+#ifndef Pandas_FuncParams_PC_EQUIPITEM
 bool pc_equipitem(map_session_data *sd,int16 n,int32 req_pos,bool equipswitch)
+#else
+bool pc_equipitem(map_session_data *sd,int16 n,int32 req_pos,bool equipswitch, bool swapping)
+#endif // Pandas_FuncParams_PC_EQUIPITEM
 {
 	int32 i, pos, flag = 0, iflag;
 	struct item_data *id;
@@ -12611,7 +12615,11 @@ int32 pc_equipswitch( map_session_data* sd, int32 index ){
 		// Remove it from the equip switch
 		pc_equipswitch_remove( sd, index );
 
+#ifndef Pandas_FuncParams_PC_EQUIPITEM
 		pc_equipitem( sd, index, position );
+#else
+		pc_equipitem( sd, index, position, false, true );
+#endif // Pandas_FuncParams_PC_EQUIPITEM
 
 		return position;
 	}else{
@@ -12652,7 +12660,11 @@ int32 pc_equipswitch( map_session_data* sd, int32 index ){
 				pc_equipswitch_remove( sd, exchange_index );
 
 				// Equip the item at the destinated position
+#ifndef Pandas_FuncParams_PC_EQUIPITEM
 				pc_equipitem( sd, exchange_index, exchange_position );
+#else
+				pc_equipitem( sd, exchange_index, exchange_position, false, true );
+#endif // Pandas_FuncParams_PC_EQUIPITEM
 			}
 		}
 

@@ -1605,7 +1605,11 @@ int32 pc_resetstate(map_session_data*);
 int32 pc_resetskill(map_session_data*, int32);
 int32 pc_resetfeel(map_session_data*);
 int32 pc_resethate(map_session_data*);
+#ifndef Pandas_FuncParams_PC_EQUIPITEM
 bool pc_equipitem(map_session_data *sd, int16 n, int32 req_pos, bool equipswitch=false);
+#else
+bool pc_equipitem(map_session_data *sd, int16 n, int32 req_pos, bool equipswitch = false, bool swapping = false);
+#endif // Pandas_FuncParams_PC_EQUIPITEM
 bool pc_unequipitem(map_session_data*,int32,int32);
 int32 pc_equipswitch( map_session_data* sd, int32 index );
 void pc_equipswitch_remove( map_session_data* sd, int32 index );
