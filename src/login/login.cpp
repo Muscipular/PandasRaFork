@@ -31,6 +31,10 @@
 #include "logincnslif.hpp"
 #include "loginlog.hpp"
 
+#ifdef Pandas_Strict_Userid_Verification
+#include "../../3rdparty/pcre/include/pcre.h"
+#endif // Pandas_Strict_Userid_Verification
+
 using namespace rathena;
 using namespace rathena::server_login;
 
@@ -344,6 +348,27 @@ int32 login_mmo_auth(struct login_session_data* sd, bool isServer) {
 			// remove the _M/_F suffix
 			len -= 2;
 			sd->userid[len] = '\0';
+
+#ifdef Pandas_Strict_Userid_Verification
+			if (login_config.strict_new_account_userid) {
+				pcre *re;
+				pcre_extra *extra;
+				const char *error;
+				int erroffset, r = -1, ovector[30];
+				std::string rules = R"(^[A-Za-z0-9~!@#%%&_=`,;:'"/<>\$\^\*\(\)\-\+\[\]\{\}\|\.\?\\]+$)";
+
+				re = pcre_compile(rules.c_str(), 0, &error, &erroffset, NULL);
+				extra = pcre_study(re, 0, &error);
+				r = pcre_exec(re, extra, sd->userid, (int)strlen(sd->userid), 0, 0, ovector, 30);
+				pcre_free(re);
+
+				if (extra != NULL) pcre_free(extra);
+				if (r == PCRE_ERROR_NOMATCH) {
+					ShowNotice("Attempt of creation of an contains special characters account (account: %s, sex: %c, ip: %s)\n", sd->userid, TOUPPER(sd->userid[len + 1]), ip);
+					return 3;
+				}
+			}
+#endif // Pandas_Strict_Userid_Verification
 
 			result = login_mmo_auth_new(sd->userid, sd->passwd, TOUPPER(sd->userid[len+1]), ip);
 			if( result != -1 )
@@ -715,6 +740,10 @@ bool login_config_read(const char* cfgName, bool normal) {
 		else if (!strcmpi(w1, "hide_server_ipaddress"))
 			pandas_inter_hide_server_ipaddress = config_switch(w2);
 #endif // Pandas_InterConfig_HideServerIpAddress
+#ifdef Pandas_Strict_Userid_Verification
+		else if (!strcmpi(w1, "strict_new_account_userid"))
+			login_config.strict_new_account_userid = (bool)config_switch(w2);
+#endif // Pandas_Strict_Userid_Verification
 		else if(strcmpi(w1, "chars_per_account") == 0) { //maxchars per account [Sirius]
 			login_config.char_per_account = atoi(w2);
 			if( login_config.char_per_account > MAX_CHARS ) {
@@ -797,6 +826,9 @@ void login_set_defaults() {
 	login_config.usercount_medium = 500;
 	login_config.usercount_high = 1000;
 	login_config.char_per_account = MAX_CHARS - MAX_CHAR_VIP - MAX_CHAR_BILLING;
+#ifdef Pandas_Strict_Userid_Verification
+	login_config.strict_new_account_userid = true;
+#endif // Pandas_Strict_Userid_Verification
 #ifdef VIP_ENABLE
 	login_config.vip_sys.char_increase = MAX_CHAR_VIP;
 	login_config.vip_sys.group = 5;

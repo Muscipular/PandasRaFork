@@ -113,6 +113,10 @@ struct Login_Config {
 	int32 client_hash_check;							/// flags for checking client md5
 	struct client_hash_node *client_hash_nodes;		/// linked list containing md5 hash for each gm group
 
+#ifdef Pandas_Strict_Userid_Verification
+	bool strict_new_account_userid;					/// 是否禁止使用中文等字符作为游戏账号 [Sola丶小克]
+#endif // Pandas_Strict_Userid_Verification
+
 	bool usercount_disable;							/// Disable colorization and description in general?
 	int32 usercount_low;								/// Amount of users that will display in green
 	int32 usercount_medium;							/// Amount of users that will display in yellow
