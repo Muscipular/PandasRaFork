@@ -1318,6 +1318,7 @@
 
 		// 是否启用 getchartitle 脚本指令 [Sola丶小克]
 		// 获得指定玩家的称号ID, 客户端封包版本大于等于 20150513 才可用
+		#define Pandas_ScriptCommand_GetCharTitle
 	#endif // Pandas_Character_Title_Controller
 	// PYHELP - SCRIPTCMD - INSERT POINT - <Section 1>
 #endif // Pandas_ScriptCommands
