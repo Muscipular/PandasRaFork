@@ -29423,6 +29423,113 @@ BUILDIN_FUNC(getmobspawns) {
 }
 #endif // Pandas_ScriptCommand_GetMobSpawns
 
+#ifdef Pandas_ScriptCommand_GetBossInfo
+/* ===========================================================
+ * 指令: getbossinfo
+ * 描述: 查询 BOSS 魔物重生时间及其坟墓等信息
+ * 用法: getbossinfo {<"地图名称">{,<魔物编号>{,<角色编号>}}};
+ * 返回: 返回查询到的记录数
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getbossinfo) {
+	const char* mapname = nullptr;
+	map_session_data* sd = nullptr;
+	int32 mobid = 0, char_id = 0, mapid = -1;
+
+	if (script_hasdata(st, 4)) {
+		char_id = script_getnum(st, 4);
+	}
+
+	if (script_hasdata(st, 2)) {
+		mapname = script_getstr(st, 2);
+
+		if (strcmpi(mapname, "all") == 0) {
+			mapid = -1;
+		} else if (strcmpi(mapname, "this") == 0) {
+			if (!script_charid2sd(4, sd)) {
+				script_pushint(st, 0);
+				return SCRIPT_CMD_FAILURE;
+			}
+
+			mapid = sd->m;
+		} else {
+			mapid = map_mapname2mapid(mapname);
+
+			if (mapid < 0) {
+				ShowError("buildin_getbossinfo: Unknown map name %s.\n", mapname);
+				script_pushint(st, 0);
+				return SCRIPT_CMD_FAILURE;
+			}
+		}
+	}
+
+	if (script_hasdata(st, 3)) {
+		mobid = script_getnum(st, 3);
+	}
+
+	script_both_setreg(st, "boss_count", 0, false, -1, char_id);
+
+	DBIterator* iter = db_iterator(get_bossid_db());
+	mob_data* md = nullptr;
+	int32 count = 0;
+
+	for (md = (mob_data*)dbi_first(iter); dbi_exists(iter); md = (mob_data*)dbi_next(iter)) {
+		if (mapid != -1 && mapid != md->m)
+			continue;
+		if (mobid != 0 && mobid != md->mob_id)
+			continue;
+
+		npc_data* tomb_nd = nullptr;
+
+		if (md->tomb_nid) {
+			tomb_nd = map_id2nd(md->tomb_nid);
+		}
+
+		script_both_setreg(st, "boss_mapid", md->m, true, count, char_id);
+		script_both_setregstr(st, "boss_mapname$", (md->m >= 0 ? map[md->m].name : ""), true, count, char_id);
+		script_both_setreg(st, "boss_x", md->x, true, count, char_id);
+		script_both_setreg(st, "boss_y", md->y, true, count, char_id);
+		script_both_setreg(st, "boss_gid", md->id, true, count, char_id);
+
+		t_tick boss_respawn_tick = md->spawn_timer != INVALID_TIMER ? gettick_timer(md->spawn_timer) : -1;
+		script_both_setreg(st, "boss_spawn", (boss_respawn_tick != -1 ? DIFF_TICK(boss_respawn_tick, gettick()) : 0), true, count, char_id);
+		script_both_setreg(st, "boss_classid", md->mob_id, true, count, char_id);
+
+		script_both_setreg(st, "boss_tomb_mapid", (tomb_nd ? tomb_nd->bl.m : -1), true, count, char_id);
+		script_both_setregstr(st, "boss_tomb_mapname$", (tomb_nd && tomb_nd->bl.m >= 0 ? map[tomb_nd->bl.m].name : ""), true, count, char_id);
+		script_both_setreg(st, "boss_tomb_x", (tomb_nd ? tomb_nd->bl.x : 0), true, count, char_id);
+		script_both_setreg(st, "boss_tomb_y", (tomb_nd ? tomb_nd->bl.y : 0), true, count, char_id);
+		script_both_setreg(st, "boss_tomb_gid", (tomb_nd ? tomb_nd->bl.id : 0), true, count, char_id);
+		script_both_setreg(st, "boss_tomb_createtime", (tomb_nd ? tomb_nd->u.tomb.kill_time : 0), true, count, char_id);
+		script_both_setreg(st, "boss_tomb_respawnsecs", -1, true, count, char_id);
+
+		t_tick respawntime = -1;
+
+		if (tomb_nd && tomb_nd->u.tomb.md->spawn) {
+			respawntime = gettick_timer(tomb_nd->u.tomb.md->spawn_timer);
+
+			if (respawntime != -1) {
+				respawntime = DIFF_TICK(respawntime, gettick());
+				respawntime = respawntime / 1000;
+				script_both_setreg(st, "boss_tomb_respawnsecs", respawntime, true, count, char_id);
+				respawntime = respawntime + (int32)time(nullptr);
+			}
+		}
+
+		script_both_setreg(st, "boss_tomb_respawntime", respawntime, true, count, char_id);
+		script_both_setregstr(st, "boss_tomb_killer_name$", (tomb_nd ? tomb_nd->u.tomb.killer_name : ""), true, count, char_id);
+
+		count++;
+	}
+
+	dbi_destroy(iter);
+	script_both_setreg(st, "boss_count", count, false, -1, char_id);
+	script_pushint(st, count);
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetBossInfo
+
 /// script command definitions
 /// for an explanation on args, see add_buildin_func
 struct script_function buildin_func[] = {
@@ -29793,6 +29900,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_GetMobSpawns
 	BUILDIN_DEF(getmobspawns, "i??"), // 查询指定魔物在不同地图的刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMobSpawns
+#ifdef Pandas_ScriptCommand_GetBossInfo
+	BUILDIN_DEF(getbossinfo, "???"), // 查询 BOSS 魔物重生时间及其坟墓等信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetBossInfo
 	BUILDIN_DEF(dispbottom,"s??"), //added from jA [Lupus]
 	BUILDIN_DEF(recovery,"i???"),
 	BUILDIN_DEF(getpetinfo,"i?"),

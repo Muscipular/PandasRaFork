@@ -2585,6 +2585,13 @@ mob_data * map_id2boss(int32 id)
 	return (mob_data*)idb_get(bossid_db,id);
 }
 
+#ifdef Pandas_ScriptCommand_GetBossInfo
+DBMap* get_bossid_db()
+{
+	return bossid_db;
+}
+#endif // Pandas_ScriptCommand_GetBossInfo
+
 /// Applies func to all the players in the db.
 /// Stops iterating if func returns -1.
 void map_foreachpc(int32 (*func)(map_session_data* sd, va_list args), ...)

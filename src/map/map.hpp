@@ -1244,6 +1244,9 @@ mob_data * map_getmob_boss(int16 m);
 mob_data * map_getmob_boss(int16 m, bool alive_first = false);
 #endif // Pandas_FuncDefine_Mob_Getmob_Boss
 mob_data * map_id2boss(int32 id);
+#ifdef Pandas_ScriptCommand_GetBossInfo
+DBMap* get_bossid_db();
+#endif // Pandas_ScriptCommand_GetBossInfo
 
 // reload config file looking only for npcs
 void map_reloadnpc(bool clear);

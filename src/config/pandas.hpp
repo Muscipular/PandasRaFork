@@ -1005,6 +1005,7 @@
 	// 随机获取一个数值型数组的索引序号, 数组中每个元素的值为权重值
 	// 是否启用 getbossinfo 脚本指令 [Sola丶小克]
 	// 该指令用于查询 BOSS 魔物重生时间及其坟墓等信息
+	#define Pandas_ScriptCommand_GetBossInfo
 	// 是否启用 whodropitem 脚本指令 [Sola丶小克]
 	// 该指令用于查询指定道具会从哪些魔物身上掉落以及掉落的机率信息
 	// 是否扩充 getinventorylist 脚本指令 [Sola丶小克]
