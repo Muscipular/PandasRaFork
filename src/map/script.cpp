@@ -28688,6 +28688,50 @@ BUILDIN_FUNC(processhalt) {
 }
 #endif // Pandas_ScriptCommand_ProcessHalt
 
+#ifdef Pandas_ScriptCommand_SetEventTrigger
+/* ===========================================================
+ * 指令: settrigger
+ * 描述: 使用该指令可以设置某个事件或过滤器的触发行为 (禁止触发、下次触发、永久触发)
+ * 用法: settrigger <事件的常量名称>,<触发行为>;
+ * 返回: 该指令无论成功失败, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(settrigger) {
+	map_session_data *sd = nullptr;
+
+	if (!script_rid2sd(sd))
+		return SCRIPT_CMD_SUCCESS;
+
+	uint16 envtype = script_getnum(st, 2);
+
+	if (envtype >= NPCE_MAX) {
+		ShowError("buildin_settrigger: Invalid npc event type: %d\n", envtype);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	uint16 triggerflag = script_getnum(st, 3);
+
+	if (triggerflag >= EVENT_TRIGGER_MAX) {
+		ShowError("buildin_settrigger: Invalid npc event trigger type: %d\n", triggerflag);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	const char* name = npc_get_script_event_name(envtype);
+
+	if (name == nullptr) {
+		ShowError("buildin_settrigger: Can not get the event name for event type: %d\n", envtype);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (!setEventTrigger(sd, static_cast<npce_event>(envtype), static_cast<npce_trigger>(triggerflag))) {
+		ShowError("buildin_settrigger: An error occurred while setting the '%s' event trigger type to '%d'.\n", name, triggerflag);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_SetEventTrigger
+
 #ifdef Pandas_ScriptCommand_UnlockCmd
 /* ===========================================================
  * 指令: unlockcmd
@@ -29124,6 +29168,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_ProcessHalt
 	BUILDIN_DEF(processhalt, "?"), // 用于中断源代码的后续处理逻辑 [Sola丶小克]
 #endif // Pandas_ScriptCommand_ProcessHalt
+#ifdef Pandas_ScriptCommand_SetEventTrigger
+	BUILDIN_DEF(settrigger, "ii"), // 使用该指令可以设置某个事件或过滤器的触发行为 [Sola丶小克]
+#endif // Pandas_ScriptCommand_SetEventTrigger
 #ifdef Pandas_ScriptCommand_UnlockCmd
 	BUILDIN_DEF(unlockcmd, ""), // 解锁实时事件和过滤器事件的指令限制 [Sola丶小克]
 #endif // Pandas_ScriptCommand_UnlockCmd
