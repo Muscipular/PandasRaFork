@@ -337,6 +337,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcFilter_CLICKTOMB
 	"OnPCClickTombFilter", //clicktomb_filter_name
 #endif // Pandas_NpcFilter_CLICKTOMB
+#ifdef Pandas_NpcFilter_STORAGE_ADD
+	"OnPCStorageAddFilter", //storage_add_filter_name
+#endif // Pandas_NpcFilter_STORAGE_ADD
 	// NPC related
 	"OnTouch_",	//ontouch_event_name (runs on first visible char to enter area, picks another char if the first char leaves)
 	"OnTouch",	//ontouch2_event_name (run whenever a char walks into the OnTouch area)

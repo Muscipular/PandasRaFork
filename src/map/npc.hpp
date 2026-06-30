@@ -1681,6 +1681,9 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcFilter_CLICKTOMB
 	NPCF_CLICKTOMB,
 #endif // Pandas_NpcFilter_CLICKTOMB
+#ifdef Pandas_NpcFilter_STORAGE_ADD
+	NPCF_STORAGE_ADD,
+#endif // Pandas_NpcFilter_STORAGE_ADD
 	NPCE_MAX
 };
 
@@ -1689,6 +1692,9 @@ int32 npc_chat_sub(block_list* bl, va_list ap);
 int32 npc_event_dequeue(map_session_data* sd,bool free_script_stack=true);
 int32 npc_event(map_session_data* sd, const char* eventname, int32 ontouch);
 int32 npc_touch_areanpc(map_session_data* sd, int16 m, int16 x, int16 y, npc_data* nd);
+#ifdef Pandas_NpcFilter_STORAGE_ADD
+bool npc_event_aide_storage_add(map_session_data* sd, struct s_storage* store, int32 idx, int32 amount, int32 item_from);
+#endif // Pandas_NpcFilter_STORAGE_ADD
 int32 npc_touch_area_allnpc(map_session_data* sd, int16 m, int16 x, int16 y);
 int32 npc_touch_areanpc2(mob_data *md); // [Skotlex]
 int32 npc_check_areanpc(int32 flag, int16 m, int16 x, int16 y, int16 range);

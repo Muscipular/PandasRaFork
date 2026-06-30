@@ -188,6 +188,7 @@
 			// 当玩家准备将道具存入仓库时触发过滤器 [香草]
 			// 事件类型: Filter / 事件名称: OnPCStorageAddFilter
 			// 常量名称: NPCF_STORAGE_ADD / 变量名称: storage_add_filter_name
+			#define Pandas_NpcFilter_STORAGE_ADD
 
 			// 当玩家准备将道具取出仓库时触发过滤器 [香草]
 			// 事件类型: Filter / 事件名称: OnPCStorageDelFilter

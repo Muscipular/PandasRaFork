@@ -131,6 +131,40 @@ struct script_event_s{
 // Holds pointers to the commonly executed scripts for speedup. [Skotlex]
 std::map<enum npce_event, std::vector<struct script_event_s>> script_event;
 
+#ifdef Pandas_NpcFilter_STORAGE_ADD
+bool npc_event_aide_storage_add(map_session_data* sd, struct s_storage* store, int32 idx, int32 amount, int32 item_from) {
+	nullpo_retr(false, sd);
+	nullpo_retr(false, store);
+
+	struct item* idata = nullptr;
+
+	switch (item_from) {
+		case TABLE_INVENTORY:
+			if (idx >= 0 && idx < MAX_INVENTORY) {
+				idata = &sd->inventory.u.items_inventory[idx];
+			}
+			break;
+		case TABLE_CART:
+			if (idx >= 0 && idx < MAX_CART) {
+				idata = &sd->cart.u.items_cart[idx];
+			}
+			break;
+	}
+
+	if (idata == nullptr) {
+		return false;
+	}
+
+	pc_setreg(sd, add_str("@storeitem_src_from"), item_from);
+	pc_setreg(sd, add_str("@storeitem_src_idx"), idx);
+	pc_setreg(sd, add_str("@storeitem_src_nameid"), idata->nameid);
+	pc_setreg(sd, add_str("@storeitem_src_amount"), amount);
+	pc_setreg(sd, add_str("@storeitem_dst_type"), static_cast<int32>(store->type - 2));
+	pc_setreg(sd, add_str("@storeitem_dst_storeid"), store->stor_id);
+	return npc_script_filter(sd, NPCF_STORAGE_ADD);
+}
+#endif // Pandas_NpcFilter_STORAGE_ADD
+
 #ifdef Pandas_Helper_Common_Function
 struct event_data* npc_event_data(const char* eventname) {
 	return static_cast<struct event_data*>(strdb_get(ev_db, eventname));
@@ -6572,6 +6606,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCF_CLICKTOMB:
 		return script_config.clicktomb_filter_name;
 #endif // Pandas_NpcFilter_CLICKTOMB
+#ifdef Pandas_NpcFilter_STORAGE_ADD
+	case NPCF_STORAGE_ADD:
+		return script_config.storage_add_filter_name;
+#endif // Pandas_NpcFilter_STORAGE_ADD
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;

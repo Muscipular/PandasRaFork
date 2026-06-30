@@ -228,6 +228,9 @@ struct Script_Config {
 #ifdef Pandas_NpcFilter_CLICKTOMB
 	const char* clicktomb_filter_name;
 #endif // Pandas_NpcFilter_CLICKTOMB
+#ifdef Pandas_NpcFilter_STORAGE_ADD
+	const char* storage_add_filter_name;
+#endif // Pandas_NpcFilter_STORAGE_ADD
 	// NPC related
 	const char* ontouch_event_name;
 	const char* ontouch2_event_name;

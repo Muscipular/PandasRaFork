@@ -20,6 +20,9 @@
 #include "itemdb.hpp"
 #include "log.hpp"
 #include "map.hpp" // map_session_data
+#ifdef Pandas_NpcFilter_STORAGE_ADD
+#include "npc.hpp"
+#endif // Pandas_NpcFilter_STORAGE_ADD
 #include "packets.hpp"
 #include "pc.hpp"
 #include "pc_groups.hpp"
@@ -341,6 +344,14 @@ void storage_storageadd(map_session_data* sd, struct s_storage *stor, int32 inde
 	if (result == STORAGE_ADD_INVALID)
 		return;
 	else if (result == STORAGE_ADD_OK) {
+#ifdef Pandas_NpcFilter_STORAGE_ADD
+		if (npc_event_aide_storage_add(sd, stor, index, amount, TABLE_INVENTORY)) {
+			clif_storageitemremoved(*sd, index, 0);
+			clif_dropitem(*sd, index, 0);
+			return;
+		}
+#endif // Pandas_NpcFilter_STORAGE_ADD
+
 		switch( storage_additem(sd, stor, &sd->inventory.u.items_inventory[index], amount) ){
 			case 0:
 				pc_delitem(sd,index,amount,0,4,LOG_TYPE_STORAGE);
@@ -404,6 +415,14 @@ void storage_storageaddfromcart(map_session_data *sd, struct s_storage *stor, in
 	if (result == STORAGE_ADD_INVALID)
 		return;
 	else if (result == STORAGE_ADD_OK) {
+#ifdef Pandas_NpcFilter_STORAGE_ADD
+		if (npc_event_aide_storage_add(sd, stor, index, amount, TABLE_CART)) {
+			clif_storageitemremoved(*sd, index, 0);
+			clif_cart_delitem(*sd, index, 0);
+			return;
+		}
+#endif // Pandas_NpcFilter_STORAGE_ADD
+
 		switch( storage_additem(sd, stor, &sd->cart.u.items_cart[index], amount) ){
 			case 0:
 				pc_cart_delitem(sd,index,amount,0,LOG_TYPE_STORAGE);
@@ -896,6 +915,14 @@ void storage_guild_storageadd(map_session_data* sd, int32 index, int32 amount)
 		return;
 	}
 
+#ifdef Pandas_NpcFilter_STORAGE_ADD
+	if (npc_event_aide_storage_add(sd, stor, index, amount, TABLE_INVENTORY)) {
+		clif_storageitemremoved(*sd, index, 0);
+		clif_dropitem(*sd, index, 0);
+		return;
+	}
+#endif // Pandas_NpcFilter_STORAGE_ADD
+
 	if(storage_guild_additem(sd,stor,&sd->inventory.u.items_inventory[index],amount))
 		pc_delitem(sd,index,amount,0,4,LOG_TYPE_GSTORAGE);
 	else {
@@ -968,6 +995,14 @@ void storage_guild_storageaddfromcart(map_session_data* sd, int32 index, int32 a
 
 	if( amount < 1 || amount > sd->cart.u.items_cart[index].amount )
 		return;
+
+#ifdef Pandas_NpcFilter_STORAGE_ADD
+	if (npc_event_aide_storage_add(sd, stor, index, amount, TABLE_CART)) {
+		clif_storageitemremoved(*sd, index, 0);
+		clif_cart_delitem(*sd, index, 0);
+		return;
+	}
+#endif // Pandas_NpcFilter_STORAGE_ADD
 
 	if(storage_guild_additem(sd,stor,&sd->cart.u.items_cart[index],amount))
 		pc_cart_delitem(sd,index,amount,0,LOG_TYPE_GSTORAGE);
