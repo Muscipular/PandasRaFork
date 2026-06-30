@@ -4371,6 +4371,18 @@ ACMD_FUNC(partyrecall)
  *------------------------------------------*/
 void atcommand_doload();
 
+#ifdef Pandas_FuncLogic_ATCOMMAND_RELOAD
+static void atcommand_status_recalc_pc() {
+	map_session_data *sd = nullptr;
+	s_mapiterator *iter = mapit_geteachpc();
+
+	for (sd = (map_session_data*)mapit_first(iter); mapit_exists(iter); sd = (map_session_data*)mapit_next(iter))
+		status_calc_pc(sd, SCO_FORCE);
+
+	mapit_free(iter);
+}
+#endif // Pandas_FuncLogic_ATCOMMAND_RELOAD
+
 ACMD_FUNC(reloadcashdb){
 	nullpo_retr(-1, sd);
 
@@ -4514,6 +4526,9 @@ ACMD_FUNC(reloadbattleconf){
 	{	// Exp or Drop rates changed.
 		mob_reload(); //Needed as well so rate changes take effect.
 	}
+#ifdef Pandas_FuncLogic_ATCOMMAND_RELOAD
+	atcommand_status_recalc_pc();
+#endif // Pandas_FuncLogic_ATCOMMAND_RELOAD
 	clif_displaymessage(fd, msg_txt(sd,255)); // Battle configuration has been reloaded.
 
 	return 0;

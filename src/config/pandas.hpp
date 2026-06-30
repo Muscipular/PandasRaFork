@@ -572,6 +572,7 @@
 
 	// 调整 atcommand.cpp 中 atcommand_reload 配置重载指令的逻辑 [Sola丶小克]
 	// 我们希望在执行某些 reload 指令 (@reloadbattleconf) 时能重新计算全服玩家的属性和能力值
+	#define Pandas_FuncLogic_ATCOMMAND_RELOAD
 
 	// 重写 instance.cpp -> instance_destroy_command 函数
 	// 因为 rAthena 官方实现的该函数在切换队长后的处理并不友好 [Sola丶小克]
