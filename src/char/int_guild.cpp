@@ -885,7 +885,11 @@ int32 guild_calcinfo( std::shared_ptr<CharGuild> g ){
 	}
 
 	// Set the max number of members, Guild Extention skill - currently adds 6 to max per skill lv.
+#ifndef Pandas_Guild_Extension_Configure
 	g->guild.max_member = 16 + guild_checkskill(g, GD_EXTENSION) * 6;
+#else
+	g->guild.max_member = GUILD_INITIAL_MEMBER + guild_checkskill(g, GD_EXTENSION) * GUILD_EXTENSION_PERLEVEL;
+#endif // Pandas_Guild_Extension_Configure
 	if(g->guild.max_member > MAX_GUILD)
 	{
 		ShowError("Guild %d:%s has capacity for too many guild members (%d), max supported is %d\n", g->guild.guild_id, g->guild.name, g->guild.max_member, MAX_GUILD);
