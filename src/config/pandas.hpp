@@ -584,6 +584,7 @@
 	// 虽然有提示, 但是根据白名单规则却又进行了放行操作.. 因此这个提示是很没意义的.
 	// 启用此选项将改变判断逻辑, 变成如下:
 	// 只要 IP 地址被判定为无条件放行, 那么他将不会因为高频连接而被判定为发起了 DDoS 攻击.
+	#define Pandas_FuncLogic_Whitelist_Privileges
 
 	// 调整 clif.cpp 中给 clif_item_equip 函数增加 caller 参数 [Sola丶小克]
 	// 新增的 caller 参数用来标记调用这个函数的调用者是谁, 以便在必要情况下能够调整返回给客户端的字段值

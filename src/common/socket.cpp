@@ -1183,6 +1183,12 @@ static int32 connect_check_(uint32 ip)
 			} else if( DIFF_TICK(gettick(),hist->tick) < ddos_interval )
 			{// connection within ddos_interval
 				hist->tick = gettick();
+#ifdef Pandas_FuncLogic_Whitelist_Privileges
+				if (connect_ok == 2) {
+					hist->count = 0;
+					return connect_ok;
+				}
+#endif // Pandas_FuncLogic_Whitelist_Privileges
 				if( hist->count++ >= ddos_count )
 				{// DDoS attack detected
 					hist->ddos = 1;
