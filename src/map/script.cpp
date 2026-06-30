@@ -30060,6 +30060,47 @@ BUILDIN_FUNC(aura) {
 }
 #endif // Pandas_ScriptCommand_Aura
 
+#ifdef Pandas_ScriptCommand_UnitAura
+/* ===========================================================
+ * 指令: unitaura
+ * 描述: 用于调整七种单位的光环组合 (但仅 BL_PC 会被持久化)
+ * 用法: unitaura <单位编号>,<光环编号>;
+ * 返回: 成功返回 1 失败返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(unitaura) {
+	struct block_list* bl = nullptr;
+	struct s_unit_common_data* ucd = nullptr;
+	int64 input_aura_id = script_getnum(st, 3);
+
+	if (input_aura_id < 0)
+		input_aura_id = 0;
+
+	uint32 aura_id = static_cast<uint32>(input_aura_id);
+
+	if (!script_rid2bl(2, bl)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	ucd = status_get_ucd(bl);
+	if (!ucd) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (aura_id && !aura_search(aura_id)) {
+		ShowError("buildin_unitaura: The specified aura id '%d' is invalid.\n", static_cast<int32>(aura_id));
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	aura_make_effective(bl, aura_id);
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_UnitAura
+
 /// script command definitions
 /// for an explanation on args, see add_buildin_func
 struct script_function buildin_func[] = {
@@ -30097,6 +30138,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_Aura
 	BUILDIN_DEF(aura, "i?"),							// 激活指定的光环组合 [Sola丶小克]
 #endif // Pandas_ScriptCommand_Aura
+#ifdef Pandas_ScriptCommand_UnitAura
+	BUILDIN_DEF(unitaura, "ii"),						// 用于调整七种单位的光环组合 [Sola丶小克]
+#endif // Pandas_ScriptCommand_UnitAura
 	BUILDIN_DEF(changelook,"ii?"), // Simulates but don't Store it
 	BUILDIN_DEF2(setr,"set","rv?"),
 	BUILDIN_DEF(setr,"rv??"), // Not meant to be used directly, required for var++/var--

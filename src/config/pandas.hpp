@@ -1204,6 +1204,9 @@
 	// 该指令用于调整七种单位的光环组合 (但仅 BL_PC 会被持久化)
 	// 七种单位分别是: 玩家/魔物/佣兵/宠物/NPC/精灵/人工生命体
 	// 此选项开关需要依赖 Pandas_Aura_Mechanism 的拓展
+	#ifdef Pandas_Aura_Mechanism
+		#define Pandas_ScriptCommand_UnitAura
+	#endif // Pandas_Aura_Mechanism
 	// 是否启用 getunittarget 脚本指令 [Sola丶小克]
 	// 该指令用于获取指定单位当前正在攻击的目标单位编号
 	// 是否启用 unlockcmd 脚本指令 [Sola丶小克]
