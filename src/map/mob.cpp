@@ -654,7 +654,11 @@ bool mob_ksprotected (block_list *src, block_list *target)
 	return false;
 }
 
+#ifndef Pandas_FuncDefine_Mob_Once_Spawn_Sub
 mob_data *mob_once_spawn_sub(block_list *bl, int16 m, int16 x, int16 y, const char *mobname, int32 mob_id, const char *event, uint32 size, enum mob_ai ai)
+#else
+mob_data *mob_once_spawn_sub(block_list *bl, int16 m, int16 x, int16 y, const char *mobname, int32 mob_id, const char *event, uint32 size, enum mob_ai ai, uint16 spawn_flag)
+#endif // Pandas_FuncDefine_Mob_Once_Spawn_Sub
 {
 	struct spawn_data data;
 
@@ -664,6 +668,9 @@ mob_data *mob_once_spawn_sub(block_list *bl, int16 m, int16 x, int16 y, const ch
 	data.id = mob_id;
 	data.state.size = size;
 	data.state.ai = ai;
+#ifdef Pandas_FuncDefine_Mob_Once_Spawn_Sub
+	data.state.boss = (spawn_flag & 1);
+#endif // Pandas_FuncDefine_Mob_Once_Spawn_Sub
 
 	if (mobname)
 		safestrncpy(data.name, mobname, sizeof(data.name));

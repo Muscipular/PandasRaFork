@@ -592,10 +592,13 @@
 
 	// 在 mob.cpp 中的 mob_once_spawn_sub 增加 spawn_flag 参数 [Sola丶小克]
 	// 新增的 spawn_flag 参数可以用来控制召唤出来的魔物是不是 BOSS (可以被 BOSS 雷达探测)
+	#define Pandas_FuncDefine_Mob_Once_Spawn_Sub
 
 	// 在 mob.cpp 中的 mob_once_spawn 增加 spawn_flag 参数 [Sola丶小克]
 	// 新增的 spawn_flag 参数可以用来控制召唤出来的魔物是不是 BOSS (可以被 BOSS 雷达探测)
 	// 此选项依赖 Pandas_FuncDefine_Mob_Once_Spawn_Sub 的拓展
+	#ifdef Pandas_FuncDefine_Mob_Once_Spawn_Sub
+	#endif // Pandas_FuncDefine_Mob_Once_Spawn_Sub
 
 	// 在 map.cpp 中的 map_getmob_boss 增加 alive_first 参数 [Sola丶小克]
 	// 新增的 alive_first 参数可以指定优先返回存活着的 BOSS 魔物

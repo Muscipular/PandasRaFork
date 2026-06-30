@@ -520,7 +520,11 @@ struct view_data* mob_get_viewdata(int32 mob_id);
 void mob_set_dynamic_viewdata( mob_data* md );
 void mob_free_dynamic_viewdata( mob_data* md );
 
+#ifndef Pandas_FuncDefine_Mob_Once_Spawn_Sub
 mob_data *mob_once_spawn_sub(block_list *bl, int16 m, int16 x, int16 y, const char *mobname, int32 mob_id, const char *event, uint32 size, enum mob_ai ai);
+#else
+mob_data *mob_once_spawn_sub(block_list *bl, int16 m, int16 x, int16 y, const char *mobname, int32 mob_id, const char *event, uint32 size, enum mob_ai ai, uint16 spawn_flag = 0);
+#endif // Pandas_FuncDefine_Mob_Once_Spawn_Sub
 
 int32 mob_once_spawn(map_session_data* sd, int16 m, int16 x, int16 y,
 	const char* mobname, int32 mob_id, int32 amount, const char* event, uint32 size, enum mob_ai ai);
