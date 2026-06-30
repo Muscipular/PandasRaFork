@@ -8990,6 +8990,10 @@ static const struct _battle_data {
 	{ "repeat_clearunit_interval",          &battle_config.repeat_clearunit_interval,       0,      0,      1000,           },
 #endif // Pandas_BattleConfig_Repeat_ClearUnit_Interval
 
+#ifdef Pandas_BattleConfig_Dead_Area_Size
+	{ "dead_area_size",                     &battle_config.dead_area_size,                  28,     0,      200,            },
+#endif // Pandas_BattleConfig_Dead_Area_Size
+
 #ifdef Pandas_BattleConfig_Mob_SetUnitData_Persistence
 	{ "mob_setunitdata_persistence",        &battle_config.mob_setunitdata_persistence,     1,      0,      1,              },
 #endif // Pandas_BattleConfig_Mob_SetUnitData_Persistence

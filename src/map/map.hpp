@@ -73,6 +73,9 @@ void map_msg_reload(void);
 
 #define MAX_NPC_PER_MAP 512
 #define AREA_SIZE battle_config.area_size
+#ifdef Pandas_BattleConfig_Dead_Area_Size
+#define AREA_DEAD_SIZE battle_config.dead_area_size
+#endif // Pandas_BattleConfig_Dead_Area_Size
 #ifndef DAMAGELOG_SIZE 
 	#define DAMAGELOG_SIZE 20
 #endif

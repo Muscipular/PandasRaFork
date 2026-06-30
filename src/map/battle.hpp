@@ -874,6 +874,10 @@ struct Battle_Config
 	int32 repeat_clearunit_interval; // 重发魔物死亡封包的间隔时间
 #endif // Pandas_BattleConfig_Repeat_ClearUnit_Interval
 
+#ifdef Pandas_BattleConfig_Dead_Area_Size
+	int32 dead_area_size; // 魔物死亡封包将会发送给周围多少个格的玩家
+#endif // Pandas_BattleConfig_Dead_Area_Size
+
 #ifdef Pandas_BattleConfig_Mob_SetUnitData_Persistence
 	int32 mob_setunitdata_persistence; // 是否高优先级持久化保存 setunitdata 对魔物的设置
 #endif // Pandas_BattleConfig_Mob_SetUnitData_Persistence
