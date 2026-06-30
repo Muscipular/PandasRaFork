@@ -34,6 +34,10 @@
 #include "translate.hpp"
 #endif // Pandas_Console_Translate
 
+#ifdef Pandas_Setup_Console_Output_Codepage
+#include "utf8.hpp"
+#endif // Pandas_Setup_Console_Output_Codepage
+
 #ifndef DEPRECATED_COMPILER_SUPPORT
 	#if defined( _MSC_VER ) && _MSC_VER < 1914
 		#error "Visual Studio versions older than Visual Studio 2017 are not officially supported anymore"
@@ -398,6 +402,10 @@ int32 Core::start( int32 argc, char **argv ){
 	}
 
 	this->set_status( e_core_status::CORE_INITIALIZING );
+
+#ifdef Pandas_Setup_Console_Output_Codepage
+	PandasUtf8::setupConsoleOutputCP();
+#endif // Pandas_Setup_Console_Output_Codepage
 
 	{// initialize program arguments
 		char *p1;
