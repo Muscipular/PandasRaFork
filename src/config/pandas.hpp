@@ -6,6 +6,7 @@
 	#define Pandas_BattleConfigure
 	#define Pandas_StructIncrease
 	#define Pandas_FuncIncrease
+	#define Pandas_CreativeWork
 	#define Pandas_ScriptEngine
 	#define Pandas_ScriptCommands
 
@@ -490,6 +491,16 @@
 	// 调整 pc.cpp 中 pc_equipitem 执行道具绑定的时机 [Sola丶小克]
 	#define Pandas_FuncLogic_PC_EQUIPITEM_BOUND_OPPORTUNITY
 #endif // Pandas_FuncIncrease
+
+// ============================================================================
+// 原创功能组 - Pandas_CreativeWork
+// ============================================================================
+
+#ifdef Pandas_CreativeWork
+	// 扩展信息配置文件 (Msg_conf) 的 ID 最大上限,
+	// 同时提供 msg_txt_cn 宏定义函数, 方便在工程中使用自定义信息 [Sola丶小克]
+	// PYHELP - CREATIVEWORK - INSERT POINT - <Section 1>
+#endif // Pandas_CreativeWork
 
 // ============================================================================
 // 脚本引擎修改组 - Pandas_ScriptEngine
