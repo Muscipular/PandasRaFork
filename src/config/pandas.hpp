@@ -223,6 +223,12 @@
 			// 常量名称: NPCF_FAVORITE_DEL / 变量名称: favorite_del_filter_name
 			#define Pandas_NpcFilter_FAVORITE_DEL
 
+		#ifdef Pandas_Character_Title_Controller
+			// 当玩家试图变更称号时将触发过滤器 [Sola丶小克]
+			// 事件类型: Filter / 事件名称: OnPCChangeTitleFilter
+			// 常量名称: NPCF_CHANGETITLE / 变量名称: changetitle_filter_name
+		#endif // Pandas_Character_Title_Controller
+
 			// PYHELP - NPCEVENT - INSERT POINT - <Section 1>
 		#endif // Pandas_Struct_Map_Session_Data_EventHalt
 
@@ -687,6 +693,11 @@
 
 	// 是否启用一列用于控制角色称号的指令、事件等等 [Sola丶小克]
 	#define Pandas_Character_Title_Controller
+
+	#ifdef Pandas_Character_Title_Controller
+		// 是否启用 title 管理员指令 [Sola丶小克]
+		// 给角色设置一个指定的称号ID, 客户端封包版本大于等于 20150513 才可用
+	#endif // Pandas_Character_Title_Controller
 
 	#ifndef _WIN32
 		// 在 Linux 环境下输出信息时, 能转换成终端自适应编码 [Sola丶小克]
@@ -1161,5 +1172,11 @@
 	// - query_logsql_async
 	// 此功能由 inhyositsu <inhyositsu@gmail.com> 实现,
 	// 后续由 Sola丶小克 进行微调并汇入熊猫模拟器
+	#ifdef Pandas_Character_Title_Controller
+		// 是否启用 setchartitle 脚本指令 [Sola丶小克]
+		// 设置指定玩家的称号ID, 客户端封包版本大于等于 20150513 才可用
+		// 是否启用 getchartitle 脚本指令 [Sola丶小克]
+		// 获得指定玩家的称号ID, 客户端封包版本大于等于 20150513 才可用
+	#endif // Pandas_Character_Title_Controller
 	// PYHELP - SCRIPTCMD - INSERT POINT - <Section 1>
 #endif // Pandas_ScriptCommands

@@ -1859,4 +1859,8 @@ int32 npc_do_atcmd_event(map_session_data* sd, const char* command, const char* 
 bool npc_unloadfile( const char* path );
 bool npc_remove_mob_spawns(const char* path);
 
+#ifdef Pandas_Character_Title_Controller
+bool npc_change_title_event(map_session_data* sd, uint32 title_id, int mode);
+#endif // Pandas_Character_Title_Controller
+
 #endif /* NPC_HPP */

@@ -21108,6 +21108,12 @@ void clif_parse_change_title(int32 fd, map_session_data *sd)
 
 	title_id = RFIFOL(fd, 2);
 
+#ifdef Pandas_Character_Title_Controller
+	// 玩家从装备面板中修改了称号, 走相关的事件判断是否需要就此终止
+	if (!npc_change_title_event(sd, title_id, 0))
+		return;
+#endif // Pandas_Character_Title_Controller
+
 	if( title_id == sd->status.title_id ){
 		// It is exactly the same as the old one
 		return;

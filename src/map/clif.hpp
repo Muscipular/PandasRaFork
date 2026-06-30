@@ -1504,6 +1504,11 @@ void clif_macro_checker( const map_session_data& sd, e_macro_checker_result resu
 
 void clif_dynamicnpc_result( const map_session_data& sd, e_dynamicnpc_result result );
 
+#ifdef Pandas_Character_Title_Controller
+// 将 rAthena 官方编写的 clif_change_title_ack 暴露出来, 以便 npc.cpp 中的函数调用
+void clif_change_title_ack(map_session_data* sd, unsigned char result, unsigned long title_id);
+#endif // Pandas_Character_Title_Controller
+
 void clif_set_dialog_align( const map_session_data& sd, int32 npcid, e_say_dialog_align align );
 void clif_set_npc_window_size( const map_session_data& sd, int32 width, int32 height );
 void clif_set_npc_window_pos( const map_session_data& sd, int32 x, int32 y );
