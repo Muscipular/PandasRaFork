@@ -555,7 +555,12 @@ uint64 ItemDatabase::parseBodyNode(const ryml::NodeRef& node) {
 				return 0;
 
 			if (active) {
+#ifndef Pandas_Shadowgear_Support_Card
 				if (constant & EQP_SHADOW_GEAR && item->type != IT_SHADOWGEAR) {
+#else
+				// 准许卡片类型道具设置影子装备的穿戴位置, 而不会被系统判定为无效道具
+				if (constant & EQP_SHADOW_GEAR && item->type != IT_SHADOWGEAR && item->type != IT_CARD) {
+#endif // Pandas_Shadowgear_Support_Card
 					this->invalidWarning(node, "Invalid item equip location %s as it's not a Shadow Gear item type, defaulting to IT_ETC.\n", equipName.c_str());
 					item->type = IT_ETC;
 				}

@@ -5643,8 +5643,14 @@ int32 pc_insert_card(map_session_data* sd, int32 idx_card, int32 idx_equip)
 		return 0; // target item missing
 	if( sd->inventory.u.items_inventory[idx_card].nameid == 0 || sd->inventory.u.items_inventory[idx_card].amount < 1 )
 		return 0; // target card missing
+#ifndef Pandas_Shadowgear_Support_Card
 	if( item_eq->type != IT_WEAPON && item_eq->type != IT_ARMOR )
 		return 0; // only weapons and armor are allowed
+#else
+	// 此处进行调整使之能够允许影子装备插卡
+	if( item_eq->type != IT_WEAPON && item_eq->type != IT_ARMOR && item_eq->type != IT_SHADOWGEAR )
+		return 0; // only weapons, armor and shadowgears are allowed
+#endif // Pandas_Shadowgear_Support_Card
 	if( item_card->type != IT_CARD )
 		return 0; // must be a card
 	if( sd->inventory.u.items_inventory[idx_equip].identify == 0 )
