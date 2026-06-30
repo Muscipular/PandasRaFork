@@ -12,6 +12,12 @@
 
 using namespace rathena;
 
+#ifdef Pandas_Database_Yaml_BeQuiet
+	#define ShowError if (!this->p || (((YamlDatabase*)this->p)->quietLevel & 4) != 4) ::ShowError
+	#define ShowWarning if (!this->p || (((YamlDatabase*)this->p)->quietLevel & 2) != 2) ::ShowWarning
+	#define ShowStatus if (!this->p || (((YamlDatabase*)this->p)->quietLevel & 1) != 1) ::ShowStatus
+#endif // Pandas_Database_Yaml_BeQuiet
+
 bool YamlDatabase::nodeExists( const ryml::NodeRef& node, const std::string& name ){
 	return (node.num_children() > 0 && node.has_child(c4::to_csubstr(name)));
 }

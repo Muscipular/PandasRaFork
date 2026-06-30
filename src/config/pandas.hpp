@@ -380,6 +380,9 @@
 	// 是否启用魔物道具固定掉率数据库及其功能 [Sola丶小克]
 	// 通过这个数据库可以指定某个道具的全局固定掉落概率, 且能绕过等级惩罚和VIP掉率加成等机制
 	#define Pandas_Database_MobItem_FixedRatio
+
+	// 是否拓展 Yaml 的 Database 操作类使之能抑制错误信息 [Sola丶小克]
+	#define Pandas_Database_Yaml_BeQuiet
 #endif // Pandas_DatabaseIncrease
 
 // ============================================================================
