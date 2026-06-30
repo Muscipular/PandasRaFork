@@ -87,6 +87,7 @@
 			// 当玩家在装备鉴定列表中选择好装备, 并点击“确定”按钮时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCIdentifyFilter
 			// 常量名称: NPCF_IDENTIFY / 变量名称: identify_filter_name
+			#define Pandas_NpcFilter_IDENTIFY
 
 			// 当玩家进入 NPC 开启的聊天室时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCInChatroomFilter

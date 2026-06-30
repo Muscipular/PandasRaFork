@@ -1621,6 +1621,9 @@ enum npce_event : uint8 {
 	NPCE_KILLPC,
 	NPCE_KILLNPC,
 	NPCE_IDENTIFY,
+#ifdef Pandas_NpcFilter_IDENTIFY
+	NPCF_IDENTIFY,
+#endif // Pandas_NpcFilter_IDENTIFY
 	NPCE_MAX
 };
 

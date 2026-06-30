@@ -168,6 +168,9 @@ struct Script_Config {
 	const char *baselvup_event_name;
 	const char *joblvup_event_name;
 	const char *identify_event_name;
+#ifdef Pandas_NpcFilter_IDENTIFY
+	const char* identify_filter_name;
+#endif // Pandas_NpcFilter_IDENTIFY
 
 	// NPC related
 	const char* ontouch_event_name;
