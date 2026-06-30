@@ -352,6 +352,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcFilter_FAVORITE_ADD
 	"OnPCFavoriteAddFilter", //favorite_add_filter_name
 #endif // Pandas_NpcFilter_FAVORITE_ADD
+#ifdef Pandas_NpcFilter_FAVORITE_DEL
+	"OnPCFavoriteDelFilter", //favorite_del_filter_name
+#endif // Pandas_NpcFilter_FAVORITE_DEL
 	// NPC related
 	"OnTouch_",	//ontouch_event_name (runs on first visible char to enter area, picks another char if the first char leaves)
 	"OnTouch",	//ontouch2_event_name (run whenever a char walks into the OnTouch area)

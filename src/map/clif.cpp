@@ -19999,8 +19999,16 @@ void clif_parse_MoveItem( int32 fd, map_session_data* sd ){
 		return;
 	}
 
-	if ( sd->inventory.u.items_inventory[index].favorite != 0 && p->favorite == true )
+	if ( sd->inventory.u.items_inventory[index].favorite != 0 && p->favorite == true ) {
+#ifdef Pandas_NpcFilter_FAVORITE_DEL
+		pc_setreg(sd, add_str("@unfavorite_nameid"), sd->inventory.u.items_inventory[index].nameid);
+		pc_setreg(sd, add_str("@unfavorite_amount"), sd->inventory.u.items_inventory[index].amount);
+		pc_setreg(sd, add_str("@unfavorite_idx"), index);
+		if (npc_script_filter(sd, NPCF_FAVORITE_DEL))
+			return;
+#endif // Pandas_NpcFilter_FAVORITE_DEL
 		sd->inventory.u.items_inventory[index].favorite = 0;
+	}
 	else if( p->favorite == false ) {
 #ifdef Pandas_NpcFilter_FAVORITE_ADD
 		pc_setreg(sd, add_str("@favorite_nameid"), sd->inventory.u.items_inventory[index].nameid);
