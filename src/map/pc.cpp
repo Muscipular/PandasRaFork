@@ -5667,6 +5667,15 @@ int32 pc_insert_card(map_session_data* sd, int32 idx_card, int32 idx_equip)
 	// remember the card id to insert
 	nameid = sd->inventory.u.items_inventory[idx_card].nameid;
 
+#ifdef Pandas_NpcFilter_INSERT_CARD
+	pc_setreg(sd, add_str("@insert_equip_idx"), idx_equip);
+	pc_setreg(sd, add_str("@insert_card_idx"), idx_card);
+	pc_setreg(sd, add_str("@insert_card_id"), nameid);
+	pc_setreg(sd, add_str("@insert_card_slot"), i);
+	if (npc_script_filter(sd, NPCF_INSERT_CARD))
+		return 0;
+#endif // Pandas_NpcFilter_INSERT_CARD
+
 	if( pc_delitem(sd,idx_card,1,1,0,LOG_TYPE_OTHER) == 1 )
 	{// failed
 		clif_insert_card( *sd, idx_equip, idx_card, true );

@@ -1627,6 +1627,9 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcFilter_ENTERCHAT
 	NPCF_ENTERCHAT,
 #endif // Pandas_NpcFilter_ENTERCHAT
+#ifdef Pandas_NpcFilter_INSERT_CARD
+	NPCF_INSERT_CARD,
+#endif // Pandas_NpcFilter_INSERT_CARD
 	NPCE_MAX
 };
 

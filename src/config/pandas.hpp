@@ -97,6 +97,7 @@
 			// 当玩家准备插入卡片时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCInsertCardFilter
 			// 常量名称: NPCF_INSERT_CARD / 变量名称: insert_card_filter_name
+			#define Pandas_NpcFilter_INSERT_CARD
 
 			// 当玩家准备使用非装备类道具时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCUseItemFilter
