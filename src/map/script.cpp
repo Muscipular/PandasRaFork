@@ -280,6 +280,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcFilter_IDENTIFY
 	"OnPCIdentifyFilter", //identify_filter_name
 #endif // Pandas_NpcFilter_IDENTIFY
+#ifdef Pandas_NpcFilter_ENTERCHAT
+	"OnPCInChatroomFilter", //enterchat_filter_name
+#endif // Pandas_NpcFilter_ENTERCHAT
 	// NPC related
 	"OnTouch_",	//ontouch_event_name (runs on first visible char to enter area, picks another char if the first char leaves)
 	"OnTouch",	//ontouch2_event_name (run whenever a char walks into the OnTouch area)

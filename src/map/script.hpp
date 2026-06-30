@@ -171,6 +171,9 @@ struct Script_Config {
 #ifdef Pandas_NpcFilter_IDENTIFY
 	const char* identify_filter_name;
 #endif // Pandas_NpcFilter_IDENTIFY
+#ifdef Pandas_NpcFilter_ENTERCHAT
+	const char* enterchat_filter_name;
+#endif // Pandas_NpcFilter_ENTERCHAT
 
 	// NPC related
 	const char* ontouch_event_name;

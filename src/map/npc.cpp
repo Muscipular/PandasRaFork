@@ -6467,6 +6467,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCF_IDENTIFY:
 		return script_config.identify_filter_name;
 #endif // Pandas_NpcFilter_IDENTIFY
+#ifdef Pandas_NpcFilter_ENTERCHAT
+	case NPCF_ENTERCHAT:
+		return script_config.enterchat_filter_name;
+#endif // Pandas_NpcFilter_ENTERCHAT
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;

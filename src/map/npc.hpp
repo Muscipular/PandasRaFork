@@ -1624,6 +1624,9 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcFilter_IDENTIFY
 	NPCF_IDENTIFY,
 #endif // Pandas_NpcFilter_IDENTIFY
+#ifdef Pandas_NpcFilter_ENTERCHAT
+	NPCF_ENTERCHAT,
+#endif // Pandas_NpcFilter_ENTERCHAT
 	NPCE_MAX
 };
 

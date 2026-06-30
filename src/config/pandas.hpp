@@ -92,6 +92,7 @@
 			// 当玩家进入 NPC 开启的聊天室时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCInChatroomFilter
 			// 常量名称: NPCF_ENTERCHAT / 变量名称: enterchat_filter_name
+			#define Pandas_NpcFilter_ENTERCHAT
 
 			// 当玩家准备插入卡片时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCInsertCardFilter
