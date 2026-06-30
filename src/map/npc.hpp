@@ -1642,6 +1642,9 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcFilter_VIEW_EQUIP
 	NPCF_VIEW_EQUIP,
 #endif // Pandas_NpcFilter_VIEW_EQUIP
+#ifdef Pandas_NpcFilter_EQUIP
+	NPCF_EQUIP,
+#endif // Pandas_NpcFilter_EQUIP
 	NPCE_MAX
 };
 

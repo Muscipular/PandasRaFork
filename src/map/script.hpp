@@ -189,6 +189,9 @@ struct Script_Config {
 #ifdef Pandas_NpcFilter_VIEW_EQUIP
 	const char* view_equip_filter_name;
 #endif // Pandas_NpcFilter_VIEW_EQUIP
+#ifdef Pandas_NpcFilter_EQUIP
+	const char* equip_filter_name;
+#endif // Pandas_NpcFilter_EQUIP
 
 	// NPC related
 	const char* ontouch_event_name;
