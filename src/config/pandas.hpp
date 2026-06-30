@@ -751,6 +751,9 @@
 	// 是否启用 getmobspawns 脚本指令 [Sola丶小克]
 	// 该指令用于查询指定魔物在不同地图的刷新点信息
 	// 此选项开关需要依赖 Pandas_Struct_Map_Data_Mob_Spawns 的拓展
+	#ifdef Pandas_Struct_Map_Data_Mob_Spawns
+		#define Pandas_ScriptCommand_GetMobSpawns
+	#endif // Pandas_Struct_Map_Data_Mob_Spawns
 	// 是否启用 getcalendartime 脚本指令 [Haru]
 	// 该指令用于获取下次出现指定时间的 UNIX 时间戳
 	// 是否启用 getskillinfo 脚本指令 [聽風]
