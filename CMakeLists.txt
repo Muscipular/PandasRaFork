@@ -627,6 +627,26 @@ endif( INSTALL_COMPONENT_RUNTIME )
 #
 set( TARGET_LIST  CACHE INTERNAL "" )
 add_subdirectory( 3rdparty )
+
+# Pandas local third-party dependencies used by the console translate runtime.
+set( fmt_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include"
+	CACHE PATH "fmt include directories" )
+set( utfcpp_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/utfcpp/source"
+	CACHE PATH "utfcpp include directories" )
+set( uchardet_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/uchardet/src"
+	CACHE PATH "uchardet include directories" )
+mark_as_advanced( fmt_INCLUDE_DIRS utfcpp_INCLUDE_DIRS uchardet_INCLUDE_DIRS )
+
+file( GLOB PANDAS_UCHARDET_SOURCES
+	"${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/uchardet/src/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/uchardet/src/LangModels/*.cpp" )
+add_library( libuchardet STATIC ${PANDAS_UCHARDET_SOURCES} )
+target_include_directories( libuchardet PUBLIC ${uchardet_INCLUDE_DIRS} )
+target_compile_definitions( libuchardet PRIVATE BUILDING_UCHARDET "VERSION=\"0.0.7\"" )
+set_target_properties( libuchardet PROPERTIES LINKER_LANGUAGE CXX )
+set( uchardet_LIBRARIES libuchardet CACHE INTERNAL "uchardet libraries" )
+set( TARGET_LIST ${TARGET_LIST} libuchardet CACHE INTERNAL "" )
+
 add_subdirectory( src )
 
 

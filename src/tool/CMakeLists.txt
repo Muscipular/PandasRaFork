@@ -13,6 +13,7 @@ target_sources(tools INTERFACE
 	"${COMMON_SOURCE_DIR}/des.cpp"
 	"${COMMON_SOURCE_DIR}/grfio.cpp"
 	"${COMMON_SOURCE_DIR}/nullpo.cpp"
+	"${COMMON_SOURCE_DIR}/utilities.cpp"
 	"${COMMON_SOURCE_DIR}/database.cpp"
 )
 
