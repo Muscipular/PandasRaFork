@@ -143,6 +143,7 @@
 			// 当玩家使用一键鉴定道具时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCUseOCIdentifyFilter
 			// 常量名称: NPCF_ONECLICK_IDENTIFY / 变量名称: oneclick_identify_filter_name
+			#define Pandas_NpcFilter_ONECLICK_IDENTIFY
 
 			// 当玩家准备创建公会时触发过滤器 [聽風]
 			// 事件类型: Filter / 事件名称: OnPCGuildCreateFilter

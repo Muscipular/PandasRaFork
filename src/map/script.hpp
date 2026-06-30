@@ -201,6 +201,9 @@ struct Script_Config {
 #ifdef Pandas_NpcFilter_USE_REVIVE_TOKEN
 	const char* use_revive_token_filter_name;
 #endif // Pandas_NpcFilter_USE_REVIVE_TOKEN
+#ifdef Pandas_NpcFilter_ONECLICK_IDENTIFY
+	const char* oneclick_identify_filter_name;
+#endif // Pandas_NpcFilter_ONECLICK_IDENTIFY
 	// NPC related
 	const char* ontouch_event_name;
 	const char* ontouch2_event_name;

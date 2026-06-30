@@ -21543,6 +21543,14 @@ void clif_parse_Oneclick_Itemidentify(int32 fd, map_session_data *sd) {
 #if PACKETVER >= 20150513
 	int16 idx = RFIFOW(fd,packet_db[RFIFOW(fd,0)].pos[0]) - 2, magnifier_idx;
 
+#ifdef Pandas_NpcFilter_ONECLICK_IDENTIFY
+	if (sd) {
+		pc_setreg(sd, add_str("@identify_idx"), idx);
+		if (npc_script_filter(sd, NPCF_ONECLICK_IDENTIFY))
+			return;
+	}
+#endif // Pandas_NpcFilter_ONECLICK_IDENTIFY
+
 	// Ignore the request
 	// - Invalid item index
 	// - Invalid item ID or item doesn't exist

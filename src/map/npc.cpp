@@ -6507,6 +6507,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCF_USE_REVIVE_TOKEN:
 		return script_config.use_revive_token_filter_name;
 #endif // Pandas_NpcFilter_USE_REVIVE_TOKEN
+#ifdef Pandas_NpcFilter_ONECLICK_IDENTIFY
+	case NPCF_ONECLICK_IDENTIFY:
+		return script_config.oneclick_identify_filter_name;
+#endif // Pandas_NpcFilter_ONECLICK_IDENTIFY
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;
