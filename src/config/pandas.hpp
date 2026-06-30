@@ -10,6 +10,7 @@
 	#define Pandas_CreativeWork
 	#define Pandas_ScriptEngine
 	#define Pandas_NpcEvent
+	#define Pandas_AtCommands
 	#define Pandas_ScriptCommands
 
 // ============================================================================
@@ -920,6 +921,53 @@
 	// 启用道具特殊公告策略 [Sola丶小克]
 	#define Pandas_Item_Special_Annouce
 #endif // Pandas_Struct_Item_Data_Properties
+
+// ============================================================================
+// 管理员指令组 - Pandas_AtCommands
+// ============================================================================
+
+#ifdef Pandas_AtCommands
+	// 是否启用 recallmap 管理员指令 [Sola丶小克]
+	// 召唤当前(或指定)地图的玩家来到身边 (处于离线挂店模式的角色不会被召唤)
+	#define Pandas_AtCommand_RecallMap
+
+	// 是否启用 crashtest 管理员指令 [Sola丶小克]
+	// 执行崩溃测试, 在比较严格的环境上故意触发地图服务器崩溃
+	#define Pandas_AtCommand_Crashtest
+
+	#ifdef Pandas_Character_Title_Controller
+		// 是否启用 title 管理员指令 [Sola丶小克]
+		// 给角色设置一个指定的称号ID, 客户端封包版本大于等于 20150513 才可用
+		#define Pandas_AtCommand_Title
+	#endif // Pandas_Character_Title_Controller
+
+	// 是否启用 suspend 管理员指令 [Sola丶小克]
+	// 使角色进入离线挂机模式, 维持当前的全部状态 (朝向, 站立与否)
+	#define Pandas_AtCommand_Suspend
+
+	// 是否启用 afk 管理员指令 [Sola丶小克]
+	// 使角色进入离开模式, 角色将会坐到地上并自动使用 AFK 头饰 (表示角色暂时离开)
+	#define Pandas_AtCommand_AFK
+
+	// 是否启用 aura 管理员指令 [Sola丶小克]
+	// 使角色可以激活特定组合的光环效果, 光环效果会一直跟随角色
+	// 此选项开关需要依赖 Pandas_Aura_Mechanism 的拓展
+	#ifdef Pandas_Aura_Mechanism
+		#define Pandas_AtCommand_Aura
+	#endif // Pandas_Aura_Mechanism
+
+	// 是否启用 reloadauradb 管理员指令 [Sola丶小克]
+	// 重新加载光环数据库 (aura_db.yml)
+	// 此选项开关需要依赖 Pandas_Aura_Mechanism 的拓展
+	#ifdef Pandas_Aura_Mechanism
+		#define Pandas_AtCommand_ReloadAuraDB
+	#endif // Pandas_Aura_Mechanism
+
+	// 是否启用 reloadlaphinedb 管理员指令 [Sola丶小克]
+	// 重新加载 Laphine 数据库 (laphine_synthesis.yml 和 laphine_upgrade.yml)
+	#define Pandas_AtCommand_ReloadLaphineDB
+	// PYHELP - ATCMD - INSERT POINT - <Section 1>
+#endif // Pandas_AtCommands
 
 // ============================================================================
 // 脚本指令组 - Pandas_ScriptCommands
