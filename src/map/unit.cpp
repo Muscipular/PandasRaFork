@@ -3929,6 +3929,17 @@ int32 unit_free(block_list *bl, clr_type clrtype)
 	batrec_free(bl);
 #endif // Pandas_BattleRecord
 
+#ifdef Pandas_Aura_Mechanism
+	struct s_unit_common_data* ucd = nullptr;
+	if ((ucd = status_get_ucd(bl)) != nullptr) {
+		for (auto &it : ucd->aura.effects) {
+			if (it->replay_tid == INVALID_TIMER) continue;
+			delete_timer(it->replay_tid, aura_effects_timer);
+			it->replay_tid = INVALID_TIMER;
+		}
+	}
+#endif // Pandas_Aura_Mechanism
+
 	FreeBlockLock freeLock;
 
 	if( bl->prev )	// Players are supposed to logout with a "warp" effect.

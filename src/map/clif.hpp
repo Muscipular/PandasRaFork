@@ -12,6 +12,9 @@
 #include <common/mmo.hpp>
 #include <common/timer.hpp> // t_tick
 
+#ifdef Pandas_Aura_Mechanism
+#include "aura.hpp"
+#endif // Pandas_Aura_Mechanism
 #include "packets.hpp"
 #include "script.hpp"
 #include "skill.hpp"
@@ -926,6 +929,9 @@ void clif_misceffect( const block_list& bl, e_notify_effect type );
 void clif_changeoption_target( const block_list* bl, const block_list* target);
 #define clif_changeoption(bl) clif_changeoption_target(bl, nullptr)	// area
 void clif_changeoption2( const block_list& bl );
+#ifdef Pandas_Aura_Mechanism
+void clif_send_auras(struct block_list* bl, enum send_target target, bool ignore_when_hidden, enum e_aura_special flag);
+#endif // Pandas_Aura_Mechanism
 void clif_useitemack( const map_session_data* sd, int32 index, int32 amount, bool ok );	// self
 void clif_GlobalMessage( const block_list& bl, const char* message, enum send_target target );
 void clif_createchat( const map_session_data& sd, e_create_chatroom flag );

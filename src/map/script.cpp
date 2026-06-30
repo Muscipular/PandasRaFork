@@ -39,6 +39,9 @@
 #include "achievement.hpp"
 #include "atcommand.hpp"
 #include "battle.hpp"
+#ifdef Pandas_Aura_Mechanism
+#include "aura.hpp"
+#endif // Pandas_Aura_Mechanism
 #ifdef Pandas_BattleRecord
 #include "battlerec.hpp"
 #endif // Pandas_BattleRecord

@@ -26,6 +26,9 @@
 #include "achievement.hpp"
 #include "atcommand.hpp"
 #include "battle.hpp"
+#ifdef Pandas_Aura_Mechanism
+#include "aura.hpp"
+#endif // Pandas_Aura_Mechanism
 #include "battleground.hpp"
 #include "cashshop.hpp"
 #include "channel.hpp"
@@ -5302,6 +5305,9 @@ void MapServer::finalize(){
 	do_final_vending();
 	do_final_buyingstore();
 	do_final_path();
+#ifdef Pandas_Aura_Mechanism
+	do_final_aura();
+#endif // Pandas_Aura_Mechanism
 #ifdef Pandas_Player_Suspend_System
 	do_final_suspend();
 #endif // Pandas_Player_Suspend_System
@@ -5707,6 +5713,9 @@ bool MapServer::initialize( int32 argc, char *argv[] ){
 	do_init_duel();
 	do_init_vending();
 	do_init_buyingstore();
+#ifdef Pandas_Aura_Mechanism
+	do_init_aura();
+#endif // Pandas_Aura_Mechanism
 #ifdef Pandas_Player_Suspend_System
 	do_init_suspend();
 #endif // Pandas_Player_Suspend_System

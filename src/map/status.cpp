@@ -13379,13 +13379,18 @@ static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_t
 
 	// On Aegis, when turning on a status change, first goes the option packet, then the sc packet.
 	if (!disable_opt_flag && (opt_flag[SCF_SENDOPTION] || opt_flag[SCF_ONTOUCH] || opt_flag[SCF_UNITMOVE] || opt_flag[SCF_NONPLAYER] || opt_flag[SCF_SENDLOOK])) {
+#ifndef Pandas_Aura_Mechanism
 		clif_changeoption(bl);
+#endif // Pandas_Aura_Mechanism
 		if(sd && opt_flag[SCF_SENDLOOK]) {
 			clif_changelook(bl,LOOK_BASE,vd->look[LOOK_BASE]);
 			clif_changelook(bl,LOOK_WEAPON,0);
 			clif_changelook(bl,LOOK_SHIELD,0);
 			clif_changelook(bl,LOOK_CLOTHES_COLOR,vd->look[LOOK_CLOTHES_COLOR]);
 		}
+#ifdef Pandas_Aura_Mechanism
+		clif_changeoption(bl);
+#endif // Pandas_Aura_Mechanism
 	}
 
 	if (calc_flag[SCB_DYE]) { // Reset DYE color
@@ -14324,7 +14329,9 @@ int32 status_change_end( block_list* bl, enum sc_type type, int32 tid ){
 	if( opt_flag[SCF_NONPLAYER] ) // bugreport:681
 		clif_changeoption2( *bl );
 	else if (!disable_opt_flag && (opt_flag[SCF_SENDOPTION] || opt_flag[SCF_ONTOUCH] || opt_flag[SCF_UNITMOVE] || opt_flag[SCF_NONPLAYER] || opt_flag[SCF_SENDLOOK])) {
+#ifndef Pandas_Aura_Mechanism
 		clif_changeoption(bl);
+#endif // Pandas_Aura_Mechanism
 		if (sd && opt_flag[SCF_SENDLOOK]) {
 			clif_changelook(bl,LOOK_BASE,sd->vd.look[LOOK_BASE]);
 			sd->update_look( LOOK_WEAPON );
@@ -14334,6 +14341,9 @@ int32 status_change_end( block_list* bl, enum sc_type type, int32 tid ){
 			clif_changelook(bl,LOOK_CLOTHES_COLOR,cap_value(sd->status.clothes_color,0,battle_config.max_cloth_color));
 			clif_changelook( bl, LOOK_BODY2, sd->status.body );
 		}
+#ifdef Pandas_Aura_Mechanism
+		clif_changeoption(bl);
+#endif // Pandas_Aura_Mechanism
 	}
 	if (calc_flag.any()) {
 #ifndef RENEWAL

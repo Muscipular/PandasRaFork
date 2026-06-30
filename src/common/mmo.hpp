@@ -295,7 +295,15 @@ enum e_mode {
 
 #ifdef Pandas_Struct_Unit_CommonData
 #ifdef Pandas_Struct_Unit_CommonData_Aura
+#ifdef Pandas_Aura_Mechanism
+struct s_aura_effect {
+	uint16 effect_id = 0;
+	uint32 replay_interval = 0;
+	int32 replay_tid = INVALID_TIMER;
+};
+#else
 struct s_aura_effect;
+#endif // Pandas_Aura_Mechanism
 #endif // Pandas_Struct_Unit_CommonData_Aura
 
 #ifdef Pandas_Struct_Unit_CommonData_BattleRecord

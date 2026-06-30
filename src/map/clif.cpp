@@ -1046,6 +1046,35 @@ static int32 clif_setlevel(const block_list* bl) {
 	return lv;
 }
 
+#ifdef Pandas_Aura_Mechanism
+void clif_send_auras_single(struct block_list* bl, map_session_data* tsd) {
+	if (!bl || !tsd || bl->m == -1) return;
+	struct s_unit_common_data* ucd = status_get_ucd(bl);
+	if (!ucd) return;
+	if (aura_need_hiding(bl, &tsd->bl)) return;
+
+	for (auto it : ucd->aura.effects) {
+		if (it->replay_tid != INVALID_TIMER) continue;
+		clif_specialeffect_single(bl, it->effect_id, tsd->fd);
+	}
+}
+
+void clif_send_auras(struct block_list* bl, enum send_target target, bool ignore_when_hidden, enum e_aura_special flag) {
+	if (!bl || bl->m == -1) return;
+	if (aura_need_hiding(bl) && ignore_when_hidden)
+		return;
+
+	struct s_unit_common_data* ucd = status_get_ucd(bl);
+	if (!ucd) return;
+
+	for (auto it : ucd->aura.effects) {
+		if (it->replay_tid != INVALID_TIMER) continue;
+		if (flag != AURA_SPECIAL_NOTHING && (aura_special(it->effect_id) & flag) != flag) continue;
+		clif_specialeffect(bl, it->effect_id, target);
+	}
+}
+#endif // Pandas_Aura_Mechanism
+
 /*==========================================
  * Prepares 'unit standing/spawning' packet
  *------------------------------------------*/
@@ -1231,6 +1260,16 @@ static void clif_set_unit_idle( const block_list* bl, bool walking, send_target 
 #endif
 		clif_send(&p, sizeof(p), bl, SELF);
 	}
+
+#ifdef Pandas_Aura_Mechanism
+	block_list* aura_bl = const_cast<block_list*>(bl);
+	if (tbl != nullptr && tbl->type == BL_PC) {
+		map_session_data* tsd = BL_CAST(BL_PC, const_cast<block_list*>(tbl));
+		clif_send_auras_single(aura_bl, tsd);
+	} else {
+		clif_send_auras(aura_bl, target, false, AURA_SPECIAL_NOTHING);
+	}
+#endif // Pandas_Aura_Mechanism
 }
 
 static void clif_spawn_unit( const block_list* bl, enum send_target target ){
@@ -1384,6 +1423,10 @@ static void clif_spawn_unit( const block_list* bl, enum send_target target ){
 	}else{
 		clif_send( &p, sizeof( p ), bl, target );
 	}
+
+#ifdef Pandas_Aura_Mechanism
+	clif_send_auras(const_cast<block_list*>(bl), target, true, AURA_SPECIAL_NOTHING);
+#endif // Pandas_Aura_Mechanism
 }
 
 /*==========================================
@@ -1492,6 +1535,15 @@ static void clif_set_unit_walking( const block_list& bl, const map_session_data*
 #endif
 		clif_send(&p, sizeof(p), &bl, SELF);
 	}
+
+#ifdef Pandas_Aura_Mechanism
+	block_list* aura_bl = const_cast<block_list*>(&bl);
+	if (tsd != nullptr) {
+		clif_send_auras_single(aura_bl, const_cast<map_session_data*>(tsd));
+	} else {
+		clif_send_auras(aura_bl, target, true, AURA_SPECIAL_HIDE_DISAPPEAR);
+	}
+#endif // Pandas_Aura_Mechanism
 }
 
 /// Changes sprite of a non player object.
@@ -1752,6 +1804,9 @@ int32 clif_spawn( const block_list* bl, bool walking ){
 			if (sd->spiritcharm_type != CHARM_TYPE_NONE && sd->spiritcharm > 0)
 				clif_spiritcharm( *sd );
 			clif_efst_status_change_sub(bl, bl, AREA);
+#ifdef Pandas_Aura_Mechanism
+			clif_send_auras(const_cast<block_list*>(bl), SELF, true, AURA_SPECIAL_NOTHING);
+#endif // Pandas_Aura_Mechanism
 		}
 		break;
 	case BL_MOB:
@@ -4468,6 +4523,10 @@ void clif_misceffect( const block_list& bl, e_notify_effect type ){
 	clif_send( &packet, sizeof( packet ), &bl, AREA );
 }
 
+#ifdef Pandas_Aura_Mechanism
+void clif_getareachar_unit(map_session_data* sd, struct block_list* bl);
+#endif // Pandas_Aura_Mechanism
+
 
 /// Notifies clients in the area of a state change.
 /// 0119 <id>.L <body state>.W <health state>.W <effect state>.W <pk mode>.B (ZC_STATE_CHANGE)
@@ -4523,6 +4582,27 @@ void clif_changeoption_target( const block_list* bl, const block_list* target ){
 			clif_send( &p, sizeof( p ), target, SELF );
 		}
 	}
+
+#ifdef Pandas_Aura_Mechanism
+	block_list* aura_bl = const_cast<block_list*>(bl);
+	struct s_unit_common_data* ucd = status_get_ucd(aura_bl);
+	if (ucd) {
+		if (target != nullptr && target->type == BL_PC) {
+			map_session_data* tsd = BL_CAST(BL_PC, const_cast<block_list*>(target));
+			clif_clearunit_single(bl->id, CLR_TRICKDEAD, *tsd);
+			if (!aura_need_hiding(aura_bl, const_cast<block_list*>(target))) {
+				clif_getareachar_unit(tsd, aura_bl);
+			}
+		} else if (bl->type == BL_NPC) {
+			clif_clearunit_area(*bl, CLR_TRICKDEAD);
+			map_foreachinallrange(clif_insight, aura_bl, AREA_SIZE, BL_PC, aura_bl);
+		}
+
+		if (bl->type == BL_PC) {
+			clif_send_auras(aura_bl, SELF, false, AURA_SPECIAL_HIDE_DISAPPEAR);
+		}
+	}
+#endif // Pandas_Aura_Mechanism
 }
 
 
@@ -5773,11 +5853,21 @@ int32 clif_insight(block_list *bl,va_list ap)
 			skill_getareachar_skillunit_visibilty_single((TBL_SKILL*)bl, tsd);
 			break;
 		default:
+#ifdef Pandas_Aura_Mechanism
+			if (bl && tsd) {
+				clif_clearunit_single(bl->id, CLR_TRICKDEAD, *tsd);
+			}
+#endif // Pandas_Aura_Mechanism
 			clif_getareachar_unit(tsd,bl);
 			break;
 		}
 	}
 	if (clif_session_isValid(sd)) { //Tell sd that tbl walked into his view
+#ifdef Pandas_Aura_Mechanism
+		if (tbl && sd) {
+			clif_clearunit_single(tbl->id, CLR_TRICKDEAD, *sd);
+		}
+#endif // Pandas_Aura_Mechanism
 		clif_getareachar_unit(sd,tbl);
 	}
 	return 0;
@@ -10045,6 +10135,9 @@ void clif_refresh(map_session_data *sd)
 		pc_disguise(sd, disguise);
 	}
 	clif_refresh_storagewindow(sd);
+#ifdef Pandas_Aura_Mechanism
+	clif_send_auras_single(&sd->bl, sd);
+#endif // Pandas_Aura_Mechanism
 }
 
 
