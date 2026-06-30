@@ -3190,16 +3190,31 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 					zeny*=rnd()%250;
 			}
 
-			if (map_getmapflag(m, MF_NOBASEEXP) || !md->db->base_exp)
+			if (map_getmapflag(m, MF_NOBASEEXP)
+#ifdef Pandas_ScriptParams_UnitData_Experience
+				|| (!md->db->base_exp && md->pandas.base_exp <= 0) || (md->db->base_exp && !md->pandas.base_exp)
+#else
+				|| !md->db->base_exp
+#endif // Pandas_ScriptParams_UnitData_Experience
+			)
 				base_exp = 0;
 			else {
 				double exp = apply_rate2(md->db->base_exp, per, 1);
+#ifdef Pandas_ScriptParams_UnitData_Experience
+				if (md->pandas.base_exp >= 0)
+					exp = apply_rate2(md->pandas.base_exp, per, 1);
+#endif // Pandas_ScriptParams_UnitData_Experience
 				exp = apply_rate(exp, bonus);
 				exp = apply_rate(exp, map_getmapflag(m, MF_BEXP));
 				base_exp = (t_exp)cap_value(exp, 1, MAX_EXP);
 			}
 
-			if (map_getmapflag(m, MF_NOJOBEXP) || !md->db->job_exp
+			if (map_getmapflag(m, MF_NOJOBEXP)
+#ifdef Pandas_ScriptParams_UnitData_Experience
+				|| (!md->db->job_exp && md->pandas.job_exp <= 0) || (md->db->job_exp && !md->pandas.job_exp)
+#else
+				|| !md->db->job_exp
+#endif // Pandas_ScriptParams_UnitData_Experience
 #ifndef RENEWAL
 				|| entry.flag == MDLF_HOMUN // Homun earned job-exp is always lost.
 #endif
@@ -3207,6 +3222,10 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 				job_exp = 0;
 			else {
 				double exp = apply_rate2(md->db->job_exp, per, 1);
+#ifdef Pandas_ScriptParams_UnitData_Experience
+				if (md->pandas.job_exp >= 0)
+					exp = apply_rate2(md->pandas.job_exp, per, 1);
+#endif // Pandas_ScriptParams_UnitData_Experience
 				exp = apply_rate(exp, bonus);
 				exp = apply_rate(exp, map_getmapflag(m, MF_JEXP));
 				job_exp = (t_exp)cap_value(exp, 1, MAX_EXP);

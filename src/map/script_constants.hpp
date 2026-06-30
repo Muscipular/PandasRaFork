@@ -4288,6 +4288,12 @@
 #ifdef Pandas_Struct_Unit_CommonData_Aura
 	export_constant(UMOB_AURA);
 #endif // Pandas_Struct_Unit_CommonData_Aura
+#ifdef Pandas_ScriptParams_UnitData_Experience
+	export_constant(UMOB_MOBBASEEXP);
+	export_constant(UMOB_MOBBASEEXP_DB);
+	export_constant(UMOB_MOBJOBEXP);
+	export_constant(UMOB_MOBJOBEXP_DB);
+#endif // Pandas_ScriptParams_UnitData_Experience
 
 	/* unit control - homunculus */
 	export_constant(UHOM_SIZE);

@@ -584,6 +584,12 @@ enum unitdata_mobtypes {
 #ifdef Pandas_Struct_Unit_CommonData_Aura
 	UMOB_AURA,
 #endif // Pandas_Struct_Unit_CommonData_Aura
+#ifdef Pandas_ScriptParams_UnitData_Experience
+	UMOB_MOBBASEEXP,
+	UMOB_MOBBASEEXP_DB,
+	UMOB_MOBJOBEXP,
+	UMOB_MOBJOBEXP_DB,
+#endif // Pandas_ScriptParams_UnitData_Experience
 };
 
 enum unitdata_homuntypes {
