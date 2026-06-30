@@ -29518,6 +29518,9 @@ BUILDIN_FUNC(getbossinfo) {
 
 		script_both_setreg(st, "boss_tomb_respawntime", respawntime, true, count, char_id);
 		script_both_setregstr(st, "boss_tomb_killer_name$", (tomb_nd ? tomb_nd->u.tomb.killer_name : ""), true, count, char_id);
+#ifdef Pandas_FuncParams_Mob_MvpTomb_Create
+		script_both_setreg(st, "boss_tomb_killer_gid", (tomb_nd ? tomb_nd->u.tomb.killer_gid : 0), true, count, char_id);
+#endif // Pandas_FuncParams_Mob_MvpTomb_Create
 
 		count++;
 	}

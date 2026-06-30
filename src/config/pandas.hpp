@@ -607,6 +607,7 @@
 
 	// 在 mob.cpp 中的 mvptomb_create 增加 killer_gid 参数 [Sola丶小克]
 	// 新增的 killer_gid 参数用于传递杀死 MVP 玩家的游戏单位编号
+	#define Pandas_FuncParams_Mob_MvpTomb_Create
 #endif // Pandas_FuncIncrease
 
 // ============================================================================

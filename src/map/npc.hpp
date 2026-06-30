@@ -212,6 +212,9 @@ struct npc_data : public block_list {
 			mob_data *md;
 			time_t kill_time;
 			char killer_name[NAME_LENGTH];
+#ifdef Pandas_FuncParams_Mob_MvpTomb_Create
+			int32 killer_gid;
+#endif // Pandas_FuncParams_Mob_MvpTomb_Create
 			int32 spawn_timer;
 		} tomb;
 		struct {

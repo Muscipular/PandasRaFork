@@ -2347,6 +2347,9 @@ void run_tomb(map_session_data* sd, npc_data* nd)
 		}
 		pc_setreg(sd, add_str("@tomb_mob_respawntime"), respawntime);
 		pc_setregstr(sd, add_str("@tomb_killer_name$"), nd->u.tomb.killer_name);
+#ifdef Pandas_FuncParams_Mob_MvpTomb_Create
+		pc_setreg(sd, add_str("@tomb_killer_gid"), nd->u.tomb.killer_gid);
+#endif // Pandas_FuncParams_Mob_MvpTomb_Create
 		if (npc_script_filter(sd, NPCF_CLICKTOMB)) {
 			return;
 		}
@@ -3987,6 +3990,9 @@ npc_data *npc_create_npc(int16 m, int16 x, int16 y){
 	nd->dynamicnpc.owner_char_id = 0;
 	nd->dynamicnpc.last_interaction = 0;
 	nd->dynamicnpc.removal_tid = INVALID_TIMER;
+#ifdef Pandas_FuncParams_Mob_MvpTomb_Create
+	nd->u.tomb.killer_gid = 0;
+#endif // Pandas_FuncParams_Mob_MvpTomb_Create
 
 #ifdef Pandas_Struct_Npc_Data_DestructionStrategy
 	nd->pandas.destruction_strategy = 0;

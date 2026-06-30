@@ -606,7 +606,11 @@ int32 mob_getdroprate(block_list *src, std::shared_ptr<s_mob_db> mob, int32 base
 // MvP Tomb System
 int32 mvptomb_setdelayspawn(npc_data *nd);
 TIMER_FUNC(mvptomb_delayspawn);
+#ifndef Pandas_FuncParams_Mob_MvpTomb_Create
 void mvptomb_create(mob_data *md, char *killer, time_t time);
+#else
+void mvptomb_create(mob_data *md, char *killer, time_t time, int32 killer_gid);
+#endif // Pandas_FuncParams_Mob_MvpTomb_Create
 void mvptomb_destroy(mob_data *md);
 
 void mob_setdropitem_option( item& itm, const std::shared_ptr<s_mob_drop>& mobdrop );
