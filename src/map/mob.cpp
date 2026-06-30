@@ -3719,6 +3719,12 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 			npc_script_event( *first_sd, NPCE_KILLNPC );
 		}
 #endif // Pandas_BattleConfig_AlwaysTriggerNPCKillEvent
+#if defined(Pandas_NpcEvent_KILLMVP) && defined(Pandas_BattleConfig_AlwaysTriggerMVPKillEvent)
+		if (!md->state.npc_killmonster &&
+			(!md->npc_event[0] || battle_config.always_trigger_mvp_killevent)) {
+			npc_event_aide_killmvp(sd, mvp_sd, md);
+		}
+#endif // defined(Pandas_NpcEvent_KILLMVP) && defined(Pandas_BattleConfig_AlwaysTriggerMVPKillEvent)
 	}
 
 	if(md->deletetimer != INVALID_TIMER) {

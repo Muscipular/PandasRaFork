@@ -8419,6 +8419,9 @@ static const struct _battle_data {
 #ifdef Pandas_BattleConfig_AlwaysTriggerNPCKillEvent
 	{ "always_trigger_npc_killevent",       &battle_config.always_trigger_npc_killevent,    0,      0,      1,              },
 #endif // Pandas_BattleConfig_AlwaysTriggerNPCKillEvent
+#ifdef Pandas_BattleConfig_AlwaysTriggerMVPKillEvent
+	{ "always_trigger_mvp_killevent",       &battle_config.always_trigger_mvp_killevent,    1,      0,      1,              },
+#endif // Pandas_BattleConfig_AlwaysTriggerMVPKillEvent
 	{ "max_walk_speed",                     &battle_config.max_walk_speed,                  300,    100,    100*DEFAULT_WALK_SPEED, },
 	{ "max_lv",                             &battle_config.max_lv,                          99,     0,      MAX_LEVEL,      },
 	{ "aura_lv",                            &battle_config.aura_lv,                         99,     0,      INT_MAX,        },
