@@ -3908,6 +3908,15 @@ void map_flags_init(void){
 	}));
 #endif // Pandas_MapFlag_MobInfo
 
+#ifdef Pandas_MapFlag_NoAura
+	mapflag_config.insert(std::make_pair(MF_NOAURA, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "NoAura",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ false,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {}
+	}));
+#endif // Pandas_MapFlag_NoAura
+
 	for (int32 i = 0; i < map_num; i++) {
 		struct map_data *mapdata = &map[i];
 		pds_mapflag_args args = {};
@@ -5442,6 +5451,23 @@ bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, pds_mapfla
 	}
 
 	switch (mapflag) {
+#ifdef Pandas_MapFlag_NoAura
+		case MF_NOAURA:
+		{
+			struct s_mapiterator* iter = mapit_getallusers();
+			map_session_data* pl_sd = nullptr;
+
+			for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter)) {
+				if (!pl_sd || pl_sd->bl.m != m)
+					continue;
+
+				clif_refresh(pl_sd);
+			}
+
+			mapit_free(iter);
+			break;
+		}
+#endif // Pandas_MapFlag_NoAura
 	}
 #endif // Pandas_Mapflags
 

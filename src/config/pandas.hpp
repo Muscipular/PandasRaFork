@@ -853,6 +853,9 @@
 	// 是否启用 noaura 地图标记 [Sola丶小克]
 	// 该标记用于在当前地图上禁用角色的光环效果
 	// 此地图标记依赖 Pandas_Aura_Mechanism 的拓展
+	#ifdef Pandas_Aura_Mechanism
+		#define Pandas_MapFlag_NoAura
+	#endif // Pandas_Aura_Mechanism
 
 	// 是否启用 maxaspd 地图标记 [Sola丶小克]
 	// 该标记用于限制此地图上单位的最大攻击速度 (ASDP: 1~199)

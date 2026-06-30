@@ -707,6 +707,9 @@ enum e_mapflag : int16 {
 #ifdef Pandas_MapFlag_NoCapture
 	MF_NOCAPTURE,
 #endif // Pandas_MapFlag_NoCapture
+#ifdef Pandas_MapFlag_NoAura
+	MF_NOAURA,
+#endif // Pandas_MapFlag_NoAura
 	MF_NOBUYINGSTORE,
 	MF_NODYNAMICNPC,
 	MF_NOBANK,

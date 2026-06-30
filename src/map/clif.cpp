@@ -1052,6 +1052,9 @@ void clif_send_auras_single(struct block_list* bl, map_session_data* tsd) {
 	struct s_unit_common_data* ucd = status_get_ucd(bl);
 	if (!ucd) return;
 	if (aura_need_hiding(bl, &tsd->bl)) return;
+#ifdef Pandas_MapFlag_NoAura
+	if (map_getmapflag(bl->m, MF_NOAURA)) return;
+#endif // Pandas_MapFlag_NoAura
 
 	for (auto it : ucd->aura.effects) {
 		if (it->replay_tid != INVALID_TIMER) continue;
@@ -1061,6 +1064,9 @@ void clif_send_auras_single(struct block_list* bl, map_session_data* tsd) {
 
 void clif_send_auras(struct block_list* bl, enum send_target target, bool ignore_when_hidden, enum e_aura_special flag) {
 	if (!bl || bl->m == -1) return;
+#ifdef Pandas_MapFlag_NoAura
+	if (map_getmapflag(bl->m, MF_NOAURA)) return;
+#endif // Pandas_MapFlag_NoAura
 	if (aura_need_hiding(bl) && ignore_when_hidden)
 		return;
 

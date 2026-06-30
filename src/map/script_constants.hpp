@@ -775,6 +775,9 @@
 #ifdef Pandas_MapFlag_NoCapture
 	export_constant(MF_NOCAPTURE);
 #endif // Pandas_MapFlag_NoCapture
+#ifdef Pandas_MapFlag_NoAura
+	export_constant(MF_NOAURA);
+#endif // Pandas_MapFlag_NoAura
 	export_constant(MF_NOBUYINGSTORE);
 	export_constant(MF_NODYNAMICNPC);
 	export_constant(MF_NOBANK);
