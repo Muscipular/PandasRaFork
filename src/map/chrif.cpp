@@ -1699,6 +1699,9 @@ int32 chrif_bsdata_save(map_session_data *sd, bool quit) {
 			bs.flag = entry->flag;
 			bs.type = entry->type;
 			bs.icon = entry->icon;
+#ifdef Pandas_BonusScript_Unique_ID
+			bs.bonus_id = entry->bonus_id;
+#endif // Pandas_BonusScript_Unique_ID
 			memcpy(WFIFOP(char_fd, 9 + i * sizeof(struct bonus_script_data)), &bs, sizeof(struct bonus_script_data));
 			i++;
 		}
@@ -1745,8 +1748,13 @@ int32 chrif_bsdata_received(int32 fd) {
 			if (bs->script_str[0] == '\0' || !bs->tick)
 				continue;
 
+#ifndef Pandas_BonusScript_Unique_ID
 			if (!(entry = pc_bonus_script_add(sd, bs->script_str, bs->tick, (enum efst_type)bs->icon, bs->flag, bs->type)))
 				continue;
+#else
+			if (!(entry = pc_bonus_script_add(sd, bs->script_str, bs->tick, (enum efst_type)bs->icon, bs->flag, bs->type, bs->bonus_id)))
+				continue;
+#endif // Pandas_BonusScript_Unique_ID
 
 			linkdb_insert(&sd->bonus_script.head, (void *)((intptr_t)entry), entry);
 		}

@@ -24850,8 +24850,16 @@ BUILDIN_FUNC(bonus_script) {
 	const char *script_str = nullptr;
 	struct s_bonus_script_entry *entry = nullptr;
 
+#ifdef Pandas_BonusScript_Unique_ID
+	if ( !script_charid2sd(7,sd) )
+	{
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+#else
 	if ( !script_charid2sd(7,sd) )
 		return SCRIPT_CMD_FAILURE;
+#endif // Pandas_BonusScript_Unique_ID
 	
 	script_str = script_getstr(st,2);
 	dur = 1000 * abs(script_getnum(st,3));
@@ -24862,11 +24870,17 @@ BUILDIN_FUNC(bonus_script) {
 	// No Script string, No Duration!
 	if (script_str[0] == '\0' || !dur) {
 		ShowError("buildin_bonus_script: Invalid! Script: \"%s\". Duration: %d\n", script_str, dur);
+#ifdef Pandas_BonusScript_Unique_ID
+		script_pushint(st, 0);
+#endif // Pandas_BonusScript_Unique_ID
 		return SCRIPT_CMD_FAILURE;
 	}
 
 	if (strlen(script_str) >= MAX_BONUS_SCRIPT_LENGTH) {
 		ShowError("buildin_bonus_script: Script string to long: \"%s\".\n", script_str);
+#ifdef Pandas_BonusScript_Unique_ID
+		script_pushint(st, 0);
+#endif // Pandas_BonusScript_Unique_ID
 		return SCRIPT_CMD_FAILURE;
 	}
 
@@ -24876,6 +24890,9 @@ BUILDIN_FUNC(bonus_script) {
 	if ((entry = pc_bonus_script_add(sd, script_str, dur, (enum efst_type)icon, flag, type))) {
 		linkdb_insert(&sd->bonus_script.head, (void *)((intptr_t)entry), entry);
 		status_calc_pc(sd,SCO_NONE);
+#ifdef Pandas_BonusScript_Unique_ID
+		script_pushint(st, entry->bonus_id);
+#endif // Pandas_BonusScript_Unique_ID
 	}
 	return SCRIPT_CMD_SUCCESS;
 }

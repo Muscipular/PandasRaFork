@@ -2298,6 +2298,9 @@ bool pc_authok(map_session_data *sd, uint32 login_id2, time_t expiration_time, i
 	
 	sd->bonus_script.head = nullptr;
 	sd->bonus_script.count = 0;
+#ifdef Pandas_BonusScript_Unique_ID
+	sd->pandas.bonus_script_counter = 0;
+#endif // Pandas_BonusScript_Unique_ID
 
 	// Initialize BG queue
 	sd->bg_queue_id = 0;
@@ -2373,6 +2376,9 @@ void pc_reg_received(map_session_data *sd)
 	sd->change_level_3rd = static_cast<unsigned char>(pc_readglobalreg(sd, add_str(JOBCHANGE3RD_VAR)));
 	sd->change_level_4th = static_cast<unsigned char>(pc_readglobalreg(sd, add_str(JOBCHANGE4TH_VAR)));
 	sd->die_counter = static_cast<int32>(pc_readglobalreg(sd, add_str(PCDIECOUNTER_VAR)));
+#ifdef Pandas_BonusScript_Unique_ID
+	sd->pandas.bonus_script_counter = static_cast<uint32>(pc_readglobalreg(sd, add_str(BONUS_SCRIPT_COUNTER_VAR)));
+#endif // Pandas_BonusScript_Unique_ID
 
 #if defined(Pandas_Struct_Unit_CommonData_Aura) && defined(Pandas_Aura_Mechanism)
 	// 从角色的变量中读取当前角色设置启用的光环编号
@@ -15441,7 +15447,11 @@ void pc_bonus_script(map_session_data *sd) {
  * @return New created entry pointer or nullptr if failed or nullptr if duplicate fail
  * @author [Cydh]
  **/
+#ifndef Pandas_BonusScript_Unique_ID
 struct s_bonus_script_entry *pc_bonus_script_add(map_session_data *sd, const char *script_str, t_tick dur, enum efst_type icon, uint16 flag, uint8 type) {
+#else
+struct s_bonus_script_entry *pc_bonus_script_add(map_session_data *sd, const char *script_str, t_tick dur, enum efst_type icon, uint16 flag, uint8 type, uint64 bonus_id) {
+#endif // Pandas_BonusScript_Unique_ID
 	struct script_code *script = nullptr;
 	struct linkdb_node *node = nullptr;
 	struct s_bonus_script_entry *entry = nullptr;
@@ -15486,6 +15496,9 @@ struct s_bonus_script_entry *pc_bonus_script_add(map_session_data *sd, const cha
 	entry->tick = dur; // Use duration first, on run change to expire time
 	entry->type = type;
 	entry->script = script;
+#ifdef Pandas_BonusScript_Unique_ID
+	entry->bonus_id = (!bonus_id ? pc_bonus_script_generate_unique_id(sd) : bonus_id);
+#endif // Pandas_BonusScript_Unique_ID
 	sd->bonus_script.count++;
 	return entry;
 }
@@ -15599,6 +15612,16 @@ void pc_bonus_script_clear(map_session_data *sd, uint32 flag) {
 	if (count && !(flag&BSF_REM_ON_LOGOUT)) //Don't need to do this if log out
 		status_calc_pc(sd,SCO_NONE);
 }
+
+#ifdef Pandas_BonusScript_Unique_ID
+uint64 pc_bonus_script_generate_unique_id(map_session_data* sd) {
+	nullpo_ret(sd);
+
+	uint64 bonus_script_unique_id = ((uint64)sd->status.char_id << 32) | sd->pandas.bonus_script_counter++;
+	pc_setglobalreg(sd, add_str(BONUS_SCRIPT_COUNTER_VAR), sd->pandas.bonus_script_counter);
+	return bonus_script_unique_id;
+}
+#endif // Pandas_BonusScript_Unique_ID
 
 /** [Cydh]
  * Gives/removes SC_BASILICA when player steps in/out the cell with 'cell_basilica'

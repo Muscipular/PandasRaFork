@@ -47,6 +47,10 @@ class MapGuild;
 #define AURA_VARIABLE "PANDAS_AURASET"
 #endif // Pandas_Struct_Unit_CommonData_Aura
 
+#ifdef Pandas_BonusScript_Unique_ID
+#define BONUS_SCRIPT_COUNTER_VAR "PANDAS_BONUSSCRIPT_COUNTER"
+#endif // Pandas_BonusScript_Unique_ID
+
 #define MAX_PC_BONUS 50 /// Max bonus, usually used by item bonus
 #define MAX_PC_FEELHATE 3 /// Max feel hate info
 #define MAX_SPIRITBALL 15 /// Max spirit balls
@@ -1809,8 +1813,15 @@ void pc_show_version(map_session_data *sd);
 
 TIMER_FUNC(pc_bonus_script_timer);
 void pc_bonus_script(map_session_data *sd);
+#ifndef Pandas_BonusScript_Unique_ID
 struct s_bonus_script_entry *pc_bonus_script_add(map_session_data *sd, const char *script_str, t_tick dur, enum efst_type icon, uint16 flag, uint8 type);
+#else
+struct s_bonus_script_entry *pc_bonus_script_add(map_session_data *sd, const char *script_str, t_tick dur, enum efst_type icon, uint16 flag, uint8 type, uint64 bonus_id = 0);
+#endif // Pandas_BonusScript_Unique_ID
 void pc_bonus_script_clear(map_session_data *sd, uint32 flag);
+#ifdef Pandas_BonusScript_Unique_ID
+uint64 pc_bonus_script_generate_unique_id(map_session_data* sd);
+#endif // Pandas_BonusScript_Unique_ID
 
 void pc_cell_basilica(map_session_data *sd);
 

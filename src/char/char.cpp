@@ -2575,10 +2575,17 @@ bool char_checkdb(void){
 		return false;
 	}
 	//checking bonus_script_db
+#ifndef Pandas_BonusScript_Unique_ID
 	if( SQL_ERROR == Sql_Query(sql_handle, "SELECT  `char_id`,`script`,`tick`,`flag`,`type`,`icon` FROM `%s` LIMIT 1;", schema_config.bonus_script_db) ){
 		Sql_ShowDebug(sql_handle);
 		return false;
 	}
+#else
+	if( SQL_ERROR == Sql_Query(sql_handle, "SELECT  `id`,`char_id`,`script`,`tick`,`flag`,`type`,`icon` FROM `%s` LIMIT 1;", schema_config.bonus_script_db) ){
+		Sql_ShowDebug(sql_handle);
+		return false;
+	}
+#endif // Pandas_BonusScript_Unique_ID
 	//checking cart_db
 	if( SQL_ERROR == Sql_Query(sql_handle, "SELECT  `id`,`char_id`,`nameid`,`amount`,`equip`,`identify`,`refine`,"
 		"`attribute`,`card0`,`card1`,`card2`,`card3`,`option_id0`,`option_val0`,`option_parm0`,`option_id1`,`option_val1`,`option_parm1`,`option_id2`,`option_val2`,`option_parm2`,`option_id3`,`option_val3`,`option_parm3`,`option_id4`,`option_val4`,`option_parm4`,`expire_time`,`bound`,`unique_id`,`enchantgrade`"

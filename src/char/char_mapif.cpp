@@ -1332,6 +1332,7 @@ int32 chmapif_bonus_script_get(int32 fd) {
 
 		RFIFOSKIP(fd,6);
 
+#ifndef Pandas_BonusScript_Unique_ID
 		if (SQL_ERROR == stmt.Prepare(
 			"SELECT `script`, `tick`, `flag`, `type`, `icon` FROM `%s` WHERE `char_id` = '%d' LIMIT %d",
 			schema_config.bonus_script_db, cid, MAX_PC_BONUS_SCRIPT) ||
@@ -1342,6 +1343,19 @@ int32 chmapif_bonus_script_get(int32 fd) {
 			SQL_ERROR == stmt.BindColumn(3, SQLDT_UINT8,  &tmp_bsdata.type) ||
 			SQL_ERROR == stmt.BindColumn(4, SQLDT_INT16,  &tmp_bsdata.icon)
 			)
+#else
+		if (SQL_ERROR == stmt.Prepare(
+			"SELECT `script`, `tick`, `flag`, `type`, `icon`, `id` FROM `%s` WHERE `char_id` = '%d' LIMIT %d",
+			schema_config.bonus_script_db, cid, MAX_PC_BONUS_SCRIPT) ||
+			SQL_ERROR == stmt.Execute() ||
+			SQL_ERROR == stmt.BindColumn(0, SQLDT_STRING, &tmp_bsdata.script_str, sizeof(tmp_bsdata.script_str)) ||
+			SQL_ERROR == stmt.BindColumn(1, SQLDT_INT64, &tmp_bsdata.tick) ||
+			SQL_ERROR == stmt.BindColumn(2, SQLDT_UINT16, &tmp_bsdata.flag) ||
+			SQL_ERROR == stmt.BindColumn(3, SQLDT_UINT8,  &tmp_bsdata.type) ||
+			SQL_ERROR == stmt.BindColumn(4, SQLDT_INT16,  &tmp_bsdata.icon) ||
+			SQL_ERROR == stmt.BindColumn(5, SQLDT_UINT64, &tmp_bsdata.bonus_id)
+			)
+#endif // Pandas_BonusScript_Unique_ID
 		{
 			SqlStmt_ShowDebug(stmt);
 			return 1;
@@ -1367,6 +1381,9 @@ int32 chmapif_bonus_script_get(int32 fd) {
 				bsdata.flag = tmp_bsdata.flag;
 				bsdata.type = tmp_bsdata.type;
 				bsdata.icon = tmp_bsdata.icon;
+#ifdef Pandas_BonusScript_Unique_ID
+				bsdata.bonus_id = tmp_bsdata.bonus_id;
+#endif // Pandas_BonusScript_Unique_ID
 				memcpy(WFIFOP(fd, 9 + i * sizeof(struct bonus_script_data)), &bsdata, sizeof(struct bonus_script_data));
 			}
 
@@ -1406,13 +1423,21 @@ int32 chmapif_bonus_script_save(int32 fd) {
 			uint8 i;
 
 			StringBuf_Init(&buf);
+#ifndef Pandas_BonusScript_Unique_ID
 			StringBuf_Printf(&buf, "INSERT INTO `%s` (`char_id`, `script`, `tick`, `flag`, `type`, `icon`) VALUES ", schema_config.bonus_script_db);
+#else
+			StringBuf_Printf(&buf, "INSERT INTO `%s` (`char_id`, `script`, `tick`, `flag`, `type`, `icon`, `id`) VALUES ", schema_config.bonus_script_db);
+#endif // Pandas_BonusScript_Unique_ID
 			for (i = 0; i < count; ++i) {
 				memcpy(&bsdata, RFIFOP(fd, 9 + i*sizeof(struct bonus_script_data)), sizeof(struct bonus_script_data));
 				Sql_EscapeString(sql_handle, esc_script, bsdata.script_str);
 				if (i > 0)
 					StringBuf_AppendStr(&buf,", ");
+#ifndef Pandas_BonusScript_Unique_ID
 				StringBuf_Printf(&buf, "('%d','%s','%" PRtf "','%d','%d','%d')", cid, esc_script, bsdata.tick, bsdata.flag, bsdata.type, bsdata.icon);
+#else
+				StringBuf_Printf(&buf, "('%d','%s','%" PRtf "','%d','%d','%d','%" PRIu64 "')", cid, esc_script, bsdata.tick, bsdata.flag, bsdata.type, bsdata.icon, bsdata.bonus_id);
+#endif // Pandas_BonusScript_Unique_ID
 			}
 			if (SQL_ERROR == Sql_QueryStr(sql_handle,StringBuf_Value(&buf)))
 				Sql_ShowDebug(sql_handle);
