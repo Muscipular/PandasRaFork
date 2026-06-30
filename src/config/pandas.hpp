@@ -700,6 +700,7 @@
 		#define Pandas_ScriptCommand_BattleRecordQuery
 		// 是否启用 batrec_rank 脚本指令 [Sola丶小克]
 		// 查询指定单位的战斗记录并对记录的值进行排序, 返回排行榜单
+		#define Pandas_ScriptCommand_BattleRecordRank
 		// 是否启用 batrec_sortout 脚本指令 [Sola丶小克]
 		// 移除指定单位的战斗记录中交互单位已经不存在 (或下线) 的记录
 		// 是否启用 batrec_reset 脚本指令 [Sola丶小克]

@@ -28813,6 +28813,103 @@ BUILDIN_FUNC(batrec_query) {
 }
 #endif // Pandas_ScriptCommand_BattleRecordQuery
 
+#ifdef Pandas_ScriptCommand_BattleRecordRank
+/* ===========================================================
+ * 指令: batrec_rank
+ * 描述: 查询指定单位的战斗记录并对记录的值进行排序, 返回排行榜单
+ * 用法: batrec_rank <记录宿主的单位编号>,<返回交互目标的单位编号数组>,<返回记录值数组>,<记录类型>{,<聚合规则>{,<排序规则>}};
+ * 返回: 失败返回 -1, 含 0 正整数表示数组中返回的榜单记录数
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(batrec_rank) {
+	map_session_data* sd = map_id2sd(st->rid);
+	struct block_list* bl = map_id2bl(script_getnum(st, 2));
+
+	if (bl == nullptr) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int32 gid_array_varid = 0;
+	char* gid_array_varname = nullptr;
+	struct script_data* gid_array_vardata = nullptr;
+
+	if (!script_get_array(st, 3, gid_array_varid, gid_array_varname, gid_array_vardata)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	script_cleararray_st(st, 3);
+
+	int32 dmg_array_varid = 0;
+	char* dmg_array_varname = nullptr;
+	struct script_data* dmg_array_vardata = nullptr;
+
+	if (!script_get_array(st, 4, dmg_array_varid, dmg_array_varname, dmg_array_vardata)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	script_cleararray_st(st, 4);
+
+	int32 rec_type = script_getnum(st, 5);
+
+	if (rec_type != BRT_DMG_RECEIVE && rec_type != BRT_DMG_CAUSE) {
+		ShowError("%s: The battle record type is invalid.\n", __func__);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int32 aggregation = BRA_COMBINE;
+
+	if (!script_get_optnum(st, 6, "Aggregation strategy", aggregation, true, BRA_COMBINE)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int32 sort_type = BRS_DESC;
+
+	if (!script_get_optnum(st, 7, "Sort Type", sort_type, true, BRS_DESC)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	batrec_map* origin_rec = batrec_getmap(bl, static_cast<e_batrec_type>(rec_type));
+
+	if (origin_rec == nullptr) {
+		ShowError("%s: The battle record type is invalid.\n", __func__);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	batrec_map rec;
+	batrec_aggregation(origin_rec, rec, static_cast<e_batrec_agg>(aggregation));
+
+	std::vector<std::pair<uint32, s_batrec_item_ptr>> rec_sorted;
+
+	for (auto& it : rec) {
+		rec_sorted.push_back(it);
+	}
+
+	if (sort_type == BRS_DESC) {
+		std::sort(rec_sorted.begin(), rec_sorted.end(), batrec_cmp_desc);
+	} else {
+		std::sort(rec_sorted.begin(), rec_sorted.end(), batrec_cmp_asc);
+	}
+
+	for (size_t i = 0; i < rec_sorted.size(); i++) {
+		int64 uid = reference_uid(gid_array_varid, i);
+		set_reg_num(st, sd, uid, gid_array_varname, rec_sorted[i].first, reference_getref(gid_array_vardata));
+
+		uid = reference_uid(dmg_array_varid, i);
+		set_reg_num(st, sd, uid, dmg_array_varname, rec_sorted[i].second->damage, reference_getref(dmg_array_vardata));
+	}
+
+	script_pushint(st, rec_sorted.size());
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BattleRecordRank
+
 #ifdef Pandas_ScriptCommand_UnlockCmd
 /* ===========================================================
  * 指令: unlockcmd
@@ -29259,6 +29356,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_BattleRecordQuery
 	BUILDIN_DEF(batrec_query, "iii?"), // 查询指定单位的战斗记录, 查看与交互目标单位产生的具体记录值 [Sola丶小克]
 #endif // Pandas_ScriptCommand_BattleRecordQuery
+#ifdef Pandas_ScriptCommand_BattleRecordRank
+	BUILDIN_DEF(batrec_rank, "irri??"), // 查询指定单位的战斗记录并对记录的值进行排序, 返回排行榜单 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BattleRecordRank
 #ifdef Pandas_ScriptCommand_UnlockCmd
 	BUILDIN_DEF(unlockcmd, ""), // 解锁实时事件和过滤器事件的指令限制 [Sola丶小克]
 #endif // Pandas_ScriptCommand_UnlockCmd
