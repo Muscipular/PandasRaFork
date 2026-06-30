@@ -3711,6 +3711,14 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 			pc_setparam(first_sd, SP_KILLEDRID, md->mob_id);
 			npc_script_event( *first_sd, NPCE_KILLNPC );
 		}
+#ifdef Pandas_BattleConfig_AlwaysTriggerNPCKillEvent
+		if (md->npc_event[0] && first_sd != nullptr &&
+			!md->state.npc_killmonster && battle_config.always_trigger_npc_killevent) {
+			pc_setparam(first_sd, SP_KILLEDGID, md->id);
+			pc_setparam(first_sd, SP_KILLEDRID, md->mob_id);
+			npc_script_event( *first_sd, NPCE_KILLNPC );
+		}
+#endif // Pandas_BattleConfig_AlwaysTriggerNPCKillEvent
 	}
 
 	if(md->deletetimer != INVALID_TIMER) {

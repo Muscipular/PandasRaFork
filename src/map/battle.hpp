@@ -810,6 +810,10 @@ struct Battle_Config
 	int32 multiplayer_recall_behavior; // 控制多人召唤时是否避开在线摆摊玩家
 #endif // Pandas_BattleConfig_Multiplayer_Recall_Behavior
 
+#ifdef Pandas_BattleConfig_AlwaysTriggerNPCKillEvent
+	int32 always_trigger_npc_killevent; // 当魔物拥有且触发了自己的死亡事件标签后, 是否还会继续触发 OnNPCKillEvent 事件
+#endif // Pandas_BattleConfig_AlwaysTriggerNPCKillEvent
+
 #ifdef Pandas_BattleConfig_Suspend_MonsterIgnore
 	int32 suspend_monsterignore; // 当玩家使用挂机系列指令时, 处于哪些模式不会被魔物攻击
 #endif // Pandas_BattleConfig_Suspend_MonsterIgnore

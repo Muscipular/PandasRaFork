@@ -440,6 +440,10 @@
 	// 此选项用于控制多人召回时是否避开在线摆摊或采购的玩家
 	#define Pandas_BattleConfig_Multiplayer_Recall_Behavior
 
+	// 是否启用 always_trigger_npc_killevent 配置选项及其功能 [Sola丶小克]
+	// 此选项用于控制魔物触发自己的死亡事件后是否继续触发 OnNPCKillEvent
+	#define Pandas_BattleConfig_AlwaysTriggerNPCKillEvent
+
 // 是否启用 suspend_monsterignore 配置选项及其功能 [Sola丶小克]
 // 此选项用于指定当玩家使用挂机系列指令时, 哪些模式不会被魔物攻击 (掩码选项)
 #define Pandas_BattleConfig_Suspend_MonsterIgnore
