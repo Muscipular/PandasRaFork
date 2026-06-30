@@ -17779,6 +17779,29 @@ void clif_parse_ViewPlayerEquip(int32 fd, map_session_data* sd)
 	if (!tsd)
 		return;
 
+#ifdef Pandas_NpcFilter_VIEW_EQUIP
+	if (sd && sd->bl.type == BL_PC && tsd->bl.type == BL_PC && sd->m == tsd->m) {
+		pc_setregstr(sd, add_str("@vieweq_name$"), tsd->status.name);
+		pc_setreg(sd, add_str("@vieweq_cid"), tsd->status.char_id);
+		pc_setreg(sd, add_str("@vieweq_aid"), tsd->status.account_id);
+		pc_setreg(sd, add_str("@eqview_cid"), tsd->status.char_id);
+
+		pc_setregstr(sd, add_str("@view_equip_target_name$"), tsd->status.name);
+		pc_setreg(sd, add_str("@view_equip_target_cid"), tsd->status.char_id);
+		pc_setreg(sd, add_str("@view_equip_target_aid"), tsd->status.account_id);
+		pc_setreg(sd, add_str("@view_equip_target_allowed"), tsd->status.show_equip);
+		pc_setreg(sd, add_str("@view_equip_bypass_limit"), 0);
+
+		if (npc_script_filter(sd, NPCF_VIEW_EQUIP))
+			return;
+
+		if (pc_readreg(sd, add_str("@view_equip_bypass_limit")) == 1) {
+			clif_viewequip_ack(*sd, *tsd);
+			return;
+		}
+	}
+#endif // Pandas_NpcFilter_VIEW_EQUIP
+
 	if (sd->m != tsd->m)
 		return;
 	else if( tsd->status.show_equip || pc_has_permission(sd, PC_PERM_VIEW_EQUIPMENT) )

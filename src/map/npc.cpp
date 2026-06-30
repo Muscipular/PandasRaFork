@@ -6487,6 +6487,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCF_ROULETTE_OPEN:
 		return script_config.roulette_open_filter_name;
 #endif // Pandas_NpcFilter_ROULETTE_OPEN
+#ifdef Pandas_NpcFilter_VIEW_EQUIP
+	case NPCF_VIEW_EQUIP:
+		return script_config.view_equip_filter_name;
+#endif // Pandas_NpcFilter_VIEW_EQUIP
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;

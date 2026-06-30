@@ -117,6 +117,7 @@
 			// 当玩家准备查看某个角色的装备时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCViewEquipFilter
 			// 常量名称: NPCF_VIEW_EQUIP / 变量名称: view_equip_filter_name
+			#define Pandas_NpcFilter_VIEW_EQUIP
 
 			// 当玩家准备穿戴装备时触发过滤器 [Sola丶小克]
 			// 事件类型: Filter / 事件名称: OnPCEquipFilter
