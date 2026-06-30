@@ -6854,6 +6854,16 @@ bool pc_getitemfromcart(map_session_data *sd,int32 idx,int32 amount)
 	if (item_data->nameid == 0 || amount < 1 || item_data->amount < amount || sd->state.vending || sd->state.prevend)
 		return false;
 
+#ifdef Pandas_NpcFilter_CART_DEL
+	pc_setreg(sd, add_str("@removeitem_nameid"), item_data->nameid);
+	pc_setreg(sd, add_str("@removeitem_amount"), amount);
+	pc_setreg(sd, add_str("@removeitem_idx"), idx);
+	if (npc_script_filter(sd, NPCF_CART_DEL)) {
+		clif_cart_delitem(*sd, idx, 0);
+		return true;
+	}
+#endif // Pandas_NpcFilter_CART_DEL
+
 	enum e_additem_result flag = pc_additem(sd, item_data, amount, LOG_TYPE_NONE);
 
 	if (flag == ADDITEM_SUCCESS)
