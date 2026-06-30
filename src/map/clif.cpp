@@ -20947,6 +20947,20 @@ void clif_roulette_open( map_session_data* sd ){
 void clif_parse_roulette_open( int32 fd, map_session_data* sd ){
 	nullpo_retv(sd);
 
+#ifdef Pandas_NpcFilter_ROULETTE_OPEN
+	// 禁止在与 NPC 对话的时候使用乐透大转盘。
+	if (sd->npc_id || pc_hasprogress(sd, WIP_DISABLE_NPC)) {
+		clif_msg(*sd, MSI_BUSY);
+		return;
+	}
+
+	// 避免过滤事件中的 NPC 对话被绕过 processhalt 后直接打开大乐透面板。
+	if (sd && sd->bl.type == BL_PC && !sd->npc_id) {
+		if (npc_script_filter(sd, NPCF_ROULETTE_OPEN))
+			return;
+	}
+#endif // Pandas_NpcFilter_ROULETTE_OPEN
+
 	if (!battle_config.feature_roulette) {
 		clif_messagecolor(sd,color_table[COLOR_RED],msg_txt(sd,1497),false,SELF); //Roulette is disabled
 		return;

@@ -1636,6 +1636,9 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcFilter_USE_SKILL
 	NPCF_USE_SKILL,
 #endif // Pandas_NpcFilter_USE_SKILL
+#ifdef Pandas_NpcFilter_ROULETTE_OPEN
+	NPCF_ROULETTE_OPEN,
+#endif // Pandas_NpcFilter_ROULETTE_OPEN
 	NPCE_MAX
 };
 

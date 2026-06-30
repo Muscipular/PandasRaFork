@@ -183,6 +183,9 @@ struct Script_Config {
 #ifdef Pandas_NpcFilter_USE_SKILL
 	const char* use_skill_filter_name;
 #endif // Pandas_NpcFilter_USE_SKILL
+#ifdef Pandas_NpcFilter_ROULETTE_OPEN
+	const char* roulette_open_filter_name;
+#endif // Pandas_NpcFilter_ROULETTE_OPEN
 
 	// NPC related
 	const char* ontouch_event_name;
