@@ -12018,7 +12018,11 @@ BUILDIN_FUNC(monster)
 		std::shared_ptr<s_mob_db> mob = mobdb_search_aegisname( name );
 
 		if( mob == nullptr ){
+#ifndef Pandas_ScriptCommand_BossMonster
 			ShowWarning( "buildin_monster: Attempted to spawn non-existing monster \"%s\"\n", name );
+#else
+			ShowWarning("buildin_%s: Attempted to spawn non-existing monster \"%s\"\n", script_getfuncname(st), name);
+#endif // Pandas_ScriptCommand_BossMonster
 			return SCRIPT_CMD_FAILURE;
 		}
 
@@ -12027,7 +12031,11 @@ BUILDIN_FUNC(monster)
 		class_ = script_getnum( st, 6 );
 
 		if( class_ >= 0 && !mobdb_checkid( class_ ) ){
+#ifndef Pandas_ScriptCommand_BossMonster
 			ShowWarning( "buildin_monster: Attempted to spawn non-existing monster class %d\n", class_ );
+#else
+			ShowWarning("buildin_%s: Attempted to spawn non-existing monster class %d\n", script_getfuncname(st), class_);
+#endif // Pandas_ScriptCommand_BossMonster
 			return SCRIPT_CMD_FAILURE;
 		}
 	}
@@ -12040,7 +12048,11 @@ BUILDIN_FUNC(monster)
 	if (script_hasdata(st, 9)) {
 		size = script_getnum(st, 9);
 		if (size > SZ_BIG) {
+#ifndef Pandas_ScriptCommand_BossMonster
 			ShowWarning("buildin_monster: Attempted to spawn non-existing size %d for monster class %d\n", size, class_);
+#else
+			ShowWarning("buildin_%s: Attempted to spawn non-existing size %d for monster class %d\n", script_getfuncname(st), size, class_);
+#endif // Pandas_ScriptCommand_BossMonster
 			return SCRIPT_CMD_FAILURE;
 		}
 	}
@@ -12048,7 +12060,11 @@ BUILDIN_FUNC(monster)
 	if (script_hasdata(st, 10)) {
 		ai = static_cast<enum mob_ai>(script_getnum(st, 10));
 		if (ai >= AI_MAX) {
+#ifndef Pandas_ScriptCommand_BossMonster
 			ShowWarning("buildin_monster: Attempted to spawn non-existing ai %d for monster class %d\n", ai, class_);
+#else
+			ShowWarning("buildin_%s: Attempted to spawn non-existing ai %d for monster class %d\n", script_getfuncname(st), ai, class_);
+#endif // Pandas_ScriptCommand_BossMonster
 			return SCRIPT_CMD_FAILURE;
 		}
 	}
@@ -12063,7 +12079,11 @@ BUILDIN_FUNC(monster)
 	TBL_MOB* md;
 
 	for(i = 0; i < amount; i++) { //not optimised
+#ifndef Pandas_ScriptCommand_BossMonster
 		int32 mobid = mob_once_spawn(sd, m, x, y, str, class_, 1, event, size, ai);
+#else
+		int32 mobid = mob_once_spawn(sd, m, x, y, str, class_, 1, event, size, ai, (!strcmp(script_getfuncname(st), "boss_monster")) ? 1 : 0);
+#endif // Pandas_ScriptCommand_BossMonster
 
 		if (mobid > 0) {
 			md = map_id2md(mobid);
@@ -29802,6 +29822,9 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(produce,"i"),
 	BUILDIN_DEF(cooking,"i"),
 	BUILDIN_DEF(monster,"siisvi???"),
+#ifdef Pandas_ScriptCommand_BossMonster
+	BUILDIN_DEF2(monster,"boss_monster", "siisvi???"),
+#endif // Pandas_ScriptCommand_BossMonster
 	BUILDIN_DEF(getmobdrops,"i"),
 	BUILDIN_DEF(areamonster,"siiiisvi???"),
 	BUILDIN_DEF(killmonster,"ss?"),

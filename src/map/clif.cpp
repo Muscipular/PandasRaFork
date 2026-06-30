@@ -17874,6 +17874,24 @@ void clif_bossmapinfo( const map_session_data& sd, mob_data* md, e_bossmap_info 
 	clif_send( &p, sizeof( p ), &sd, SELF );
 }
 
+#ifdef Pandas_ScriptCommand_BossMonster
+void clif_bossmapinfo_clear(map_session_data* sd)
+{
+	if (!sd)
+		return;
+
+	int fd = sd->fd;
+
+	WFIFOHEAD(fd, 70);
+	memset(WFIFOP(fd, 0), 0, 70);
+	WFIFOW(fd, 0) = 0x293;
+	WFIFOB(fd, 2) = BOSS_INFO_ALIVE;
+	WFIFOL(fd, 3) = -1;
+	WFIFOL(fd, 7) = -1;
+	WFIFOSET(fd, 70);
+}
+#endif // Pandas_ScriptCommand_BossMonster
+
 
 /// Requesting equip of a player (CZ_EQUIPWIN_MICROSCOPE).
 /// 02d6 <account id>.L
