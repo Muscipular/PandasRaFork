@@ -47,6 +47,9 @@
 #include "mapreg.hpp"
 #include "mercenary.hpp"
 #include "mob.hpp"
+#ifdef Pandas_Database_MobItem_FixedRatio
+#include "mobdrop.hpp"
+#endif // Pandas_Database_MobItem_FixedRatio
 #include "npc.hpp"
 #include "party.hpp"
 #include "pc.hpp"
@@ -8209,6 +8212,12 @@ ACMD_FUNC(mobinfo)
 
 				int32 droprate = mob_getdroprate( sd, mob, entry->rate, drop_modifier );
 
+#ifdef Pandas_Database_MobItem_FixedRatio
+				// 若严格固定掉率, 那么无视上面的等级惩罚、VIP掉率加成等计算
+				if (mobdrop_strict_droprate(id->nameid, mob->id))
+					droprate = entry->rate;
+#endif // Pandas_Database_MobItem_FixedRatio
+
 				sprintf(atcmd_output2, " - %s  %02.02f%%", item_db.create_item_link( id ).c_str(), (float)droprate / 100);
 				strcat(atcmd_output, atcmd_output2);
 				if (++j % 3 == 0) {
@@ -8772,6 +8781,13 @@ ACMD_FUNC(whodrops)
 #endif
 				if (pc_isvip(sd)) // Display item rate increase for VIP
 					dropchance += (dropchance * battle_config.vip_drop_increase) / 100;
+
+#ifdef Pandas_Database_MobItem_FixedRatio
+				// 若严格固定掉率, 那么无视上面的等级惩罚、VIP掉率加成等计算
+				if (mobdrop_strict_droprate(id->nameid, id->mob[j].id))
+					dropchance = id->mob[j].chance;
+#endif // Pandas_Database_MobItem_FixedRatio
+
 				sprintf(atcmd_output, "- %s (%d): %02.02f%%", mob->jname.c_str(), id->mob[j].id, dropchance/100.);
 				clif_displaymessage(fd, atcmd_output);
 			}

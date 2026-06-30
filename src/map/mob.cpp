@@ -34,6 +34,9 @@
 #include "homunculus.hpp"
 #include "intif.hpp"
 #include "itemdb.hpp"
+#ifdef Pandas_Database_MobItem_FixedRatio
+#include "mobdrop.hpp"
+#endif // Pandas_Database_MobItem_FixedRatio
 #ifdef Pandas_Item_Special_Annouce
 #include "itemprops.hpp"
 #endif // Pandas_Item_Special_Annouce
@@ -3387,6 +3390,12 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type)
 				continue;
 
 			drop_rate = mob_getdroprate(src, md->db, entry->rate, drop_modifier, md);
+
+#ifdef Pandas_Database_MobItem_FixedRatio
+			// 若严格固定掉率, 那么无视上面的等级惩罚、VIP掉率加成、地图标记掉率修正等计算
+			if (mobdrop_strict_droprate(entry->nameid, md->mob_id))
+				drop_rate = entry->rate;
+#endif // Pandas_Database_MobItem_FixedRatio
 
 			// attempt to drop the item
 			if (rnd() % 10000 >= drop_rate)
@@ -6899,6 +6908,10 @@ static void mob_drop_ratio_adjust(void){
 			// Adjust rate with given algorithms
 			int32 rate = mob_drop_adjust( entry->rate, rate_adjust, battle_config.item_drop_mvp_min, battle_config.item_drop_mvp_max );
 
+#ifdef Pandas_Database_MobItem_FixedRatio
+			rate = mobdrop_fixed_droprate_adjust(entry->nameid, mob_id, rate);
+#endif // Pandas_Database_MobItem_FixedRatio
+
 			// calculate and store Max available drop chance of the MVP item
 			if( rate ){
 				item_data* id = itemdb_search( entry->nameid );
@@ -7001,6 +7014,10 @@ static void mob_drop_ratio_adjust(void){
 			}
 
 			rate = mob_drop_adjust( rate, rate_adjust, ratemin, ratemax );
+
+#ifdef Pandas_Database_MobItem_FixedRatio
+			rate = mobdrop_fixed_droprate_adjust(entry->nameid, mob_id, rate);
+#endif // Pandas_Database_MobItem_FixedRatio
 
 			// calculate and store Max available drop chance of the item
 			// but skip treasure chests.
@@ -7321,6 +7338,10 @@ static void mob_load(void)
  * Initialize monster data
  */
 void mob_db_load(bool is_reload){
+#ifdef Pandas_Database_MobItem_FixedRatio
+	mobitem_fixedratio_db.load();
+#endif // Pandas_Database_MobItem_FixedRatio
+
 	mob_load();
 }
 
@@ -7472,6 +7493,9 @@ void do_final_mob(bool is_reload){
 	mob_item_drop_ratio.clear();
 	mob_summon_db.clear();
 	map_drop_db.clear();
+#ifdef Pandas_Database_MobItem_FixedRatio
+	mobitem_fixedratio_db.clear();
+#endif // Pandas_Database_MobItem_FixedRatio
 	if( !is_reload ) {
 		mob_delayed_drops.clear();
 	}

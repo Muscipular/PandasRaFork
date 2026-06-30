@@ -376,6 +376,10 @@
 	#ifdef Pandas_Struct_Item_Data_Properties
 		#define Pandas_Database_ItemProperties
 	#endif // Pandas_Struct_Item_Data_Properties
+
+	// 是否启用魔物道具固定掉率数据库及其功能 [Sola丶小克]
+	// 通过这个数据库可以指定某个道具的全局固定掉落概率, 且能绕过等级惩罚和VIP掉率加成等机制
+	#define Pandas_Database_MobItem_FixedRatio
 #endif // Pandas_DatabaseIncrease
 
 // ============================================================================
