@@ -6511,6 +6511,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCF_ONECLICK_IDENTIFY:
 		return script_config.oneclick_identify_filter_name;
 #endif // Pandas_NpcFilter_ONECLICK_IDENTIFY
+#ifdef Pandas_NpcFilter_GUILDCREATE
+	case NPCF_GUILDCREATE:
+		return script_config.guildcreate_filter_name;
+#endif // Pandas_NpcFilter_GUILDCREATE
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;

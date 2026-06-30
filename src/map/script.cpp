@@ -313,6 +313,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcFilter_ONECLICK_IDENTIFY
 	"OnPCUseOCIdentifyFilter", //oneclick_identify_filter_name
 #endif // Pandas_NpcFilter_ONECLICK_IDENTIFY
+#ifdef Pandas_NpcFilter_GUILDCREATE
+	"OnPCGuildCreateFilter", //guildcreate_filter_name
+#endif // Pandas_NpcFilter_GUILDCREATE
 	// NPC related
 	"OnTouch_",	//ontouch_event_name (runs on first visible char to enter area, picks another char if the first char leaves)
 	"OnTouch",	//ontouch2_event_name (run whenever a char walks into the OnTouch area)

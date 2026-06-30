@@ -148,6 +148,7 @@
 			// 当玩家准备创建公会时触发过滤器 [聽風]
 			// 事件类型: Filter / 事件名称: OnPCGuildCreateFilter
 			// 常量名称: NPCF_GUILDCREATE / 变量名称: guildcreate_filter_name
+			#define Pandas_NpcFilter_GUILDCREATE
 
 			// 当玩家即将加入公会时触发过滤器 [聽風]
 			// 事件类型: Filter / 事件名称: OnPCGuildJoinFilter

@@ -1657,6 +1657,9 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcFilter_ONECLICK_IDENTIFY
 	NPCF_ONECLICK_IDENTIFY,
 #endif // Pandas_NpcFilter_ONECLICK_IDENTIFY
+#ifdef Pandas_NpcFilter_GUILDCREATE
+	NPCF_GUILDCREATE,
+#endif // Pandas_NpcFilter_GUILDCREATE
 	NPCE_MAX
 };
 

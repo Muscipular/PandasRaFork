@@ -29,6 +29,7 @@
 #include "mob.hpp"
 #include "npc.hpp"
 #include "pc.hpp"
+#include "script.hpp"
 #include "storage.hpp"
 #include "trade.hpp"
 
@@ -708,6 +709,13 @@ bool guild_create( map_session_data& sd, const char* name ){
 		clif_guild_created( sd, 3 );
 		return false;
 	}
+
+#ifdef Pandas_NpcFilter_GUILDCREATE
+	pc_setregstr(&sd, add_str("@create_guild_name$"), name);
+	if (npc_script_filter(&sd, NPCF_GUILDCREATE)) {
+		return false;
+	}
+#endif // Pandas_NpcFilter_GUILDCREATE
 
 	struct guild_member m = {};
 
