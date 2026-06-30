@@ -6230,6 +6230,14 @@ bool pc_dropitem(map_session_data *sd,int32 n,int32 amount)
 		return false;
 	}
 
+#ifdef Pandas_NpcFilter_DROPITEM
+	pc_setreg(sd, add_str("@drop_idx"), n);
+	pc_setreg(sd, add_str("@drop_itemid"), sd->inventory.u.items_inventory[n].nameid);
+	pc_setreg(sd, add_str("@drop_amount"), amount);
+	if (npc_script_filter(sd, NPCF_DROPITEM))
+		return false;
+#endif // Pandas_NpcFilter_DROPITEM
+
 	// Bypass drop restriction in map_addflooritem because we've already checked it above
 	if (!map_addflooritem(&sd->inventory.u.items_inventory[n], amount, sd->m, sd->x, sd->y, 0, 0, 0, 2|4, 0,
 		false, DIR_MAX, battle_config.item_stacking?BL_NUL:BL_ITEM))

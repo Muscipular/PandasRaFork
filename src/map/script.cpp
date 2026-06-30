@@ -331,6 +331,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcFilter_PARTYLEAVE
 	"OnPCPartyLeaveFilter", //partyleave_filter_name
 #endif // Pandas_NpcFilter_PARTYLEAVE
+#ifdef Pandas_NpcFilter_DROPITEM
+	"OnPCDropItemFilter", //dropitem_filter_name
+#endif // Pandas_NpcFilter_DROPITEM
 	// NPC related
 	"OnTouch_",	//ontouch_event_name (runs on first visible char to enter area, picks another char if the first char leaves)
 	"OnTouch",	//ontouch2_event_name (run whenever a char walks into the OnTouch area)

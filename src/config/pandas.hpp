@@ -178,6 +178,7 @@
 			// 当玩家准备丢弃或掉落道具时触发过滤器 [人鱼姬的思念]
 			// 事件类型: Filter / 事件名称: OnPCDropItemFilter
 			// 常量名称: NPCF_DROPITEM / 变量名称: dropitem_filter_name
+			#define Pandas_NpcFilter_DROPITEM
 
 			// 当玩家点击魔物墓碑时触发过滤器 [人鱼姬的思念]
 			// 事件类型: Filter / 事件名称: OnPCClickTombFilter

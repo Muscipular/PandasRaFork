@@ -222,6 +222,9 @@ struct Script_Config {
 #ifdef Pandas_NpcFilter_PARTYLEAVE
 	const char* partyleave_filter_name;
 #endif // Pandas_NpcFilter_PARTYLEAVE
+#ifdef Pandas_NpcFilter_DROPITEM
+	const char* dropitem_filter_name;
+#endif // Pandas_NpcFilter_DROPITEM
 	// NPC related
 	const char* ontouch_event_name;
 	const char* ontouch2_event_name;

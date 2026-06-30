@@ -1675,6 +1675,9 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcFilter_PARTYLEAVE
 	NPCF_PARTYLEAVE,
 #endif // Pandas_NpcFilter_PARTYLEAVE
+#ifdef Pandas_NpcFilter_DROPITEM
+	NPCF_DROPITEM,
+#endif // Pandas_NpcFilter_DROPITEM
 	NPCE_MAX
 };
 

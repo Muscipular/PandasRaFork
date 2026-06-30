@@ -6535,6 +6535,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCF_PARTYLEAVE:
 		return script_config.partyleave_filter_name;
 #endif // Pandas_NpcFilter_PARTYLEAVE
+#ifdef Pandas_NpcFilter_DROPITEM
+	case NPCF_DROPITEM:
+		return script_config.dropitem_filter_name;
+#endif // Pandas_NpcFilter_DROPITEM
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;
