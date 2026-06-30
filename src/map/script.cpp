@@ -28910,6 +28910,38 @@ BUILDIN_FUNC(batrec_rank) {
 }
 #endif // Pandas_ScriptCommand_BattleRecordRank
 
+#ifdef Pandas_ScriptCommand_BattleRecordSortout
+/* ===========================================================
+ * 指令: batrec_sortout
+ * 描述: 移除指定单位的战斗记录中交互单位已经不存在 (或下线) 的记录
+ * 用法: batrec_sortout <记录宿主的单位编号>{,<记录类型>};
+ * 返回: 该指令无论成功与否, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(batrec_sortout) {
+	struct block_list* bl = map_id2bl(script_getnum(st, 2));
+
+	if (bl == nullptr) {
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!script_hasdata(st, 3)) {
+		batrec_sortout(bl);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int32 rec_type = script_getnum(st, 3);
+
+	if (rec_type != BRT_DMG_RECEIVE && rec_type != BRT_DMG_CAUSE) {
+		ShowError("%s: The battle record type is invalid.\n", __func__);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	batrec_sortout(bl, static_cast<e_batrec_type>(rec_type));
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BattleRecordSortout
+
 #ifdef Pandas_ScriptCommand_UnlockCmd
 /* ===========================================================
  * 指令: unlockcmd
@@ -29359,6 +29391,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_BattleRecordRank
 	BUILDIN_DEF(batrec_rank, "irri??"), // 查询指定单位的战斗记录并对记录的值进行排序, 返回排行榜单 [Sola丶小克]
 #endif // Pandas_ScriptCommand_BattleRecordRank
+#ifdef Pandas_ScriptCommand_BattleRecordSortout
+	BUILDIN_DEF(batrec_sortout, "i?"), // 移除指定单位的战斗记录中交互单位已经不存在 (或下线) 的记录 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BattleRecordSortout
 #ifdef Pandas_ScriptCommand_UnlockCmd
 	BUILDIN_DEF(unlockcmd, ""), // 解锁实时事件和过滤器事件的指令限制 [Sola丶小克]
 #endif // Pandas_ScriptCommand_UnlockCmd
