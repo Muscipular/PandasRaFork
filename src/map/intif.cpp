@@ -3534,6 +3534,7 @@ static bool intif_parse_StorageReceived(int32 fd)
 
 		case TABLE_CART:
 			pc_check_available_item(sd, ITMCHK_CART);
+#ifndef Pandas_Fix_Autotrade_HeadView_Missing
 	#ifndef Pandas_Struct_Autotrade_Extend
 			if (sd->state.autotrade) {
 	#else
@@ -3551,6 +3552,17 @@ static bool intif_parse_StorageReceived(int32 fd)
 					sd->state.pending_vending_ui = false;
 				}
 			}
+#else
+			if( sd->state.prevend ){
+				clif_clearcart(sd->fd);
+				clif_cartlist(sd);
+				// Only open the vending UI, if it has not been opened already
+				if (sd->state.pending_vending_ui) {
+					clif_openvendingreq( *sd, sd->vend_skill_lv + 2 );
+					sd->state.pending_vending_ui = false;
+				}
+			}
+#endif // Pandas_Fix_Autotrade_HeadView_Missing
 			break;
 
 		case TABLE_STORAGE:

@@ -15218,6 +15218,17 @@ void pc_scdata_received(map_session_data *sd) {
 
 	if (sd->sc.getSCE(SC_SOULENERGY))
 		sd->soulball = sd->sc.getSCE(SC_SOULENERGY)->val1;
+
+#ifdef Pandas_Fix_Autotrade_HeadView_Missing
+	if (sd->state.pc_loaded && sd->state.autotrade) {
+		// 修正离线挂店的角色在服务器重启自动上线后, 头饰外观会暂时丢失的问题
+		// 将原先位于 intif.cpp -> intif_parse_StorageReceived 函数中自动开店的处理逻辑移动到这里来
+		if (sd->state.autotrade & AUTOTRADE_VENDING || sd->state.autotrade & AUTOTRADE_BUYINGSTORE) {
+			clif_parse_LoadEndAck(sd->fd, sd);
+			sd->autotrade_tid = add_timer(gettick() + battle_config.feature_autotrade_open_delay, pc_autotrade_timer, sd->id, 0);
+		}
+	}
+#endif // Pandas_Fix_Autotrade_HeadView_Missing
 }
 
 /**
