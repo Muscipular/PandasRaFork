@@ -1012,6 +1012,7 @@
 	// 只要 sd_status->dex 和 md_status->dex 的类型是无符号数值并且两者相减出现负数,
 	// 那么最终计算出来的概率值因为出现 "回绕" 而变得很大, 结果等于偷窃必定成功.
 	// 特别感谢 "最美的Secret" 指出此问题
+	#define Pandas_Fix_StealItem_Formula_Overflow
 #endif // Pandas_Bugfix
 
 // ============================================================================
