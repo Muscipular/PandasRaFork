@@ -4040,6 +4040,16 @@ int32 unit_free(block_list *bl, clr_type clrtype)
 				sd->npc_id_dynamic.clear();
 			}
 
+#ifdef Pandas_ScriptEngine_MutliStackBackup
+			while (!sd->previous_st.empty()) {
+				struct mutli_state val = sd->previous_st.back();
+				sd->previous_st.pop_back();
+				if (val.bk_st != nullptr) {
+					script_free_state(val.bk_st);
+				}
+			}
+#endif // Pandas_ScriptEngine_MutliStackBackup
+
 			sd->combos.clear();
 
 			if( sd->sc_display_count ) { /* [Ind] */

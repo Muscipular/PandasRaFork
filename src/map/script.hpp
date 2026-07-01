@@ -406,9 +406,11 @@ struct script_state {
 	struct sleep_data {
 		int32 tick,timer,charid;
 	} sleep;
+#ifndef Pandas_ScriptEngine_MutliStackBackup
 	//For backing up purposes
 	struct script_state *bk_st;
 	int32 bk_npcid;
+#endif // Pandas_ScriptEngine_MutliStackBackup
 	unsigned freeloop : 1;// used by buildin_freeloop
 #ifdef Pandas_ScriptCommand_UnlockCmd
 	unsigned unlockcmd : 1;
@@ -423,6 +425,13 @@ struct script_state {
 	bool asyncSleep;
 #endif // Pandas_ScriptCommand_QuerySql_Async
 };
+
+#ifdef Pandas_ScriptEngine_MutliStackBackup
+struct mutli_state {
+	struct script_state* bk_st;
+	int bk_npcid;
+};
+#endif // Pandas_ScriptEngine_MutliStackBackup
 
 struct script_reg {
 	int64 index;
@@ -2434,6 +2443,9 @@ TIMER_FUNC(run_script_timer);
 void script_stop_sleeptimers(int32 id);
 struct linkdb_node *script_erase_sleepdb(struct linkdb_node *n);
 void script_attach_state(struct script_state* st);
+#ifdef Pandas_ScriptEngine_MutliStackBackup
+void script_detach_state(struct script_state* st, bool dequeue_event);
+#endif // Pandas_ScriptEngine_MutliStackBackup
 void script_detach_rid(struct script_state* st);
 void run_script_main(struct script_state *st);
 

@@ -1357,6 +1357,7 @@
 
 	// 使脚本引擎能够支持备份无数个脚本堆栈 [Sola丶小克]
 	// 以此避免嵌套调用超过两层的脚本会导致程序崩溃的问题 (如: script4each -> getitem -> 成就系统)
+	#define Pandas_ScriptEngine_MutliStackBackup
 
 	// 脚本语法验证时能够考虑双字节字符与转义序列的关系 [Sola丶小克]
 	// rAthena 在大部分情况下可以正常工作, 除了中文紧挨着待转义的双引号这种情况:

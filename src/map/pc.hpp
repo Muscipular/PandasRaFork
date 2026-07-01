@@ -35,6 +35,10 @@
 #include "npc.hpp" // enum npce_event
 #endif // Pandas_Struct_Map_Session_Data_WorkInEvent
 
+#ifdef Pandas_ScriptEngine_MutliStackBackup
+#include <stack> // std::stack
+#endif // Pandas_ScriptEngine_MutliStackBackup
+
 enum AtCommandType : uint8;
 enum e_instance_mode : uint8;
 //enum e_log_chat_type : uint8;
@@ -586,6 +590,9 @@ public:
 #endif // Pandas_Fix_ScriptControl_Shop_Missing_NpcID_Error
 	int32 npc_amount;
 	struct script_state *st;
+#ifdef Pandas_ScriptEngine_MutliStackBackup
+	std::vector<mutli_state> previous_st;
+#endif // Pandas_ScriptEngine_MutliStackBackup
 	char npc_str[CHATBOX_SIZE]; // for passing npc input box text to script engine
 	int32 npc_timer_id; //For player attached npc timers. [Skotlex]
 	uint32 chatID;
