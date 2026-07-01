@@ -143,9 +143,20 @@ struct script_event_s{
 std::map<enum npce_event, std::vector<struct script_event_s>> script_event;
 
 #ifdef Pandas_NpcEvent_KILLMVP
+// Method:      npc_event_aide_killmvp
+// Description: 用来触发 OnPCKillMvpEvent 事件的辅助函数
+// Access:      public
+// Parameter:   map_session_data * sd
+// Parameter:   map_session_data * mvp_sd
+// Parameter:   mob_data * md
+// Returns:     void
+// Author:      Sola丶小克(CairoLee)  2021/04/03 20:10
 void npc_event_aide_killmvp(map_session_data* sd, map_session_data* mvp_sd, mob_data* md) {
 	nullpo_retv(md);
 
+	// 此处不再使用 nullpo_retv 对 sd 进行判断
+	// 因为被系统杀死的魔物 sd 将永远为 nullptr, 而使用 nullpo_retv 会导致终端抛出空指针错误
+	// 在这个场景下, 空指针是可预期的
 	if (sd == nullptr)
 		return;
 
@@ -6996,7 +7007,7 @@ const char *npc_get_script_event_name(int32 npce_index)
 #endif // Pandas_NpcFilter_FAVORITE_DEL
 #ifdef Pandas_NpcEvent_KILLMVP
 	case NPCE_KILLMVP:
-		return script_config.killmvp_event_name;
+		return script_config.killmvp_event_name;	// OnPCKillMvpEvent		// 当玩家杀死 MVP 魔物后触发事件
 #endif // Pandas_NpcEvent_KILLMVP
 #ifdef Pandas_NpcExpress_STATCALC
 	case NPCE_STATCALC:

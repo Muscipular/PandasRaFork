@@ -2513,7 +2513,7 @@ enum npce_event : uint8 {
 	NPCF_FAVORITE_DEL,
 #endif // Pandas_NpcFilter_FAVORITE_DEL
 #ifdef Pandas_NpcEvent_KILLMVP
-	NPCE_KILLMVP,
+	NPCE_KILLMVP,	// killmvp_event_name	// OnPCKillMvpEvent		// 当玩家杀死 MVP 魔物后触发事件
 #endif // Pandas_NpcEvent_KILLMVP
 #ifdef Pandas_NpcExpress_STATCALC
 	NPCE_STATCALC,	// statcalc_express_name	// OnPCStatCalcEvent		// 当角色能力被重新计算时触发事件
