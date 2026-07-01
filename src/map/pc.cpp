@@ -4510,6 +4510,12 @@ void pc_bonus(map_session_data *sd,int32 type,int32 val)
 				sd->bonus.itemsphealrate2 += val;
 			break;
 		default:
+		#ifdef Pandas_NpcExpress_STATCALC
+			if (running_npc_stat_calc_event) {
+				ShowWarning("pc_bonus: unknown bonus type %d %d in OnPCStatCalcEvent!\n", type, val);
+			}
+			else
+		#endif // Pandas_NpcExpress_STATCALC
 			if (current_equip_combo_pos > 0) {
 				ShowWarning("pc_bonus: unknown bonus type %d %d in a combo with item #%u\n", type, val, sd->inventory_data[pc_checkequip( sd, current_equip_combo_pos )]->nameid);
 			}
@@ -5180,6 +5186,12 @@ void pc_bonus2(map_session_data *sd,int32 type,int32 type2,int32 val)
 		pc_bonus_itembonus( sd->itemgroupsphealrate, type2, val, false );
 		break;
 	default:
+	#ifdef Pandas_NpcExpress_STATCALC
+		if (running_npc_stat_calc_event) {
+			ShowWarning("pc_bonus2: unknown bonus type %d %d %d in OnPCStatCalcEvent!\n", type, type2, val);
+		}
+		else
+	#endif // Pandas_NpcExpress_STATCALC
 		if (current_equip_combo_pos > 0) {
 			ShowWarning("pc_bonus2: unknown bonus type %d %d %d in a combo with item #%u\n", type, type2, val, sd->inventory_data[pc_checkequip( sd, current_equip_combo_pos )]->nameid);
 		} 
@@ -5324,6 +5336,12 @@ void pc_bonus3(map_session_data *sd,int32 type,int32 type2,int32 type3,int32 val
 		sd->norecover_state_race[type2].tick = val;
 		break;
 	default:
+	#ifdef Pandas_NpcExpress_STATCALC
+		if (running_npc_stat_calc_event) {
+			ShowWarning("pc_bonus3: unknown bonus type %d %d %d %d in OnPCStatCalcEvent!\n", type, type2, type3, val);
+		}
+		else
+	#endif // Pandas_NpcExpress_STATCALC
 		if (current_equip_combo_pos > 0) {
 			ShowWarning("pc_bonus3: unknown bonus type %d %d %d %d in a combo with item #%u\n", type, type2, type3, val, sd->inventory_data[pc_checkequip( sd, current_equip_combo_pos )]->nameid);
 		}
@@ -5411,6 +5429,12 @@ void pc_bonus4(map_session_data *sd,int32 type,int32 type2,int32 type3,int32 typ
 		break;
 
 	default:
+	#ifdef Pandas_NpcExpress_STATCALC
+		if (running_npc_stat_calc_event) {
+			ShowWarning("pc_bonus4: unknown bonus type %d %d %d %d %d in OnPCStatCalcEvent!\n", type, type2, type3, type4, val);
+		}
+		else
+	#endif // Pandas_NpcExpress_STATCALC
 		if (current_equip_combo_pos > 0) {
 			ShowWarning("pc_bonus4: unknown bonus type %d %d %d %d %d in a combo with item #%u\n", type, type2, type3, type4, val, sd->inventory_data[pc_checkequip( sd, current_equip_combo_pos )]->nameid);
 		}
@@ -5464,6 +5488,12 @@ void pc_bonus5(map_session_data *sd,int32 type,int32 type2,int32 type3,int32 typ
 		break;
 
 	default:
+	#ifdef Pandas_NpcExpress_STATCALC
+		if (running_npc_stat_calc_event) {
+			ShowWarning("pc_bonus5: unknown bonus type %d %d %d %d %d %d in OnPCStatCalcEvent!\n", type, type2, type3, type4, type5, val);
+		}
+		else
+	#endif // Pandas_NpcExpress_STATCALC
 		if (current_equip_combo_pos > 0) {
 			ShowWarning("pc_bonus5: unknown bonus type %d %d %d %d %d %d in a combo with item #%u\n", type, type2, type3, type4, type5, val, sd->inventory_data[pc_checkequip( sd, current_equip_combo_pos )]->nameid);
 		}

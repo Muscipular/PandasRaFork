@@ -6927,6 +6927,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCE_KILLMVP:
 		return script_config.killmvp_event_name;
 #endif // Pandas_NpcEvent_KILLMVP
+#ifdef Pandas_NpcExpress_STATCALC
+	case NPCE_STATCALC:
+		return script_config.statcalc_express_name;	// OnPCStatCalcEvent		// 当角色能力被重新计算时触发事件
+#endif // Pandas_NpcExpress_STATCALC
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;
@@ -7003,6 +7007,20 @@ void npc_clear_pathlist(void) {
 
 	dbi_destroy(path_list);
 }
+
+#ifdef Pandas_NpcExpress_STATCALC
+static int npc_status_calc_sub(map_session_data* sd, va_list va)
+{
+	enum e_status_calc_opt opt;
+	opt = (enum e_status_calc_opt)va_arg(va, int);
+
+	if (sd) {
+		status_calc_pc(sd, opt);
+		return 1;
+	}
+	return 0;
+}
+#endif // Pandas_NpcExpress_STATCALC
 
 //Clear then reload npcs files
 int32 npc_reload(void) {
@@ -7115,6 +7133,11 @@ int32 npc_reload(void) {
 #if PACKETVER >= 20131223
 	npc_market_checkall();
 #endif
+#ifdef Pandas_NpcExpress_STATCALC
+	// reloadscript 重建事件缓存后, 若存在 OnPCStatCalcEvent, 重新计算在线角色能力以让新事件立即生效.
+	if (script_event[NPCE_STATCALC].size())
+		map_foreachpc(npc_status_calc_sub, SCO_NONE);
+#endif // Pandas_NpcExpress_STATCALC
 	return 0;
 }
 

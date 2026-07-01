@@ -252,6 +252,9 @@ struct Script_Config {
 #ifdef Pandas_NpcEvent_KILLMVP
 	const char* killmvp_event_name;
 #endif // Pandas_NpcEvent_KILLMVP
+#ifdef Pandas_NpcExpress_STATCALC
+	const char* statcalc_express_name;	// NPCE_STATCALC	// OnPCStatCalcEvent	// 当角色能力被重新计算时触发事件
+#endif // Pandas_NpcExpress_STATCALC
 	// NPC related
 	const char* ontouch_event_name;
 	const char* ontouch2_event_name;

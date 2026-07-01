@@ -2506,6 +2506,9 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcEvent_KILLMVP
 	NPCE_KILLMVP,
 #endif // Pandas_NpcEvent_KILLMVP
+#ifdef Pandas_NpcExpress_STATCALC
+	NPCE_STATCALC,	// statcalc_express_name	// OnPCStatCalcEvent		// 当角色能力被重新计算时触发事件
+#endif // Pandas_NpcExpress_STATCALC
 	NPCE_MAX
 };
 
