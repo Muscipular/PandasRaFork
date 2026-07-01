@@ -298,7 +298,11 @@ int32 login_mmo_auth_new(const char* userid, const char* pass, const char sex, c
 
 	if( DIFF_TICK(tick, new_reg_tick) > 0 ) {// Update the registration check.
 		num_regs = 0;
+#ifndef Pandas_Fix_Potential_Arithmetic_Overflow
 		new_reg_tick = tick + login_config.time_allowed*1000;
+#else
+		new_reg_tick = tick + (t_tick)login_config.time_allowed * 1000;
+#endif // Pandas_Fix_Potential_Arithmetic_Overflow
 	}
 	++num_regs;
 

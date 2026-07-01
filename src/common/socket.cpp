@@ -1302,8 +1302,13 @@ static TIMER_FUNC(connect_check_clear){
 		prev_hist = &root;
 		root.next = hist = connect_history[i];
 		while( hist ){
+#ifndef Pandas_Fix_Potential_Arithmetic_Overflow
 			if( (!hist->ddos && DIFF_TICK(tick,hist->tick) > ddos_interval*3) ||
 					(hist->ddos && DIFF_TICK(tick,hist->tick) > ddos_autoreset) )
+#else
+			if ((!hist->ddos && DIFF_TICK(tick, hist->tick) > (t_tick)ddos_interval * 3) ||
+				(hist->ddos && DIFF_TICK(tick, hist->tick) > ddos_autoreset))
+#endif // Pandas_Fix_Potential_Arithmetic_Overflow
 			{// Remove connection history
 				prev_hist->next = hist->next;
 				aFree(hist);

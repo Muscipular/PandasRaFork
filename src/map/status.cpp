@@ -1347,7 +1347,11 @@ int32 status_set_maxhp(block_list *bl, uint32 maxhp, int32 flag)
 	if (maxhp == status->max_hp)
 		return 0;
 
+#ifndef Pandas_Fix_Potential_Arithmetic_Overflow
 	heal = maxhp - status->max_hp;
+#else
+	heal = (int32)maxhp - (int32)status->max_hp;
+#endif // Pandas_Fix_Potential_Arithmetic_Overflow
 	status->max_hp = maxhp;
 
 	if (heal > 0)
