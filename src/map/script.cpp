@@ -13021,7 +13021,11 @@ BUILDIN_FUNC(announce)
 	int32         fontAlign = script_hasdata(st,7) ? script_getnum(st,7) : 0;     // default fontAlign
 	int32         fontY     = script_hasdata(st,8) ? script_getnum(st,8) : 0;     // default fontY
 
+#ifndef Pandas_ScriptCommand_Announce
 	if (flag&(BC_TARGET_MASK|BC_SOURCE_MASK)) // Broadcast source or broadcast region defined
+#else
+	if (flag&(BC_TARGET_MASK|BC_SOURCE_MASK|BC_NAME)) // Broadcast source or broadcast region defined
+#endif // Pandas_ScriptCommand_Announce
 	{
 		send_target target;
 		block_list *bl;
@@ -13048,10 +13052,28 @@ BUILDIN_FUNC(announce)
 			default:		target = ALL_CLIENT;	break; // BC_ALL
 		}
 
+#ifndef Pandas_ScriptCommand_Announce
 		if (fontColor)
 			clif_broadcast2(bl, mes, (int32)strlen(mes)+1, strtol(fontColor, (char **)nullptr, 0), fontType, fontSize, fontAlign, fontY, target);
 		else
 			clif_broadcast(bl, mes, (int32)strlen(mes)+1, flag&BC_COLOR_MASK, target);
+#else
+		if ((flag & BC_NAME) != 0 && bl != nullptr && bl->type == BL_PC) {
+			char output[CHAT_SIZE_MAX] = { 0 };
+
+			if (!fontColor)
+				fontColor = "0xFFFF00";
+
+			sprintf(output, "%06lx%s", strtol(fontColor, (char**)nullptr, 0), mes);
+			clif_broadcast(bl, output, (int32)strlen(output) + 1, flag, target);
+		}
+		else {
+			if (fontColor)
+				clif_broadcast2(bl, mes, (int32)strlen(mes) + 1, strtol(fontColor, (char**)nullptr, 0), fontType, fontSize, fontAlign, fontY, target);
+			else
+				clif_broadcast(bl, mes, (int32)strlen(mes) + 1, flag & BC_COLOR_MASK, target);
+		}
+#endif // Pandas_ScriptCommand_Announce
 	}
 	else
 	{

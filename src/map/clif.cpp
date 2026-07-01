@@ -7023,6 +7023,17 @@ void clif_broadcast( const block_list* bl, const char* mes, size_t len, int32 ty
 	p->packetType = HEADER_ZC_BROADCAST;
 	p->PacketLength = sizeof( *p );
 
+#ifdef Pandas_ScriptCommand_Announce
+	if ((type & BC_NAME) != 0 && bl != nullptr && bl->type == BL_PC) {
+		int16 length = static_cast<int16>(NAME_LENGTH + 4);
+
+		// If the message starts with "micc", the following string is treated as the sender name.
+		sprintf(p->message, "micc%s", BL_CAST(BL_PC, bl)->status.name);
+		strncpy(&p->message[length], mes, len);
+		p->PacketLength += static_cast<decltype(p->PacketLength)>(length + len);
+	}
+	else
+#endif // Pandas_ScriptCommand_Announce
 	if( ( type&BC_BLUE ) != 0 ){
 		// If there's "blue" at the beginning of the message, game client will display it in blue instead of yellow.
 		const char* color = "blue";
