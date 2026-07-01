@@ -964,6 +964,7 @@
 
 	// 修正 inter_server.yml 中的 Max 超大时没有妥善处理的问题 [Sola丶小克]
 	// 启用后 Max 字段的值最多不能超过 MAX_STORAGE 的值
+	#define Pandas_Fix_INTER_SERVER_DB_Field_Verify
 
 	// 修正特殊情况下 bonus_script 拥有 BSF_REM_ON_LOGOUT 标记位,
 	// 也会在重新进入游戏时生效的问题 [Sola丶小克]
