@@ -2684,6 +2684,9 @@ static void mob_item_drop(mob_data *md, std::shared_ptr<s_item_drop_list>& dlist
 		&& (drop_rate <= sd->state.autoloot || pc_isautolooting(sd, ditem->item_data.nameid))
 		&& (flag ? ((battle_config.homunculus_autoloot ? (battle_config.hom_idle_no_share == 0 || !pc_isidle_hom(sd)) : 0) || (battle_config.mercenary_autoloot ? (battle_config.mer_idle_no_share == 0 || !pc_isidle_mer(sd)) : 0)) :
 			(battle_config.idle_no_autoloot == 0 || DIFF_TICK(last_tick, sd->idletime) < battle_config.idle_no_autoloot));
+#ifdef Pandas_MapFlag_NoAutoLoot
+	test_autoloot = test_autoloot && (sd && sd->bl.m >= 0 && !map_getmapflag(sd->bl.m, MF_NOAUTOLOOT));
+#endif // Pandas_MapFlag_NoAutoLoot
 #ifdef AUTOLOOT_DISTANCE
 		test_autoloot = test_autoloot && sd->m == md->m
 		&& check_distance_blxy(sd, dlist->x, dlist->y, AUTOLOOT_DISTANCE);

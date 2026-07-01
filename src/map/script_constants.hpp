@@ -772,6 +772,9 @@
 #ifdef Pandas_MapFlag_MobInfo
 	export_constant(MF_MOBINFO);
 #endif // Pandas_MapFlag_MobInfo
+#ifdef Pandas_MapFlag_NoAutoLoot
+	export_constant(MF_NOAUTOLOOT);
+#endif // Pandas_MapFlag_NoAutoLoot
 #ifdef Pandas_MapFlag_NoCapture
 	export_constant(MF_NOCAPTURE);
 #endif // Pandas_MapFlag_NoCapture
