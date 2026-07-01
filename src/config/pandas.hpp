@@ -1751,6 +1751,7 @@
 	#define Pandas_ScriptCommand_EquipIdx
 	// 是否启用 itemexists 脚本指令 [Sola丶小克]
 	// 确认物品数据库中是否存在指定物品 (该指令有一个用于兼容的别名: existitem)
+	#define Pandas_ScriptCommand_ItemExists
 	// 是否启用 renttime 脚本指令 [Sola丶小克]
 	// 增加/减少指定位置装备的租赁时间 (该指令有一个用于兼容的别名: resume)
 	// 是否启用 getequipidx 脚本指令 [Sola丶小克]

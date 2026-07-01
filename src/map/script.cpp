@@ -30975,6 +30975,33 @@ BUILDIN_FUNC(equipidx) {
 }
 #endif // Pandas_ScriptCommand_EquipIdx
 
+#ifdef Pandas_ScriptCommand_ItemExists
+/* ===========================================================
+ * 指令: itemexists
+ * 描述: 确认物品数据库中是否存在指定物品
+ * 用法: itemexists <物品编号/"物品名称">;
+ * 返回: 若物品指定的道具编号不存在于物品数据库中则返回 0,
+ *      若物品存在且可堆叠则返回正数物品编号, 不可堆叠则返回负数物品编号
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(itemexists) {
+	std::shared_ptr<item_data> id;
+
+	if (script_isstring(st, 2))
+		id = item_db.searchname(script_getstr(st, 2));
+	else
+		id = item_db.find(script_getnum(st, 2));
+
+	if (id == nullptr) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushint(st, (itemdb_isstackable2(id.get()) ? id->nameid : -(int64)id->nameid));
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_ItemExists
+
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 /* ===========================================================
  * 指令: getmapspawns
@@ -31815,6 +31842,10 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(equipidx, "i?"), // 穿戴指定背包序号的道具 [Sola丶小克]
 	BUILDIN_DEF2(equipidx, "equipinventory", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
 #endif // Pandas_ScriptCommand_EquipIdx
+#ifdef Pandas_ScriptCommand_ItemExists
+	BUILDIN_DEF(itemexists, "v"), // 确认物品数据库中是否存在指定物品 [Sola丶小克]
+	BUILDIN_DEF2(itemexists, "existitem", "v"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_ItemExists
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMapSpawns
