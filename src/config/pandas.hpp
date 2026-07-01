@@ -849,6 +849,9 @@
 	// 修正部分函数没有验证传入参数可能导致的崩溃问题 [Sola丶小克]
 	#define Pandas_Crashfix_FunctionParams_Verify
 
+	// 修正部分空指针访问可能导致的崩溃问题 [Sola丶小克]
+	#define Pandas_Crashfix_Prevent_NullPointer
+
 	// 修正在未开启大乐透功能的情况下启动服务端, 再重新打开大乐透功能
 	// 并用 @reloadbattleconf 使之立刻生效之后, 点击大乐透按钮会导致地图服务器崩溃的问题 [Sola丶小克]
 

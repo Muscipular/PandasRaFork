@@ -16329,6 +16329,11 @@ void clif_Mail_setattachment( map_session_data* sd, int32 index, int32 amount, u
 				continue;
 			}
 
+#ifdef Pandas_Crashfix_Prevent_NullPointer
+				if( !sd->inventory_data[sd->mail.item[i].index] ){
+					return; // 直接放弃发送封包
+				}
+#endif // Pandas_Crashfix_Prevent_NullPointer
 			p.weight += sd->mail.item[i].amount * ( sd->inventory_data[sd->mail.item[i].index]->weight / 10 );
 		}
 		p.favorite = ( item->favorite != 0 ) ? 1 : 0;

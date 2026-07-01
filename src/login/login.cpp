@@ -320,6 +320,10 @@ int32 login_mmo_auth_new(const char* userid, const char* pass, const char sex, c
  *	x: acc state (TODO document me deeper)
  */
 int32 login_mmo_auth(struct login_session_data* sd, bool isServer) {
+	#ifdef Pandas_Crashfix_Prevent_NullPointer
+		if (!sd) return 0;
+	#endif // Pandas_Crashfix_Prevent_NullPointer
+
 	struct mmo_account acc;
 
 	char ip[16];

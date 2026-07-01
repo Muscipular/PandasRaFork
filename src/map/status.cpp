@@ -5394,6 +5394,9 @@ void status_calc_regen(block_list *bl, struct status_data *status, struct regen_
 		// Only players have skill/sitting skill regen for now.
 		sregen = regen->sregen;
 
+#ifdef Pandas_Crashfix_Prevent_NullPointer
+		if (sregen) {
+#endif // Pandas_Crashfix_Prevent_NullPointer
 		val = 0;
 		if( (skill=pc_checkskill(sd,SM_RECOVERY)) > 0 )
 			val += skill*5 + skill*status->max_hp/500;
@@ -5415,9 +5418,15 @@ void status_calc_regen(block_list *bl, struct status_data *status, struct regen_
 
 		sregen->sp = cap_value(val, 0, SHRT_MAX);
 
+#ifdef Pandas_Crashfix_Prevent_NullPointer
+		}
+#endif // Pandas_Crashfix_Prevent_NullPointer
 		// Skill-related recovery (only when sit)
 		sregen = regen->ssregen;
 
+#ifdef Pandas_Crashfix_Prevent_NullPointer
+		if (sregen) {
+#endif // Pandas_Crashfix_Prevent_NullPointer
 		val = 0;
 		if( (skill=pc_checkskill(sd,MO_SPIRITSRECOVERY)) > 0 )
 			val += skill*4 + skill*status->max_hp/500;
@@ -5435,6 +5444,10 @@ void status_calc_regen(block_list *bl, struct status_data *status, struct regen_
 		if( (skill=pc_checkskill(sd,MO_SPIRITSRECOVERY)) > 0 )
 			val += skill*2 + skill*status->max_sp/500;
 		sregen->sp = cap_value(val, 0, SHRT_MAX);
+
+#ifdef Pandas_Crashfix_Prevent_NullPointer
+		}
+#endif // Pandas_Crashfix_Prevent_NullPointer
 	}
 
 	if( bl->type == BL_HOM ) {
@@ -6928,8 +6941,13 @@ void status_calc_bl_(block_list* bl, std::bitset<SCB_MAX> flag, uint8 opt)
 	} else if( bl->type == BL_ELEM ) {
 		TBL_ELEM* ed = BL_CAST(BL_ELEM, bl);
 
+#ifndef Pandas_Crashfix_Prevent_NullPointer
 		if (!ed->master)
 			return;
+#else
+		if (!ed || !ed->master)
+			return;
+#endif // Pandas_Crashfix_Prevent_NullPointer
 
 		if( b_status.max_hp != status->max_hp )
 			clif_elemental_updatestatus(*ed->master, SP_MAXHP);

@@ -4523,6 +4523,9 @@ void script_attach_state(struct script_state* st){
  *------------------------------------------*/
 void run_script_main(struct script_state *st)
 {
+#ifdef Pandas_Crashfix_Prevent_NullPointer
+	nullpo_retv(st);
+#endif // Pandas_Crashfix_Prevent_NullPointer
 	int32 cmdcount = script_config.check_cmdcount;
 	int32 gotocount = script_config.check_gotocount;
 	TBL_PC *sd;
