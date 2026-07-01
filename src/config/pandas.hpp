@@ -1351,6 +1351,7 @@
 		// 当玩家往聊天框发送信息时触发实时事件 [人鱼姬的思念]
 		// 事件类型: Express / 事件名称: OnPCTalkExpress
 		// 常量名称: NPCX_PC_TALK / 变量名称: pc_talk_express_name
+		#define Pandas_NpcExpress_PC_TALK
 
 		// 当玩家受到伤害并即将进行结算时触发实时事件 [人鱼姬的思念]
 		// 事件类型: Express / 事件名称: OnPCHarmedExpress
