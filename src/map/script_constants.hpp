@@ -835,6 +835,9 @@
 #ifdef Pandas_MapFlag_NoAttack
 	export_constant(MF_NOATTACK);
 #endif // Pandas_MapFlag_NoAttack
+#ifdef Pandas_MapFlag_NoAttack2
+	export_constant(MF_NOATTACK2);
+#endif // Pandas_MapFlag_NoAttack2
 	export_constant(MF_NOBUYINGSTORE);
 	export_constant(MF_NODYNAMICNPC);
 	export_constant(MF_NOBANK);
