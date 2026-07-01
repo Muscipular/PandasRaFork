@@ -977,6 +977,7 @@
 
 	// 修正 sprintf 脚本指令无法格式化 int64 数值的问题 [Sola丶小克]
 	// 注意: 即使启用此选项, 当你需要格式化 int64 的数值时依然需要使用 %lld 而不是 %d
+	#define Pandas_Fix_Sprintf_ScriptCommand_Unsupport_Int64
 
 	// 修正 setunitdata 对魔物的部分属性调整会继承到魔物下一次重生的问题 [Sola丶小克]
 	// 当一个魔物是由自然刷怪点刷新出来的话, 杀死它并不会导致 md 的数据被清空,
