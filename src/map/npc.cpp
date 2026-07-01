@@ -3668,6 +3668,21 @@ static int32 npc_unload_ev(DBKey key, DBData *data, va_list ap)
 	char* npcname = va_arg(ap, char *);
 
 	if(strcmp(ev->nd->exname,npcname)==0){
+#ifdef Pandas_Crashfix_EventDatabase_Clean_Synchronize
+		// 由于 script_event 中的内容是 ev_db 提供的
+		// 因此当移除 ev_db 中的内容时, 需要将 script_event 中的内容一起移除掉
+		for (auto& mapit : script_event) {
+			for (auto vecit = mapit.second.begin(); vecit != mapit.second.end(); ) {
+				if (vecit->event && vecit->event->nd) {
+					if (strcmp(npcname, vecit->event->nd->exname) == 0) {
+						vecit = mapit.second.erase(vecit);
+						continue;
+					}
+				}
+				vecit++;
+			}
+		}
+#endif // Pandas_Crashfix_EventDatabase_Clean_Synchronize
 		db_remove(ev_db, key);
 		return 1;
 	}
@@ -6918,6 +6933,12 @@ int32 npc_reload(void) {
 
 	db_clear(npc_path_db);
 
+#ifdef Pandas_Crashfix_EventDatabase_Clean_Synchronize
+	// 即将清空 ev_db, 同时也得把 script_event 清空掉 [Sola丶小克]
+	// 因为 ev_db 清空后 script_event 的值已经无效了, 被其他环节利用会导致崩溃
+	script_event.clear();
+#endif // Pandas_Crashfix_EventDatabase_Clean_Synchronize
+
 	db_clear(npcname_db);
 	db_clear(ev_db);
 
@@ -7117,6 +7138,11 @@ bool npc_remove_mob_spawns(const char* path) {
 }
 
 void do_clear_npc(void) {
+#ifdef Pandas_Crashfix_EventDatabase_Clean_Synchronize
+	// 即将清空 ev_db, 同时也得把 script_event 清空掉 [Sola丶小克]
+	// 因为 ev_db 清空后 script_event 的值已经无效了, 被其他环节利用会导致崩溃
+	script_event.clear();
+#endif // Pandas_Crashfix_EventDatabase_Clean_Synchronize
 	db_clear(npcname_db);
 	db_clear(ev_db);
 }
