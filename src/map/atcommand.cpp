@@ -11736,31 +11736,6 @@ ACMD_FUNC(crashtest) {
 }
 #endif // Pandas_AtCommand_Crashtest
 
-#ifdef Pandas_AtCommand_Suspend
-/* ===========================================================
- * 指令: suspend
- * 描述: 使角色进入离线挂机模式, 维持当前的全部状态 (朝向, 站立与否)
- * 用法: @suspend
- * 作者: Sola丶小克
- * -----------------------------------------------------------*/
-ACMD_FUNC(suspend) {
-	nullpo_retr(-1, sd);
-
-	if (pc_isdead(sd)) {
-		clif_displaymessage(fd, msg_txt_cn(sd, 81)); // You cannot enter suspend mode when dead.
-		return -1;
-	}
-
-	if (map_flag_vs2(sd->m)) {
-		clif_displaymessage(fd, msg_txt_cn(sd, 82)); // You cannot enter suspend mode on this map.
-		return -1;
-	}
-
-	suspend_active(sd, SUSPEND_MODE_OFFLINE);
-	return 0;
-}
-#endif // Pandas_AtCommand_Suspend
-
 #ifdef Pandas_AtCommand_Title
 /* ===========================================================
  * 指令: title
@@ -11795,6 +11770,56 @@ ACMD_FUNC(title) {
 #endif
 }
 #endif // Pandas_AtCommand_Title
+
+#ifdef Pandas_AtCommand_Suspend
+/* ===========================================================
+ * 指令: suspend
+ * 描述: 使角色进入离线挂机模式, 维持当前的全部状态 (朝向, 站立与否)
+ * 用法: @suspend
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(suspend) {
+	nullpo_retr(-1, sd);
+
+	if (pc_isdead(sd)) {
+		clif_displaymessage(fd, msg_txt_cn(sd, 81)); // You cannot enter suspend mode when dead.
+		return -1;
+	}
+
+	if (map_flag_vs2(sd->m)) {
+		clif_displaymessage(fd, msg_txt_cn(sd, 82)); // You cannot enter suspend mode on this map.
+		return -1;
+	}
+
+	suspend_active(sd, SUSPEND_MODE_OFFLINE);
+	return 0;
+}
+#endif // Pandas_AtCommand_Suspend
+
+#ifdef Pandas_AtCommand_AFK
+/* ===========================================================
+ * 指令: afk
+ * 描述: 使角色进入离开模式, 角色将会坐到地上并自动使用 AFK 头饰
+ * 用法: @afk
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(afk) {
+	nullpo_retr(-1, sd);
+
+	if (pc_isdead(sd)) {
+		clif_displaymessage(fd, msg_txt_cn(sd, 83)); // You cannot enter afk mode when dead.
+		return -1;
+	}
+
+	if (map_flag_vs2(sd->m)) {
+		clif_displaymessage(fd, msg_txt_cn(sd, 84)); // You cannot enter afk mode on this map.
+		return -1;
+	}
+
+	suspend_active(sd, SUSPEND_MODE_AFK);
+	return 0;
+}
+#endif // Pandas_AtCommand_AFK
 
 #ifdef Pandas_AtCommand_Aura
 /* ===========================================================
@@ -11874,12 +11899,15 @@ void atcommand_basecommands(void) {
 #ifdef Pandas_AtCommand_Crashtest
 		ACMD_DEF(crashtest),			// 执行崩溃测试, 在比较严格的环境上故意触发地图服务器崩溃 [Sola丶小克]
 #endif // Pandas_AtCommand_Crashtest
-#ifdef Pandas_AtCommand_Suspend
-		ACMD_DEF(suspend),				// 使角色进入离线挂机模式 [Sola丶小克]
-#endif // Pandas_AtCommand_Suspend
 #ifdef Pandas_AtCommand_Title
 		ACMD_DEF(title),				// 给角色设置一个指定的称号ID [Sola丶小克]
 #endif // Pandas_AtCommand_Title
+#ifdef Pandas_AtCommand_Suspend
+		ACMD_DEF(suspend),				// 使角色进入离线挂机模式 [Sola丶小克]
+#endif // Pandas_AtCommand_Suspend
+#ifdef Pandas_AtCommand_AFK
+		ACMD_DEF(afk),					// 使角色进入离开模式 [Sola丶小克]
+#endif // Pandas_AtCommand_AFK
 #ifdef Pandas_AtCommand_Aura
 		ACMD_DEF(aura),					// 激活指定的光环组合 [Sola丶小克]
 #endif // Pandas_AtCommand_Aura
