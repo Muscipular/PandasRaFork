@@ -30595,6 +30595,62 @@ BUILDIN_FUNC(battleignore) {
 }
 #endif // Pandas_ScriptCommand_BattleIgnore
 
+#ifdef Pandas_ScriptCommand_GetHotkey
+/* ===========================================================
+ * 指令: gethotkey
+ * 描述: 获取指定快捷键位置当前的信息
+ * 用法: gethotkey <快捷键位置编号>{,<要获取的数据类型>};
+ * 返回: 若携带 <要获取的数据类型> 参数时, 发生错误将返回 -1, 成功则返回查询的值;
+		不携带 <要获取的数据类型> 参数时, 发生错误将返回 -1, 成功则将信息保存到变量并返回 1
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(gethotkey) {
+	map_session_data *sd = nullptr;
+
+	if (!script_rid2sd(sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int hotkey_idx = script_getnum(st, 2);
+	if (hotkey_idx < 0 || hotkey_idx >= MAX_HOTKEYS_DB) {
+		ShowError("buildin_gethotkey: hotkey index %d is out of range (0..%d).\n", hotkey_idx, MAX_HOTKEYS_DB - 1);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (script_hasdata(st, 3)) {
+		if (!script_isint(st, 3)) {
+			ShowError("buildin_gethotkey: request date type must be a integer value.\n");
+			script_pushint(st, -1);
+			return SCRIPT_CMD_SUCCESS;
+		}
+
+		switch (script_getnum(st, 3)) {
+		case 0:
+			script_pushint(st, sd->status.hotkeys[hotkey_idx].type);
+			break;
+		case 1:
+			script_pushint(st, sd->status.hotkeys[hotkey_idx].id);
+			break;
+		case 2:
+			script_pushint(st, sd->status.hotkeys[hotkey_idx].lv);
+			break;
+		default:
+			ShowError("buildin_gethotkey: request date type %d is out of range (0..2).\n", script_getnum(st, 3));
+			script_pushint(st, -1);
+		}
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	pc_setreg(sd, add_str("@hotkey_type"), (int)sd->status.hotkeys[hotkey_idx].type);
+	pc_setreg(sd, add_str("@hotkey_id"), (int)sd->status.hotkeys[hotkey_idx].id);
+	pc_setreg(sd, add_str("@hotkey_lv"), (int)sd->status.hotkeys[hotkey_idx].lv);
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetHotkey
+
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 /* ===========================================================
  * 指令: getmapspawns
@@ -31402,6 +31458,10 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_BattleIgnore
 	BUILDIN_DEF(battleignore, "i?"), // 将角色设置为魔物免战状态, 避免被魔物攻击 [Sola丶小克]
 #endif // Pandas_ScriptCommand_BattleIgnore
+#ifdef Pandas_ScriptCommand_GetHotkey
+	BUILDIN_DEF(gethotkey, "i?"), // 获取指定快捷键位置当前的信息 [Sola丶小克]
+	BUILDIN_DEF2(gethotkey, "get_hotkey", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_GetHotkey
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMapSpawns

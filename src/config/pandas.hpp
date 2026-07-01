@@ -1723,6 +1723,7 @@
 	#define Pandas_ScriptCommand_BattleIgnore
 	// 是否启用 gethotkey 脚本指令 [Sola丶小克]
 	// 获取指定快捷键位置当前的信息 (该指令有一个用于兼容的别名: get_hotkey)
+	#define Pandas_ScriptCommand_GetHotkey
 	// 是否启用 sethotkey 脚本指令 [Sola丶小克]
 	// 设置指定快捷键位置的信息 (该指令有一个用于兼容的别名: set_hotkey)
 	// 是否启用 showvend 脚本指令 [Jian916]
