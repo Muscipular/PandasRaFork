@@ -581,6 +581,9 @@ public:
 #ifdef Pandas_Fix_Prompt_Cancel_Combine_Close_Error
 	int npc_menu_npcid;
 #endif // Pandas_Fix_Prompt_Cancel_Combine_Close_Error
+#ifdef Pandas_Fix_ScriptControl_Shop_Missing_NpcID_Error
+	int callshop_master_npcid;
+#endif // Pandas_Fix_ScriptControl_Shop_Missing_NpcID_Error
 	int32 npc_amount;
 	struct script_state *st;
 	char npc_str[CHATBOX_SIZE]; // for passing npc input box text to script engine

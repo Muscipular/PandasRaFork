@@ -999,6 +999,7 @@
 	// 只要在 npcshopattach + callshop 之前调用了一个 mes 并且不 close 它,
 	// 那么当玩家完成商店中的交易操作后就会出现 npc_scriptcont 报错.
 	// 特别感谢 "HongShin" 指出此问题
+	#define Pandas_Fix_ScriptControl_Shop_Missing_NpcID_Error
 
 	// 修正启用 use_sql_db 之后终端加载信息出现来源数据表为 (null) 的问题 [Sola丶小克]
 
