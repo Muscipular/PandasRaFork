@@ -31052,6 +31052,75 @@ BUILDIN_FUNC(bonus_script_getid) {
 }
 #endif // Pandas_ScriptCommand_BonusScriptGetId
 
+#ifdef Pandas_ScriptCommand_BonusScriptInfo
+/* ===========================================================
+ * 指令: bonus_script_info
+ * 描述: 查询指定效果脚本的相关信息
+ * 用法: bonus_script_info <效果脚本编号>,<查询类型>{,<角色编号>};
+ * 返回: 直接返回所查询的结果值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(bonus_script_info) {
+	TBL_PC* sd = nullptr;
+	if (!script_charid2sd(4, sd)) {
+		script_pushint(st, -2);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	uint64 bonus_id = script_getnum64(st, 2);
+	int32 query_type = script_getnum(st, 3);
+
+	bool found = false;
+	struct linkdb_node* node = nullptr;
+	struct s_bonus_script_entry* entry = nullptr;
+
+	if ((node = sd->bonus_script.head)) {
+		while (node) {
+			struct linkdb_node* next = node->next;
+			entry = (struct s_bonus_script_entry*)node->data;
+			if (bonus_id == entry->bonus_id) {
+				found = true;
+				break;
+			}
+			node = next;
+		}
+	}
+
+	if (!found) {
+		script_pushint(st, -3);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	switch (query_type) {
+		case 0: // 效果脚本代码
+			script_pushstrcopy(st, StringBuf_Value(entry->script_buf));
+			break;
+		case 1: // 标记位
+			script_pushint(st, entry->flag);
+			break;
+		case 2: // 状态图标编号
+			script_pushint(st, entry->icon);
+			break;
+		case 3: // 类型
+			script_pushint(st, entry->type);
+			break;
+		case 4: // 剩余时间 (毫秒)
+			if (entry->tid == INVALID_TIMER) {
+				script_pushint(st, -1);
+				break;
+			}
+			script_pushint(st, DIFF_TICK(get_timer(entry->tid)->tick, gettick()));
+			break;
+		default:
+			ShowWarning("buildin_bonus_script_info: The type should be in range 0-%d, currently type is: %d.\n", 4, query_type);
+			script_pushint(st, -4);
+			break;
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BonusScriptInfo
+
 #ifdef Pandas_ScriptCommand_MobRemove
 /* ===========================================================
  * 指令: mobremove
@@ -33264,6 +33333,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_BonusScriptGetId
 	BUILDIN_DEF(bonus_script_getid, "sr?"), // 查询效果脚本代码对应的效果脚本编号 [Sola丶小克]
 #endif // Pandas_ScriptCommand_BonusScriptGetId
+#ifdef Pandas_ScriptCommand_BonusScriptInfo
+	BUILDIN_DEF(bonus_script_info, "ii?"), // 查询指定效果脚本的相关信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BonusScriptInfo
 #ifdef Pandas_ScriptCommand_MobRemove
 	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
 #endif // Pandas_ScriptCommand_MobRemove

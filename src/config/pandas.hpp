@@ -1925,6 +1925,7 @@
 	#define Pandas_ScriptCommand_BonusScriptGetId
 	// 是否启用 bonus_script_info 脚本指令 [Sola丶小克]
 	// 该指令用于查询指定效果脚本的相关信息
+	#define Pandas_ScriptCommand_BonusScriptInfo
 	// 是否启用 expandinventory_adjust 脚本指令 [Sola丶小克]
 	// 该指令用于增加角色的背包容量上限
 	// 是否启用 getinventorysize 脚本指令 [Sola丶小克]
