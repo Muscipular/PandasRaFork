@@ -18169,6 +18169,10 @@ void clif_parse_Adopt_reply(int32 fd, map_session_data *sd){
 ///     BOSS_INFO_ALIVE_WITHMSG = Boss is alive (initial announce).
 ///     BOSS_INFO_DEAD = Boss is dead.
 void clif_bossmapinfo( const map_session_data& sd, mob_data* md, e_bossmap_info flag ){
+#ifdef Pandas_Crashfix_BossMapinfo
+	if (flag != BOSS_INFO_NOT && !md) return;
+#endif // Pandas_Crashfix_BossMapinfo
+
 	PACKET_ZC_BOSS_INFO p = {};
 
 	p.packetType = HEADER_ZC_BOSS_INFO;
