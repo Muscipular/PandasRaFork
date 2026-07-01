@@ -1477,13 +1477,42 @@
 
 #ifdef Pandas_NpcEvent
 	/************************************************************************/
-	/* Event 类型的标准事件，这些事件不能被 processhalt 打断                    */
+	/* Filter 类型的过滤事件，这些事件可以被 processhalt 中断                    */
+	/************************************************************************/
+
+	/************************************************************************/
+	/* Event  类型的标准事件，这些事件不能被 processhalt 打断                    */
 	/************************************************************************/
 
 	// 当玩家杀死 MVP 魔物后触发事件 [Sola丶小克]
 	// 事件类型: Event / 事件名称: OnPCKillMvpEvent
 	// 常量名称: NPCE_KILLMVP / 变量名称: killmvp_event_name
 	#define Pandas_NpcEvent_KILLMVP
+
+	// 当玩家成功插入卡片后触发事件 [Sola丶小克]
+	// 事件类型: Event / 事件名称: OnPCInsertCardEvent
+	// 常量名称: NPCE_INSERT_CARD / 变量名称: insert_card_event_name
+
+	// 当玩家成功使用非装备类道具后触发事件 [Sola丶小克]
+	// 事件类型: Event / 事件名称: OnPCUseItemEvent
+	// 常量名称: NPCE_USE_ITEM / 变量名称: use_item_event_name
+
+	// 当玩家成功使用技能后触发事件 [Sola丶小克]
+	// 事件类型: Event / 事件名称: OnPCUseSkillEvent
+	// 常量名称: NPCE_USE_SKILL / 变量名称: use_skill_event_name
+
+	// 当玩家成功穿戴一件装备时触发事件 [Sola丶小克]
+	// 事件类型: Event / 事件名称: OnPCEquipEvent
+	// 常量名称: NPCE_EQUIP / 变量名称: equip_event_name
+
+	// 当玩家成功脱下一件装备时触发事件 [Sola丶小克]
+	// 事件类型: Event / 事件名称: OnPCUnequipEvent
+	// 常量名称: NPCE_UNEQUIP / 变量名称: unequip_event_name
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 7>
+
+	/************************************************************************/
+	/* Express 类型的快速事件，这些事件将会被立刻执行, 不进事件队列                */
+	/************************************************************************/
 #endif // Pandas_NpcEvent
 
 // ============================================================================
