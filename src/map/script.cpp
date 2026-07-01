@@ -28666,6 +28666,17 @@ BUILDIN_FUNC(openbank){
 		return SCRIPT_CMD_FAILURE;
 	}
 
+#ifdef Pandas_MapFlag_NoBank
+	if (map_getmapflag(sd->m, MF_NOBANK)) {
+		// You cannot use the Bank on this map.
+		clif_messagecolor(sd, color_table[COLOR_RED], msg_txt(sd, 831), false, SELF);
+#ifdef Pandas_ScriptCommand_OpenBank
+		script_pushint(st, 0);
+#endif // Pandas_ScriptCommand_OpenBank
+		return SCRIPT_CMD_SUCCESS;
+	}
+#endif // Pandas_MapFlag_NoBank
+
 	clif_ui_open( *sd, OUT_UI_BANK, 0 );
 	return SCRIPT_CMD_SUCCESS;
 #endif

@@ -1358,6 +1358,7 @@
 
 	// 是否启用 nobank 地图标记 [聽風]
 	// rAthena 官方已经实现此标记, 当前宏定义所包含的代码用于处理体验细节
+	#define Pandas_MapFlag_NoBank
 
 	// 是否启用 nouseitem 地图标记 [HongShin]
 	// 该标记用于禁止玩家在地图上使用消耗型物品道具
