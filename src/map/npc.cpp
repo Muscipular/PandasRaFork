@@ -7025,6 +7025,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCE_EQUIP:
 		return script_config.equip_event_name;	// OnPCEquipEvent		// 当玩家成功穿戴一件装备时触发事件
 #endif // Pandas_NpcEvent_EQUIP
+#ifdef Pandas_NpcEvent_UNEQUIP
+	case NPCE_UNEQUIP:
+		return script_config.unequip_event_name;	// OnPCUnequipEvent		// 当玩家成功脱下一件装备时触发事件
+#endif // Pandas_NpcEvent_UNEQUIP
 #ifdef Pandas_NpcExpress_STATCALC
 	case NPCE_STATCALC:
 		return script_config.statcalc_express_name;	// OnPCStatCalcEvent		// 当角色能力被重新计算时触发事件
