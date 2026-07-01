@@ -31882,6 +31882,27 @@ BUILDIN_FUNC(setinventoryinfo) {
 }
 #endif // Pandas_ScriptCommand_SetInventoryInfo
 
+#ifdef Pandas_ScriptCommand_UpdateInventory
+/* ===========================================================
+ * 指令: updateinventory
+ * 描述: 重新下发关联玩家的背包数据给客户端 (刷新客户端背包数据)
+ * 用法: updateinventory {<角色编号>};
+ * 返回: 返回 1 表示成功, 0 表示失败
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(updateinventory) {
+	map_session_data* sd = nullptr;
+	if (!script_charid2sd(2, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	clif_inventorylist(sd);
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_UpdateInventory
+
 #ifdef Pandas_ScriptCommand_PartyLeave
 /* ===========================================================
  * 指令: party_leave
@@ -32590,6 +32611,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_SetInventoryInfo
 	BUILDIN_DEF(setinventoryinfo, "iii??"),				// 设置指定背包序号的道具的详细信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_SetInventoryInfo
+#ifdef Pandas_ScriptCommand_UpdateInventory
+	BUILDIN_DEF(updateinventory, "?"),					// 重新下发关联玩家的背包数据给客户端 [Sola丶小克]
+#endif // Pandas_ScriptCommand_UpdateInventory
 	BUILDIN_DEF(guildstoragecountitem,"v?"),
 	BUILDIN_DEF(cartcountitem,"v?"),
 	BUILDIN_DEF2(countitem,"countitem2","viiiiiii?"),

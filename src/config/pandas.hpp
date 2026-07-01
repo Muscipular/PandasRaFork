@@ -1842,6 +1842,7 @@
 	#define Pandas_ScriptCommand_SetInventoryInfo
 	// 是否启用 updateinventory 脚本指令 [Sola丶小克]
 	// 该指令用于重新下发关联玩家的背包数据给客户端 (刷新客户端背包数据)
+	#define Pandas_ScriptCommand_UpdateInventory
 	// 是否启用 getcharmac 脚本指令 [Sola丶小克]
 	// 该指令用于获取指定角色登录时使用的 MAC 地址
 	// 此选项开关需要依赖 Pandas_Extract_SSOPacket_MacAddress 的拓展
