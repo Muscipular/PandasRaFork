@@ -2964,6 +2964,11 @@ int32 mob_getdroprate(block_list *src, std::shared_ptr<s_mob_db> mob, int32 base
 			}
 		}
 	}
+#ifdef Pandas_MapFlag_MobDroprate
+	if( md && !status_has_mode( &md->status, MD_MVP ) ){
+		drop_rate = apply_rate( drop_rate, map_getmapflag_param( md->m, MF_MOBDROPRATE, 1 ) );
+	}
+#endif // Pandas_MapFlag_MobDroprate
 
 #ifdef RENEWAL_DROP
 	drop_rate = apply_rate( drop_rate, drop_modifier );
