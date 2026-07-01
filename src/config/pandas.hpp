@@ -1251,6 +1251,7 @@
 	// 常量名称: SP_PANDAS_STATUSADDDAMAGERATE / 调整器名称: bStatusAddDamageRate
 	// 变量位置: map_session_data / 变量名称: status_damagerate_adjust
 	// 使用原型: bonus4 bStatusAddDamageRate,sc,n,r,bf;
+	#define Pandas_Bonus4_bStatusAddDamageRate
 
 	// 是否启用 bonus3 bFinalAddRace 效果调整器 [聽風]
 	// 使用 bf 攻击 r 种族的目标时增加 x% 的伤害 (在最终伤害上全段修正)

@@ -5560,6 +5560,12 @@ void pc_bonus4(map_session_data *sd,int32 type,int32 type2,int32 type3,int32 typ
 			pc_bonus_status_damage(sd->status_damage_adjust, (sc_type)type2, type4, val, type3);
 		break;
 #endif // Pandas_Bonus4_bStatusAddDamage
+#ifdef Pandas_Bonus4_bStatusAddDamageRate
+	case SP_PANDAS_STATUSADDDAMAGERATE: // bonus4 bStatusAddDamageRate,sc,n,r,bf;
+		if (sd->state.lr_flag != LR_FLAG_ARROW)
+			pc_bonus_status_damage(sd->status_damagerate_adjust, (sc_type)type2, type4, val, type3);
+		break;
+#endif // Pandas_Bonus4_bStatusAddDamageRate
 
 	default:
 	#ifdef Pandas_NpcExpress_STATCALC

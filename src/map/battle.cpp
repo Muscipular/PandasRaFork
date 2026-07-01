@@ -7458,6 +7458,27 @@ enum damage_lv battle_weapon_attack(block_list* src, block_list* target, t_tick 
 	}
 #endif // Pandas_Bonus4_bStatusAddDamage
 
+#ifdef Pandas_Bonus4_bStatusAddDamageRate
+	if (sd && src->type == BL_PC && tsc) {
+		int total_rate = 100;
+		for (auto& it : sd->status_damagerate_adjust) {
+			if (!tsc->getSCE(it.type))
+				continue;
+			if (!(((it.battle_flag) & wd.flag) & BF_WEAPONMASK &&
+				((it.battle_flag) & wd.flag) & BF_RANGEMASK &&
+				((it.battle_flag) & wd.flag) & BF_SKILLMASK))
+				continue;
+			if (rnd() % 10000 < it.rate)
+				total_rate = rathena::util::safe_addition_cap(total_rate, it.val, INT_MAX);
+		}
+		if (total_rate != 100) {
+			total_rate = cap_value(total_rate, -100, INT_MAX);
+			wd.damage = (int64)(wd.damage / 100.0 * total_rate);
+		}
+		damage = wd.damage + wd.damage2;
+	}
+#endif // Pandas_Bonus4_bStatusAddDamageRate
+
 #ifdef Pandas_NpcExpress_PCHARMED
 	if (src && target && damage > 0) {
 		map_session_data* esd = nullptr;

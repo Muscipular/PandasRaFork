@@ -2951,6 +2951,27 @@ int64 skill_attack (int32 attack_type, block_list* src, block_list *dsrc, block_
 	}
 #endif // Pandas_Bonus4_bStatusAddDamage
 
+#ifdef Pandas_Bonus4_bStatusAddDamageRate
+	if (sd && src->type == BL_PC && tsc) {
+		int total_rate = 100;
+		for (auto& it : sd->status_damagerate_adjust) {
+			if (!tsc->getSCE(it.type))
+				continue;
+			if (!(((it.battle_flag) & dmg.flag) & BF_WEAPONMASK &&
+				((it.battle_flag) & dmg.flag) & BF_RANGEMASK &&
+				((it.battle_flag) & dmg.flag) & BF_SKILLMASK))
+				continue;
+			if (rnd() % 10000 < it.rate)
+				total_rate = rathena::util::safe_addition_cap(total_rate, it.val, INT_MAX);
+		}
+		if (total_rate != 100) {
+			total_rate = cap_value(total_rate, -100, INT_MAX);
+			dmg.damage = (int64)(dmg.damage / 100.0 * total_rate);
+		}
+		damage = dmg.damage + dmg.damage2;
+	}
+#endif // Pandas_Bonus4_bStatusAddDamageRate
+
 #ifdef Pandas_NpcExpress_PCHARMED
 	if (src && bl && damage > 0) {
 		map_session_data* esd = nullptr;

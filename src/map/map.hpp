@@ -620,6 +620,9 @@ enum _sp {
 #ifdef Pandas_Bonus4_bStatusAddDamage
 	SP_PANDAS_STATUSADDDAMAGE,	// 调整器名称: bStatusAddDamage / 说明: 攻击拥有 sc 状态的目标时, 使用 bf 攻击有 r/100% 的概率使伤害增加 n
 #endif // Pandas_Bonus4_bStatusAddDamage
+#ifdef Pandas_Bonus4_bStatusAddDamageRate
+	SP_PANDAS_STATUSADDDAMAGERATE,	// 调整器名称: bStatusAddDamageRate / 说明: 攻击拥有 sc 状态的目标时, 使用 bf 攻击有 r/100% 的概率使伤害增加 n%
+#endif // Pandas_Bonus4_bStatusAddDamageRate
 	// PYHELP - BONUS - INSERT POINT - <Section 2>
 	SP_PANDAS_EXTEND_BONUS_END,
 #endif // Pandas_Bonuses

@@ -718,6 +718,9 @@ public:
 #ifdef Pandas_Bonus4_bStatusAddDamage
 	std::vector<s_sc_damage> status_damage_adjust;
 #endif // Pandas_Bonus4_bStatusAddDamage
+#ifdef Pandas_Bonus4_bStatusAddDamageRate
+	std::vector<s_sc_damage> status_damagerate_adjust;
+#endif // Pandas_Bonus4_bStatusAddDamageRate
 	std::vector<s_add_drop> add_drop;
 	std::vector<s_addele2> subele2;
 	std::vector<s_vanish_bonus> sp_vanish, hp_vanish;
