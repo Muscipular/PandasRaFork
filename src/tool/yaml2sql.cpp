@@ -183,8 +183,10 @@ bool process( const std::string& type, uint32 version, const std::vector<std::st
 					continue;
 			}
 
+#ifndef Pandas_Fix_Yaml2Sql_NoBodyNode_Break
 			if (!inNode["Body"].IsDefined())
 				continue;
+#endif // Pandas_Fix_Yaml2Sql_NoBodyNode_Break
 
 #ifndef CONVERT_ALL
 			if (fileExists(to)) {
