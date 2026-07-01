@@ -4523,6 +4523,12 @@ void pc_bonus(map_session_data *sd,int32 type,int32 val)
 			if (sd->state.lr_flag != LR_FLAG_ARROW)
 				sd->bonus.itemsphealrate2 += val;
 			break;
+#ifdef Pandas_Bonus_bNoFieldGemStone
+		case SP_PANDAS_NOFIELDGEMSTONE:
+			if (sd->state.lr_flag != LR_FLAG_ARROW)
+				sd->special_state.nofieldgemstone = 1;
+			break;
+#endif // Pandas_Bonus_bNoFieldGemStone
 		default:
 		#ifdef Pandas_NpcExpress_STATCALC
 			if (running_npc_stat_calc_event) {
@@ -10818,6 +10824,9 @@ int64 pc_readparam( const map_session_data* sd, int64 type )
 #endif
 		case SP_CRIT_DEF_RATE: val = sd->bonus.crit_def_rate; break;
 		case SP_ADD_ITEM_SPHEAL_RATE: val = sd->bonus.itemsphealrate2; break;
+#ifdef Pandas_Bonus_bNoFieldGemStone
+		case SP_PANDAS_NOFIELDGEMSTONE: val = sd->special_state.nofieldgemstone; break;
+#endif // Pandas_Bonus_bNoFieldGemStone
 		default:
 			ShowError("pc_readparam: Attempt to read unknown parameter '%lld'.\n", type);
 			return -1;

@@ -546,6 +546,9 @@ public:
 		uint32 no_castcancel2 : 1;
 		uint32 no_sizefix : 1;
 		uint32 no_gemstone : 2;
+#ifdef Pandas_Bonus_bNoFieldGemStone
+		uint32 nofieldgemstone : 1;
+#endif // Pandas_Bonus_bNoFieldGemStone
 		uint32 intravision : 1; // Maya Purple Card effect [DracoRPG]
 		uint32 perfect_hiding : 1; // [Valaris]
 		uint32 no_knockback : 1;

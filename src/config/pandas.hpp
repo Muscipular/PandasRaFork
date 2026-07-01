@@ -1216,6 +1216,7 @@
 	// 常量名称: SP_PANDAS_NOFIELDGEMSTONE / 调整器名称: bNoFieldGemStone
 	// 变量位置: map_session_data.special_state / 变量名称: nofieldgemstone
 	// 使用原型: bonus bNoFieldGemStone;
+	#define Pandas_Bonus_bNoFieldGemStone
 
 	// 是否启用 bonus3 bRebirthWithHeal 效果调整器 [聽風]
 	// 当玩家死亡时有 r/100% 的机率复活并恢复 h% 的 HP 和 s% 的 SP
