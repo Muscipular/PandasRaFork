@@ -31372,6 +31372,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_MobRemove
 	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
 #endif // Pandas_ScriptCommand_MobRemove
+#ifdef Pandas_ScriptCommand_MesClear
+	BUILDIN_DEF2(clear, "mesclear", ""), // 由于 rAthena 已经实现 clear 指令, 这里兼容老版本 mesclear 指令 [Sola丶小克]
+#endif // Pandas_ScriptCommand_MesClear
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMapSpawns
