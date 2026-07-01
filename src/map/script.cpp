@@ -26918,7 +26918,9 @@ BUILDIN_FUNC(unloadnpc) {
 
 	npc_unload_duplicates(nd);
 	npc_unload(nd, true);
+#ifndef Pandas_Speedup_Unloadnpc_Without_Refactoring_ScriptEvent
 	npc_read_event_script();
+#endif // Pandas_Speedup_Unloadnpc_Without_Refactoring_ScriptEvent
 
 	return SCRIPT_CMD_SUCCESS;
 }

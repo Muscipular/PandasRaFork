@@ -7054,8 +7054,10 @@ bool npc_unloadfile( const char* path ) {
 		found = true;
 	}
 
+#ifndef Pandas_Speedup_Unloadnpc_Without_Refactoring_ScriptEvent
 	if( found ) /* refresh event cache */
 		npc_read_event_script();
+#endif // Pandas_Speedup_Unloadnpc_Without_Refactoring_ScriptEvent
 
 	npc_delsrcfile(path);
 
