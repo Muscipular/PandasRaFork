@@ -3,6 +3,7 @@
 
 #include "database.hpp"
 
+#include <cstring>
 #include <iostream>
 #include <sstream>
 
@@ -20,7 +21,29 @@ using namespace rathena;
 #endif // Pandas_Database_Yaml_BeQuiet
 
 bool YamlDatabase::nodeExists( const ryml::NodeRef& node, const std::string& name ){
+#ifndef Pandas_UserExperience_Yaml_Error
 	return (node.num_children() > 0 && node.has_child(c4::to_csubstr(name)));
+#else
+	// - 将技能数据库中某个 Requires 节点的 SpCost 删掉, 但别进行缩进对齐
+	// - 加载的时候就会之别抛出错误崩溃掉
+	bool bResult = false;
+
+	try {
+		bResult = (node.num_children() > 0 && node.has_child(c4::to_csubstr(name)));
+	}
+	catch (std::runtime_error const& err) {
+		ShowError("Error while looking for the '%s' node: %s\n", name.c_str(), err.what());
+		ShowError("Occurred in file '" CL_WHITE "%s" CL_RESET "' on line %d and column %d.\n", this->currentFile.c_str(), this->getLineNumber(node), this->getColumnNumber(node));
+
+#ifdef DEBUG
+		std::cout << node;
+#endif // DEBUG
+
+		return false;
+	}
+
+	return bResult;
+#endif // Pandas_UserExperience_Yaml_Error
 }
 
 bool YamlDatabase::nodesExist( const ryml::NodeRef& node, std::initializer_list<const std::string> names ){
@@ -383,11 +406,36 @@ bool YamlDatabase::asUInt32Rate( const ryml::NodeRef& node, const std::string& n
 }
 
 int32 YamlDatabase::getLineNumber(const ryml::NodeRef& node) {
+#ifndef Pandas_UserExperience_Yaml_Error
 	return parser.source().has_str() ? (int32)parser.location(node).line : 0;
+#else
+	try {
+		// 读取到的行号应该 + 1 才是正确的行号
+		return parser.source().has_str() ? (int32)parser.location(node).line + 1 : 0;
+	}
+	catch (std::runtime_error) {
+#ifdef DEBUG
+		std::cout << node;
+#endif // DEBUG
+		return 0;
+	}
+#endif // Pandas_UserExperience_Yaml_Error
 }
 
 int32 YamlDatabase::getColumnNumber(const ryml::NodeRef& node) {
+#ifndef Pandas_UserExperience_Yaml_Error
 	return parser.source().has_str() ? (int32)parser.location(node).col : 0;
+#else
+	try {
+		return parser.source().has_str() ? (int32)parser.location(node).col : 0;
+	}
+	catch (std::runtime_error) {
+#ifdef DEBUG
+		std::cout << node;
+#endif // DEBUG
+		return 0;
+	}
+#endif // Pandas_UserExperience_Yaml_Error
 }
 
 void YamlDatabase::invalidWarning( const ryml::NodeRef& node, const char* fmt, ... ){
@@ -418,7 +466,15 @@ void YamlDatabase::setGenerator(bool shouldLoad) {
 }
 
 void on_yaml_error( const char* msg, size_t len, ryml::Location loc, void *user_data ){
+#ifndef Pandas_UserExperience_Yaml_Error
 	throw std::runtime_error( msg );
+#else
+	std::shared_ptr<char> mes(new char[len + 1], std::default_delete<char[]>());
+	memset(mes.get(), 0, len + 1);
+	memcpy(mes.get(), msg, len);
+	std::string text = util::trim_copy(std::string(mes.get()));
+	throw std::runtime_error(text.c_str());
+#endif // Pandas_UserExperience_Yaml_Error
 }
 
 void do_init_database(){

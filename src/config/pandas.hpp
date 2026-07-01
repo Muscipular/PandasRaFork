@@ -1437,6 +1437,7 @@
 	#define Pandas_UserExperience_Move_BartersYml_To_DB
 
 	// 优化加载与解析 YAML 文件时出现的一些报错体验 [Sola丶小克]
+	#define Pandas_UserExperience_Yaml_Error
 
 	// 当 YAML 数据文件中不存在 Body 节点时也依然输出结尾信息 [Sola丶小克]
 
