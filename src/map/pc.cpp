@@ -14,6 +14,7 @@
 #endif
 
 #include <common/cbasetypes.hpp>
+#include <common/assistant.hpp>
 #include <common/core.hpp> // get_svn_revision()
 #include <common/database.hpp>
 #include <common/ers.hpp>  // ers_destroy
@@ -15502,6 +15503,7 @@ void pc_crimson_marker_clear(map_session_data *sd) {
 * @param sd: Player
 **/
 void pc_show_version(map_session_data *sd) {
+#ifndef Pandas_UserExperience_AtCommand_Version
 	const char* svn = get_svn_revision();
 	char buf[CHAT_SIZE_MAX];
 
@@ -15515,6 +15517,42 @@ void pc_show_version(map_session_data *sd) {
 			sprintf(buf,"%s",msg_txt(sd,1296)); //Cannot determine SVN/Git version.
 	}
 	clif_displaymessage(sd->fd,buf);
+#else
+#ifdef CRASHRPT_APPID
+	std::string appid(CRASHRPT_APPID);
+#else
+	std::string appid;
+#endif // CRASHRPT_APPID
+	std::string gitbranch(GIT_BRANCH);
+	std::string githash(GIT_HASH);
+	char mes[CHAT_SIZE_MAX] = { 0 };
+	char compile[CHAT_SIZE_MAX] = { 0 };
+	char mode[CHAT_SIZE_MAX] = { 0 };
+
+#ifdef PRERE
+	strcpy(mode, msg_txt_cn(sd, 89));	// Pre-Renewal
+#else
+	strcpy(mode, msg_txt_cn(sd, 90));	// Renewal
+#endif // PRERE
+	if (appid.length())
+		strcpy(compile, msg_txt_cn(sd, 86));	// Official Compilation
+	else
+		strcpy(compile, msg_txt_cn(sd, 87));	// Unofficial Compilation
+	if (gitbranch.empty())
+		gitbranch = msg_txt_cn(sd, 91);			// Null
+	if (githash.empty())
+		githash = msg_txt_cn(sd, 91);			// Null
+	if (isCommercialVersion()) {
+		std::string community_ver = formatVersion(Pandas_Version, true, true, 0);
+		sprintf(mes, msg_txt_cn(sd, 92), getPandasVersion().c_str(), community_ver.c_str(), compile);
+	}
+	else {
+		sprintf(mes, msg_txt_cn(sd, 85), getPandasVersion().c_str(), compile);
+	}
+	clif_displaymessage(sd->fd, mes);
+	sprintf(mes, msg_txt_cn(sd, 88), mode, PACKETVER, gitbranch.c_str(), githash.c_str());
+	clif_displaymessage(sd->fd, mes);
+#endif // Pandas_UserExperience_AtCommand_Version
 }
 
 /**

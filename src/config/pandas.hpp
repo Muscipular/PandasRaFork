@@ -19,6 +19,14 @@
 	#define Pandas_AtCommands
 	#define Pandas_ScriptCommands
 
+#ifndef GIT_BRANCH
+	#define GIT_BRANCH ""
+#endif // GIT_BRANCH
+
+#ifndef GIT_HASH
+	#define GIT_HASH ""
+#endif // GIT_HASH
+
 // ============================================================================
 // 基础组 - Pandas_Basic
 // ============================================================================
@@ -1412,6 +1420,7 @@
 
 #ifdef Pandas_UserExperience
 	// 优化使用 @version 指令的回显信息 [Sola丶小克]
+	#define Pandas_UserExperience_AtCommand_Version
 
 	// 使 yaml2sql 辅助工具在加载 YAML 文件时能给个提示
 	// 否则容易因加载时间过长, 给使用者造成程序已经卡死的错觉 [Sola丶小克]
