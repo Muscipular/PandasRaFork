@@ -799,6 +799,9 @@
 #ifdef Pandas_MapFlag_MobDroprate
 	export_constant(MF_MOBDROPRATE);
 #endif // Pandas_MapFlag_MobDroprate
+#ifdef Pandas_MapFlag_MvpDroprate
+	export_constant(MF_MVPDROPRATE);
+#endif // Pandas_MapFlag_MvpDroprate
 #ifdef Pandas_MapFlag_NoCapture
 	export_constant(MF_NOCAPTURE);
 #endif // Pandas_MapFlag_NoCapture
