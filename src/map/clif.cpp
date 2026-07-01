@@ -2338,7 +2338,9 @@ void clif_changemapserver( const map_session_data& sd, const char* map, uint16 x
 #endif
 
 #ifdef DEBUG
+#ifndef Pandas_UserExperience_Debug_Hide_SubnetInfo
 	ShowDebug( "Sending the client (%d %d.%d.%d.%d) to map-server with ip %d.%d.%d.%d and port %hu\n", sd.status.account_id, CONVIP(session[sd.fd]->client_addr), CONVIP(ip), port );
+#endif // Pandas_UserExperience_Debug_Hide_SubnetInfo
 #endif
 
 	clif_send( &packet, sizeof( packet ), &sd, SELF );

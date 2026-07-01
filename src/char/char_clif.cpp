@@ -922,9 +922,11 @@ void chclif_send_map_data( int32 fd, std::shared_ptr<struct mmo_charstatus> cd, 
 	safestrncpy( p.domain, "", sizeof( p.domain ) );
 #endif
 #ifdef DEBUG
+#ifndef Pandas_UserExperience_Debug_Hide_SubnetInfo
 	ShowDebug("Sending the client (%d %d.%d.%d.%d) to map-server with ip %d.%d.%d.%d and port %hu\n",
 			  cd->account_id, CONVIP( session[fd]->client_addr ), CONVIP((subnet_map_ip) ? subnet_map_ip : map_server[map_server_index].ip),
 			  map_server[map_server_index].port);
+#endif // Pandas_UserExperience_Debug_Hide_SubnetInfo
 #endif
 
 	socket_send( fd, p );
