@@ -173,6 +173,16 @@ bool process( const std::string& type, uint32 version, const std::vector<std::st
 			ShowMessage("Found the file \"%s\", converting from yml to sql.\n", from.c_str());
 #endif
 
+#ifdef Pandas_UserExperience_Yaml2Sql_AskConfirmation_Order
+#ifndef CONVERT_ALL
+			if (fileExists(to)) {
+				if (!askConfirmation("The file \"%s\" already exists.\nDo you want to replace it? (Y/N)\n", to.c_str())) {
+					continue;
+				}
+			}
+#endif
+#endif // Pandas_UserExperience_Yaml2Sql_AskConfirmation_Order
+
 			inNode.reset();
 
 			try {
@@ -191,6 +201,7 @@ bool process( const std::string& type, uint32 version, const std::vector<std::st
 				continue;
 #endif // Pandas_Fix_Yaml2Sql_NoBodyNode_Break
 
+#ifndef Pandas_UserExperience_Yaml2Sql_AskConfirmation_Order
 #ifndef CONVERT_ALL
 			if (fileExists(to)) {
 				if (!askConfirmation("The file \"%s\" already exists.\nDo you want to replace it? (Y/N)\n", to.c_str())) {
@@ -198,6 +209,7 @@ bool process( const std::string& type, uint32 version, const std::vector<std::st
 				}
 			}
 #endif
+#endif // Pandas_UserExperience_Yaml2Sql_AskConfirmation_Order
 
 			outFile.open(to);
 

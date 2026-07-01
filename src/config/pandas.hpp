@@ -1428,6 +1428,7 @@
 
 	// 调整 yaml2sql 辅助工具的询问确认流程 [Sola丶小克]
 	// 先询问是否能覆盖目标文件, 再尝试去加载来源数据文件, 以便优化体验
+	#define Pandas_UserExperience_Yaml2Sql_AskConfirmation_Order
 
 	// 调整 Yaml2sql 辅助工具在发布版本中的文件保存位置 [Sola丶小克]
 
