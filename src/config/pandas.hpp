@@ -1819,6 +1819,7 @@
 	#define Pandas_ScriptCommand_Copynpc
 	// 是否启用 gettimefmt 脚本指令 [Sola丶小克]
 	// 将当前时间格式化输出成字符串, 是 gettimestr 的改进版
+	#define Pandas_ScriptCommand_GetTimeFmt
 	// 是否启用 multicatchpet 脚本指令 [Sola丶小克]
 	// 与 catchpet 指令类似, 但可以指定更多支持捕捉的魔物编号
 	// 此选项开关需要依赖 Pandas_Struct_Map_Session_Data_MultiCatchTargetClass 的拓展
