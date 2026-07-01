@@ -763,7 +763,15 @@ bool login_config_read(const char* cfgName, bool normal) {
 						memcpy(buf, &md5[i], 2);
 						buf[2] = 0;
 
+						#ifndef Pandas_Fix_Ignore_sscanf_Return_Value
 						sscanf(buf, "%2x", &byte);
+						#else
+						if (sscanf(buf, "%2x", &byte) != 1) {
+							ShowWarning("The client hash length is incorrect (hash: %s), skipping it...\n", md5);
+							nnode->hash[0] = '\0';
+							break;
+						}
+						#endif // Pandas_Fix_Ignore_sscanf_Return_Value
 						nnode->hash[i / 2] = (uint8)(byte & 0xFF);
 					}
 				}

@@ -842,6 +842,7 @@
 	#define Pandas_Fix_Potential_Arithmetic_Overflow
 
 	// 修正未判断 sscanf 返回值可能导致程序工作不符合预期的问题 [Sola丶小克]
+	#define Pandas_Fix_Ignore_sscanf_Return_Value
 
 	// 修正在部分情况下角色公会图标刷新不及时的问题 [Sola丶小克]
 
