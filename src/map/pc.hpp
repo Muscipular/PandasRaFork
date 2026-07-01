@@ -255,6 +255,14 @@ extern uint32 equip_bitmask[EQI_MAX];
 
 #define equip_index_check(i) ( (i) >= EQI_ACC_L && (i) < EQI_MAX )
 
+#if defined(Pandas_Bonus4_bStatusAddDamage) || defined(Pandas_Bonus4_bStatusAddDamageRate)
+struct s_sc_damage {
+	sc_type type;
+	short rate, battle_flag;
+	int val;
+};
+#endif // defined(Pandas_Bonus4_bStatusAddDamage) || defined(Pandas_Bonus4_bStatusAddDamageRate)
+
 /// Miscellaneous item bonus struct
 struct s_item_bonus {
 	uint16 id;
@@ -707,6 +715,9 @@ public:
 #ifdef Pandas_Bonus2_bSkillNoRequire
 	std::vector<s_item_bonus> skillnorequire;
 #endif // Pandas_Bonus2_bSkillNoRequire
+#ifdef Pandas_Bonus4_bStatusAddDamage
+	std::vector<s_sc_damage> status_damage_adjust;
+#endif // Pandas_Bonus4_bStatusAddDamage
 	std::vector<s_add_drop> add_drop;
 	std::vector<s_addele2> subele2;
 	std::vector<s_vanish_bonus> sp_vanish, hp_vanish;

@@ -3333,6 +3333,50 @@ static void pc_bonus_addeff_onskill(std::vector<s_addeffectonskill> &effect, enu
 	effect.push_back(entry);
 }
 
+#if defined(Pandas_Bonus4_bStatusAddDamage) || defined(Pandas_Bonus4_bStatusAddDamageRate)
+static void pc_bonus_status_damage(std::vector<s_sc_damage>& dmgrule, enum sc_type sc, short rate, short battle_flag, int val)
+{
+	if (dmgrule.size() == MAX_PC_BONUS) {
+		ShowWarning("pc_bonus_status_damage: Reached max (%d) number of add status damage rule per character!\n", MAX_PC_BONUS);
+		return;
+	}
+
+	if (!rate)
+		return;
+
+	if (!(battle_flag & BF_RANGEMASK))
+		battle_flag |= BF_SHORT | BF_LONG;
+	if (!(battle_flag & BF_WEAPONMASK))
+		battle_flag |= BF_WEAPON;
+	if (!(battle_flag & BF_SKILLMASK)) {
+		if (battle_flag & (BF_MAGIC | BF_MISC))
+			battle_flag |= BF_SKILL;
+		if (battle_flag & BF_WEAPON)
+			battle_flag |= BF_NORMAL;
+	}
+
+	for (auto& it : dmgrule) {
+		if (it.type == sc && it.battle_flag == battle_flag) {
+			it.rate = cap_value(it.rate + rate, -10000, 10000);
+			it.val = rathena::util::safe_addition_cap(it.val, val, INT_MAX);
+			return;
+		}
+	}
+
+	struct s_sc_damage entry = {};
+
+	if (rate < -10000 || rate > 10000)
+		ShowWarning("pc_bonus_status_damage: bonus rate %d exceeds -10000~10000 range, capping.\n", rate);
+
+	entry.type = sc;
+	entry.rate = cap_value(rate, -10000, 10000);
+	entry.battle_flag = battle_flag;
+	entry.val = val;
+
+	dmgrule.push_back(entry);
+}
+#endif // defined(Pandas_Bonus4_bStatusAddDamage) || defined(Pandas_Bonus4_bStatusAddDamageRate)
+
 /**
  * Adjust/add drop rate modifier for player
  * @param drop: Player's sd->add_drop (struct s_add_drop)
@@ -5509,6 +5553,13 @@ void pc_bonus4(map_session_data *sd,int32 type,int32 type2,int32 type3,int32 typ
 		sd->mdef_set_race[type2].tick = type4;
 		sd->mdef_set_race[type2].value = val;
 		break;
+
+#ifdef Pandas_Bonus4_bStatusAddDamage
+	case SP_PANDAS_STATUSADDDAMAGE: // bonus4 bStatusAddDamage,sc,n,r,bf;
+		if (sd->state.lr_flag != LR_FLAG_ARROW)
+			pc_bonus_status_damage(sd->status_damage_adjust, (sc_type)type2, type4, val, type3);
+		break;
+#endif // Pandas_Bonus4_bStatusAddDamage
 
 	default:
 	#ifdef Pandas_NpcExpress_STATCALC
