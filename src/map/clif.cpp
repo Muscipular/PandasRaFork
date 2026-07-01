@@ -5,6 +5,9 @@
 #include "clif.hpp"
 
 #include <cstdarg>
+#ifdef Pandas_Fix_Progressbar_Refresh_Stuck
+#include <cmath>
+#endif // Pandas_Fix_Progressbar_Refresh_Stuck
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -10231,6 +10234,15 @@ void clif_refresh(map_session_data *sd)
 		pc_disguise(sd, disguise);
 	}
 	clif_refresh_storagewindow(sd);
+
+#ifdef Pandas_Fix_Progressbar_Refresh_Stuck
+	if (sd->progressbar.npc_id) {
+		int32 second = 0;
+		second = (int32)ceil((sd->progressbar.timeout - gettick()) / 1000.0);
+		clif_progressbar(sd, 0, max(second, 1));	// 至少显示 1 秒
+	}
+#endif // Pandas_Fix_Progressbar_Refresh_Stuck
+
 #ifdef Pandas_Aura_Mechanism
 	clif_send_auras_single(&sd->bl, sd);
 #endif // Pandas_Aura_Mechanism

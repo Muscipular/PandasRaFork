@@ -927,6 +927,7 @@
 	#define Pandas_Fix_Progressbar_Abort_Stuck
 
 	// 修正 progressbar 期间使用 @refresh 或 @refreshall 会导致角色无法移动的问题 [Sola丶小克]
+	#define Pandas_Fix_Progressbar_Refresh_Stuck
 
 	// 修正挂店中的角色被临时踢下线后, 如果趁着地图服务器还未重启而直接进入游戏
 	// 并对手推车中原先离线摆摊的商品进行增删操作, 可能会导致下次地图服务器启动时出现 vending_reopen 错误 3 的情况,
