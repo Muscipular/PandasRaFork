@@ -30808,6 +30808,41 @@ BUILDIN_FUNC(viewequip) {
 }
 #endif // Pandas_ScriptCommand_ViewEquip
 
+#ifdef Pandas_ScriptCommand_CountItemIdx
+/* ===========================================================
+ * 指令: countitemidx
+ * 描述: 获取指定背包序号的道具在背包中的数量
+ * 用法: countitemidx <背包序号>{,<角色编号>};
+ * 返回: 操作成功则返回道具的数量, 操作失败则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(countitemidx) {
+	map_session_data *sd = nullptr;
+	int idx = -1;
+
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	idx = script_getnum(st, 2);
+	if (idx < 0 || idx >= sd->inventory.max_amount) {
+		ShowWarning("buildin_countitemidx: Index (%d) should be from 0-%d.\n", idx, sd->inventory.max_amount - 1);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!item_db.find(sd->inventory.u.items_inventory[idx].nameid)) {
+		ShowWarning("buildin_countitemidx: Invalid Item ID (%u).\n", sd->inventory.u.items_inventory[idx].nameid);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushint(st, sd->inventory.u.items_inventory[idx].amount);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_CountItemIdx
+
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 /* ===========================================================
  * 指令: getmapspawns
@@ -31629,6 +31664,10 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_ViewEquip
 	BUILDIN_DEF(viewequip, "i?"), // 查看指定在线角色的装备面板信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_ViewEquip
+#ifdef Pandas_ScriptCommand_CountItemIdx
+	BUILDIN_DEF(countitemidx, "i?"), // 获取指定背包序号的道具在背包中的数量 [Sola丶小克]
+	BUILDIN_DEF2(countitemidx, "countinventory", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_CountItemIdx
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMapSpawns

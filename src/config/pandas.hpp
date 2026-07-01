@@ -1735,6 +1735,7 @@
 	#define Pandas_ScriptCommand_ViewEquip
 	// 是否启用 countitemidx 脚本指令 [Sola丶小克]
 	// 获取指定背包序号的道具在背包中的数量 (该指令有一个用于兼容的别名: countinventory)
+	#define Pandas_ScriptCommand_CountItemIdx
 	// 是否启用 delitemidx 脚本指令的别名 delinventory [Sola丶小克]
 	// https://github.com/rathena/rathena/commit/c18707bb6dd2bd6068bc0d3708401871a2d7270c
 	// 由于 rAthena 官方实现了 delitemidx, 因此使用它来接替原先熊猫模拟器的自定义实现
