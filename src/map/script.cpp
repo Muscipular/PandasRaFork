@@ -30904,6 +30904,32 @@ BUILDIN_FUNC(checksuspend) {
 }
 #endif // Pandas_ScriptCommand_CheckSuspend
 
+#ifdef Pandas_ScriptCommand_BonusScriptRemove
+/* ===========================================================
+ * 指令: bonus_script_remove
+ * 描述: 移除指定的 bonus_script 效果脚本
+ * 用法: bonus_script_remove <效果脚本编号>{,<角色编号>};
+ * 返回: 成功移除则返回 true, 找不到脚本代码或移除失败则返回 false
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(bonus_script_remove) {
+	TBL_PC* sd = nullptr;
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, false);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	uint64 bonus_id = script_getnum64(st, 2);
+	if (pc_bonus_script_remove(sd, bonus_id)) {
+		script_pushint(st, true);
+	} else {
+		script_pushint(st, false);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BonusScriptRemove
+
 #ifdef Pandas_ScriptCommand_MobRemove
 /* ===========================================================
  * 指令: mobremove
@@ -33104,6 +33130,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_CheckSuspend
 	BUILDIN_DEF(checksuspend, "?"), // 获取指定角色或指定账号当前在线角色的挂机模式 [Sola丶小克]
 #endif // Pandas_ScriptCommand_CheckSuspend
+#ifdef Pandas_ScriptCommand_BonusScriptRemove
+	BUILDIN_DEF(bonus_script_remove, "i?"), // 移除指定的 bonus_script 效果脚本 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BonusScriptRemove
 #ifdef Pandas_ScriptCommand_MobRemove
 	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
 #endif // Pandas_ScriptCommand_MobRemove

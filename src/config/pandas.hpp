@@ -1913,6 +1913,7 @@
 	#endif // Pandas_Struct_Autotrade_Extend
 	// 是否启用 bonus_script_remove 脚本指令 [Sola丶小克]
 	// 该指令用于移除指定的 bonus_script 效果脚本
+	#define Pandas_ScriptCommand_BonusScriptRemove
 	// 是否启用 bonus_script_list 脚本指令 [Sola丶小克]
 	// 该指令用于获取指定角色当前激活的全部 bonus_script 效果脚本编号
 	// 是否启用 bonus_script_exists 脚本指令 [Sola丶小克]

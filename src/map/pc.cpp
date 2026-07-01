@@ -16062,6 +16062,47 @@ uint64 pc_bonus_script_generate_unique_id(map_session_data* sd) {
 }
 #endif // Pandas_BonusScript_Unique_ID
 
+#ifdef Pandas_ScriptCommand_BonusScriptRemove
+//************************************
+// Method:      pc_bonus_script_remove
+// Description: 移除指定的 bonus_script 效果脚本
+// Access:      public
+// Parameter:   map_session_data * sd
+// Parameter:   uint64 bonus_id
+// Returns:     bool
+// Author:      Sola丶小克(CairoLee)  2021/04/05 17:37
+//************************************
+bool pc_bonus_script_remove(map_session_data* sd, uint64 bonus_id) {
+	struct linkdb_node* node = nullptr;
+	struct s_bonus_script_entry* entry = nullptr;
+	uint16 count = 0;
+
+	if (!sd)
+		return false;
+
+	if ((node = sd->bonus_script.head)) {
+		while (node) {
+			struct linkdb_node* next = node->next;
+			entry = (struct s_bonus_script_entry*)node->data;
+			if (bonus_id == entry->bonus_id) {
+				linkdb_erase(&sd->bonus_script.head, (void*)((intptr_t)entry));
+				pc_bonus_script_free_entry(sd, entry);
+				count++;
+			}
+			node = next;
+		}
+	}
+
+	pc_bonus_script_check_final(sd);
+
+	if (count) {
+		status_calc_pc(sd, SCO_NONE);
+	}
+
+	return (count > 0);
+}
+#endif // Pandas_ScriptCommand_BonusScriptRemove
+
 /** [Cydh]
  * Gives/removes SC_BASILICA when player steps in/out the cell with 'cell_basilica'
  * @param sd: Target player
