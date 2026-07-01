@@ -2934,6 +2934,11 @@ int32 unit_attack(block_list *src,int32 target_id,int32 continuous)
 	if (ud == nullptr)
 		return USW_NONE;
 
+#ifdef Pandas_MapFlag_NoAttack
+	if (map_getmapflag(src->m, MF_NOATTACK))
+		return USW_FIXPOS;
+#endif // Pandas_MapFlag_NoAttack
+
 	mob_data* md = BL_CAST(BL_MOB, src);
 
 	// Check for special monster random target mode, function might overwrite the original target
