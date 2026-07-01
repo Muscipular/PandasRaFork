@@ -589,7 +589,11 @@ uint64 StylistDatabase::parseBodyNode( const ryml::NodeRef& node ){
 StylistDatabase stylist_db;
 
 const std::string BarterDatabase::getDefaultLocation(){
+#ifndef Pandas_UserExperience_Move_BartersYml_To_DB
 	return "npc/barters.yml";
+#else
+	return std::string(db_path) + "/barters.yml";
+#endif // Pandas_UserExperience_Move_BartersYml_To_DB
 }
 
 uint64 BarterDatabase::parseBodyNode( const ryml::NodeRef& node ){
