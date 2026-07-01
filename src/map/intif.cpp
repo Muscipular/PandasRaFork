@@ -568,6 +568,12 @@ bool intif_send_guild_storage(uint32 account_id, struct s_storage *gstor)
 {
 	if (CheckForCharServer())
 		return false;
+
+#ifdef Pandas_Fix_Storage_DirtyFlag_Override
+	// 保存请求发出后, 若期间又有增删改操作, 对应路径会重新将该标记置为 true.
+	gstor->dirty_when_saving = false;
+#endif // Pandas_Fix_Storage_DirtyFlag_Override
+
 #ifndef Pandas_Unlock_Storage_Capacity_Limit
 	WFIFOHEAD(inter_fd,sizeof(struct s_storage)+12);
 	WFIFOW(inter_fd,0) = 0x3019;
@@ -3611,9 +3617,16 @@ static void intif_parse_StorageSaved(int32 fd)
 						}
 					}
 
+					#ifndef Pandas_Fix_Storage_DirtyFlag_Override
 					if( stor ){
 						stor->dirty = false;
 					}
+					#else
+					// 只有在保存期间没有任何增删改操作, 才能将 dirty 标记设置为 false.
+					if (stor && !stor->dirty_when_saving) {
+						stor->dirty = false;
+					}
+					#endif // Pandas_Fix_Storage_DirtyFlag_Override
 				}
 				break;
 			case TABLE_CART: // cart
@@ -3697,7 +3710,7 @@ bool intif_storage_request( const map_session_data* sd, enum storage_type type, 
  * @param stor: Storage data
  * @ return false - error, true - message sent
  */
-bool intif_storage_save( const map_session_data* sd, const s_storage* stor )
+bool intif_storage_save( const map_session_data* sd, s_storage* stor )
 {
 	int32 stor_size = sizeof(struct s_storage);
 
@@ -3706,6 +3719,11 @@ bool intif_storage_save( const map_session_data* sd, const s_storage* stor )
 
 	if (CheckForCharServer())
 		return false;
+
+#ifdef Pandas_Fix_Storage_DirtyFlag_Override
+	// 保存请求发出后, 若期间又有增删改操作, 对应路径会重新将该标记置为 true.
+	stor->dirty_when_saving = false;
+#endif // Pandas_Fix_Storage_DirtyFlag_Override
 
 #ifndef Pandas_Unlock_Storage_Capacity_Limit
 	WFIFOHEAD(inter_fd, stor_size+13);

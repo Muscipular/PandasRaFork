@@ -276,6 +276,9 @@ int32 storage_additem(map_session_data* sd, struct s_storage *stor, struct item 
 
 				stor->u.items_storage[i].amount += amount;
 				stor->dirty = true;
+#ifdef Pandas_Fix_Storage_DirtyFlag_Override
+				stor->dirty_when_saving = true;
+#endif // Pandas_Fix_Storage_DirtyFlag_Override
 #ifdef Pandas_FuncDefine_STORAGE_ADDITEM
 				if( direct_creater )
 					return 0;
@@ -306,6 +309,9 @@ int32 storage_additem(map_session_data* sd, struct s_storage *stor, struct item 
 	stor->amount++;
 	stor->u.items_storage[i].amount = amount;
 	stor->dirty = true;
+#ifdef Pandas_Fix_Storage_DirtyFlag_Override
+	stor->dirty_when_saving = true;
+#endif // Pandas_Fix_Storage_DirtyFlag_Override
 #ifdef Pandas_FuncDefine_STORAGE_ADDITEM
 	if( direct_creater )
 		return 0;
@@ -330,6 +336,9 @@ int32 storage_delitem(map_session_data* sd, struct s_storage *stor, int32 index,
 
 	stor->u.items_storage[index].amount -= amount;
 	stor->dirty = true;
+#ifdef Pandas_Fix_Storage_DirtyFlag_Override
+	stor->dirty_when_saving = true;
+#endif // Pandas_Fix_Storage_DirtyFlag_Override
 
 	if( stor->u.items_storage[index].amount == 0 ) {
 		memset(&stor->u.items_storage[index],0,sizeof(stor->u.items_storage[0]));
@@ -811,6 +820,9 @@ bool storage_guild_additem(map_session_data* sd, struct s_storage* stor, struct 
 				stor->u.items_guild[i].amount += amount;
 				clif_storageitemadded(sd,&stor->u.items_guild[i],i,amount);
 				stor->dirty = true;
+#ifdef Pandas_Fix_Storage_DirtyFlag_Override
+				stor->dirty_when_saving = true;
+#endif // Pandas_Fix_Storage_DirtyFlag_Override
 
 				storage_guild_log( sd, &stor->u.items_guild[i], amount );
 
@@ -830,6 +842,9 @@ bool storage_guild_additem(map_session_data* sd, struct s_storage* stor, struct 
 	clif_storageitemadded(sd,&stor->u.items_guild[i],i,amount);
 	clif_updatestorageamount(*sd, stor->amount, stor->max_amount);
 	stor->dirty = true;
+#ifdef Pandas_Fix_Storage_DirtyFlag_Override
+	stor->dirty_when_saving = true;
+#endif // Pandas_Fix_Storage_DirtyFlag_Override
 
 	storage_guild_log( sd, &stor->u.items_guild[i], amount );
 
@@ -866,6 +881,9 @@ bool storage_guild_additem2(struct s_storage* stor, struct item* item, int32 amo
 					ShowWarning("storage_guild_additem2: Stack limit reached! Altered amount of item \"" CL_WHITE "%s" CL_RESET "\" (%u). '" CL_WHITE "%d" CL_RESET "' -> '" CL_WHITE"%d" CL_RESET "'.\n", id->name.c_str(), id->nameid, item->amount, amount);
 				stor->u.items_guild[i].amount += amount;
 				stor->dirty = true;
+#ifdef Pandas_Fix_Storage_DirtyFlag_Override
+				stor->dirty_when_saving = true;
+#endif // Pandas_Fix_Storage_DirtyFlag_Override
 				return true;
 			}
 		}
@@ -880,6 +898,9 @@ bool storage_guild_additem2(struct s_storage* stor, struct item* item, int32 amo
 	stor->u.items_guild[i].amount = amount;
 	stor->amount++;
 	stor->dirty = true;
+#ifdef Pandas_Fix_Storage_DirtyFlag_Override
+	stor->dirty_when_saving = true;
+#endif // Pandas_Fix_Storage_DirtyFlag_Override
 	return true;
 }
 
@@ -912,6 +933,9 @@ bool storage_guild_delitem(map_session_data* sd, struct s_storage* stor, int32 n
 
 	clif_storageitemremoved( *sd, n, amount );
 	stor->dirty = true;
+#ifdef Pandas_Fix_Storage_DirtyFlag_Override
+	stor->dirty_when_saving = true;
+#endif // Pandas_Fix_Storage_DirtyFlag_Override
 	return true;
 }
 
@@ -1129,8 +1153,13 @@ void storage_guild_storagesaved(int32 guild_id)
 	struct s_storage *stor;
 
 	if ((stor = guild2storage2(guild_id)) != nullptr) {
+		#ifndef Pandas_Fix_Storage_DirtyFlag_Override
 		if (stor->dirty && !stor->status) // Storage has been correctly saved.
 			stor->dirty = false;
+		#else
+		if (stor->dirty && !stor->status && !stor->dirty_when_saving) // Storage has been correctly saved.
+			stor->dirty = false;
+		#endif // Pandas_Fix_Storage_DirtyFlag_Override
 	}
 }
 

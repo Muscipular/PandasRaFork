@@ -518,6 +518,9 @@ enum e_storage_mode {
 
 struct s_storage {
 	bool dirty; ///< Dirty status, data needs to be saved
+#ifdef Pandas_Fix_Storage_DirtyFlag_Override
+	bool dirty_when_saving; ///< 保存请求待确认期间是否发生过新的增删改操作
+#endif // Pandas_Fix_Storage_DirtyFlag_Override
 	bool status; ///< Current status of storage (opened or closed)
 	uint16 amount; ///< Amount of items in storage
 	bool lock; ///< If locked, can't use storage when item bound retrieval
