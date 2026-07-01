@@ -861,6 +861,7 @@
 
 	// 修正 npc_unloadfile 和 npc_parsesrcfile 的行为会被空格影响的问题 [Sola丶小克]
 	// 如果 @reloadnpc 时给定的路径带空格, 系统将无法正确的 unloadnpc, 导致 npc 重复出现
+	#define Pandas_Fix_NPC_Filepath_WhiteSpace_Effects
 
 	// 修正 skill_db.yml 的 ItemCost 字段指定的 Item 道具不存在时
 	// 会导致地图服务器直接崩溃的问题. 看代码应该是 rAthena 的工程师手误了 [Sola丶小克]
