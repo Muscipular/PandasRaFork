@@ -8,6 +8,7 @@
 	#define Pandas_FuncIncrease
 	#define Pandas_PacketFunction
 	#define Pandas_CreativeWork
+	#define Pandas_Crashfix
 	#define Pandas_Mapflags
 	#define Pandas_ScriptEngine
 	#define Pandas_NpcEvent
@@ -791,6 +792,97 @@
 #ifndef Pandas_Support_Transfer_Autotrade_Player
 	#undef Pandas_BattleConfig_Multiplayer_Recall_Behavior
 #endif // Pandas_Support_Transfer_Autotrade_Player
+
+// ============================================================================
+// 官方崩溃修正组 - Pandas_Crashfix
+// ============================================================================
+
+#ifdef Pandas_Crashfix
+	// 对部分比较关键的变量初始化时进行置空处理 [Sola丶小克]
+	// 特别针对那些单纯依赖目标是否为 Null 作为野指针判断的相关变量
+
+	// 是否在 Release 模式下也启用 nullpo_ret 等系列指令 [Sola丶小克]
+	// 在 rAthena 的设计中, nullpo_ret 等指令仅在 Debug 模式会拦截空指针的情况并记录下位置信息
+	// 为了健壮性考虑, 熊猫模拟器会试图在 Release 模式下也使这些指令可以拦截空指针的情况
+	// 因为有些空指针时在运行时产生的, 日常测试非常难以覆盖到这些异常情况
+	// 若未来在生产环境执行过程中也碰到了空指针错误, 可考虑尝试上报到服务端进行统计分析
+
+	// 对函数的参数进行合法性校验 [Sola丶小克]
+
+	// 对潜在的空指针调用崩溃情况进行校验和判断 [Sola丶小克]
+
+	// 对除数可能为零的情况进行一些规避处理 [Sola丶小克]
+
+	// 修复使用 getd 操作的变量名存在空格开头时,
+	// 若 getd 的结果直接作为参数传入其他脚本指令, 会导致地图服务器崩溃的问题 [Sola丶小克]
+	// 重现方法:
+	// 使 NPC 调用 .@result = inarray(getd(" $test"), 100); 即可触发崩溃
+
+	// 修正 Visual Studio 2019 的 16.3 在支持 AVX512 指令集的设备上
+	// 使用 std::unordered_map::reserve 会提示 Illegal instruction 并导致地图服务器崩溃的问题.
+	// 虽然根据微软的回复已经在 Visual Studio 2019 的 16.4 Preview 4 中解决了问题,
+	// 考虑部分用户可能会一直停留在存在问题的编译器上工作, 因此做一个热修复.
+	// 此修复只对 _MSC_VER == 1923 的 Visual Studio 编译器有效 (对应 Visual Studio 2019 16.3 版本)
+	// https://developercommunity.visualstudio.com/content/problem/787296/vs2019-163-seems-to-incorrectly-detect-avx512-on-w.html
+	// 感谢"李小狼"在阿里云服务器上暴露此问题, 并提供调试环境
+
+	// 修正在 NPC 事件脚本代码中执行 unloadnpc 会导致地图服务器崩溃的问题 [Sola丶小克]
+	// unloadnpc 的时候会重新构造 script_event 这个 std::map 的内容
+	// 这会导致 npc_script_event 中提前获取的 vector 引用所指向的内容被清空,
+	// 以至于在执行下一轮循环的时候, 无法获取已经被清空的原 script_event 内容, 而触发崩溃
+	// 感谢"聽風"指出重现此问题的条件和环境
+
+	// 修正 delchar 指令可能会导致地图服务器崩溃的问题 [Sola丶小克]
+	// 会导致崩溃的示例脚本: .@m$ = delchar("", 0);
+
+	// 修正 SC_BOSSMAPINFO 会导致地图服务器崩溃的问题 [Sola丶小克]
+
+	// 修正释放或删除 ev_db 时, 对应的 script_event 节点没清空的问题 [Sola丶小克]
+	// 在 reloadscript 时可能会因为 ev_db 被清空, 其他环节直接使用 script_event 的值而崩溃
+
+	// 修正在未开启大乐透功能的情况下启动服务端, 再重新打开大乐透功能
+	// 并用 @reloadbattleconf 使之立刻生效之后, 点击大乐透按钮会导致地图服务器崩溃的问题 [Sola丶小克]
+
+	// 修正释放 script_code 后没有将指针置空, 导致的崩溃问题 [Sola丶小克]
+	// 感谢 Renee / HongShin 协助进行相关测试, 感谢 ╰づ记忆•斑驳〤 提出此问题
+	// 重现方法:
+	// - 编译成 Release 模式 (Debug 模式下编译器有内存访问越界保护, 无法被触发)
+	// - 登录游戏, 将 Alt+M 中的表情快捷键的 8 设置为 @reloaditemdb
+	// - 使用 @item 指令获取道具 12491, 双击执行
+	// - 不做出任何选择, 直接按 Alt+8 触发 @reloaditemdb
+	// - 完成重载后, 选择某一个菜单项 - 此时应该触发崩溃
+	// - 若没有崩溃, 则重复使用 12491 -> reload -> 选择, 直到崩溃
+	// reloaditemdb -> item_db.reload(); -> 触发每一个 item_data 的析构函数 (destruct function) ->
+	// script_free_code 释放掉 script/equip_script/unequip_script 的 script_code
+	// 但是释放后没有将对应的指针设为 NULL. 导致上述重现步骤中 script_free_state 函数针对 st->script->local.vars
+	// 和 st->script->local.arrays 的空指针判断被绕过, 继而触发崩溃
+
+	// 修正 pc_setpos 在特殊操作情况下可能会导致崩溃的问题 [Sola丶小克]
+	// 重现方法:
+	// - 构造一个 NPC, 对话开始时 sleep 5000 然后用 atcommand 指令调用 @warp
+	// - 玩家与其对话然后立刻下线, 时间到之后会触发 warp 指令并导致崩溃
+	// 因为触发 atcommand 的时候角色已经下线, 因此 atcommand_sub 会生成一个 dummy_sd 来替代,
+	// 而 dummy_sd 并非真实存在的 sd 对象, 最后会导致地图服务器崩溃
+
+	// 修正 getinstancevar 传递无效的副本编号会导致地图服务器崩溃的问题 [Sola丶小克]
+
+	// 修正 setinstancevar 传递无效的副本编号会导致地图服务器崩溃的问题 [Sola丶小克]
+
+	// 规避脚本引擎在定时器唤醒后可能导致的潜在崩溃 [Sola丶小克]
+	// 目前常看到的崩溃调用堆栈是:
+	// 在脚本被 sleep / sleep2 定时机制安排在未来继续执行某脚本时,
+	// 如果在脚本恢复执行之前, 就因为其他原因把整个脚本释放掉, 就会在恢复执行脚本的时候导致地图服务器崩溃.
+	// 具体: 从 run_script_timer 恢复进入 run_script_main 之后崩溃
+	// 至于什么地方会在脚本还没恢复执行之前就将 script_code 释放暂时还没有特别明确的线索
+
+	// 规避在 map_addblock 和 map_delblock 因检查不严而导致崩溃的问题 [Renee]
+
+	// 避免非 DelayConsume 类型的道具在使用脚本中调用 laphine_synthesis 脚本指令时,
+	// 当最后一个物品被消耗时会导致地图服务器崩溃的问题 [Sola丶小克]
+
+	// 避免非 DelayConsume 类型的道具在使用脚本中调用 laphine_upgrade 脚本指令时,
+	// 当最后一个物品被消耗时会导致地图服务器崩溃的问题 [Sola丶小克]
+#endif // Pandas_Crashfix
 
 // ============================================================================
 // 地图标记组 - Pandas_Mapflags
