@@ -1311,6 +1311,7 @@
 		// 当玩家成功获得一个状态(Buff)后触发实时事件 [Sola丶小克]
 		// 事件类型: Express / 事件名称: OnPCBuffStartExpress
 		// 常量名称: NPCX_SC_START / 变量名称: sc_start_express_name
+		#define Pandas_NpcExpress_SC_START
 
 		// 当玩家进入或者改变地图时触发实时事件 [Sola丶小克]
 		// 事件类型: Express / 事件名称: OnPCEnterMapExpress

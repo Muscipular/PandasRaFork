@@ -392,6 +392,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcExpress_SC_END
 	"OnPCBuffEndExpress",	// NPCX_SC_END		// sc_end_express_name	// 当玩家成功解除一个状态(Buff)后触发实时事件
 #endif // Pandas_NpcExpress_SC_END
+#ifdef Pandas_NpcExpress_SC_START
+	"OnPCBuffStartExpress",	// NPCX_SC_START		// sc_start_express_name	// 当玩家成功获得一个状态(Buff)后触发实时事件
+#endif // Pandas_NpcExpress_SC_START
 	// NPC related
 	"OnTouch_",	//ontouch_event_name (runs on first visible char to enter area, picks another char if the first char leaves)
 	"OnTouch",	//ontouch2_event_name (run whenever a char walks into the OnTouch area)

@@ -2512,6 +2512,9 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcExpress_SC_END
 	NPCX_SC_END,	// sc_end_express_name	// OnPCBuffEndExpress		// 当玩家成功解除一个状态(Buff)后触发实时事件
 #endif // Pandas_NpcExpress_SC_END
+#ifdef Pandas_NpcExpress_SC_START
+	NPCX_SC_START,	// sc_start_express_name	// OnPCBuffStartExpress		// 当玩家成功获得一个状态(Buff)后触发实时事件
+#endif // Pandas_NpcExpress_SC_START
 	NPCE_MAX
 };
 

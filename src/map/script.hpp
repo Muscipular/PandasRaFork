@@ -258,6 +258,9 @@ struct Script_Config {
 #ifdef Pandas_NpcExpress_SC_END
 	const char* sc_end_express_name;	// NPCX_SC_END	// OnPCBuffEndExpress	// 当玩家成功解除一个状态(Buff)后触发实时事件
 #endif // Pandas_NpcExpress_SC_END
+#ifdef Pandas_NpcExpress_SC_START
+	const char* sc_start_express_name;	// NPCX_SC_START	// OnPCBuffStartExpress	// 当玩家成功获得一个状态(Buff)后触发实时事件
+#endif // Pandas_NpcExpress_SC_START
 	// NPC related
 	const char* ontouch_event_name;
 	const char* ontouch2_event_name;
