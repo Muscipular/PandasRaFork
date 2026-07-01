@@ -1780,6 +1780,7 @@
 	#define Pandas_ScriptCommand_RentTimeIdx
 	// 是否启用 party_leave 脚本指令 [Sola丶小克]
 	// 使当前角色或指定角色退出队伍 (主要出于兼容目的而实现该指令)
+	#define Pandas_ScriptCommand_PartyLeave
 	// 是否启用 script4each / script4eachmob / script4eachnpc 脚本指令 [Sola丶小克]
 	// 对指定范围的玩家 / 魔物 / NPC 执行相同的一段脚本
 	#define Pandas_ScriptCommand_Script4Each

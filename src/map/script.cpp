@@ -31362,6 +31362,27 @@ BUILDIN_FUNC(renttimeidx) {
 }
 #endif // Pandas_ScriptCommand_RentTimeIdx
 
+#ifdef Pandas_ScriptCommand_PartyLeave
+/* ===========================================================
+ * 指令: party_leave
+ * 描述: 使当前角色或指定角色退出队伍
+ * 用法: party_leave {<角色编号>};
+ * 返回: 若指定的角色不在线或不在队伍中则返回 0, 若角色成功退出队伍则返回 1
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(party_leave) {
+	map_session_data *sd = nullptr;
+
+	if (!script_charid2sd(2, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushint(st, party_leave(*sd));
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_PartyLeave
+
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 /* ===========================================================
  * 指令: getmapspawns
@@ -32235,6 +32256,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_RentTimeIdx
 	BUILDIN_DEF(renttimeidx, "ii?"), // 增加/减少指定背包序号道具的租赁时间 [Sola丶小克]
 #endif // Pandas_ScriptCommand_RentTimeIdx
+#ifdef Pandas_ScriptCommand_PartyLeave
+	BUILDIN_DEF(party_leave, "?"), // 使当前角色或指定角色退出队伍 [Sola丶小克]
+#endif // Pandas_ScriptCommand_PartyLeave
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMapSpawns
