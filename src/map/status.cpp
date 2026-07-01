@@ -5351,11 +5351,21 @@ void status_calc_regen(block_list *bl, struct status_data *status, struct regen_
 	status_change *sc;
 	int32 val, skill, reg_flag;
 
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!bl || !status || !regen)
+		return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	if( !(bl->type&BL_REGEN) || !regen )
 		return;
 
 	sd = BL_CAST(BL_PC,bl);
 	sc = status_get_sc(bl);
+
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if ((bl->type&BL_PC) && !sd)
+		return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
 
 	val = (status->vit/5) + max(1, status->max_hp/200);
 

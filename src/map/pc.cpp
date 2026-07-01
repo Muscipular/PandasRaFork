@@ -11689,6 +11689,10 @@ char* pc_readregstr( const map_session_data* sd, int64 reg )
  *------------------------------------------*/
 bool pc_setregstr(map_session_data* sd, int64 reg, const char* str)
 {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd || !str) return false;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	struct script_reg_str *p = nullptr;
 	uint32 index = script_getvaridx(reg);
 	DBData prev;

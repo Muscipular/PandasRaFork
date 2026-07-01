@@ -3630,6 +3630,10 @@ struct script_data* push_copy(struct script_stack* stack, int32 pos)
 /// Adjusts all stack pointers.
 void pop_stack(struct script_state* st, int32 start, int32 end)
 {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!st || !st->stack) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	struct script_stack* stack = st->stack;
 	struct script_data* data;
 	int32 i;
@@ -22814,6 +22818,10 @@ BUILDIN_FUNC(bg_info)
  */
 int32 script_instancegetid(struct script_state* st, e_instance_mode mode)
 {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!st) return 0;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	int32 instance_id = 0;
 
 	if (mode == IM_NONE) {

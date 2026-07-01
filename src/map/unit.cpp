@@ -2904,6 +2904,10 @@ int32 unit_unattackable(block_list *bl)
  */
 int32 unit_attack(block_list *src,int32 target_id,int32 continuous)
 {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	nullpo_ret(src);
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	block_list *target;
 	int32 range;
 

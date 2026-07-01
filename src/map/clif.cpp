@@ -16293,6 +16293,10 @@ void clif_parse_Check(int32 fd, map_session_data *sd)
 ///		1 = over weight
 ///		2 = fatal error
 void clif_Mail_setattachment( map_session_data* sd, int32 index, int32 amount, uint8 flag ){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	int32 fd = sd->fd;
 
 #if PACKETVER < 20150513
@@ -16351,6 +16355,10 @@ void clif_Mail_setattachment( map_session_data* sd, int32 index, int32 amount, u
 /// 09f2 <mail id>.Q <mail tab>.B <result>.B (ZC_ACK_ZENY_FROM_MAIL)
 /// 09f4 <mail id>.Q <mail tab>.B <result>.B (ZC_ACK_ITEM_FROM_MAIL)
 void clif_mail_getattachment(map_session_data* sd, struct mail_message *msg, uint8 result, enum mail_attachment_type type) {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	int32 fd = sd->fd;
 
@@ -16359,6 +16367,10 @@ void clif_mail_getattachment(map_session_data* sd, struct mail_message *msg, uin
 	WFIFOB(fd,2) = result;
 	WFIFOSET(fd,packet_len(0x245));
 #else
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!msg) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	switch( type ){
 		case MAIL_ATT_ITEM:
 		case MAIL_ATT_ZENY:
@@ -16387,6 +16399,10 @@ void clif_mail_getattachment(map_session_data* sd, struct mail_message *msg, uin
 ///     1 = recipinent does not exist
 /// 09ed <result>.B (ZC_ACK_WRITE_MAIL)
 void clif_Mail_send(map_session_data* sd, enum mail_send_result result){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	int32 fd = sd->fd;
 
@@ -16411,6 +16427,10 @@ void clif_Mail_send(map_session_data* sd, enum mail_send_result result){
 ///     1 = failure
 // 09f6 <mail tab>.B <mail id>.Q (ZC_ACK_DELETE_MAIL)
 void clif_mail_delete( map_session_data* sd, struct mail_message *msg, bool success ){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd || !msg) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	int32 fd = sd->fd;
 
@@ -16451,6 +16471,10 @@ void clif_Mail_return(int32 fd, int32 mail_id, int16 fail)
 /// 024a <mail id>.L <title>.40B <sender>.24B (ZC_MAIL_RECEIVE)
 /// 09e7 <result>.B (ZC_NOTIFY_UNREADMAIL)
 void clif_Mail_new(map_session_data* sd, int32 mail_id, const char *sender, const char *title){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	int32 fd = sd->fd;
 
@@ -16494,6 +16518,10 @@ void clif_Mail_window(int32 fd, int32 flag)
 /// 0ac2 <packet len>.W <unknown>.B (ZC_ACK_MAIL_LIST3)
 ///		{ <type>.B <mail id>.Q <read>.B <type>.B <sender>.24B <expires>.L <title length>.W <title>.?B }*
 void clif_Mail_refreshinbox(map_session_data *sd,enum mail_inbox_type type,int64 mailID){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	int32 fd = sd->fd;
 	struct mail_data *md = &sd->mail.inbox;
@@ -16687,6 +16715,10 @@ void clif_Mail_refreshinbox(map_session_data *sd,enum mail_inbox_type type,int64
 /// 0ac0 <mail id>.Q <unknown>.16B (CZ_OPEN_MAILBOX2)
 /// 0ac1 <mail id>.Q <unknown>.16B (CZ_REQ_REFRESH_MAIL_LIST2)
 void clif_parse_Mail_refreshinbox(int32 fd, map_session_data *sd){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	if( mail_invalid_operation( sd ) ){
 		return;
 	}
@@ -16754,6 +16786,10 @@ void clif_parse_Mail_refreshinbox(int32 fd, map_session_data *sd){
 ///		{  }*n
 // TODO: Packet description => for repeated block
 void clif_Mail_read( map_session_data *sd, int32 mail_id ){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	int32 i, fd = sd->fd;
 
 	ARR_FIND(0, MAIL_MAX_INBOX, i, sd->mail.inbox.msg[i].id == mail_id);
@@ -16869,6 +16905,10 @@ void clif_Mail_read( map_session_data *sd, int32 mail_id ){
 /// 0241 <mail id>.L (CZ_MAIL_OPEN)
 /// 09ea <mail tab>.B <mail id>.Q (CZ_REQ_READ_MAIL)
 void clif_parse_Mail_read(int32 fd, map_session_data *sd){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	int32 mail_id = RFIFOL(fd,packet_db[RFIFOW(fd,0)].pos[0]);
 #else
@@ -16887,6 +16927,10 @@ void clif_parse_Mail_read(int32 fd, map_session_data *sd){
 /// Allow a player to begin writing a mail
 /// 0a12 <receiver>.24B <success>.B (ZC_ACK_OPEN_WRITE_MAIL)
 void clif_send_Mail_beginwrite_ack( map_session_data *sd, char* name, bool success ){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	PACKET_ZC_ACK_OPEN_WRITE_MAIL p = { 0 };
 
 	p.PacketType = rodexopenwrite;
@@ -16898,6 +16942,10 @@ void clif_send_Mail_beginwrite_ack( map_session_data *sd, char* name, bool succe
 /// Request to start writing a mail
 /// 0a08 <receiver>.24B (CZ_REQ_OPEN_WRITE_MAIL)
 void clif_parse_Mail_beginwrite( int32 fd, map_session_data *sd ){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	char name[NAME_LENGTH];
 
 	safestrncpy(name, RFIFOCP(fd, 2), NAME_LENGTH);
@@ -16920,6 +16968,10 @@ void clif_parse_Mail_beginwrite( int32 fd, map_session_data *sd ){
 /// Notification that the client cancelled writing a mail
 /// 0a03 (CZ_REQ_CANCEL_WRITE_MAIL)
 void clif_parse_Mail_cancelwrite( int32 fd, map_session_data *sd ){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	sd->state.mail_writing = false;
 }
 
@@ -16928,6 +16980,10 @@ void clif_parse_Mail_cancelwrite( int32 fd, map_session_data *sd ){
 /// 0a51 <char id>.L <class>.W <base level>.W <name>.24B (ZC_CHECK_RECEIVE_CHARACTER_NAME2)
 void clif_Mail_Receiver_Ack( const map_session_data* sd, uint32 char_id, int16 class_, uint32 level, const char* name ){
 #if PACKETVER >= 20141119
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	PACKET_ZC_CHECKNAME p = { 0 };
 
 	p.PacketType = HEADER_ZC_CHECKNAME;
@@ -16944,6 +17000,10 @@ void clif_Mail_Receiver_Ack( const map_session_data* sd, uint32 char_id, int16 c
 /// Request information about the recipient
 /// 0a13 <name>.24B (CZ_CHECK_RECEIVE_CHARACTER_NAME)
 void clif_parse_Mail_Receiver_Check(int32 fd, map_session_data *sd) {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER >= 20140423
 #if PACKETVER_MAIN_NUM >= 20201104 || PACKETVER_RE_NUM >= 20211103 || PACKETVER_ZERO_NUM >= 20201118
 	const PACKET_CZ_CHECKNAME2* p = reinterpret_cast<PACKET_CZ_CHECKNAME2*>( RFIFOP( fd, 0 ) );
@@ -16967,6 +17027,10 @@ void clif_parse_Mail_Receiver_Check(int32 fd, map_session_data *sd) {
 /// 09f1 <mail id>.Q <mail tab>.B (CZ_REQ_ZENY_FROM_MAIL)
 /// 09f3 <mail id>.Q <mail tab>.B (CZ_REQ_ITEM_FROM_MAIL)
 void clif_parse_Mail_getattach( int32 fd, map_session_data *sd ){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	int32 i;
 	struct mail_message* msg;
 #if PACKETVER < 20150513
@@ -17073,6 +17137,10 @@ void clif_parse_Mail_getattach( int32 fd, map_session_data *sd ){
 /// 0243 <mail id>.L (CZ_MAIL_DELETE)
 /// 09f5 <mail tab>.B <mail id>.Q (CZ_REQ_DELETE_MAIL)
 void clif_parse_Mail_delete(int32 fd, map_session_data *sd){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	int32 mail_id = RFIFOL(fd,packet_db[RFIFOW(fd,0)].pos[0]);
 #else
@@ -17117,6 +17185,10 @@ void clif_parse_Mail_delete(int32 fd, map_session_data *sd){
 /// Request to return a mail.
 /// 0273 <mail id>.L <receive name>.24B (CZ_REQ_MAIL_RETURN)
 void clif_parse_Mail_return(int32 fd, map_session_data *sd){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER_MAIN_NUM >= 20201104 || PACKETVER_RE_NUM >= 20211103 || PACKETVER_ZERO_NUM >= 20201118
 	const PACKET_CZ_RODEX_RETURN* p = reinterpret_cast<PACKET_CZ_RODEX_RETURN*>( RFIFOP( fd, 0 ) );
 
@@ -17149,6 +17221,10 @@ void clif_parse_Mail_return(int32 fd, map_session_data *sd){
 /// 0247 <index>.W <amount>.L (CZ_MAIL_ADD_ITEM)
 /// 0a04 <index>.W <amount>.W (CZ_REQ_ADD_ITEM_TO_MAIL)
 void clif_parse_Mail_setattach(int32 fd, map_session_data *sd){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	struct s_packet_db* info = &packet_db[RFIFOW(fd,0)];
 	uint16 idx = RFIFOW(fd,info->pos[0]);
 #if PACKETVER < 20150513
@@ -17182,6 +17258,10 @@ void clif_parse_Mail_setattach(int32 fd, map_session_data *sd){
 /// Remove an item from a mail
 /// 0a07 <result>.B <index>.W <amount>.W <weight>.W
 void clif_mail_removeitem( const map_session_data* sd, bool success, int32 index, int32 amount ){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	PACKET_ZC_ACK_REMOVE_ITEM_MAIL p = { 0 };
 
 	p.PacketType = rodexremoveitem;
@@ -17221,6 +17301,10 @@ void clif_mail_removeitem( const map_session_data* sd, bool success, int32 index
 /// 0a06 <index>.W <amount>.W (CZ_REQ_REMOVE_ITEM_MAIL)
 void clif_parse_Mail_winopen(int32 fd, map_session_data *sd)
 {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	int32 type = RFIFOW(fd,packet_db[RFIFOW(fd,0)].pos[0]);
 
@@ -17241,6 +17325,10 @@ void clif_parse_Mail_winopen(int32 fd, map_session_data *sd)
 /// 09ec <packet len>.W <recipient>.24B <sender>.24B <zeny>.Q <title length>.W <body length>.W <title>.?B <body>.?B (CZ_REQ_WRITE_MAIL)
 /// 0a6e <packet len>.W <recipient>.24B <sender>.24B <zeny>.Q <title length>.W <body length>.W <char id>.L <title>.?B <body>.?B (CZ_REQ_WRITE_MAIL2)
 void clif_parse_Mail_send(int32 fd, map_session_data *sd){
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 #if PACKETVER < 20150513
 	struct s_packet_db* info = &packet_db[RFIFOW(fd,0)];
 
@@ -18139,6 +18227,10 @@ void clif_bossmapinfo_clear(map_session_data* sd)
 /// 02d6 <account id>.L
 void clif_parse_ViewPlayerEquip(int32 fd, map_session_data* sd)
 {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	nullpo_retv(sd);
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	int32 aid = RFIFOL(fd, packet_db[RFIFOW(fd,0)].pos[0]);
 	map_session_data* tsd = map_id2sd(aid);
 
@@ -18187,6 +18279,10 @@ void clif_parse_configuration( int32 fd, map_session_data* sd ){
 	int32 cmd = RFIFOW(fd,0);
 	int32 type = RFIFOL(fd,packet_db[cmd].pos[0]);
 	bool flag = RFIFOL(fd,packet_db[cmd].pos[1]) != 0;
+
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd) return;
+#endif // Pandas_Crashfix_FunctionParams_Verify
 
 	switch( type ){
 		case CONFIG_OPEN_EQUIPMENT_WINDOW:

@@ -1887,6 +1887,11 @@ int32 npc_settimerevent_tick(npc_data* nd, int32 newtimer)
 
 int32 npc_event_sub(map_session_data* sd, struct event_data* ev, const char* eventname)
 {
+#ifdef Pandas_Crashfix_FunctionParams_Verify
+	if (!sd || !ev || !eventname || !ev->nd)
+		return 0;
+#endif // Pandas_Crashfix_FunctionParams_Verify
+
 	if ( sd->npc_id != 0 )
 	{
 		//Enqueue the event trigger.
