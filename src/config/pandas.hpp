@@ -1855,6 +1855,7 @@
 	#define Pandas_ScriptCommand_GetConstant
 	// 是否启用 preg_search 脚本指令 [Sola丶小克]
 	// 该指令用于执行一个正则表达式搜索并返回首个匹配的分组内容
+	#define Pandas_ScriptCommand_Preg_Search
 	// 是否启用 aura 脚本指令 [Sola丶小克]
 	// 该指令用于为角色激活特定组合的光环效果, 光环效果会一直跟随角色
 	// 此选项开关需要依赖 Pandas_Aura_Mechanism 的拓展
