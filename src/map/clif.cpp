@@ -11436,6 +11436,19 @@ void clif_parse_LoadEndAck(int32 fd,map_session_data *sd)
 		// Set facing direction before check below to update client
 		if (battle_config.spawn_direction)
 			unit_setdir(sd, sd->status.body_direction, false);
+#ifdef Pandas_NpcExpress_ENTERMAP
+		if (sd) {
+			pc_setreg(sd, add_str("@frommap_id"), 0);
+			pc_setreg(sd, add_str("@frommap_x"), 0);
+			pc_setreg(sd, add_str("@frommap_y"), 0);
+			pc_setregstr(sd, add_str("@frommap_name$"), "");
+			pc_setreg(sd, add_str("@tomap_id"), sd->m);
+			pc_setreg(sd, add_str("@tomap_x"), sd->x);
+			pc_setreg(sd, add_str("@tomap_y"), sd->y);
+			pc_setregstr(sd, add_str("@tomap_name$"), map[sd->m].name);
+			npc_script_event(*sd, NPCX_ENTERMAP);
+		}
+#endif // Pandas_NpcExpress_ENTERMAP
 	} else {
 		//For some reason the client "loses" these on warp/map-change.
 		clif_updatestatus(*sd,SP_STR);

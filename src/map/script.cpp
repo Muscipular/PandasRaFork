@@ -395,6 +395,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcExpress_SC_START
 	"OnPCBuffStartExpress",	// NPCX_SC_START		// sc_start_express_name	// 当玩家成功获得一个状态(Buff)后触发实时事件
 #endif // Pandas_NpcExpress_SC_START
+#ifdef Pandas_NpcExpress_ENTERMAP
+	"OnPCEnterMapExpress",	// NPCX_ENTERMAP		// entermap_express_name	// 当玩家进入或者改变地图时触发实时事件
+#endif // Pandas_NpcExpress_ENTERMAP
 	// NPC related
 	"OnTouch_",	//ontouch_event_name (runs on first visible char to enter area, picks another char if the first char leaves)
 	"OnTouch",	//ontouch2_event_name (run whenever a char walks into the OnTouch area)
