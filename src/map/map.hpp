@@ -605,6 +605,9 @@ enum _sp {
 
 #ifdef Pandas_Bonuses
 	SP_PANDAS_EXTEND_BONUS_START = 3500,
+#ifdef Pandas_Bonus3_bRebirthWithHeal
+	SP_PANDAS_REBIRTHWITHHEAL,	// 调整器名称: bRebirthWithHeal / 说明: 当玩家死亡时有 r/100% 的机率复活并恢复 h% 的 HP 和 s% 的 SP
+#endif // Pandas_Bonus3_bRebirthWithHeal
 	// PYHELP - BONUS - INSERT POINT - <Section 2>
 	SP_PANDAS_EXTEND_BONUS_END,
 #endif // Pandas_Bonuses

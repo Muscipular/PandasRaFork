@@ -5349,6 +5349,18 @@ void pc_bonus3(map_session_data *sd,int32 type,int32 type2,int32 type3,int32 val
 		sd->norecover_state_race[type2].rate = type3;
 		sd->norecover_state_race[type2].tick = val;
 		break;
+#ifdef Pandas_Bonus3_bRebirthWithHeal
+	case SP_PANDAS_REBIRTHWITHHEAL: // bonus3 bRebirthWithHeal,r,h,s;
+		if (sd->state.lr_flag != LR_FLAG_ARROW) {
+			sd->bonus.rebirth_rate += type2;
+			sd->bonus.rebirth_heal_percent_hp += type3;
+			sd->bonus.rebirth_heal_percent_sp += val;
+			sd->bonus.rebirth_rate = cap_value(sd->bonus.rebirth_rate, 0, 10000);
+			sd->bonus.rebirth_heal_percent_hp = cap_value(sd->bonus.rebirth_heal_percent_hp, 0, 100);
+			sd->bonus.rebirth_heal_percent_sp = cap_value(sd->bonus.rebirth_heal_percent_sp, 0, 100);
+		}
+		break;
+#endif // Pandas_Bonus3_bRebirthWithHeal
 	default:
 	#ifdef Pandas_NpcExpress_STATCALC
 		if (running_npc_stat_calc_event) {

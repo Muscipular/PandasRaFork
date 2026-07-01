@@ -1109,6 +1109,10 @@
 	export_constant2("bWeaponSubSize", SP_WEAPON_SUBSIZE);
 	export_constant2("bNonCritAtkRate", SP_NON_CRIT_ATK_RATE);
 #ifdef Pandas_Bonuses
+#ifdef Pandas_Bonus3_bRebirthWithHeal
+	// 当玩家死亡时有 r/100% 的机率复活并恢复 h% 的 HP 和 s% 的 SP
+	export_constant2("bRebirthWithHeal", SP_PANDAS_REBIRTHWITHHEAL);
+#endif // Pandas_Bonus3_bRebirthWithHeal
 	// PYHELP - BONUS - INSERT POINT - <Section 3>
 #endif // Pandas_Bonuses
 

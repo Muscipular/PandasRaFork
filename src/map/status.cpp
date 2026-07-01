@@ -1787,6 +1787,23 @@ int32 status_damage(block_list *src,block_list *target,int64 dhp, int64 dsp, int
 		return (int32)(hp+sp+ap);
 	}
 
+#ifdef Pandas_Bonus3_bRebirthWithHeal
+	if (target && target->type == BL_PC) {
+		TBL_PC* tsd = BL_CAST(BL_PC, target);
+
+		if (tsd && rnd() % 10000 < tsd->bonus.rebirth_rate) {
+			if (tsd->special_state.restart_full_recover) {
+				status_revive(target, 100, 100);
+			}
+			else {
+				status_revive(target, tsd->bonus.rebirth_heal_percent_hp, tsd->bonus.rebirth_heal_percent_sp);
+			}
+			clif_skill_nodamage(target, *target, ALL_RESURRECTION, 1, 1);
+			return (int32)(hp + sp + ap);
+		}
+	}
+#endif // Pandas_Bonus3_bRebirthWithHeal
+
 	status_change_clear(target,0);
 
 	if(flag&4) // Delete from memory. (also invokes map removal code)

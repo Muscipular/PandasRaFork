@@ -764,6 +764,9 @@ public:
 		int16 critical_rangeatk;
 		int16 weapon_atk_rate, weapon_matk_rate;
 		int32 skill_ratio;
+#ifdef Pandas_Bonus3_bRebirthWithHeal
+		int rebirth_rate, rebirth_heal_percent_hp, rebirth_heal_percent_sp;
+#endif // Pandas_Bonus3_bRebirthWithHeal
 	} bonus;
 	// zeroed vars end here.
 

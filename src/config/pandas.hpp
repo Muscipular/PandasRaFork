@@ -1222,6 +1222,7 @@
 	// 常量名称: SP_PANDAS_REBIRTHWITHHEAL / 调整器名称: bRebirthWithHeal
 	// 变量位置: map_session_data.bonus / 变量名称: rebirth_rate, rebirth_heal_percent_hp, rebirth_heal_percent_sp
 	// 使用原型: bonus3 bRebirthWithHeal,r,h,s;
+	#define Pandas_Bonus3_bRebirthWithHeal
 
 	// 是否启用 bonus2 bAddSkillRange 效果调整器 [聽風]
 	// 增加 sk 技能 n 格攻击距离
