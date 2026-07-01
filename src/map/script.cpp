@@ -31955,6 +31955,10 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_GetEquipIdx
 	BUILDIN_DEF(getequipidx, "i?"), // 获取指定位置装备的背包序号 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetEquipIdx
+#ifdef Pandas_ScriptCommand_StatusCalc
+	BUILDIN_DEF2(recalculatestat, "statuscalc", ""), // 由于 rAthena 已经实现 recalculatestat 指令, 这里兼容老版本 statuscalc 指令 [Sola丶小克]
+	BUILDIN_DEF2(recalculatestat, "status_calc", ""), // 由于 rAthena 已经实现 recalculatestat 指令, 这里兼容老版本 status_calc 指令
+#endif // Pandas_ScriptCommand_StatusCalc
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMapSpawns
