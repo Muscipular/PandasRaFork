@@ -861,6 +861,9 @@
 	// 修正 Visual Studio 2019 16.3 在支持 AVX512 指令设备上的 unordered_map reserve 崩溃问题 [Sola丶小克]
 	#define Pandas_Crashfix_VisualStudio_UnorderedMap_AVX512
 
+	// 修正在 NPC 事件中执行 unloadnpc 可能导致事件列表引用失效的问题 [Sola丶小克]
+	#define Pandas_Crashfix_Unloadnpc_In_Event
+
 	// 修正在未开启大乐透功能的情况下启动服务端, 再重新打开大乐透功能
 	// 并用 @reloadbattleconf 使之立刻生效之后, 点击大乐透按钮会导致地图服务器崩溃的问题 [Sola丶小克]
 
