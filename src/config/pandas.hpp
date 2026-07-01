@@ -1449,6 +1449,7 @@
 	#define Pandas_UserExperience_Rewrite_MapServerGenerator_Args_Process
 
 	// 优化 map-server-generator 的输出信息 [Sola丶小克]
+	#define Pandas_UserExperience_MapServerGenerator_Output
 
 	// 在 Linux 平台上使用 Ctrl+C 输出 ^C 符号之后换一行 [Sola丶小克]
 	#ifndef _WIN32
