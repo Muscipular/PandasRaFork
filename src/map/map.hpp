@@ -746,6 +746,9 @@ enum e_mapflag : int16 {
 #ifdef Pandas_MapFlag_MaxHeal
 	MF_MAXHEAL,
 #endif // Pandas_MapFlag_MaxHeal
+#ifdef Pandas_MapFlag_MaxDmg_Skill
+	MF_MAXDMG_SKILL,
+#endif // Pandas_MapFlag_MaxDmg_Skill
 #ifdef Pandas_MapFlag_NoCapture
 	MF_NOCAPTURE,
 #endif // Pandas_MapFlag_NoCapture

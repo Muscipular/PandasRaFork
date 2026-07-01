@@ -6803,6 +6803,22 @@ struct Damage battle_calc_attack(int32 attack_type,block_list *bl,block_list *ta
 
 	map_session_data *sd = BL_CAST(BL_PC, bl);
 
+#ifdef Pandas_MapFlag_MaxDmg_Skill
+	if (skill_id && bl && map_getmapflag(bl->m, MF_MAXDMG_SKILL)) {
+		int val = map_getmapflag_param(bl->m, MF_MAXDMG_SKILL, 1);
+		if (val > 0 && d.damage + d.damage2 > val) {
+			int64 overval = (d.damage + d.damage2) - val;
+			if (d.damage2 >= overval) {
+				d.damage2 -= overval;
+			} else {
+				overval -= d.damage2;
+				d.damage2 = 0;
+				d.damage = cap_value(d.damage - overval, 0, val);
+			}
+		}
+	}
+#endif // Pandas_MapFlag_MaxDmg_Skill
+
 	if (sd && d.damage + d.damage2 > 1)
 		battle_vanish_damage(sd, target, d.flag);
 
