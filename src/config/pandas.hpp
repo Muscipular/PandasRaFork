@@ -893,6 +893,7 @@
 	// 临时方案:
 	// 在 unit_walktoxy_sub 函数中, 如果发现当前坐标和目的地坐标一致, 那么放弃移动.
 	// 但问题更本质的原因是: 为什么会出现这样的情况...
+	#define Pandas_Fix_Same_Coordinate_Move_Logic
 
 	// 修正更换队长后, 新队长无法看到销毁副本按钮的问题
 	// 此选项开关需要依赖 Pandas_FuncLogic_Instance_Destroy_Command 的拓展 [Sola丶小克]

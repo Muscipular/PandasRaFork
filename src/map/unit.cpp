@@ -265,6 +265,11 @@ int32 unit_walktoxy_sub(block_list *bl)
 
 	walkpath_data wpd = { 0 };
 
+#ifdef Pandas_Fix_Same_Coordinate_Move_Logic
+	if (bl && bl->x == ud->to_x && bl->y == ud->to_y)
+		return 0;
+#endif // Pandas_Fix_Same_Coordinate_Move_Logic
+
 	if( !path_search(&wpd,bl->m,bl->x,bl->y,ud->to_x,ud->to_y,ud->state.walk_easy,CELL_CHKNOPASS) )
 		return 0;
 
