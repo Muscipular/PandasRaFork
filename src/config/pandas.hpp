@@ -1742,6 +1742,7 @@
 	#define Pandas_ScriptCommand_DelItemIdx
 	// 是否启用 identifyidx 脚本指令 [Sola丶小克]
 	// 鉴定指定背包序号的道具 (该指令有一个用于兼容的别名: identifybyidx)
+	#define Pandas_ScriptCommand_IdentifyIdx
 	// 是否启用 unequipidx 脚本指令 [Sola丶小克]
 	// 脱下指定背包序号的道具 (该指令有一个用于兼容的别名: unequipinventory)
 	// 是否启用 equipidx 脚本指令 [Sola丶小克]

@@ -30843,6 +30843,46 @@ BUILDIN_FUNC(countitemidx) {
 }
 #endif // Pandas_ScriptCommand_CountItemIdx
 
+#ifdef Pandas_ScriptCommand_IdentifyIdx
+/* ===========================================================
+ * 指令: identifyidx
+ * 描述: 鉴定指定背包序号的道具
+ * 用法: identifyidx <背包序号>{,<角色编号>};
+ * 返回: 操作成功则返回 1, 操作失败则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(identifyidx) {
+	map_session_data *sd = nullptr;
+	int idx = -1;
+
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	idx = script_getnum(st, 2);
+	if (idx < 0 || idx >= sd->inventory.max_amount) {
+		ShowWarning("buildin_identifyidx: Index (%d) should be from 0-%d.\n", idx, sd->inventory.max_amount - 1);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!item_db.find(sd->inventory.u.items_inventory[idx].nameid)) {
+		ShowWarning("buildin_identifyidx: Invalid Item ID (%u).\n", sd->inventory.u.items_inventory[idx].nameid);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (sd->inventory.u.items_inventory[idx].identify != 1) {
+		sd->inventory.u.items_inventory[idx].identify = 1;
+		clif_item_identified(*sd, idx, false);
+	}
+
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_IdentifyIdx
+
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 /* ===========================================================
  * 指令: getmapspawns
@@ -31671,6 +31711,10 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_DelItemIdx
 	BUILDIN_DEF2(delitemidx, "delinventory", "i??"), // 指定一个别名, 以便兼容的老版本或其他服务端 [Sola丶小克]
 #endif // Pandas_ScriptCommand_DelItemIdx
+#ifdef Pandas_ScriptCommand_IdentifyIdx
+	BUILDIN_DEF(identifyidx, "i?"), // 鉴定指定背包序号的道具 [Sola丶小克]
+	BUILDIN_DEF2(identifyidx, "identifybyidx", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_IdentifyIdx
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMapSpawns
