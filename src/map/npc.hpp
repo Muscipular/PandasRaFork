@@ -252,6 +252,13 @@ struct npc_data : public block_list {
 		int32 removal_tid;
 	} dynamicnpc;
 
+#ifdef Pandas_ScriptCommand_ShowVend
+	struct {
+		char message[NAME_LENGTH + 1];
+		bool show;
+	} vendingboard;
+#endif // Pandas_ScriptCommand_ShowVend
+
 #ifdef Pandas_Struct_Npc_Data_Pandas
 	struct {
 	#ifdef Pandas_Struct_Npc_Data_DestructionStrategy

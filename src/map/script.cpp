@@ -30714,6 +30714,61 @@ BUILDIN_FUNC(sethotkey) {
 }
 #endif // Pandas_ScriptCommand_SetHotkey
 
+#ifdef Pandas_ScriptCommand_ShowVend
+/* ===========================================================
+ * 指令: showvend
+ * 描述: 使指定的 NPC 头上可以显示露天商店的招牌
+ * 用法: showvend "<NPC名称>",<是否显示>{,"<招牌名称>"};
+ * 返回: 操作成功则返回 1, 操作失败则返回 0
+ * 作者: Jian916, Rewrite By Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(showvend) {
+	npc_data *nd = nullptr;
+	const char *npcname = nullptr, *message = nullptr;
+	char buf[NAME_LENGTH + 1] = { 0 };
+	int showit = 0;
+
+	npcname = script_getstr(st, 2);
+	showit = script_getnum(st, 3);
+
+	if (showit && !script_hasdata(st, 4)) {
+		ShowError("buildin_showvend: Can't create vendingboard without any message.\n");
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	} else if (showit && !script_isstring(st, 4)) {
+		ShowError("buildin_showvend: The 'message' param must be a string.\n");
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	} else if (showit) {
+		message = script_getstr(st, 4);
+	}
+
+	nd = npc_name2id(npcname);
+	if (nd == nullptr) {
+		ShowError("buildin_showvend: No such NPC '%s'.\n", npcname);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	switch (showit) {
+	case 0:
+		clif_closevendingboard(*nd, AREA_WOS, nullptr);
+		memset(nd->vendingboard.message, 0, NAME_LENGTH + 1);
+		nd->vendingboard.show = false;
+		break;
+	default:
+		safestrncpy(buf, message, sizeof(buf));
+		clif_showvendingboard(nd, buf);
+		nd->vendingboard.show = true;
+		safestrncpy(nd->vendingboard.message, buf, sizeof(nd->vendingboard.message));
+		break;
+	}
+
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_ShowVend
+
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 /* ===========================================================
  * 指令: getmapspawns
@@ -31529,6 +31584,9 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(sethotkey, "iiii"), // 设置指定快捷键位置的信息 [Sola丶小克]
 	BUILDIN_DEF2(sethotkey, "set_hotkey", "iiii"), // 指定一个别名, 以便兼容的老版本或其他服务端
 #endif // Pandas_ScriptCommand_SetHotkey
+#ifdef Pandas_ScriptCommand_ShowVend
+	BUILDIN_DEF(showvend, "si?"), // 使指定的 NPC 头上可以显示露天商店的招牌 [Jian916]
+#endif // Pandas_ScriptCommand_ShowVend
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMapSpawns

@@ -5376,6 +5376,10 @@ void clif_getareachar_unit( map_session_data* sd,block_list *bl ){
 				clif_specialeffect_single(bl,EF_BABYBODY2,sd->fd);
 			clif_efst_status_change_sub(sd, bl, SELF);
 			clif_progressbar_npc(nd, sd);
+#ifdef Pandas_ScriptCommand_ShowVend
+			if (nd->vendingboard.show)
+				clif_showvendingboard(nd, nd->vendingboard.message, SELF, sd);
+#endif // Pandas_ScriptCommand_ShowVend
 		}
 		break;
 	case BL_MOB:
@@ -7964,6 +7968,23 @@ void clif_showvendingboard( map_session_data& sd, enum send_target target, block
 
 	clif_send( &p, sizeof( p ), tbl, target );
 }
+
+#ifdef Pandas_ScriptCommand_ShowVend
+void clif_showvendingboard(block_list* bl, const char* name, enum send_target target, block_list* tbl) {
+	if (tbl == nullptr) {
+		tbl = bl;
+		target = AREA_WOS;
+	}
+
+	PACKET_ZC_STORE_ENTRY p = {};
+
+	p.packetType = HEADER_ZC_STORE_ENTRY;
+	p.makerAID = bl->id;
+	safestrncpy(p.storeName, name, sizeof(p.storeName));
+
+	clif_send(&p, sizeof(p), tbl, target);
+}
+#endif // Pandas_ScriptCommand_ShowVend
 
 
 /// Removes a vending board from screen.

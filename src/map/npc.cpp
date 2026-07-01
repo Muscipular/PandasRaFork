@@ -4197,6 +4197,10 @@ npc_data *npc_create_npc(int16 m, int16 x, int16 y){
 	nd->dynamicnpc.owner_char_id = 0;
 	nd->dynamicnpc.last_interaction = 0;
 	nd->dynamicnpc.removal_tid = INVALID_TIMER;
+#ifdef Pandas_ScriptCommand_ShowVend
+	nd->vendingboard.show = false;
+	memset(nd->vendingboard.message, 0, NAME_LENGTH + 1);
+#endif // Pandas_ScriptCommand_ShowVend
 #ifdef Pandas_FuncParams_Mob_MvpTomb_Create
 	nd->u.tomb.killer_gid = 0;
 #endif // Pandas_FuncParams_Mob_MvpTomb_Create

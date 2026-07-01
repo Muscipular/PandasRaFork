@@ -1066,6 +1066,9 @@ void clif_changed_dir( const block_list& bl, enum send_target target);
 // vending
 void clif_openvendingreq( map_session_data& sd, uint16 num );
 void clif_showvendingboard( map_session_data& sd, enum send_target target = AREA_WOS, block_list* tbl = nullptr );
+#ifdef Pandas_ScriptCommand_ShowVend
+void clif_showvendingboard( block_list* bl, const char* name, enum send_target target = AREA_WOS, block_list* tbl = nullptr );
+#endif // Pandas_ScriptCommand_ShowVend
 void clif_closevendingboard( block_list& bl, send_target target, block_list* tbl );
 void clif_vendinglist( map_session_data& sd, map_session_data& vsd );
 void clif_buyvending( map_session_data& sd, uint16 index, uint16 amount, e_pc_purchase_result_frommc result );

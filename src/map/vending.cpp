@@ -82,6 +82,14 @@ void vending_vendinglistreq(map_session_data* sd, int32 id)
 	map_session_data* vsd;
 	nullpo_retv(sd);
 
+#ifdef Pandas_ScriptCommand_ShowVend
+	npc_data* nd = map_id2nd(id);
+	if (nd != nullptr && nd->vendingboard.show) {
+		npc_click(sd, nd);
+		return;
+	}
+#endif // Pandas_ScriptCommand_ShowVend
+
 	if( (vsd = map_id2sd(id)) == nullptr )
 		return;
 	if( !vsd->state.vending )
