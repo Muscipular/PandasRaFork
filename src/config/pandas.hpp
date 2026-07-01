@@ -14,6 +14,7 @@
 	#define Pandas_Mapflags
 	#define Pandas_ScriptEngine
 	#define Pandas_Redeclaration
+	#define Pandas_UserExperience
 	#define Pandas_NpcEvent
 	#define Pandas_AtCommands
 	#define Pandas_ScriptCommands
@@ -1404,6 +1405,40 @@
 	// 将 struct event_data 的定义从 npc.cpp 移动到 npc.hpp [Sola丶小克]
 	#define Pandas_Redeclaration_Struct_Event_Data
 #endif // Pandas_Redeclaration
+
+// ============================================================================
+// 用户体验组 - Pandas_UserExperience
+// ============================================================================
+
+#ifdef Pandas_UserExperience
+	// 优化使用 @version 指令的回显信息 [Sola丶小克]
+
+	// 使 yaml2sql 辅助工具在加载 YAML 文件时能给个提示
+	// 否则容易因加载时间过长, 给使用者造成程序已经卡死的错觉 [Sola丶小克]
+
+	// 调整 yaml2sql 辅助工具的询问确认流程 [Sola丶小克]
+	// 先询问是否能覆盖目标文件, 再尝试去加载来源数据文件, 以便优化体验
+
+	// 调整 Yaml2sql 辅助工具在发布版本中的文件保存位置 [Sola丶小克]
+
+	// 将 barters.yml 数据库从 npc 目录移动回 db 目录 [Sola丶小克]
+
+	// 优化加载与解析 YAML 文件时出现的一些报错体验 [Sola丶小克]
+
+	// 当 YAML 数据文件中不存在 Body 节点时也依然输出结尾信息 [Sola丶小克]
+
+	// 使 map-server-generator 能在运行时按需自动创建输出目录 [Sola丶小克]
+
+	// 改写 map-server-generator 的参数处理流程, 支持短参数以及输出帮助 [Sola丶小克]
+
+	// 优化 map-server-generator 的输出信息 [Sola丶小克]
+
+	// 在 Linux 平台上使用 Ctrl+C 输出 ^C 符号之后换一行 [Sola丶小克]
+	#ifndef _WIN32
+	#endif // _WIN32
+
+	// 在 Debug 模式下隐藏玩家数据流转的子网掩码调试信息 [Sola丶小克]
+#endif // Pandas_UserExperience
 
 // ============================================================================
 // NPC 事件组 - Pandas_NpcEvent
