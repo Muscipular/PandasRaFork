@@ -823,6 +823,9 @@
 #ifdef Pandas_MapFlag_MaxASPD
 	export_constant(MF_MAXASPD);
 #endif // Pandas_MapFlag_MaxASPD
+#ifdef Pandas_MapFlag_NoSlave
+	export_constant(MF_NOSLAVE);
+#endif // Pandas_MapFlag_NoSlave
 	export_constant(MF_NOBUYINGSTORE);
 	export_constant(MF_NODYNAMICNPC);
 	export_constant(MF_NOBANK);

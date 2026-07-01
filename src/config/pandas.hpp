@@ -1354,6 +1354,7 @@
 
 	// 是否启用 noslave 地图标记 [HongShin]
 	// 该标记用于禁止此地图上的魔物召唤随从
+	#define Pandas_MapFlag_NoSlave
 
 	// 是否启用 nobank 地图标记 [聽風]
 	// rAthena 官方已经实现此标记, 当前宏定义所包含的代码用于处理体验细节

@@ -764,6 +764,9 @@ enum e_mapflag : int16 {
 #ifdef Pandas_MapFlag_MaxASPD
 	MF_MAXASPD,
 #endif // Pandas_MapFlag_MaxASPD
+#ifdef Pandas_MapFlag_NoSlave
+	MF_NOSLAVE,
+#endif // Pandas_MapFlag_NoSlave
 	MF_NOBUYINGSTORE,
 	MF_NODYNAMICNPC,
 	MF_NOBANK,
