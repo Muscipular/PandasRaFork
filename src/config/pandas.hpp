@@ -1174,6 +1174,7 @@
 	// 在 Debug 模式下提速约 64% (1250ms -> 760ms)
 	// 在 Release 模式下地图加载信息默认不再显示 (通过 DETAILED_LOADING_OUTPUT 控制)
 	#ifdef _WIN32
+		#define Pandas_Speedup_Loading_Map_Status_Restrictor
 	#endif // _WIN32
 
 	// 规避卸载 NPC 时的 npc_read_event_script 调用 [Sola丶小克]

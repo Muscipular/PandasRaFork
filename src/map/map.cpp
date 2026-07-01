@@ -4189,6 +4189,9 @@ int32 map_readallmaps (void)
 
 #ifdef DETAILED_LOADING_OUTPUT
 		// show progress
+#ifdef Pandas_Speedup_Loading_Map_Status_Restrictor
+		if (i % 10 == 0 || i == map_num)
+#endif // Pandas_Speedup_Loading_Map_Status_Restrictor
 		ShowStatus("Loading maps [%i/%i]: %s" CL_CLL "\r", i, map_num, mapdata->name);
 #endif
 
