@@ -14472,6 +14472,14 @@ int32 status_change_end( block_list* bl, enum sc_type type, int32 tid ){
 	if (type == SC_STONEWAIT && tid != INVALID_TIMER)
 		status_change_start(bl, bl, SC_STONE, 100, val1, val2, 0, 0, val3, SCSTART_NOAVOID);
 
+#ifdef Pandas_NpcExpress_SC_END
+	if (sd && sd->bl.type == BL_PC) {
+		pc_setreg(sd, add_str("@endedsc"), (int64)type);			// 为了兼容SEA和CSEA
+		pc_setreg(sd, add_str("@ended_sc_id"), (int64)type);
+		npc_script_event(*sd, NPCX_SC_END);
+	}
+#endif // Pandas_NpcExpress_SC_END
+
 	return 1;
 }
 

@@ -6931,6 +6931,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCE_STATCALC:
 		return script_config.statcalc_express_name;	// OnPCStatCalcEvent		// 当角色能力被重新计算时触发事件
 #endif // Pandas_NpcExpress_STATCALC
+#ifdef Pandas_NpcExpress_SC_END
+	case NPCX_SC_END:
+		return script_config.sc_end_express_name;	// OnPCBuffEndExpress		// 当玩家成功解除一个状态(Buff)后触发实时事件
+#endif // Pandas_NpcExpress_SC_END
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;

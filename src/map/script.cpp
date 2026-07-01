@@ -389,6 +389,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcExpress_STATCALC
 	"OnPCStatCalcEvent",	// NPCE_STATCALC		// statcalc_express_name	// 当角色能力被重新计算时触发事件
 #endif // Pandas_NpcExpress_STATCALC
+#ifdef Pandas_NpcExpress_SC_END
+	"OnPCBuffEndExpress",	// NPCX_SC_END		// sc_end_express_name	// 当玩家成功解除一个状态(Buff)后触发实时事件
+#endif // Pandas_NpcExpress_SC_END
 	// NPC related
 	"OnTouch_",	//ontouch_event_name (runs on first visible char to enter area, picks another char if the first char leaves)
 	"OnTouch",	//ontouch2_event_name (run whenever a char walks into the OnTouch area)

@@ -1306,6 +1306,7 @@
 		// 当玩家成功解除一个状态(Buff)后触发实时事件 [Sola丶小克]
 		// 事件类型: Express / 事件名称: OnPCBuffEndExpress
 		// 常量名称: NPCX_SC_END / 变量名称: sc_end_express_name
+		#define Pandas_NpcExpress_SC_END
 
 		// 当玩家成功获得一个状态(Buff)后触发实时事件 [Sola丶小克]
 		// 事件类型: Express / 事件名称: OnPCBuffStartExpress

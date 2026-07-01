@@ -255,6 +255,9 @@ struct Script_Config {
 #ifdef Pandas_NpcExpress_STATCALC
 	const char* statcalc_express_name;	// NPCE_STATCALC	// OnPCStatCalcEvent	// 当角色能力被重新计算时触发事件
 #endif // Pandas_NpcExpress_STATCALC
+#ifdef Pandas_NpcExpress_SC_END
+	const char* sc_end_express_name;	// NPCX_SC_END	// OnPCBuffEndExpress	// 当玩家成功解除一个状态(Buff)后触发实时事件
+#endif // Pandas_NpcExpress_SC_END
 	// NPC related
 	const char* ontouch_event_name;
 	const char* ontouch2_event_name;
