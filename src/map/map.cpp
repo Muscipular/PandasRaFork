@@ -61,6 +61,9 @@
 #include "unit.hpp"
 #endif // Pandas_BattleRecord
 #include "trade.hpp"
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+#include "asyncquery.hpp"
+#endif // Pandas_ScriptCommand_QuerySql_Async
 
 using namespace rathena;
 using namespace rathena::server_map;
@@ -5591,6 +5594,9 @@ void MapServer::finalize(){
 	iwall_db->destroy(iwall_db, nullptr);
 	regen_db->destroy(regen_db, nullptr);
 
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+	asyncquery_final();
+#endif // Pandas_ScriptCommand_QuerySql_Async
 	map_sql_close();
 
 	ShowStatus("Finished.\n");
@@ -5920,6 +5926,9 @@ bool MapServer::initialize( int32 argc, char *argv[] ){
 	map_sql_init();
 	if (log_config.sql_logs)
 		log_sql_init();
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+	asyncquery_init();
+#endif // Pandas_ScriptCommand_QuerySql_Async
 
 	mapindex_init();
 	if(enable_grf)

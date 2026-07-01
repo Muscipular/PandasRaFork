@@ -419,6 +419,9 @@ struct script_state {
 	unsigned clear_cutin : 1;
 	char* funcname; // Stores the current running function name
 	uint32 id;
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+	bool asyncSleep;
+#endif // Pandas_ScriptCommand_QuerySql_Async
 };
 
 struct script_reg {

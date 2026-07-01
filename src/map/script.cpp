@@ -14,6 +14,10 @@
 #include <csetjmp>
 #include <cstdlib> // atoi, strtol, strtoll, exit
 
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+#include <atomic>
+#include <map>
+#endif // Pandas_ScriptCommand_QuerySql_Async
 #ifdef Pandas_ScriptEngine_Express
 #include <algorithm>
 #include <cctype>
@@ -72,6 +76,9 @@
 #include "party.hpp"
 #include "path.hpp"
 #include "pc.hpp"
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+#include "asyncquery.hpp"
+#endif // Pandas_ScriptCommand_QuerySql_Async
 #include "pc_groups.hpp"
 #include "pet.hpp"
 #include "quest.hpp"
@@ -82,6 +89,9 @@ using namespace rathena;
 const int64 SCRIPT_INT_MIN = INT64_MIN;
 const int64 SCRIPT_INT_MAX = INT64_MAX;
 
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+std::atomic<int> script_batch{ 0 }; // For async SQL futures
+#endif // Pandas_ScriptCommand_QuerySql_Async
 struct eri *array_ers;
 DBMap *st_db;
 uint32 active_scripts;
@@ -3739,6 +3749,9 @@ struct script_state* script_alloc_state(struct script_code* rootscript, int32 po
 	st->oid = oid;
 	st->sleep.timer = INVALID_TIMER;
 	st->npc_item_flag = battle_config.item_enabled_npc;
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+	st->asyncSleep = false;
+#endif // Pandas_ScriptCommand_QuerySql_Async
 #ifdef Pandas_ScriptCommand_UnlockCmd
 	// 确保创建 script_state 的时候 unlockcmd 的值为 0
 	st->unlockcmd = 0;
@@ -4615,6 +4628,10 @@ void run_script_main(struct script_state *st)
 		st->sleep.charid = sd?sd->status.char_id:0;
 		st->sleep.timer = add_timer(gettick() + st->sleep.tick, run_script_timer, st->sleep.charid, (intptr_t)st);
 		linkdb_insert(&sleep_db, (void *)__64BPRTSIZE(st->oid), st);
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+	} else if (st->asyncSleep) {
+		script_detach_state(st, false);
+#endif // Pandas_ScriptCommand_QuerySql_Async
 	} else if(st->state != END && st->rid) {
 		//Resume later (st is already attached to player).
 		if(st->bk_st) {
@@ -5480,6 +5497,10 @@ void script_reload(void) {
 	int32 i;
 	DBIterator *iter;
 	struct script_state *st;
+
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+	script_batch++; // Increment script batch number to prevent pending async SQL callbacks after reload.
+#endif // Pandas_ScriptCommand_QuerySql_Async
 
 	userfunc_db->clear(userfunc_db, db_script_free_code_sub);
 	db_clear(scriptlabel_db);
@@ -19025,6 +19046,139 @@ BUILDIN_FUNC(query_logsql) {
 	return buildin_query_sql_sub(st, logmysql_handle);
 }
 
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+std::map<uint32, DBResultData*> query_sql_db;
+
+static int32 buildin_query_sql_async_sub(struct script_state* st, dbType type)
+{
+	if (!st->asyncSleep) {
+		const char* query = script_getstr(st, 2);
+		int batch_number = script_batch.load();
+
+		if (script_hasdata(st, 3)) {
+			st->state = RERUNLINE;
+			st->asyncSleep = true;
+
+			asyncquery_addDBJob(
+				type,
+				query,
+				[st, batch_number](FutureData result_data) {
+					if (batch_number != script_batch.load()) {
+						delete reinterpret_cast<DBResultData*>(result_data);
+						return;
+					}
+
+					query_sql_db[st->id] = reinterpret_cast<DBResultData*>(result_data);
+					run_script_main(st);
+				}
+			);
+		} else {
+			asyncquery_addDBJob(type, query);
+		}
+	} else {
+		auto it = query_sql_db.find(st->id);
+		if (it == query_sql_db.end() || it->second == nullptr) {
+			st->asyncSleep = false;
+			st->state = RUN;
+			script_pushint(st, -1);
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		DBResultData result_data(it->second);
+		delete it->second;
+		query_sql_db.erase(it);
+
+		int32 i, j;
+		TBL_PC* sd = nullptr;
+		struct script_data* data;
+		const char* name;
+		uint32 max_rows = SCRIPT_MAX_ARRAYSIZE;
+		size_t num_vars;
+		size_t num_cols;
+
+		st->asyncSleep = false;
+		st->state = RUN;
+
+		for (i = 3; script_hasdata(st, i); ++i) {
+			data = script_getdata(st, i);
+			if (data_isreference(data)) {
+				name = reference_getname(data);
+				if (not_server_variable(*name) && sd == nullptr) {
+					if (!script_rid2sd(sd)) {
+						script_reportdata(data);
+						st->state = END;
+						return SCRIPT_CMD_FAILURE;
+					}
+				}
+			} else {
+				ShowError("script:query_sql_async: not a variable\n");
+				script_reportdata(data);
+				st->state = END;
+				return SCRIPT_CMD_FAILURE;
+			}
+		}
+		num_vars = i - 3;
+
+		if (SQL_ERROR == result_data.sql_result_value) {
+			script_pushint(st, -1);
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		if (result_data.RowNum == 0) {
+			script_pushint(st, 0);
+			return SCRIPT_CMD_SUCCESS;
+		}
+
+		num_cols = result_data.ColumnNum;
+		if (num_vars < num_cols) {
+			ShowWarning("script:query_sql_async: Too many columns, discarding last %u columns.\n", (uint32)(num_cols - num_vars));
+			script_reportsrc(st);
+		} else if (num_vars > num_cols) {
+			ShowWarning("script:query_sql_async: Too many variables (%u extra).\n", (uint32)(num_vars - num_cols));
+			script_reportsrc(st);
+		}
+
+		for (i = 0; i < max_rows && static_cast<size_t>(i) < result_data.RowNum; ++i) {
+			for (j = 0; static_cast<size_t>(j) < num_vars; ++j) {
+				const char* str = nullptr;
+
+				if (static_cast<size_t>(j) < num_cols)
+					str = result_data.GetData(i, j);
+
+				data = script_getdata(st, j + 3);
+				name = reference_getname(data);
+
+				if (is_string_variable(name))
+					setd_sub_str(st, sd, name, i, str ? str : "", reference_getref(data));
+				else
+					setd_sub_num(st, sd, name, i, str ? strtoll(str, nullptr, 10) : 0, reference_getref(data));
+			}
+		}
+		if (i == max_rows && max_rows < result_data.RowNum) {
+			ShowWarning("script:query_sql_async: Only %d/%u rows have been stored.\n", max_rows, (uint32)result_data.RowNum);
+			script_reportsrc(st);
+		}
+
+		script_pushint(st, i);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+
+BUILDIN_FUNC(query_sql_async) {
+	return buildin_query_sql_async_sub(st, dbType::MAIN_DB);
+}
+
+BUILDIN_FUNC(query_logsql_async) {
+	if (!log_config.sql_logs) {
+		ShowWarning("buildin_query_logsql_async: SQL logs are disabled, query '%s' will not be executed.\n", script_getstr(st, 2));
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	return buildin_query_sql_async_sub(st, dbType::LOG_DB);
+}
+#endif // Pandas_ScriptCommand_QuerySql_Async
 //Allows escaping of a given string.
 BUILDIN_FUNC(escape_sql)
 {
@@ -30568,6 +30722,10 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(axtoi,"s"),
 	BUILDIN_DEF(query_sql,"s*"),
 	BUILDIN_DEF(query_logsql,"s*"),
+#ifdef Pandas_ScriptCommand_QuerySql_Async
+	BUILDIN_DEF(query_sql_async, "s*"),
+	BUILDIN_DEF(query_logsql_async, "s*"),
+#endif // Pandas_ScriptCommand_QuerySql_Async
 	BUILDIN_DEF(escape_sql,"v"),
 	BUILDIN_DEF(atoi,"s"),
 	BUILDIN_DEF(strtol,"si"),
