@@ -4407,6 +4407,16 @@ TIMER_FUNC(run_script_timer){
 	}
 	if(st->state != RERUNLINE)
 		st->sleep.tick = 0;
+
+#ifdef Pandas_Crashfix_Invaild_Script_Code
+	if (st && (st->script == nullptr || st->script->script_buf == nullptr)) {
+		ShowError("%s: The script that was resumed has been released, please report this to the developer (Trigger Point: %d).\n", __func__, 1);
+		script_reportsrc(st);
+		st->state = END;
+		return 0;
+	}
+#endif // Pandas_Crashfix_Invaild_Script_Code
+
 	run_script_main(st);
 	return 0;
 }
@@ -4540,6 +4550,15 @@ void run_script_main(struct script_state *st)
 
 	script_attach_state(st);
 
+#ifdef Pandas_Crashfix_Invaild_Script_Code
+	if (st && (st->script == nullptr || st->script->script_buf == nullptr)) {
+		ShowError("%s: The script that was resumed has been released, please report this to the developer (Trigger Point: %d).\n", __func__, 2);
+		script_reportsrc(st);
+		st->state = END;
+		return;
+	}
+#endif // Pandas_Crashfix_Invaild_Script_Code
+
 	if(st->state == RERUNLINE) {
 		run_func(st);
 		if(st->state == GOTO)
@@ -4548,6 +4567,15 @@ void run_script_main(struct script_state *st)
 		st->state = RUN;
 
 	while(st->state == RUN) {
+#ifdef Pandas_Crashfix_Invaild_Script_Code
+		if (st && (st->script == nullptr || st->script->script_buf == nullptr)) {
+			ShowError("%s: The script that was resumed has been released, please report this to the developer (Trigger Point: %d).\n", __func__, 3);
+			script_reportsrc(st);
+			st->state = END;
+			return;
+		}
+#endif // Pandas_Crashfix_Invaild_Script_Code
+
 		enum c_op c = get_com(st->script->script_buf,&st->pos);
 		switch(c){
 		case C_EOL:

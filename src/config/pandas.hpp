@@ -915,6 +915,7 @@
 	// 如果在脚本恢复执行之前, 就因为其他原因把整个脚本释放掉, 就会在恢复执行脚本的时候导致地图服务器崩溃.
 	// 具体: 从 run_script_timer 恢复进入 run_script_main 之后崩溃
 	// 至于什么地方会在脚本还没恢复执行之前就将 script_code 释放暂时还没有特别明确的线索
+	#define Pandas_Crashfix_Invaild_Script_Code
 
 	// 规避在 map_addblock 和 map_delblock 因检查不严而导致崩溃的问题 [Renee]
 
