@@ -993,6 +993,7 @@
 	// 修正玩家在 prompt 菜单中选择取消后,
 	// 后续脚本中若调用 close 系列指令会导致报错的问题 [Sola丶小克]
 	// 特别感谢 "差记性的小北" 指出此问题
+	#define Pandas_Fix_Prompt_Cancel_Combine_Close_Error
 
 	// 修正脚本控制的商店在特定情况下存在的报错问题 [Sola丶小克]
 	// 只要在 npcshopattach + callshop 之前调用了一个 mes 并且不 close 它,
