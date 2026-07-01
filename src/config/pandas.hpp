@@ -918,6 +918,7 @@
 	#define Pandas_Fix_Duplicate_Channel_Name_Make_MemoryLeak
 
 	// 修正 FAW 魔法傀儡 (技能编号: 2282) 重复扣减原石碎片的问题 [Sola丶小克]
+	#define Pandas_Fix_MagicDecoy_Twice_Deduction_Of_Ore
 
 	// 修正 progressbar 某些情况下会导致角色无法移动的问题 [Sola丶小克]
 	// 可能的现象:
