@@ -13,6 +13,7 @@
 	#define Pandas_Crashfix
 	#define Pandas_Mapflags
 	#define Pandas_ScriptEngine
+	#define Pandas_Redeclaration
 	#define Pandas_NpcEvent
 	#define Pandas_AtCommands
 	#define Pandas_ScriptCommands
@@ -1394,6 +1395,15 @@
 	// 因为 st->funcname 指针指向的内存已在扩容分配时被释放 [Sola丶小克]
 	#define Pandas_ScriptEngine_Relocation_Funcname_After_StrBuf_Realloc
 #endif // Pandas_ScriptEngine
+
+// ============================================================================
+// 重新声明组 - Pandas_Redeclaration
+// ============================================================================
+
+#ifdef Pandas_Redeclaration
+	// 将 struct event_data 的定义从 npc.cpp 移动到 npc.hpp [Sola丶小克]
+	#define Pandas_Redeclaration_Struct_Event_Data
+#endif // Pandas_Redeclaration
 
 // ============================================================================
 // NPC 事件组 - Pandas_NpcEvent
