@@ -973,6 +973,7 @@
 	// 但如果在包含 BSF_REM_ON_LOGOUT 的 bonus_script 记录在数据库时强制关闭地图服务器,
 	// 那么这条 bonus_script 将会保存到下次服务器启动, 并且玩家进入游戏时还有效.
 	// 解决方案: 进入游戏加载 bonus_script 的时候抛弃拥有 BSF_REM_ON_LOGOUT 标记位的数据
+	#define Pandas_Fix_Bonus_Script_Effective_Timing_Exception
 
 	// 修正 sprintf 脚本指令无法格式化 int64 数值的问题 [Sola丶小克]
 	// 注意: 即使启用此选项, 当你需要格式化 int64 的数值时依然需要使用 %lld 而不是 %d
