@@ -2515,6 +2515,9 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcEvent_KILLMVP
 	NPCE_KILLMVP,	// killmvp_event_name	// OnPCKillMvpEvent		// 当玩家杀死 MVP 魔物后触发事件
 #endif // Pandas_NpcEvent_KILLMVP
+#ifdef Pandas_NpcEvent_INSERT_CARD
+	NPCE_INSERT_CARD,	// insert_card_event_name	// OnPCInsertCardEvent		// 当玩家成功插入卡片后触发事件
+#endif // Pandas_NpcEvent_INSERT_CARD
 #ifdef Pandas_NpcExpress_STATCALC
 	NPCE_STATCALC,	// statcalc_express_name	// OnPCStatCalcEvent		// 当角色能力被重新计算时触发事件
 #endif // Pandas_NpcExpress_STATCALC

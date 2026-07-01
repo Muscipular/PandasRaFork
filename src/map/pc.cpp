@@ -5762,6 +5762,14 @@ int32 pc_insert_card(map_session_data* sd, int32 idx_card, int32 idx_equip)
 		sd->inventory.u.items_inventory[idx_equip].card[i] = nameid;
 		log_pick_pc(sd, LOG_TYPE_OTHER,  1, &sd->inventory.u.items_inventory[idx_equip]);
 		clif_insert_card( *sd, idx_equip, idx_card, false );
+
+#ifdef Pandas_NpcEvent_INSERT_CARD
+		pc_setreg(sd, add_str("@insert_equip_idx"), idx_equip);
+		pc_setreg(sd, add_str("@insert_card_idx"), idx_card);
+		pc_setreg(sd, add_str("@insert_card_id"), nameid);
+		pc_setreg(sd, add_str("@insert_card_slot"), i);
+		npc_script_event(*sd, NPCE_INSERT_CARD);
+#endif // Pandas_NpcEvent_INSERT_CARD
 	}
 
 	return 0;

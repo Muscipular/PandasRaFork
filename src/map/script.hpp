@@ -252,6 +252,9 @@ struct Script_Config {
 #ifdef Pandas_NpcEvent_KILLMVP
 	const char* killmvp_event_name;	// NPCE_KILLMVP		// OnPCKillMvpEvent		// 当玩家杀死 MVP 魔物后触发事件
 #endif // Pandas_NpcEvent_KILLMVP
+#ifdef Pandas_NpcEvent_INSERT_CARD
+	const char* insert_card_event_name;	// NPCE_INSERT_CARD	// OnPCInsertCardEvent	// 当玩家成功插入卡片后触发事件
+#endif // Pandas_NpcEvent_INSERT_CARD
 #ifdef Pandas_NpcExpress_STATCALC
 	const char* statcalc_express_name;	// NPCE_STATCALC	// OnPCStatCalcEvent	// 当角色能力被重新计算时触发事件
 #endif // Pandas_NpcExpress_STATCALC
