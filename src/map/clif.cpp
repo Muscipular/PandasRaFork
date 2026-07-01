@@ -11395,6 +11395,13 @@ void clif_parse_LoadEndAck(int32 fd,map_session_data *sd)
 	}
 
 	//homunculus [blackhole89]
+#ifdef Pandas_MapFlag_NoHomun
+	if( hom_is_active(sd->hd) && map_getmapflag( sd->m, MF_NOHOMUN ) ){
+		// 当前地图禁止使用人工生命体, 已自动将其安息
+		clif_displaymessage( sd->fd, msg_txt_cn( sd, 6 ) );
+		hom_vaporize( sd, HOM_ST_REST );
+	} else
+#endif // Pandas_MapFlag_NoHomun
 	if( hom_is_active(sd->hd) ) {
 		if(map_addblock(sd->hd))
 			return;

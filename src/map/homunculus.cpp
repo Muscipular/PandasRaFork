@@ -1138,6 +1138,13 @@ bool hom_call(map_session_data *sd)
 {
 	homun_data *hd;
 
+#ifdef Pandas_MapFlag_NoHomun
+	if( sd && map_getmapflag( sd->m, MF_NOHOMUN ) ){
+		clif_displaymessage( sd->fd, msg_txt_cn( sd, 7 ) );
+		return true;
+	}
+#endif // Pandas_MapFlag_NoHomun
+
 	if (!sd->status.hom_id) //Create a new homun.
 		return hom_create_request(sd, HM_CLASS_BASE + rnd_value(0, 7)) ;
 

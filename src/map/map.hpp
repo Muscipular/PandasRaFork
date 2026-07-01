@@ -731,6 +731,9 @@ enum e_mapflag : int16 {
 #ifdef Pandas_MapFlag_NoPet
 	MF_NOPET,
 #endif // Pandas_MapFlag_NoPet
+#ifdef Pandas_MapFlag_NoHomun
+	MF_NOHOMUN,
+#endif // Pandas_MapFlag_NoHomun
 #ifdef Pandas_MapFlag_NoCapture
 	MF_NOCAPTURE,
 #endif // Pandas_MapFlag_NoCapture
