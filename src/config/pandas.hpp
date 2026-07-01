@@ -904,6 +904,7 @@
 	#define Pandas_Crashfix_PC_Setpos_With_Invaild_Player
 
 	// 修正 getinstancevar 传递无效的副本编号会导致地图服务器崩溃的问题 [Sola丶小克]
+	#define Pandas_Crashfix_GetInstanceVar_Invaild_InstanceID
 
 	// 修正 setinstancevar 传递无效的副本编号会导致地图服务器崩溃的问题 [Sola丶小克]
 
