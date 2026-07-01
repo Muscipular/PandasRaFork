@@ -899,6 +899,7 @@
 	// 此选项开关需要依赖 Pandas_FuncLogic_Instance_Destroy_Command 的拓展 [Sola丶小克]
 
 	// 修正当 block_free 数组中存在重复指针时, 会导致的无效指针错误的问题 [Sola丶小克]
+	#define Pandas_Fix_DuplicateBlock_When_Freeblock_Unlock
 
 	// 修正复兴后 "魔术子弹"(GS_MAGICALBULLET) 的伤害溢出问题 [Sola丶小克]
 	// 处于该状态下若攻击者的 matk_min 小于被攻击者的 mdef 则会导致
