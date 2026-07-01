@@ -848,6 +848,7 @@
 	#define Pandas_Fix_GuildEmblem_Update
 
 	// 修正当 PACKETVER 小于 20131223 出现的 clif_mvp_exp 类型转换错误 [Sola丶小克]
+	#define Pandas_Fix_Clif_MVP_Exp_Type_Conversion
 
 	// 修正部分简体、繁体中文字符作为角色名时, 会被变成问号的问题 [Sola丶小克]
 	// 例如: "凯撒"中的"凯"字, "聽風"中的"聽"字等
