@@ -1828,6 +1828,7 @@
 	#endif // Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
 	// 是否启用 selfdeletion 脚本指令 [Sola丶小克]
 	// 设置 NPC 的自毁策略, 用于配合 copynpc 实现在开宝箱/挖矿时进行自毁等场景
+	#define Pandas_ScriptCommand_SelfDeletion
 	// 是否启用 npcexists 脚本指令 [Sola丶小克]
 	// 该指令用于判断指定名称的 NPC 是否存在, 就算不存在控制台也不会报错
 	#ifdef Pandas_FuncDefine_STORAGE_ADDITEM

@@ -10331,7 +10331,12 @@ void pc_close_npc(map_session_data *sd,int32 flag)
 				add_timer(gettick()+500,pc_close_npc_timer,sd->id,flag);
 				return;
 			}
+#ifndef Pandas_ScriptCommand_SelfDeletion
 			sd->st->state = ((flag==1 && sd->st->mes_active)?CLOSE:END);
+#else
+			// 若启用了 selfdeletion 指令则以位运算方式判断 flag 是否带 1
+			sd->st->state = (((flag & 1) == 1 && sd->st->mes_active) ? CLOSE : END);
+#endif // Pandas_ScriptCommand_SelfDeletion
 			sd->st->mes_active = 0;
 		}
 		sd->state.menu_or_input = 0;
@@ -10350,6 +10355,12 @@ void pc_close_npc(map_session_data *sd,int32 flag)
 			if (sd->st->state == CLOSE) {
 				clif_scriptclose( *sd, sd->npc_id );
 				clif_cutin( *sd, "", 255); // Force to end cutin [Haydrich]
+#ifdef Pandas_ScriptCommand_SelfDeletion
+				// 若启用了 selfdeletion 指令则以位运算方式判断 flag 是否带 4
+				// 如果没有携带 4 的话, 再执行 clif_scriptclear 清理角色当前正在进行的对话框内容
+				if ((flag & 4) != 4)
+					clif_scriptclear(*sd, sd->npc_id);
+#endif // Pandas_ScriptCommand_SelfDeletion
 				sd->st->state = END; // Force to end now
 			}
 			if (sd->st->state == END) { // free attached scripts that are waiting

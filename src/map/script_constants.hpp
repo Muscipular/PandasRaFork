@@ -226,6 +226,11 @@
 	export_constant(EVENT_TRIGGER_EVER);
 	export_constant(EVENT_TRIGGER_MAX);
 #endif // Pandas_Struct_Map_Session_Data_EventTrigger
+#ifdef Pandas_ScriptCommand_SelfDeletion
+	export_constant(SELFDEL_CANCEL);
+	export_constant(SELFDEL_NOW);
+	export_constant(SELFDEL_WAITFREE);
+#endif // Pandas_ScriptCommand_SelfDeletion
 #ifdef Pandas_Player_Suspend_System
 	/* e_suspend_mode values */
 	export_constant(SUSPEND_MODE_NONE);

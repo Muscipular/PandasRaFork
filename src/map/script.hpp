@@ -2463,6 +2463,14 @@ public:
 	uint64 parseBodyNode(const ryml::NodeRef& node) override;
 };
 
+#ifdef Pandas_ScriptCommand_SelfDeletion
+enum e_selfdeletion_flag : uint16 {
+	SELFDEL_CANCEL     = 0x00,
+	SELFDEL_NOW        = 0x01,
+	SELFDEL_WAITFREE   = 0x02
+};
+#endif // Pandas_ScriptCommand_SelfDeletion
+
 /**
  * used to generate quick script_array entries
  **/
@@ -2551,5 +2559,10 @@ void script_generic_ui_array_expand(uint32 plus);
 uint32 *script_array_cpy_list(struct script_array *sa);
 
 bool script_check_RegistryVariableLength(int32 pType, const char *val, size_t* vlen);
+
+#ifdef Pandas_ScriptCommand_SelfDeletion
+TIMER_FUNC(selfdeletion_timer);
+void selfdeletion_exec_endtalk(struct script_state* st);
+#endif // Pandas_ScriptCommand_SelfDeletion
 
 #endif /* SCRIPT_HPP */
