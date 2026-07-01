@@ -11418,6 +11418,12 @@ void clif_parse_LoadEndAck(int32 fd,map_session_data *sd)
 			skill_unit_move(sd->hd,gettick(),1); // apply land skills immediately
 	}
 
+#ifdef Pandas_MapFlag_NoMerc
+	if( sd->md && map_getmapflag( sd->m, MF_NOMERC ) ){
+		// 当前地图禁止使用佣兵, 已自动将其禁用
+		clif_displaymessage( sd->fd, msg_txt_cn( sd, 8 ) );
+	} else
+#endif // Pandas_MapFlag_NoMerc
 	if( sd->md ) {
 		if(map_addblock(sd->md))
 			return;

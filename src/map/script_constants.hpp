@@ -793,6 +793,9 @@
 #ifdef Pandas_MapFlag_NoHomun
 	export_constant(MF_NOHOMUN);
 #endif // Pandas_MapFlag_NoHomun
+#ifdef Pandas_MapFlag_NoMerc
+	export_constant(MF_NOMERC);
+#endif // Pandas_MapFlag_NoMerc
 #ifdef Pandas_MapFlag_NoCapture
 	export_constant(MF_NOCAPTURE);
 #endif // Pandas_MapFlag_NoCapture

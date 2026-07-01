@@ -1315,6 +1315,7 @@
 
 	// 是否启用 nomerc 地图标记 [Sola丶小克]
 	// 该标记用于禁止玩家在地图上召唤佣兵, 佣兵进入该地图会自动隐藏
+	#define Pandas_MapFlag_NoMerc
 
 	// 是否启用 mobdroprate 地图标记 [Sola丶小克]
 	// 该标记用于额外调整此地图上普通魔物的物品掉落倍率
