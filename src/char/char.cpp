@@ -20,6 +20,7 @@
 #include <common/mapindex.hpp>
 #include <common/mmo.hpp>
 #include <common/packets.hpp>
+#include <common/performance.hpp>
 #include <common/random.hpp>
 #include <common/showmsg.hpp>
 #include <common/socket.hpp>
@@ -3361,7 +3362,12 @@ bool CharacterServer::initialize( int32 argc, char *argv[] ){
 
 	do_init_chcnslif();
 
+#ifndef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 	ShowStatus("The char-server is " CL_GREEN "ready" CL_RESET " (Server is listening on the port %d).\n\n", charserv_config.char_port);
+#else
+	performance_stop("core_init");
+	ShowStatus("The char-server is " CL_GREEN "ready" CL_RESET " (Server is listening on the port %d, took %" PRIu64 " milliseconds).\n\n", charserv_config.char_port, static_cast<uint64>(performance_get_milliseconds("core_init")));
+#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 
 	return true;
 }

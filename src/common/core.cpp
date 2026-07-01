@@ -26,6 +26,7 @@
 #include "cbasetypes.hpp"
 #include "malloc.hpp"
 #include "mmo.hpp"
+#include "performance.hpp"
 #include "showmsg.hpp"
 #include "strlib.hpp"
 #include "assistant.hpp"
@@ -411,6 +412,10 @@ int32 Core::start( int32 argc, char **argv ){
 	isaAvailableHotfix();
 #endif // Pandas_Crashfix_VisualStudio_UnorderedMap_AVX512
 
+#ifdef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
+	performance_create_and_start("core_init");
+#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
+
 #ifdef Pandas_Setup_Console_Output_Codepage
 	PandasUtf8::setupConsoleOutputCP();
 #endif // Pandas_Setup_Console_Output_Codepage
@@ -456,6 +461,10 @@ int32 Core::start( int32 argc, char **argv ){
 	if( !this->initialize( argc, argv ) ){
 		return EXIT_FAILURE;
 	}
+
+#ifdef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
+	performance_destory("core_init");
+#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 
 	// If initialization did not trigger shutdown
 	if( this->m_status != e_core_status::STOPPING ){

@@ -15,6 +15,7 @@
 #include <common/grfio.hpp>
 #include <common/malloc.hpp>
 #include <common/nullpo.hpp>
+#include <common/performance.hpp>
 #include <common/random.hpp>
 #include <common/showmsg.hpp>
 #include <common/socket.hpp> // WFIFO*()
@@ -4127,6 +4128,10 @@ int32 map_readallmaps (void)
 	// Has the uncompressed gat data of all maps, so just one allocation has to be made
 	std::vector<char *> map_cache_buffer = {};
 
+#ifdef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
+	performance_create_and_start("map_readallmaps");
+#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
+
 	if( enable_grf )
 		ShowStatus("Loading maps (using GRF files)...\n");
 	else {
@@ -4249,7 +4254,12 @@ int32 map_readallmaps (void)
 		ShowNotice("Maps removed: '" CL_WHITE "%d" CL_RESET "'" CL_CLL ".\n", maps_removed);
 
 	// finished map loading
+#ifndef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 	ShowInfo("Successfully loaded '" CL_WHITE "%d" CL_RESET "' maps." CL_CLL "\n",map_num);
+#else
+	performance_stop("map_readallmaps");
+	ShowInfo("Successfully loaded '" CL_WHITE "%d" CL_RESET "' maps (took %" PRIu64 " milliseconds)." CL_CLL "\n", map_num, static_cast<uint64>(performance_get_milliseconds("map_readallmaps")));
+#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 
 	return 0;
 }
@@ -6047,7 +6057,12 @@ bool MapServer::initialize( int32 argc, char *argv[] ){
 		ShowNotice("Server is running on '" CL_WHITE "PK Mode" CL_RESET "'.\n");
 
 #ifndef MAP_GENERATOR
+	#ifndef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 	ShowStatus("Server is '" CL_GREEN "ready" CL_RESET "' and listening on port '" CL_WHITE "%d" CL_RESET "'.\n\n", map_port);
+	#else
+	performance_stop("core_init");
+	ShowStatus("The Map-server is " CL_GREEN "ready" CL_RESET " (Server is listening on the port %d, took %" PRIu64 " milliseconds).\n\n", map_port, static_cast<uint64>(performance_get_milliseconds("core_init")));
+	#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 #else
 	// depending on gen_options, generate the correct things
 	if (gen_options.navi)

@@ -7,6 +7,7 @@
 #include <sstream>
 
 #include "malloc.hpp"
+#include "performance.hpp"
 #include "showmsg.hpp"
 #include "utilities.hpp"
 
@@ -102,6 +103,10 @@ bool YamlDatabase::load(const std::string& path) {
 	}
 #endif // Pandas_Console_Translate
 
+#ifdef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
+	performance_create_and_start("yamldatabase_load");
+#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
+
 	ShowStatus("Loading '" CL_WHITE "%s" CL_RESET "'..." CL_CLL "\r", path.c_str());
 	FILE* f = fopen(path.c_str(), "r");
 	if (f == nullptr) {
@@ -193,7 +198,12 @@ void YamlDatabase::parse( const ryml::Tree& tree ){
 #endif
 		}
 
+#ifndef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 		ShowStatus( "Done reading '" CL_WHITE "%" PRIu64 CL_RESET "' entries in '" CL_WHITE "%s" CL_RESET "'" CL_CLL "\n", count, fileName );
+#else
+		performance_stop("yamldatabase_load");
+		ShowStatus( "Done reading '" CL_WHITE "%" PRIu64 CL_RESET "' entries in '" CL_WHITE "%s" CL_RESET "' (took %" PRIu64 " milliseconds)" CL_CLL "\n", count, fileName, static_cast<uint64>(performance_get_milliseconds("yamldatabase_load")) );
+#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 	}
 }
 

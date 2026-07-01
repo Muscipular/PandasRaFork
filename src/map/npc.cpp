@@ -19,6 +19,7 @@
 #include <common/ers.hpp>
 #include <common/malloc.hpp>
 #include <common/nullpo.hpp>
+#include <common/performance.hpp>
 #include <common/showmsg.hpp>
 #include <common/strlib.hpp>
 #include <common/timer.hpp>
@@ -1469,7 +1470,16 @@ int32 npc_event_doall(const char* name)
 
 // runs the specified event(global only) and reports call count
 void npc_event_runall( const char* eventname ){
+#ifndef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 	ShowStatus( "Event '" CL_WHITE "%s" CL_RESET "' executed with '" CL_WHITE "%d" CL_RESET "' NPCs.\n", eventname, npc_event_doall( eventname ) );
+#else
+	performance_create_and_start("npc_event_runall");
+	int32 count = npc_event_doall(eventname);
+	performance_stop("npc_event_runall");
+	ShowStatus("Event '" CL_WHITE "%s" CL_RESET "' executed with '" CL_WHITE "%d" CL_RESET "' NPCs, took %" PRIu64 " ms.\n",
+		eventname, count, static_cast<uint64>(performance_get_milliseconds("npc_event_runall"))
+	);
+#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 }
 
 // runs the specified event, with a RID attached (global only)
@@ -3912,6 +3922,10 @@ void npc_delsrcfile(const char* name)
  * Load all npc files
  */
 void npc_loadsrcfiles() {
+#ifdef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
+	performance_create_and_start("loadingnpc");
+#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
+
 	ShowStatus("Loading NPCs...\n");
 	for (const auto& file : npc_src_files) {
 #ifdef DETAILED_LOADING_OUTPUT
@@ -3921,6 +3935,7 @@ void npc_loadsrcfiles() {
 	}
 	int32 npc_total = npc_warp + npc_shop + npc_script;
 
+#ifndef Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 	ShowInfo ("Done loading '" CL_WHITE "%d" CL_RESET "' NPCs:" CL_CLL "\n"
 		"\t-'" CL_WHITE "%d" CL_RESET "' Warps\n"
 		"\t-'" CL_WHITE "%d" CL_RESET "' Shops\n"
@@ -3929,6 +3944,21 @@ void npc_loadsrcfiles() {
 		"\t-'" CL_WHITE "%d" CL_RESET "' Mobs Cached\n"
 		"\t-'" CL_WHITE "%d" CL_RESET "' Mobs Not Cached\n",
 		npc_total, npc_warp, npc_shop, npc_script, npc_mob, npc_cache_mob, npc_delay_mob);
+#else
+	performance_stop("loadingnpc");
+
+	ShowInfo("Done loading '" CL_WHITE "%d" CL_RESET "' NPCs:" CL_CLL "\n"
+		"\t-'" CL_WHITE "%d" CL_RESET "' Warps\n"
+		"\t-'" CL_WHITE "%d" CL_RESET "' Shops\n"
+		"\t-'" CL_WHITE "%d" CL_RESET "' Scripts\n"
+		"\t-'" CL_WHITE "%d" CL_RESET "' Spawn sets\n"
+		"\t-'" CL_WHITE "%d" CL_RESET "' Mobs Cached\n"
+		"\t-'" CL_WHITE "%d" CL_RESET "' Mobs Not Cached\n"
+		"\tThis operation took %" PRIu64 " milliseconds in total\n",
+		npc_total, npc_warp, npc_shop, npc_script, npc_mob, npc_cache_mob, npc_delay_mob,
+		static_cast<uint64>(performance_get_milliseconds("loadingnpc"))
+	);
+#endif // Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 }
 
 /// Parses and sets the name and exname of a npc.

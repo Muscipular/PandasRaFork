@@ -1156,6 +1156,7 @@
 
 #ifdef Pandas_Speedup
 	// 是否在一些关键耗时节点打印出耗时情况 [Sola丶小克]
+	#define Pandas_Speedup_Print_TimeConsuming_Of_KeySteps
 
 	// 优化 map_readfromcache 中对每个 cell 的分配方式 [Sola丶小克]
 	// 主要降低 map_gat2cell 的调用次数, 因为一张地图需要加载 40000 个 cell
