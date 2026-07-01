@@ -904,6 +904,7 @@
 	// 修正复兴后 "魔术子弹"(GS_MAGICALBULLET) 的伤害溢出问题 [Sola丶小克]
 	// 处于该状态下若攻击者的 matk_min 小于被攻击者的 mdef 则会导致
 	// 这一次普攻出现计算溢出的情况, 可以秒杀一切 BOSS
+	#define Pandas_Fix_MagicalBullet_Damage_Overflow
 
 	// 修正 csv2yaml 辅助工具可能存在的多余反斜杠问题 [Sola丶小克]
 
