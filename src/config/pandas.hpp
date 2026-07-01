@@ -907,6 +907,7 @@
 	#define Pandas_Fix_MagicalBullet_Damage_Overflow
 
 	// 修正 csv2yaml 辅助工具可能存在的多余反斜杠问题 [Sola丶小克]
+	#define Pandas_Fix_Csv2Yaml_Extra_Slashes_In_The_Path
 
 	// 修正 yaml2sql 辅助工具无法生成不含 Body 节点的空 sql 问题 [Sola丶小克]
 	// 当来源文件不存在 Body 节点时, 应认为数据为空而生成空 sql 文件, 而不是直接放弃生成

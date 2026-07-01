@@ -10,6 +10,10 @@
 #include "malloc.hpp"
 #include "showmsg.hpp"
 
+#ifdef Pandas_Fix_Csv2Yaml_Extra_Slashes_In_The_Path
+#include <common/assistant.hpp>
+#endif // Pandas_Fix_Csv2Yaml_Extra_Slashes_In_The_Path
+
 // Function to suppress control characters in a string.
 int32 remove_control_chars(char* str)
 {
@@ -893,6 +897,12 @@ bool sv_readdb( const char* directory, const char* filename, char delim, size_t 
 	const int16 colsize=512;
 
 	snprintf(path, sizeof(path), "%s/%s", directory, filename);
+
+#ifdef Pandas_Fix_Csv2Yaml_Extra_Slashes_In_The_Path
+	// 若发现有两斜杠则将他处理成一个,
+	// 虽然影响不会很大但很多提示信息都会把路径打出来, 看着别扭
+	strReplace(path, "//", "/");
+#endif // Pandas_Fix_Csv2Yaml_Extra_Slashes_In_The_Path
 
 	// open file
 	fp = fopen(path, "r");

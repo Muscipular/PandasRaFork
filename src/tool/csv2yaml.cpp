@@ -5,6 +5,10 @@
 
 #include <cmath>
 
+#ifdef Pandas_Fix_Csv2Yaml_Extra_Slashes_In_The_Path
+#include <common/assistant.hpp>
+#endif // Pandas_Fix_Csv2Yaml_Extra_Slashes_In_The_Path
+
 using namespace rathena::tool_csv2yaml;
 
 // Skill database data to memory
@@ -194,6 +198,16 @@ bool process( const std::string& type, uint32 version, const std::vector<std::st
 			prepareHeader(outFile, type, version, (rename.size() > 0 ? rename : name));
 			prepareBody();
 
+#ifdef Pandas_Fix_Csv2Yaml_Extra_Slashes_In_The_Path
+			// 若 path 的结尾不是斜杠, 则在回调 lambda 的时候把 path 的斜杠加上
+			if (!strEndWith(path, "/")) {
+				if (!lambda(path + "/", name_ext)) {
+					outFile.close();
+					return false;
+				}
+			}
+			else
+#endif // Pandas_Fix_Csv2Yaml_Extra_Slashes_In_The_Path
 			if( !lambda( path, name_ext ) ){
 				outFile.close();
 				return false;
@@ -214,15 +228,31 @@ bool process( const std::string& type, uint32 version, const std::vector<std::st
 
 bool Csv2YamlTool::initialize( int32 argc, char* argv[] ){
 	const std::string path_db = std::string( db_path );
+
+#ifndef Pandas_Fix_Csv2Yaml_Extra_Slashes_In_The_Path
 	const std::string path_db_mode = path_db + "/" + DBPATH;
 	const std::string path_db_import = path_db + "/" + DBIMPORT + "/";
+#else
+	// 移除 const 关键字
+	std::string path_db_mode = path_db + "/" + DBPATH;
+	std::string path_db_import = path_db + "/" + DBIMPORT + "/";
+	// 直接在此处删掉最末尾的 / 斜杠
+	path_db_mode.pop_back();
+	path_db_import.pop_back();
+#endif // Pandas_Fix_Csv2Yaml_Extra_Slashes_In_The_Path
 
 	// Loads required conversion constants
 	if (fileExists(item_db.getDefaultLocation())) {
 		item_db.load();
 	} else {
+#ifndef Pandas_Fix_Csv2Yaml_Extra_Slashes_In_The_Path
 		parse_item_constants_txt( ( path_db_mode + "item_db.txt" ).c_str() );
 		parse_item_constants_txt( ( path_db_import + "item_db.txt" ).c_str() );
+#else
+		// 这地方是个特例, 反而需要补充一个斜杠上去
+		parse_item_constants_txt((path_db_mode + "/item_db.txt").c_str());
+		parse_item_constants_txt((path_db_import + "/item_db.txt").c_str());
+#endif // Pandas_Fix_Csv2Yaml_Extra_Slashes_In_The_Path
 	}
 	if (fileExists(mob_db.getDefaultLocation())) {
 		mob_db.load();
