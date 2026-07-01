@@ -1095,7 +1095,11 @@ void ra_mysql_error_handler(uint32 ecode) {
 }
 
 void Sql_inter_server_read(const char* cfgName, bool first) {
+	#ifndef Pandas_Crashfix_Variable_Init
 	char line[1024], w1[1024], w2[1024];
+	#else
+	char line[1024] = { 0 }, w1[1024] = { 0 }, w2[1024] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	FILE* fp;
 
 	fp = fopen(cfgName, "r");

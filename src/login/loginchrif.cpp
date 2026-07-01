@@ -50,7 +50,11 @@ int32 logchrif_sendallwos(int32 sfd, uint8* buf, size_t len) {
  * @return 0
  */
 TIMER_FUNC(logchrif_sync_ip_addresses){
+	#ifndef Pandas_Crashfix_Variable_Init
 	uint8 buf[2];
+	#else
+	uint8 buf[2] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	ShowInfo("IP Sync in progress...\n");
 	WBUFW(buf,0) = 0x2735;
 	logchrif_sendallwos(-1, buf, 2);
@@ -353,7 +357,11 @@ int32 logchrif_parse_requpdaccstate(int32 fd, int32 id, char* ip){
 
 			// notify other servers
 			if (state != 0){
+	#ifndef Pandas_Crashfix_Variable_Init
 				uint8 buf[11];
+	#else
+				uint8 buf[11] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 				WBUFW(buf,0) = 0x2731;
 				WBUFL(buf,2) = account_id;
 				WBUFB(buf,6) = 0; // 0: change of state, 1: ban
@@ -398,8 +406,13 @@ int32 logchrif_parse_reqbanacc(int32 fd, int32 id, char* ip){
 			else if( timestamp <= time(nullptr) || timestamp == 0 )
 				ShowNotice("Char-server '%s': Error of ban request (account: %d, new date unbans the account, ip: %s).\n", ch_server[id].name, account_id, ip);
 			else{
+	#ifndef Pandas_Crashfix_Variable_Init
 				uint8 buf[11];
 				char tmpstr[24];
+	#else
+				uint8 buf[11] = { 0 };
+				char tmpstr[24] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 				timestamp2string(tmpstr, sizeof(tmpstr), timestamp, login_config.date_format);
 				ShowNotice("Char-server '%s': Ban request (account: %d, new final date of banishment: %s, ip: %s).\n", ch_server[id].name, account_id, tmpstr, ip);
 
@@ -441,7 +454,11 @@ int32 logchrif_parse_reqchgsex(int32 fd, int32 id, char* ip){
 		else if( acc.sex == 'S' )
 			ShowNotice("Char-server '%s': Error of sex change - account to change is a Server account (account: %d, ip: %s).\n", ch_server[id].name, account_id, ip);
 		else{
+	#ifndef Pandas_Crashfix_Variable_Init
 			unsigned char buf[7];
+	#else
+			unsigned char buf[7] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 			char sex = ( acc.sex == 'M' ) ? 'F' : 'M'; //Change gender
 
 			ShowNotice("Char-server '%s': Sex change (account: %d, new sex %c, ip: %s).\n", ch_server[id].name, account_id, sex, ip);

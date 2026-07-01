@@ -398,7 +398,11 @@ void mapif_party_noinfo(int32 fd, int32 party_id, uint32 char_id)
 //Digest party information
 void mapif_party_info(int32 fd, struct party* p, uint32 char_id)
 {
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[8 + sizeof(struct party)];
+	#else
+	unsigned char buf[8 + sizeof(struct party)] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf,0) = 0x3821;
 	WBUFW(buf,2) = 8 + sizeof(struct party);
 	WBUFL(buf,4) = char_id;
@@ -426,7 +430,11 @@ int32 mapif_party_memberadded(int32 fd, int32 party_id, uint32 account_id, uint3
 // Party setting change notification
 int32 mapif_party_optionchanged(int32 fd,struct party *p,uint32 account_id,int32 flag)
 {
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[16];
+	#else
+	unsigned char buf[16] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf,0)=0x3823;
 	WBUFL(buf,2)=p->party_id;
 	WBUFL(buf,6)=account_id;
@@ -442,7 +450,11 @@ int32 mapif_party_optionchanged(int32 fd,struct party *p,uint32 account_id,int32
 
 //Withdrawal notification party
 int32 mapif_party_withdraw(int32 party_id, uint32 account_id, uint32 char_id, char *name, enum e_party_member_withdraw type) {
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[15+NAME_LENGTH];
+	#else
+	unsigned char buf[15+NAME_LENGTH] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 
 	WBUFW(buf,0) = 0x3824;
 	WBUFL(buf,2) = party_id;
@@ -457,7 +469,11 @@ int32 mapif_party_withdraw(int32 party_id, uint32 account_id, uint32 char_id, ch
 //Party map update notification
 int32 mapif_party_membermoved(struct party *p,int32 idx)
 {
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[17+MAP_NAME_LENGTH_EXT];
+	#else
+	unsigned char buf[17+MAP_NAME_LENGTH_EXT] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 
 	WBUFW(buf,0) = 0x3825;
 	WBUFL(buf,2) = p->party_id;
@@ -475,7 +491,11 @@ int32 mapif_party_membermoved(struct party *p,int32 idx)
 //Dissolution party notification
 int32 mapif_party_broken(int32 party_id,int32 flag)
 {
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[16];
+	#else
+	unsigned char buf[16] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf,0)=0x3826;
 	WBUFL(buf,2)=party_id;
 	WBUFB(buf,6)=flag;
@@ -487,7 +507,11 @@ int32 mapif_party_broken(int32 party_id,int32 flag)
 //Remarks in the party
 int32 mapif_party_message(int32 party_id,uint32 account_id,char *mes,int32 len, int32 sfd)
 {
+	#ifndef Pandas_Crashfix_Variable_Init
 	unsigned char buf[512];
+	#else
+	unsigned char buf[512] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	WBUFW(buf,0)=0x3827;
 	WBUFW(buf,2)=len+12;
 	WBUFL(buf,4)=party_id;

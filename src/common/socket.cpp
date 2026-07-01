@@ -265,7 +265,11 @@ static time_t socket_data_last_tick = 0;
 // The connection is closed if it goes over the limit.
 #define WFIFO_MAX (1*1024*1024)
 
+#ifndef Pandas_Crashfix_Variable_Init
 struct socket_data* session[MAXCONN];
+#else
+struct socket_data* session[MAXCONN] = { 0 };
+#endif // Pandas_Crashfix_Variable_Init
 
 #ifdef SEND_SHORTLIST
 int32 send_shortlist_array[MAXCONN];// we only support MAXCONN sockets, limit the array to that
@@ -1370,7 +1374,11 @@ int32 access_ipmask(const char* str, AccessControl* acc)
 
 int32 socket_config_read(const char* cfgName)
 {
+	#ifndef Pandas_Crashfix_Variable_Init
 	char line[1024],w1[1024],w2[1024];
+	#else
+	char line[1024] = { 0 }, w1[1024] = { 0 }, w2[1024] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	FILE *fp;
 
 	fp = fopen(cfgName, "r");

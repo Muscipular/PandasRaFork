@@ -598,7 +598,11 @@ void login_do_final_msg(void){
 int32 login_lan_config_read(const char *lancfgName) {
 	FILE *fp;
 	int32 line_num = 0, s_subnet=ARRAYLENGTH(subnet);
+	#ifndef Pandas_Crashfix_Variable_Init
 	char line[1024], w1[64], w2[64], w3[64], w4[64];
+	#else
+	char line[1024] = { 0 }, w1[64] = { 0 }, w2[64] = { 0 }, w3[64] = { 0 }, w4[64] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 
 	if((fp = fopen(lancfgName, "r")) == nullptr) {
 		ShowWarning("LAN Support configuration file is not found: %s\n", lancfgName);
@@ -650,7 +654,11 @@ int32 login_lan_config_read(const char *lancfgName) {
  * @return True:success, Fals:failure (file not found|readable)
  */
 bool login_config_read(const char* cfgName, bool normal) {
+	#ifndef Pandas_Crashfix_Variable_Init
 	char line[1024], w1[32], w2[1024];
+	#else
+	char line[1024] = { 0 }, w1[32] = { 0 }, w2[1024] = { 0 };
+	#endif // Pandas_Crashfix_Variable_Init
 	FILE* fp = fopen(cfgName, "r");
 	if (fp == nullptr) {
 		ShowError("Configuration file (%s) not found.\n", cfgName);
