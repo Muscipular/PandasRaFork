@@ -30437,6 +30437,43 @@ BUILDIN_FUNC(settrigger) {
 }
 #endif // Pandas_ScriptCommand_SetEventTrigger
 
+#ifdef Pandas_ScriptCommand_MessageColor
+/* ===========================================================
+ * 指令: messagecolor
+ * 描述: 发送指定颜色的消息文本到聊天窗口中
+ * 用法: messagecolor "<消息文本>"{,"<文本颜色代码>",<发送目标>,<游戏单位编号>};
+ * 返回: 该指令无论成功失败, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(messagecolor) {
+	const char* text = script_getstr(st, 2);
+
+	const char* color = "ffffff";
+	if (script_hasdata(st, 3)) {
+		color = script_getstr(st, 3);
+	}
+
+	struct block_list *bl = nullptr;
+	if (!script_rid2bl(5, bl)) {
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	send_target target = AREA;
+	if (script_hasdata(st, 4)) {
+		switch (script_getnum(st, 4)) {
+			case BC_ALL:	target = ALL_CLIENT;	break;
+			case BC_MAP:	target = ALL_SAMEMAP;	break;
+			case BC_SELF:	target = SELF;			break;
+			case BC_AREA:
+			default:		target = AREA;			break;
+		}
+	}
+
+	clif_messagecolor(bl, strtol(color, nullptr, 16), text, true, target);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_MessageColor
+
 #ifdef Pandas_ScriptCommand_BattleRecordQuery
 /* ===========================================================
  * 指令: batrec_query
@@ -32435,6 +32472,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_SetEventTrigger
 	BUILDIN_DEF(settrigger, "ii"), // 使用该指令可以设置某个事件或过滤器的触发行为 [Sola丶小克]
 #endif // Pandas_ScriptCommand_SetEventTrigger
+#ifdef Pandas_ScriptCommand_MessageColor
+	BUILDIN_DEF(messagecolor, "s???"),					// 发送指定颜色的消息文本到聊天窗口中 [Sola丶小克]
+#endif // Pandas_ScriptCommand_MessageColor
 #ifdef Pandas_ScriptCommand_Copynpc
 	BUILDIN_DEF(copynpc, "???????"), // 复制指定的 NPC 到一个新的位置 [Sola丶小克]
 #endif // Pandas_ScriptCommand_Copynpc

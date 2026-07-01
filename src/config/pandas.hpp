@@ -1813,6 +1813,7 @@
 	#endif // Pandas_Struct_Map_Session_Data_EventTrigger
 	// 是否启用 messagecolor 脚本指令 [Sola丶小克]
 	// 使用该指令可以发送指定颜色的消息文本到聊天窗口中
+	#define Pandas_ScriptCommand_MessageColor
 	// 是否启用 copynpc 脚本指令 [Sola丶小克]
 	// 使用该指令可以复制指定的 NPC 到一个新的位置 (坐标等相对可以灵活设置)
 	#define Pandas_ScriptCommand_Copynpc
