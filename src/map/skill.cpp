@@ -777,8 +777,26 @@ int32 skill_calc_heal(block_list *src, block_list *target, uint16 skill_id, uint
 	if ( sd && status_get_hplus(src) > 0 && skill_id != SOA_TALISMAN_OF_PROTECTION)
 		hp += hp * status_get_hplus(src) / 100;
 
+#ifdef Pandas_MapFlag_MaxHeal
+	// 限制治愈技能单次施法的最大治愈量
+	if( src && map_getmapflag( src->m, MF_MAXHEAL ) ){
+		int32 result = (heal) ? max(1, hp) : hp;
+		int32 val = map_getmapflag_param( src->m, MF_MAXHEAL, 1 );
+		return (val > 0) ? cap_value(result, 0, val) : result;
+	}
+#endif // Pandas_MapFlag_MaxHeal
+
 	return (heal) ? max(1, hp) : hp;
 #else
+
+#ifdef Pandas_MapFlag_MaxHeal
+	// 限制治愈技能单次施法的最大治愈量
+	if( src && map_getmapflag( src->m, MF_MAXHEAL ) ){
+		int32 val = map_getmapflag_param( src->m, MF_MAXHEAL, 1 );
+		return (val > 0) ? cap_value(hp, 0, val) : hp;
+	}
+#endif // Pandas_MapFlag_MaxHeal
+
 	return hp;
 #endif
 }

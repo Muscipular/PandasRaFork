@@ -802,6 +802,9 @@
 #ifdef Pandas_MapFlag_MvpDroprate
 	export_constant(MF_MVPDROPRATE);
 #endif // Pandas_MapFlag_MvpDroprate
+#ifdef Pandas_MapFlag_MaxHeal
+	export_constant(MF_MAXHEAL);
+#endif // Pandas_MapFlag_MaxHeal
 #ifdef Pandas_MapFlag_NoCapture
 	export_constant(MF_NOCAPTURE);
 #endif // Pandas_MapFlag_NoCapture
