@@ -29833,6 +29833,32 @@ BUILDIN_FUNC(setbodydir) {
 }
 #endif // Pandas_ScriptCommand_SetBodyDir
 
+#ifdef Pandas_ScriptCommand_InstanceUsers
+/* ===========================================================
+ * 指令: instance_users
+ * 描述: 获取指定的副本实例中已经进入副本地图的人数
+ * 用法: instance_users <副本实例编号>;
+ * 返回: 成功直接返回副本中的人数, 副本不存在或副本中无人存在则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(instance_users) {
+	int users = 0;
+	int instance_id = script_getnum(st, 2);
+	std::shared_ptr<s_instance_data> idata = util::umap_find(instances, instance_id);
+
+	if (!idata || idata->state != INSTANCE_BUSY) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	for (const auto& it : idata->map)
+		users += max(map_getmapdata(it.m)->users, 0);
+
+	script_pushint(st, users);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_InstanceUsers
+
 #ifdef Pandas_ScriptCommand_Script4Each
 /* ===========================================================
  * 指令: buildin_script4each_sub
@@ -31432,6 +31458,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_SetBodyDir
 	BUILDIN_DEF(setbodydir, "i?"), // 用于调整角色纸娃娃身体的朝向 [Sola丶小克]
 #endif // Pandas_ScriptCommand_SetBodyDir
+#ifdef Pandas_ScriptCommand_InstanceUsers
+	BUILDIN_DEF(instance_users, "i"), // 获取指定的副本实例中, 已经进入副本地图的人数 [Sola丶小克]
+#endif // Pandas_ScriptCommand_InstanceUsers
 	BUILDIN_DEF(escape_sql,"v"),
 	BUILDIN_DEF(atoi,"s"),
 	BUILDIN_DEF(strtol,"si"),

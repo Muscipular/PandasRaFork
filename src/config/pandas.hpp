@@ -1708,6 +1708,7 @@
 	#define Pandas_ScriptCommand_OpenBank
 	// 是否启用 instance_users 脚本指令 [Sola丶小克]
 	// 获取指定的副本实例中已经进入副本地图的人数
+	#define Pandas_ScriptCommand_InstanceUsers
 	// 是否启用 cap 脚本指令 [Sola丶小克]
 	// 由于 rAthena 已经实现 cap_value 指令, 这里兼容老版本 cap 指令
 	// 是否启用 mobremove 脚本指令 [Sola丶小克]
