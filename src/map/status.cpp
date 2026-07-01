@@ -4026,6 +4026,25 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 	sd->percent_hp_regen.clear();
 	sd->percent_sp_regen.clear();
 
+#ifdef Pandas_Bonus2_bAddSkillRange
+	// 若 addskillrange 中存在被调整过攻击距离的技能,
+	// 那么在重置之前先将技能编号保存下来
+	std::vector<uint16> skillid_list;
+	if (sd->addskillrange.size()) {
+		for (auto& it : sd->addskillrange) {
+			skillid_list.push_back(it.id);
+		}
+	}
+
+	// 然后进行重置操作
+	sd->addskillrange.clear();
+
+	// 最后刷新客户端关于这些技能的攻击距离信息
+	for (auto& it : skillid_list) {
+		clif_skillinfo(*sd, it);
+	}
+#endif // Pandas_Bonus2_bAddSkillRange
+
 #ifdef Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
 	sd->pandas.multi_catch_target_class.clear();
 #endif // Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
@@ -5128,6 +5147,12 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 	amulet_status_calc(sd, opt);
 #endif // Pandas_Item_Amulet_System
 	status_cpy(&sd->battle_status, base_status);
+
+#ifdef Pandas_Bonus2_bAddSkillRange
+	for (auto& it : sd->addskillrange) {
+		clif_skillinfo(*sd, it.id);
+	}
+#endif // Pandas_Bonus2_bAddSkillRange
 
 // ----- CLIENT-SIDE REFRESH -----
 	if(!sd->prev) {

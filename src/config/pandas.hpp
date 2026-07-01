@@ -1230,6 +1230,7 @@
 	// 常量名称: SP_PANDAS_ADDSKILLRANGE / 调整器名称: bAddSkillRange
 	// 变量位置: map_session_data / 变量名称: addskillrange
 	// 使用原型: bonus2 bAddSkillRange,sk,n;
+	#define Pandas_Bonus2_bAddSkillRange
 
 	// 是否启用 bonus2 bSkillNoRequire 效果调整器 [聽風]
 	// 解除 sk 技能中由 n 指定的前置施法条件限制

@@ -367,6 +367,15 @@ int32 skill_get_range2(const block_list* bl, uint16 skill_id, uint16 skill_lv, b
 
 	if( !range && bl->type != BL_PC )
 		return 9; // Enable non players to use self skills on others. [Skotlex]
+
+#ifdef Pandas_Bonus2_bAddSkillRange
+	if (bl->type == BL_PC) {
+		TBL_PC *sd = (TBL_PC*)bl;
+		range += pc_addskillrange_bonus(sd, skill_id);
+		range = cap_value(range, 0, 14);
+	}
+#endif // Pandas_Bonus2_bAddSkillRange
+
 	return range;
 }
 

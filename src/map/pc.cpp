@@ -5205,6 +5205,20 @@ void pc_bonus2(map_session_data *sd,int32 type,int32 type2,int32 val)
 
 		pc_bonus_itembonus( sd->itemgroupsphealrate, type2, val, false );
 		break;
+#ifdef Pandas_Bonus2_bAddSkillRange
+	case SP_PANDAS_ADDSKILLRANGE: // bonus2 bAddSkillRange,sk,n;
+		if (sd->state.lr_flag == LR_FLAG_ARROW) {
+			break;
+		}
+
+		if (sd->addskillrange.size() == MAX_PC_BONUS) {
+			ShowWarning("pc_bonus2: SP_PANDAS_ADDSKILLRANGE: Reached max (%d) number of skills per character, bonus skill %d (%d) lost.\n", MAX_PC_BONUS, type2, val);
+			break;
+		}
+
+		pc_bonus_itembonus(sd->addskillrange, type2, val, false);
+		break;
+#endif // Pandas_Bonus2_bAddSkillRange
 	default:
 	#ifdef Pandas_NpcExpress_STATCALC
 		if (running_npc_stat_calc_event) {
@@ -9970,6 +9984,26 @@ int32 pc_resethate(map_session_data* sd)
 	}
 	return 0;
 }
+
+#ifdef Pandas_Bonus2_bAddSkillRange
+int32 pc_addskillrange_bonus(map_session_data* sd, uint16 skill_id)
+{
+	int32 bonus = 0;
+
+	nullpo_ret(sd);
+
+	skill_id = skill_dummy2skill_id(skill_id);
+
+	for (auto& it : sd->addskillrange) {
+		if (it.id == skill_id) {
+			bonus += it.val;
+			break;
+		}
+	}
+
+	return bonus;
+}
+#endif // Pandas_Bonus2_bAddSkillRange
 
 int32 pc_skillatk_bonus(map_session_data *sd, uint16 skill_id)
 {
