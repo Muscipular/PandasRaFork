@@ -1694,6 +1694,7 @@
 	#define Pandas_ScriptCommand_Announce
 	// 是否拓展 unitexists 脚本指令 [Sola丶小克]
 	// 添加一个可选参数, 用于强调单位必须存在且活着才返回 true
+	#define Pandas_ScriptCommand_UnitExists
 	// 是否启用 setheaddir 脚本指令 [Sola丶小克]
 	// 用于调整角色纸娃娃脑袋的朝向 (0 - 正前方; 1 - 向右看; 2 - 向左看)
 	// 是否启用 setbodydir 脚本指令 [Sola丶小克]

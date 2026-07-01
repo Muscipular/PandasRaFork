@@ -20357,10 +20357,31 @@ BUILDIN_FUNC(unitexists)
 
 	bl = map_id2bl(script_getnum(st, 2));
 
+#ifndef Pandas_ScriptCommand_UnitExists
 	if (!bl)
 		script_pushint(st, false);
 	else
 		script_pushint(st, true);
+#else
+	int require_alive = 0;
+	if (!script_get_optnum(st, 3, "Require Unit alive or not", require_alive, true, 0)) {
+		script_pushint(st, false);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (!require_alive) {
+		if (!bl)
+			script_pushint(st, false);
+		else
+			script_pushint(st, true);
+	}
+	else {
+		if (!bl || status_isdead(*bl))
+			script_pushint(st, false);
+		else
+			script_pushint(st, true);
+	}
+#endif // Pandas_ScriptCommand_UnitExists
 
 	return SCRIPT_CMD_SUCCESS;
 }
@@ -31362,7 +31383,11 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(getpcblock, "?"),
 	// <--- [zBuffer] List of player cont commands
 	// [zBuffer] List of unit control commands --->
+#ifndef Pandas_ScriptCommand_UnitExists
 	BUILDIN_DEF(unitexists,"i"),
+#else
+	BUILDIN_DEF(unitexists,"i?"),
+#endif // Pandas_ScriptCommand_UnitExists
 	BUILDIN_DEF(getunittype,"i"),
 	BUILDIN_DEF(getunitname,"i"),
 	BUILDIN_DEF(setunitname,"is"),
