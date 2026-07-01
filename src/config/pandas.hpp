@@ -988,6 +988,7 @@
 	// 因此我们不需要手动重置 md->base_status 结构体中的这些属性.
 	// 已知 UMOB_MASTERAID 在 mob_spawn 中故意不重置
 	// 特别感谢 "差记性的小北" 指出此问题
+	#define Pandas_Fix_SetUnitData_Forget_Reset_After_Monster_Dead
 
 	// 修正玩家在 prompt 菜单中选择取消后,
 	// 后续脚本中若调用 close 系列指令会导致报错的问题 [Sola丶小克]

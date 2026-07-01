@@ -1264,6 +1264,31 @@ int32 mob_spawn (mob_data *md)
 	}
 #endif // Pandas_Struct_Mob_Data_Special_SetUnitData
 
+#ifdef Pandas_Fix_SetUnitData_Forget_Reset_After_Monster_Dead
+	status_set_viewdata(md, md->mob_id);
+	md->ud.immune_attack = false;
+	md->ud.canmove_tick = gettick();
+	md->ud.group_id = 0;
+	md->ud.state.ignore_cell_stack_limit = 0;
+
+	if (md->db) {
+		md->level = md->db->lv;
+	}
+
+	if (md->spawn) {
+		safestrncpy(md->name, md->spawn->name, sizeof(md->name));
+
+		if (md->spawn->level > 0)
+			md->level = md->spawn->level;
+
+		if (md->spawn->state.ai)
+			md->special_state.ai = md->spawn->state.ai;
+
+		if (md->spawn->state.size)
+			md->special_state.size = md->spawn->state.size;
+	}
+#endif // Pandas_Fix_SetUnitData_Forget_Reset_After_Monster_Dead
+
 	if (md->lootitems)
 		memset(md->lootitems, 0, sizeof(*md->lootitems));
 
