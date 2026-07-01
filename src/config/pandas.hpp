@@ -1502,6 +1502,7 @@
 	// 当玩家成功使用技能后触发事件 [Sola丶小克]
 	// 事件类型: Event / 事件名称: OnPCUseSkillEvent
 	// 常量名称: NPCE_USE_SKILL / 变量名称: use_skill_event_name
+	#define Pandas_NpcEvent_USE_SKILL
 
 	// 当玩家成功穿戴一件装备时触发事件 [Sola丶小克]
 	// 事件类型: Event / 事件名称: OnPCEquipEvent

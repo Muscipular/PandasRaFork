@@ -2521,6 +2521,9 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcEvent_USE_ITEM
 	NPCE_USE_ITEM,	// use_item_event_name	// OnPCUseItemEvent		// 当玩家成功使用非装备类道具后触发事件
 #endif // Pandas_NpcEvent_USE_ITEM
+#ifdef Pandas_NpcEvent_USE_SKILL
+	NPCE_USE_SKILL,	// use_skill_event_name	// OnPCUseSkillEvent		// 当玩家成功使用技能后触发事件
+#endif // Pandas_NpcEvent_USE_SKILL
 #ifdef Pandas_NpcExpress_STATCALC
 	NPCE_STATCALC,	// statcalc_express_name	// OnPCStatCalcEvent		// 当角色能力被重新计算时触发事件
 #endif // Pandas_NpcExpress_STATCALC
