@@ -407,6 +407,10 @@ int32 Core::start( int32 argc, char **argv ){
 
 	this->set_status( e_core_status::CORE_INITIALIZING );
 
+#ifdef Pandas_Crashfix_VisualStudio_UnorderedMap_AVX512
+	isaAvailableHotfix();
+#endif // Pandas_Crashfix_VisualStudio_UnorderedMap_AVX512
+
 #ifdef Pandas_Setup_Console_Output_Codepage
 	PandasUtf8::setupConsoleOutputCP();
 #endif // Pandas_Setup_Console_Output_Codepage
