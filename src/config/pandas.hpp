@@ -1380,6 +1380,7 @@
 
 	// 修正 add_str 触发 str_buf 的扩容分配后 st->funcname 的所指向的指令名称无效的问题,
 	// 因为 st->funcname 指针指向的内存已在扩容分配时被释放 [Sola丶小克]
+	#define Pandas_ScriptEngine_Relocation_Funcname_After_StrBuf_Realloc
 #endif // Pandas_ScriptEngine
 
 // ============================================================================

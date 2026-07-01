@@ -871,6 +871,18 @@ int32 add_str(const char* p)
 		RECREATE(str_buf,char,str_size);
 		memset(str_buf + (str_size - STR_BUF_INCREASING_SIZE), '\0', STR_BUF_INCREASING_SIZE);
 #endif // Pandas_ScriptEngine_AddStr_Realloc_Memory
+
+#ifdef Pandas_ScriptEngine_Relocation_Funcname_After_StrBuf_Realloc
+		DBIterator* iter = db_iterator(st_db);
+		struct script_state* st = nullptr;
+
+		for (st = static_cast<script_state*>(dbi_first(iter)); dbi_exists(iter); st = static_cast<script_state*>(dbi_next(iter))) {
+			struct script_data* data = script_getdata(st, 0);
+			st->funcname = reference_getname(data);
+		}
+
+		dbi_destroy(iter);
+#endif // Pandas_ScriptEngine_Relocation_Funcname_After_StrBuf_Realloc
 	}
 
 	safestrncpy(str_buf+str_pos, p, len+1);
