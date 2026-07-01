@@ -6759,8 +6759,14 @@ BUILDIN_FUNC(warpparty)
 		if( str2 && strcmp(str2, mapdata->name) != 0 )
 			continue;
 
+#ifndef Pandas_ScriptCommand_WarpPartyRevive
 		if( pc_isdead(pl_sd) )
 			continue;
+#else
+		// 若使用的为 warppartyrevive 指令名, 那么死亡的队员也不会被忽略
+		if (pc_isdead(pl_sd) && strcmpi(script_getfuncname(st), "warppartyrevive") != 0 && strcmpi(script_getfuncname(st), "warpparty2") != 0)
+			continue;
+#endif // Pandas_ScriptCommand_WarpPartyRevive
 
 #ifdef Pandas_Support_Transfer_Autotrade_Player
 		pc_mark_multitransfer(pl_sd);
@@ -32271,6 +32277,10 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_Logout
 	BUILDIN_DEF(logout, "i?"),							// 使指定的角色立刻登出游戏 [Sola丶小克]
 #endif // Pandas_ScriptCommand_Logout
+#ifdef Pandas_ScriptCommand_WarpPartyRevive
+	BUILDIN_DEF2(warpparty, "warppartyrevive", "siii???"),	// 与 warpparty 类似, 但可以复活死亡的队友并传送 [Sola丶小克]
+	BUILDIN_DEF2(warpparty, "warpparty2", "siii???"),		// 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_WarpPartyRevive
 #ifdef Pandas_ScriptCommand_ProcessHalt
 	BUILDIN_DEF(processhalt, "?"), // 用于中断源代码的后续处理逻辑 [Sola丶小克]
 #endif // Pandas_ScriptCommand_ProcessHalt
