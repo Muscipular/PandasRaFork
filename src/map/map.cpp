@@ -4028,6 +4028,15 @@ void map_flags_init(void){
 	}));
 #endif // Pandas_MapFlag_NoMail
 
+#ifdef Pandas_MapFlag_NoPet
+	mapflag_config.insert(std::make_pair(MF_NOPET, s_mapflag_item{
+		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "NoPet",
+		/* 当有参数值的时候, 若全部参数的值等于默认值时, 是否自动关闭此地图标记 */ false,
+		/* 禁止在 @mapflag 指令中开启此地图标记 */ false,
+		/* 参数列表定义(支持多参数), 格式: {默认值, 最小值, 最大值, <"可选: 参数单位">} */ {}
+	}));
+#endif // Pandas_MapFlag_NoPet
+
 #ifdef Pandas_MapFlag_NoAura
 	mapflag_config.insert(std::make_pair(MF_NOAURA, s_mapflag_item{
 		/* 地图标记名称 (主要用在 @mapinfo 指令中显示) */ "NoAura",
@@ -5617,6 +5626,28 @@ bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, pds_mapfla
 			break;
 		}
 #endif // Pandas_MapFlag_HidePartyInfo
+#ifdef Pandas_MapFlag_NoPet
+		case MF_NOPET:
+		{
+			struct s_mapiterator* iter = mapit_getallusers();
+			map_session_data* pl_sd = nullptr;
+
+			for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter)) {
+				if (!pl_sd || pl_sd->bl.m != m)
+					continue;
+				if (pl_sd->pd && status) {
+					clif_displaymessage(pl_sd->fd, msg_txt_cn(pl_sd, 4));
+					pet_return_egg(pl_sd, pl_sd->pd);
+#if PACKETVER >= 20180620 && PACKETVER < 20180704
+					clif_inventorylist(pl_sd);
+#endif // PACKETVER >= 20180620 && PACKETVER < 20180704
+				}
+			}
+
+			mapit_free(iter);
+			break;
+		}
+#endif // Pandas_MapFlag_NoPet
 #ifdef Pandas_MapFlag_NoAura
 		case MF_NOAURA:
 		{

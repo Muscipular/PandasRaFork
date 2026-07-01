@@ -8564,6 +8564,12 @@ void clif_sendegg( map_session_data* sd)
 		clif_displaymessage(fd, msg_txt(sd,666));
 		return;
 	}
+#ifdef Pandas_MapFlag_NoPet
+	if( map_getmapflag( sd->m, MF_NOPET ) ){
+		clif_displaymessage( fd, msg_txt_cn( sd, 5 ) );
+		return;
+	}
+#endif // Pandas_MapFlag_NoPet
 	WFIFOHEAD(fd, MAX_INVENTORY * 2 + 4);
 	WFIFOW(fd,0)=0x1a6;
 	for(i=0,n=0;i<MAX_INVENTORY;i++){
@@ -11359,6 +11365,15 @@ void clif_parse_LoadEndAck(int32 fd,map_session_data *sd)
 
 	// pet
 	if( sd->pd ) {
+#ifdef Pandas_MapFlag_NoPet
+		if( map_getmapflag( sd->m, MF_NOPET ) ){
+			clif_displaymessage( sd->fd, msg_txt_cn( sd, 4 ) );
+			pet_return_egg( sd, sd->pd );
+#if PACKETVER >= 20180620 && PACKETVER < 20180704
+			clif_inventorylist( sd );
+#endif // PACKETVER >= 20180620 && PACKETVER < 20180704
+		} else
+#endif // Pandas_MapFlag_NoPet
 		if( battle_config.pet_no_gvg && mapdata_flag_gvg(mapdata) ) { //Return the pet to egg. [Skotlex]
 			clif_displaymessage(sd->fd, msg_txt(sd,666));
 			pet_return_egg( sd, sd->pd );
