@@ -3,12 +3,14 @@
 
 #include "map.hpp"
 
-#include <cstdlib>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
 #include <config/core.hpp>
 
 #include <common/cbasetypes.hpp>
+#include <common/assistant.hpp>
 #include <common/cli.hpp>
 #include <common/core.hpp>
 #include <common/ers.hpp>
@@ -242,6 +244,9 @@ struct s_generator_options {
 	bool navi;
 	bool itemmoveinfo;
 	bool reputation;
+#ifdef Pandas_UserExperience_Rewrite_MapServerGenerator_Args_Process
+	bool showhelp;
+#endif // Pandas_UserExperience_Rewrite_MapServerGenerator_Args_Process
 } gen_options;
 #endif
 
@@ -5837,6 +5842,19 @@ const char* map_msg_txt(const map_session_data* sd, int32 msg_number){
 	return "??";
 }
 
+#if defined(Pandas_UserExperience_Rewrite_MapServerGenerator_Args_Process) && defined(MAP_GENERATOR)
+void mapgenerator_show_help() {
+	ShowInfo("Usage: %s [options]\n", "map-server-generator");
+	ShowInfo("Options:\n");
+	ShowInfo("  -?, -h [--help]\tShow this help message\n");
+	ShowInfo("  -n, -navi [--generate-navi]\tCreate navigation files\n");
+	ShowInfo("  -r, -repu [--generate-reputation]\tCreate reputation bson files\n");
+	ShowInfo("  -i, -imi [--generate-itemmoveinfo]\tCreate itemmoveinfov5.txt\n");
+	printf("\n");
+	systemPause();
+}
+#endif // defined(Pandas_UserExperience_Rewrite_MapServerGenerator_Args_Process) && defined(MAP_GENERATOR)
+
 /**
  * Read the option specified in command line
  *  and assign the confs used by the different server.
@@ -5846,6 +5864,7 @@ const char* map_msg_txt(const map_session_data* sd, int32 msg_number){
  */
 int32 mapgenerator_get_options(int32 argc, char** argv) {
 #ifdef MAP_GENERATOR
+#ifndef Pandas_UserExperience_Rewrite_MapServerGenerator_Args_Process
 	bool optionSet = false;
 	for (int32 i = 1; i < argc; i++) {
 		const char *arg = argv[i];
@@ -5873,6 +5892,68 @@ int32 mapgenerator_get_options(int32 argc, char** argv) {
 		ShowError("No options passed to the map generator, you must set at least one.\n");
 		exit(1);
 	}
+#else
+	bool optionSet = false;
+	for (int32 i = 1; i < argc; i++) {
+		const char* arg = argv[i];
+		if (arg[0] != '-' && (arg[0] != '/' || arg[1] == '-')) {// -, -- and /
+			ShowError("Unknown option '%s'.\n", argv[i]);
+			exit(EXIT_FAILURE);
+		} else if (arg[0] == '/' || (++arg)[0] == '-') {// long option
+			arg++;
+			if (strcmp(arg, "help") == 0) {
+				gen_options.showhelp = optionSet = true;
+				argv[i] = nullptr;
+			} else if (strcmp(arg, "generate-navi") == 0 || strcmp(arg, "navi") == 0) {
+				gen_options.navi = optionSet = true;
+				argv[i] = nullptr;
+			} else if (strcmp(arg, "generate-itemmoveinfo") == 0 || strcmp(arg, "itemmoveinfo") == 0 || strcmp(arg, "imi") == 0) {
+				gen_options.itemmoveinfo = optionSet = true;
+				argv[i] = nullptr;
+			} else if (strcmp(arg, "generate-reputation") == 0 || strcmp(arg, "repu") == 0) {
+				gen_options.reputation = optionSet = true;
+				argv[i] = nullptr;
+			}
+			else {
+				ShowError("Unknown option '%s'.\n", argv[i]);
+				exit(EXIT_FAILURE);
+			}
+		}
+		else {
+			switch (arg[0]) {// short option
+			case '?':
+			case 'h':
+				gen_options.showhelp = optionSet = true;
+				argv[i] = nullptr;
+				break;
+			case 'n':
+				gen_options.navi = optionSet = true;
+				argv[i] = nullptr;
+				break;
+			case 'i':
+				gen_options.itemmoveinfo = optionSet = true;
+				argv[i] = nullptr;
+				break;
+			case 'r':
+				gen_options.reputation = optionSet = true;
+				argv[i] = nullptr;
+				break;
+			default:
+				ShowError("Unknown option '%s'.\n", argv[i]);
+				exit(EXIT_FAILURE);
+			}
+		}
+	}
+	if (!optionSet) {
+		ShowWarning("No options passed to the map generator, you must set at least one.\n");
+		mapgenerator_show_help();
+		exit(EXIT_FAILURE);
+	}
+	if (gen_options.showhelp) {
+		mapgenerator_show_help();
+		exit(EXIT_SUCCESS);
+	}
+#endif // Pandas_UserExperience_Rewrite_MapServerGenerator_Args_Process
 #endif
 	return 1;
 }

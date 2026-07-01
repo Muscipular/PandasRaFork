@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstring>
+#include <cstdlib>
 #include <filesystem>
 #include <regex>
 #include <sstream>
@@ -26,6 +27,14 @@ extern "C" int __isa_available;
 #include <limits.h>
 #include <unistd.h>
 #endif // _WIN32
+
+void systemPause() {
+#ifdef _WIN32
+	system("pause");
+#else
+	int _unused = system("read");
+#endif // _WIN32
+}
 
 bool isRegexMatched(const std::string& content, const std::string& patterns) {
 	try {

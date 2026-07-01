@@ -18,6 +18,7 @@
 #define WIDE_PATH_SEPARATOR L"/"
 #endif // _WIN32
 
+void systemPause();
 bool isRegexMatched(const std::string& content, const std::string& patterns);
 void isaAvailableHotfix();
 void deployImportDirectories();
