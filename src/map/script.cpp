@@ -30571,6 +30571,30 @@ BUILDIN_FUNC(mobremove) {
 }
 #endif // Pandas_ScriptCommand_MobRemove
 
+#ifdef Pandas_ScriptCommand_BattleIgnore
+/* ===========================================================
+ * 指令: battleignore
+ * 描述: 将角色设置为魔物免战状态, 避免被魔物攻击
+ * 用法: battleignore <开关状态>{,<角色编号>};
+ * 返回: 该指令无论成功失败, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(battleignore) {
+	map_session_data *sd = nullptr;
+	int immune = script_getnum(st, 2);
+
+	if (!script_charid2sd(3, sd))
+		return SCRIPT_CMD_SUCCESS;
+
+	if (cap_value(immune, 0, 1))
+		sd->state.block_action |= PCBLOCK_IMMUNE;
+	else
+		sd->state.block_action &= ~PCBLOCK_IMMUNE;
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BattleIgnore
+
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 /* ===========================================================
  * 指令: getmapspawns
@@ -31375,6 +31399,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_MesClear
 	BUILDIN_DEF2(clear, "mesclear", ""), // 由于 rAthena 已经实现 clear 指令, 这里兼容老版本 mesclear 指令 [Sola丶小克]
 #endif // Pandas_ScriptCommand_MesClear
+#ifdef Pandas_ScriptCommand_BattleIgnore
+	BUILDIN_DEF(battleignore, "i?"), // 将角色设置为魔物免战状态, 避免被魔物攻击 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BattleIgnore
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMapSpawns
