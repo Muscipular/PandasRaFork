@@ -14,6 +14,7 @@
 
 #include "processmutex.hpp"
 #include "showmsg.hpp"
+#include "strlib.hpp"
 
 #if defined(_MSC_VER)
 extern "C" int __isa_available;
@@ -504,3 +505,45 @@ std::string getPandasVersion(bool bPrefix, bool bSuffix) {
 #endif // _WIN32
 }
 #endif // Pandas_Version
+
+bool isGBKCharacter(unsigned char high, unsigned char low) {
+	// 判断基于 GBK 编码的双字节字符规则
+	// https://www.qqxiuzi.cn/zh/hanzi-gbk-bianma.php
+	// 由于 GBK 兼容 GB2312, 是 GB2312 的超集, 所以这里不再单独对 GB2312 区间做判断
+	// GBK 亦采用双字节表示, 总体编码范围为 0x8140-0xFEFE.
+	// 高位字节在 0x81-0xFE 之间, 低位字节在 0x40-0xFE 之间, 剔除 xx7F 一条线
+	if (low != 0 && low != 0x7f && low >= 0x40 && low <= 0xfe) {
+		if (high != 0 && high >= 0x81 && high <= 0xFE) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool isBIG5Character(unsigned char high, unsigned char low) {
+	// 判断基于 BIG5 编码的双字节字符规则
+	// https://www.qqxiuzi.cn/zh/hanzi-big5-bianma.php
+	// BIG5 使用两个字节表示一个字符, 高位字节 0x81-0xFE,
+	// 低位字节 0x40-0x7E 或 0xA1-0xFE.
+	if (low != 0 && ((low >= 0x40 && low <= 0x7e) || (low >= 0xa1 && low <= 0xfe))) {
+		if (high != 0 && high >= 0x81 && high <= 0xFE) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool isDoubleByteCharacter(unsigned char high, unsigned char low) {
+	return (isGBKCharacter(high, low) || isBIG5Character(high, low));
+}
+
+bool isEscapeSequence(const char* start_p) {
+	char buf[8] = { 0 };
+	size_t len = skip_escaped_c(start_p) - start_p;
+	if (len != 2)
+		return false;
+	size_t n = sv_unescape_c(buf, start_p, len);
+	return (n == 1);
+}
