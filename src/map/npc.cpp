@@ -42,9 +42,9 @@
 #include "log.hpp"
 #include "log.hpp"
 #include "map.hpp"
-#ifdef Pandas_NpcExpress_UNIT_KILL
+#if defined(Pandas_NpcExpress_UNIT_KILL) || defined(Pandas_NpcExpress_MOBDROPITEM)
 #include "mapreg.hpp"
-#endif // Pandas_NpcExpress_UNIT_KILL
+#endif // defined(Pandas_NpcExpress_UNIT_KILL) || defined(Pandas_NpcExpress_MOBDROPITEM)
 #include "mob.hpp"
 #include "navi.hpp"
 #include "pc.hpp"
@@ -182,6 +182,43 @@ void npc_event_aide_unitkill(block_list* src, block_list* target, uint16 skill_i
 	npc_event_doall(script_config.unit_kill_express_name);
 }
 #endif // Pandas_NpcExpress_UNIT_KILL
+
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+bool npc_express_aide_mobdropitem(mob_data* md, block_list* src, int32 belong_rid, t_itemid nameid, int32 drop_rate, int32 drop_type) {
+	item_data* id = itemdb_search(nameid);
+
+	if (ITEM_PROPERTIES_HASFLAG(id, special_mask, ITEM_PRO_EXECUTE_MOBDROP_EXPRESS)) {
+		mapreg_setreg(add_str("$@mobdrop_gid"), md ? md->id : 0);
+		mapreg_setreg(add_str("$@mobdrop_mobid"), md ? md->mob_id : 0);
+		mapreg_setreg(add_str("$@mobdrop_itemid"), nameid);
+		mapreg_setreg(add_str("$@mobdrop_rate"), drop_rate);
+		mapreg_setreg(add_str("$@mobdrop_from"), drop_type);
+		mapreg_setregstr(add_str("$@mobdrop_mapname$"), md && md->m >= 0 ? map[md->m].name : "");
+		mapreg_setreg(add_str("$@mobdrop_killerrid"), src && src->type == BL_PC ? src->id : 0);
+		mapreg_setreg(add_str("$@mobdrop_belongrid"), belong_rid);
+		mapreg_setreg(add_str("$@mobdrop_bypass"), 0);
+		npc_event_doall(script_config.mobdropitem_express_name);
+		return mapreg_readreg(add_str("$@mobdrop_bypass")) == 0;
+	}
+
+	return true;
+}
+
+bool npc_express_aide_mobdropitem(mob_data* md, block_list* src, std::shared_ptr<s_item_drop_list> dlist, t_itemid nameid, int32 drop_rate, int32 drop_type) {
+	if (dlist) {
+		map_session_data* belong_sd = map_charid2sd(dlist->first_charid);
+
+		if (belong_sd == nullptr)
+			belong_sd = map_charid2sd(dlist->second_charid);
+		if (belong_sd == nullptr)
+			belong_sd = map_charid2sd(dlist->third_charid);
+
+		return npc_express_aide_mobdropitem(md, src, belong_sd ? belong_sd->id : 0, nameid, drop_rate, drop_type);
+	}
+
+	return npc_express_aide_mobdropitem(md, src, 0, nameid, drop_rate, drop_type);
+}
+#endif // Pandas_NpcExpress_MOBDROPITEM
 
 #ifdef Pandas_NpcFilter_STORAGE_ADD
 bool npc_event_aide_storage_add(map_session_data* sd, struct s_storage* store, int32 idx, int32 amount, int32 item_from) {
@@ -6977,6 +7014,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCX_UNIT_KILL:
 		return script_config.unit_kill_express_name;	// OnUnitKillExpress		// 当某个单位被击杀时触发实时事件
 #endif // Pandas_NpcExpress_UNIT_KILL
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+	case NPCX_MOBDROPITEM:
+		return script_config.mobdropitem_express_name;	// OnMobDropItemExpress		// 当魔物即将掉落道具时触发实时事件
+#endif // Pandas_NpcExpress_MOBDROPITEM
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;

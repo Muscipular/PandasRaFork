@@ -3357,6 +3357,10 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type, uint16 skill_id)
 	// Process items looted by the mob
 	if (md->lootitems) {
 		for (i = 0; i < md->lootitem_count; i++) {
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+			if (!npc_express_aide_mobdropitem(md, src, lootlist, md->lootitems[i].item.nameid, 10000, 4))
+				continue;
+#endif // Pandas_NpcExpress_MOBDROPITEM
 			std::shared_ptr<s_item_drop> ditem = mob_setlootitem(md->lootitems[i], md->mob_id);
 			mob_item_drop(md, lootlist, ditem, 1, 10000, homkillonly || merckillonly);
 		}
@@ -3419,6 +3423,11 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type, uint16 skill_id)
 						mobdrop->rate = entry->adj_rate * drop_rate / 10000;
 					}
 
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+					if (!npc_express_aide_mobdropitem(md, src, dlist, mobdrop->nameid, drop_rate, 3))
+						continue;
+#endif // Pandas_NpcExpress_MOBDROPITEM
+
 					std::shared_ptr<s_item_drop> ditem = mob_setdropitem(mobdrop, 1, md->mob_id);
 
 					mob_item_drop(md, dlist, ditem, 0, mobdrop->rate, homkillonly || merckillonly);
@@ -3454,6 +3463,11 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type, uint16 skill_id)
 			// attempt to drop the item
 			if (rnd() % 10000 >= drop_rate)
 				continue;
+
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+			if (!npc_express_aide_mobdropitem(md, src, dlist, entry->nameid, drop_rate, 1))
+				continue;
+#endif // Pandas_NpcExpress_MOBDROPITEM
 
 			if (first_sd != nullptr && it->type == IT_PETEGG) {
 				pet_create_egg(first_sd, entry->nameid);
@@ -3503,6 +3517,9 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type, uint16 skill_id)
 
 				std::shared_ptr<s_item_drop> ditem = mob_setdropitem(mobdrop, 1, md->mob_id);
 
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+				if (npc_express_aide_mobdropitem(md, src, dlist, mobdrop->nameid, mobdrop->rate, 2))
+#endif // Pandas_NpcExpress_MOBDROPITEM
 				mob_item_drop(md, dlist, ditem, 0, mobdrop->rate, homkillonly || merckillonly);
 			}
 		}
@@ -3638,6 +3655,11 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type, uint16 skill_id)
 					if(rnd()%10000 >= temp) //if ==0, then it doesn't drop
 						continue;
 				}
+
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+				if (!npc_express_aide_mobdropitem(md, src, mvp_sd ? mvp_sd->id : 0, entry->nameid, temp, 5))
+					continue;
+#endif // Pandas_NpcExpress_MOBDROPITEM
 
 				struct item item = {};
 				item.nameid=entry->nameid;

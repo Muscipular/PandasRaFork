@@ -1331,6 +1331,7 @@
 		// 当魔物即将掉落道具时触发实时事件 [Sola丶小克]
 		// 事件类型: Express / 事件名称: OnMobDropItemExpress
 		// 常量名称: NPCX_MOBDROPITEM / 变量名称: mobdropitem_express_name
+		#define Pandas_NpcExpress_MOBDROPITEM
 
 		// 当玩家发起攻击并即将进行结算时触发实时事件 [聽風]
 		// 事件类型: Express / 事件名称: OnPCAttackExpress

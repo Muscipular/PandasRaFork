@@ -18,7 +18,9 @@
 #include "navi.hpp" // navi stuff
 
 struct block_list;
+struct mob_data;
 struct npc_data;
+struct s_item_drop_list;
 struct view_data;
 
 struct npc_timerevent_list {
@@ -2524,6 +2526,9 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcExpress_UNIT_KILL
 	NPCX_UNIT_KILL,	// unit_kill_express_name	// OnUnitKillExpress		// 当某个单位被击杀时触发实时事件
 #endif // Pandas_NpcExpress_UNIT_KILL
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+	NPCX_MOBDROPITEM,	// mobdropitem_express_name	// OnMobDropItemExpress		// 当魔物即将掉落道具时触发实时事件
+#endif // Pandas_NpcExpress_MOBDROPITEM
 	NPCE_MAX
 };
 
@@ -2533,6 +2538,10 @@ void npc_event_aide_killmvp(map_session_data* sd, map_session_data* mvp_sd, mob_
 #ifdef Pandas_NpcExpress_UNIT_KILL
 void npc_event_aide_unitkill(block_list* src, block_list* target, uint16 skill_id);
 #endif // Pandas_NpcExpress_UNIT_KILL
+#ifdef Pandas_NpcExpress_MOBDROPITEM
+bool npc_express_aide_mobdropitem(mob_data* md, block_list* src, int32 belong_rid, t_itemid nameid, int32 drop_rate, int32 drop_type);
+bool npc_express_aide_mobdropitem(mob_data* md, block_list* src, std::shared_ptr<s_item_drop_list> dlist, t_itemid nameid, int32 drop_rate, int32 drop_type);
+#endif // Pandas_NpcExpress_MOBDROPITEM
 struct view_data* npc_get_viewdata(int32 class_);
 int32 npc_chat_sub(block_list* bl, va_list ap);
 int32 npc_event_dequeue(map_session_data* sd,bool free_script_stack=true);
