@@ -725,6 +725,9 @@ enum e_mapflag : int16 {
 #ifdef Pandas_MapFlag_HidePartyInfo
 	MF_HIDEPARTYINFO,
 #endif // Pandas_MapFlag_HidePartyInfo
+#ifdef Pandas_MapFlag_NoMail
+	MF_NOMAIL,
+#endif // Pandas_MapFlag_NoMail
 #ifdef Pandas_MapFlag_NoCapture
 	MF_NOCAPTURE,
 #endif // Pandas_MapFlag_NoCapture

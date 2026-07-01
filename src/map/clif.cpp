@@ -17535,6 +17535,12 @@ void clif_parse_Mail_send(int32 fd, map_session_data *sd){
 		return;
 	}
 
+#ifdef Pandas_MapFlag_NoMail
+	if( mail_invalid_operation( sd ) ){
+		return;
+	}
+#endif // Pandas_MapFlag_NoMail
+
 	mail_send(sd, RFIFOCP(fd,info->pos[1]), RFIFOCP(fd,info->pos[2]), RFIFOCP(fd,info->pos[4]), RFIFOB(fd,info->pos[3]));
 #else
 	uint16 length = RFIFOW(fd, 2);

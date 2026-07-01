@@ -784,6 +784,9 @@
 #ifdef Pandas_MapFlag_HidePartyInfo
 	export_constant(MF_HIDEPARTYINFO);
 #endif // Pandas_MapFlag_HidePartyInfo
+#ifdef Pandas_MapFlag_NoMail
+	export_constant(MF_NOMAIL);
+#endif // Pandas_MapFlag_NoMail
 #ifdef Pandas_MapFlag_NoCapture
 	export_constant(MF_NOCAPTURE);
 #endif // Pandas_MapFlag_NoCapture
