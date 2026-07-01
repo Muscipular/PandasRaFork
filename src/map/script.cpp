@@ -31121,6 +31121,38 @@ BUILDIN_FUNC(bonus_script_info) {
 }
 #endif // Pandas_ScriptCommand_BonusScriptInfo
 
+#ifdef Pandas_ScriptCommand_ExpandInventoryAdjust
+/* ===========================================================
+ * 指令: expandinventory_adjust
+ * 描述: 增加角色的背包容量上限
+ * 用法: expandinventory_adjust <增加多少容量>;
+ * 返回: 调整成功返回 1, 失败返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(expandinventory_adjust) {
+	TBL_PC* sd = nullptr;
+	if (!script_rid2sd(sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int expand_count = script_getnum(st, 2);
+
+	if (sd->status.inventory_slots + expand_count <= MAX_INVENTORY &&
+		sd->status.inventory_slots + expand_count >= sd->inventory.amount &&
+		sd->status.inventory_slots + expand_count >= INVENTORY_BASE_SIZE) {
+		sd->status.inventory_slots += expand_count;
+		clif_inventory_expansion_info(sd);
+		chrif_save(sd, CSAVE_NORMAL);
+		script_pushint(st, 1);
+	} else {
+		script_pushint(st, 0);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_ExpandInventoryAdjust
+
 #ifdef Pandas_ScriptCommand_MobRemove
 /* ===========================================================
  * 指令: mobremove
@@ -33336,6 +33368,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_BonusScriptInfo
 	BUILDIN_DEF(bonus_script_info, "ii?"), // 查询指定效果脚本的相关信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_BonusScriptInfo
+#ifdef Pandas_ScriptCommand_ExpandInventoryAdjust
+	BUILDIN_DEF(expandinventory_adjust, "i"), // 增加角色的背包容量上限 [Sola丶小克]
+#endif // Pandas_ScriptCommand_ExpandInventoryAdjust
 #ifdef Pandas_ScriptCommand_MobRemove
 	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
 #endif // Pandas_ScriptCommand_MobRemove
