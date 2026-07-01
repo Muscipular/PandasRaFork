@@ -6806,6 +6806,16 @@ int32 pc_useitem(map_session_data *sd,int32 n)
 	}
 
 	potion_flag = 0;
+
+#ifdef Pandas_NpcEvent_USE_ITEM
+	if (sd && id) {
+		pc_setreg(sd, add_str("@useitem_idx"), n);
+		pc_setreg(sd, add_str("@useitem_nameid"), id->nameid);
+		pc_setreg(sd, add_str("@useitem_pos"), n);
+		npc_script_event(*sd, NPCE_USE_ITEM);
+	}
+#endif // Pandas_NpcEvent_USE_ITEM
+
 	return 1;
 }
 

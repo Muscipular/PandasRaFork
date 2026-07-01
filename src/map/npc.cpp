@@ -7013,6 +7013,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCE_INSERT_CARD:
 		return script_config.insert_card_event_name;	// OnPCInsertCardEvent		// 当玩家成功插入卡片后触发事件
 #endif // Pandas_NpcEvent_INSERT_CARD
+#ifdef Pandas_NpcEvent_USE_ITEM
+	case NPCE_USE_ITEM:
+		return script_config.use_item_event_name;	// OnPCUseItemEvent		// 当玩家成功使用非装备类道具后触发事件
+#endif // Pandas_NpcEvent_USE_ITEM
 #ifdef Pandas_NpcExpress_STATCALC
 	case NPCE_STATCALC:
 		return script_config.statcalc_express_name;	// OnPCStatCalcEvent		// 当角色能力被重新计算时触发事件

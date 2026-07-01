@@ -389,6 +389,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcEvent_INSERT_CARD
 	"OnPCInsertCardEvent",	// NPCE_INSERT_CARD		// insert_card_event_name	// 当玩家成功插入卡片后触发事件
 #endif // Pandas_NpcEvent_INSERT_CARD
+#ifdef Pandas_NpcEvent_USE_ITEM
+	"OnPCUseItemEvent",	// NPCE_USE_ITEM		// use_item_event_name	// 当玩家成功使用非装备类道具后触发事件
+#endif // Pandas_NpcEvent_USE_ITEM
 #ifdef Pandas_NpcExpress_STATCALC
 	"OnPCStatCalcEvent",	// NPCE_STATCALC		// statcalc_express_name	// 当角色能力被重新计算时触发事件
 #endif // Pandas_NpcExpress_STATCALC
