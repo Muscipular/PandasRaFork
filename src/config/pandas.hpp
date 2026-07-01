@@ -1745,6 +1745,7 @@
 	#define Pandas_ScriptCommand_IdentifyIdx
 	// 是否启用 unequipidx 脚本指令 [Sola丶小克]
 	// 脱下指定背包序号的道具 (该指令有一个用于兼容的别名: unequipinventory)
+	#define Pandas_ScriptCommand_UnEquipIdx
 	// 是否启用 equipidx 脚本指令 [Sola丶小克]
 	// 穿戴指定背包序号的道具 (该指令有一个用于兼容的别名: equipinventory)
 	// 是否启用 itemexists 脚本指令 [Sola丶小克]
