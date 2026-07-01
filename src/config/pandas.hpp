@@ -1697,6 +1697,7 @@
 	#define Pandas_ScriptCommand_UnitExists
 	// 是否启用 setheaddir 脚本指令 [Sola丶小克]
 	// 用于调整角色纸娃娃脑袋的朝向 (0 - 正前方; 1 - 向右看; 2 - 向左看)
+	#define Pandas_ScriptCommand_SetHeadDir
 	// 是否启用 setbodydir 脚本指令 [Sola丶小克]
 	// 用于调整角色纸娃娃身体的朝向 (与 NPC 一致, 从 0 到 7 共 8 个方位可选择)
 	// 是否启用 openbank 脚本指令 [Sola丶小克]
