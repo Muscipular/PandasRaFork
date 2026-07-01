@@ -320,6 +320,21 @@ int32 mercenary_delete(s_mercenary_data *md, int32 reply) {
 			break; 
 	}
 
+#ifdef Pandas_NpcExpress_MER_LEAVE
+	if (sd && md) {
+		pc_setreg(sd, add_str("@mer_gid"), md->id);
+		pc_setreg(sd, add_str("@mer_classid"), md->db->class_);
+		pc_setreg(sd, add_str("@mer_leave_reason"), reply);
+
+		pc_setreg(sd, add_str("@mer_mapid"), (md ? md->m : -1));
+		pc_setregstr(sd, add_str("@mer_mapname$"), (md && md->m >= 0 ? map[md->m].name : ""));
+		pc_setreg(sd, add_str("@mer_x"), (md ? md->x : 0));
+		pc_setreg(sd, add_str("@mer_y"), (md ? md->y : 0));
+
+		npc_script_event(*sd, NPCX_MER_LEAVE);
+	}
+#endif // Pandas_NpcExpress_MER_LEAVE
+
 	return unit_remove_map(md, CLR_OUTSIGHT);
 }
 

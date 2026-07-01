@@ -7026,6 +7026,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCX_MER_CALL:
 		return script_config.mer_call_express_name;	// OnPCMerCallExpress		// 当玩家成功召唤出佣兵时触发实时事件
 #endif // Pandas_NpcExpress_MER_CALL
+#ifdef Pandas_NpcExpress_MER_LEAVE
+	case NPCX_MER_LEAVE:
+		return script_config.mer_leave_express_name;	// OnPCMerLeaveExpress		// 当佣兵离开玩家时触发实时事件
+#endif // Pandas_NpcExpress_MER_LEAVE
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;
