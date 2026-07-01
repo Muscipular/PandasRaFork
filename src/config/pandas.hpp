@@ -1467,6 +1467,7 @@
 
 #ifdef Pandas_Cleanup
 	// 清理掉一些没啥作用看着还心烦的终端提示信息 [Sola丶小克]
+	#define Pandas_Cleanup_Useless_Message
 
 #endif // Pandas_Cleanup
 

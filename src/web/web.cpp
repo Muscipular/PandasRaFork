@@ -566,7 +566,9 @@ bool WebServer::initialize( int32 argc, char* argv[] ){
 		return false;
 	}
 
+#ifndef Pandas_Cleanup_Useless_Message
 	ShowStatus("The web-server is " CL_GREEN "ready" CL_RESET " (Server is listening on the port %u).\n\n", web_config.web_port);
+#endif // Pandas_Cleanup_Useless_Message
 	return true;
 #endif
 }
