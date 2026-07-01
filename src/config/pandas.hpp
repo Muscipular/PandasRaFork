@@ -809,6 +809,7 @@
 	// 实际上抄袭和复制到的技能并不需要被写入到 skill 表, 而是记录在变量中
 	// 抄袭对应的技能编号保存在变量: SKILL_VAR_PLAGIARISM 等级是 SKILL_VAR_PLAGIARISM_LV
 	// 复制对应的技能编号保存在变量: SKILL_VAR_REPRODUCE 等级是 SKILL_VAR_REPRODUCE_LV
+	#define Pandas_Fix_ShadowChaser_Lose_Skill
 
 	// 解决魔物死亡但客户端没移除魔物单位的问题 [Sola丶小克]
 	// 造成问题存在几个可能的原因, 且这些原因在逻辑上都是合理存在的, 因此每种情况都要进行规避:
