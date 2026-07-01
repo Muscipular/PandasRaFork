@@ -876,6 +876,7 @@
 
 	// 修正在 20180620 客户端中, 如果在玩家过图时将宠物变回宠物蛋,
 	// 背包中对应的宠物蛋没有出现的问题 (pet_disable_in_gvg 战斗配置选项) [Sola丶小克]
+	#define Pandas_Fix_LoadEndAck_Pet_Return_To_Egg_Missing
 
 	// 修正当前坐标就是移动的目的地时, 可能会导致单位无法移动或被传送的问题 [Sola丶小克]
 	// 重现方法:

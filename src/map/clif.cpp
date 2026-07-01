@@ -11282,6 +11282,13 @@ void clif_parse_LoadEndAck(int32 fd,map_session_data *sd)
 		if( battle_config.pet_no_gvg && mapdata_flag_gvg(mapdata) ) { //Return the pet to egg. [Skotlex]
 			clif_displaymessage(sd->fd, msg_txt(sd,666));
 			pet_return_egg( sd, sd->pd );
+#ifdef Pandas_Fix_LoadEndAck_Pet_Return_To_Egg_Missing
+#if PACKETVER >= 20180620 && PACKETVER < 20180704
+			// 目前测试只覆盖了 20180620 客户端
+			// 若客户端的封包版本大于等于 20180704 的话, pet_return_egg 内部有做处理
+			clif_inventorylist(sd);
+#endif // PACKETVER >= 20180620 && PACKETVER < 20180704
+#endif // Pandas_Fix_LoadEndAck_Pet_Return_To_Egg_Missing
 		} else {
 			if(map_addblock(sd->pd))
 				return;
