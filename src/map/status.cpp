@@ -1791,7 +1791,11 @@ int32 status_damage(block_list *src,block_list *target,int64 dhp, int64 dsp, int
 	if (target && target->type == BL_PC) {
 		TBL_PC* tsd = BL_CAST(BL_PC, target);
 
-		if (tsd && rnd() % 10000 < tsd->bonus.rebirth_rate) {
+		if (tsd && rnd() % 10000 < tsd->bonus.rebirth_rate
+#ifdef Pandas_MapFlag_NoToken
+			&& tsd->bl.m >= 0 && !map_getmapflag(tsd->bl.m, MF_NOTOKEN)
+#endif // Pandas_MapFlag_NoToken
+		) {
 			if (tsd->special_state.restart_full_recover) {
 				status_revive(target, 100, 100);
 			}

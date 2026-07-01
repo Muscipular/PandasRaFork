@@ -10578,6 +10578,13 @@ bool pc_revive_item(map_session_data *sd) {
 	if (sd->sc.getSCE(SC_HELLPOWER)) // Cannot resurrect while under the effect of SC_HELLPOWER.
 		return false;
 
+#ifdef Pandas_MapFlag_NoToken
+	if (sd && sd->bl.m >= 0 && map_getmapflag(sd->bl.m, MF_NOTOKEN)) {
+		clif_displaymessage(sd->fd, msg_txt_cn(sd, 17));	// 此地图禁止原地复活!
+		return false;
+	}
+#endif // Pandas_MapFlag_NoToken
+
 	int16 item_position = itemdb_group.item_exists_pc(sd, IG_TOKEN_OF_SIEGFRIED);
 	uint8 hp = 100, sp = 100;
 

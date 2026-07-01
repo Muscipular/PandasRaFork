@@ -775,6 +775,9 @@
 #ifdef Pandas_MapFlag_NoAutoLoot
 	export_constant(MF_NOAUTOLOOT);
 #endif // Pandas_MapFlag_NoAutoLoot
+#ifdef Pandas_MapFlag_NoToken
+	export_constant(MF_NOTOKEN);
+#endif // Pandas_MapFlag_NoToken
 #ifdef Pandas_MapFlag_NoCapture
 	export_constant(MF_NOCAPTURE);
 #endif // Pandas_MapFlag_NoCapture
