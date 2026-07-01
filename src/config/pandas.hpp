@@ -1726,6 +1726,7 @@
 	#define Pandas_ScriptCommand_GetHotkey
 	// 是否启用 sethotkey 脚本指令 [Sola丶小克]
 	// 设置指定快捷键位置的信息 (该指令有一个用于兼容的别名: set_hotkey)
+	#define Pandas_ScriptCommand_SetHotkey
 	// 是否启用 showvend 脚本指令 [Jian916]
 	// 使指定的 NPC 头上可以显示露天商店的招牌, 点击招牌可触发与 NPC 的对话
 	// 是否启用 viewequip 脚本指令 [Sola丶小克]

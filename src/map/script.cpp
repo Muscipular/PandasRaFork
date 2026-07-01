@@ -30651,6 +30651,69 @@ BUILDIN_FUNC(gethotkey) {
 }
 #endif // Pandas_ScriptCommand_GetHotkey
 
+#ifdef Pandas_ScriptCommand_SetHotkey
+/* ===========================================================
+ * 指令: sethotkey
+ * 描述: 设置指定快捷键位置的信息
+ * 用法: sethotkey <快捷键位置编号>,<快捷键的类型>,<物品/技能的ID>,<技能等级>;
+ * 返回: 设置成功则返回 1, 设置失败则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(sethotkey) {
+	map_session_data *sd = nullptr;
+
+	if (!script_rid2sd(sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int hotkey_idx = script_getnum(st, 2);
+	if (hotkey_idx < 0 || hotkey_idx >= MAX_HOTKEYS_DB) {
+		ShowError("buildin_sethotkey: hotkey index %d is out of range (0..%d).\n", hotkey_idx, MAX_HOTKEYS_DB - 1);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int hotkey_type = script_getnum(st, 3);
+	if (hotkey_type < 0 || hotkey_type > 1) {
+		ShowError("buildin_sethotkey: hotkey type %d is out of range (0..1).\n", hotkey_type);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int hotkey_id = script_getnum(st, 4);
+	if (hotkey_type == 0) {
+		if (!item_db.exists(hotkey_id)) {
+			ShowError("buildin_sethotkey: Nonexistant item %d requested.\n", hotkey_id);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_SUCCESS;
+		}
+	} else {
+		if (!skill_get_index(hotkey_id)) {
+			ShowError("buildin_sethotkey: Invalid skill ID %d , please review.\n", hotkey_id);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_SUCCESS;
+		}
+	}
+
+	int hotkey_lv = script_getnum(st, 5);
+	if (hotkey_type == 0) {
+		hotkey_lv = 0;
+	}
+
+	sd->status.hotkeys[hotkey_idx].type = hotkey_type;
+	sd->status.hotkeys[hotkey_idx].id = hotkey_id;
+	sd->status.hotkeys[hotkey_idx].lv = hotkey_lv;
+	clif_hotkeys_send(sd, 0);
+#if PACKETVER_MAIN_NUM >= 20190522 || PACKETVER_RE_NUM >= 20190508 || PACKETVER_ZERO_NUM >= 20190605
+	clif_hotkeys_send(sd, 1);
+#endif
+	clif_inventorylist(sd);
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_SetHotkey
+
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 /* ===========================================================
  * 指令: getmapspawns
@@ -31462,6 +31525,10 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(gethotkey, "i?"), // 获取指定快捷键位置当前的信息 [Sola丶小克]
 	BUILDIN_DEF2(gethotkey, "get_hotkey", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
 #endif // Pandas_ScriptCommand_GetHotkey
+#ifdef Pandas_ScriptCommand_SetHotkey
+	BUILDIN_DEF(sethotkey, "iiii"), // 设置指定快捷键位置的信息 [Sola丶小克]
+	BUILDIN_DEF2(sethotkey, "set_hotkey", "iiii"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_SetHotkey
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMapSpawns
