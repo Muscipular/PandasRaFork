@@ -3776,6 +3776,12 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type, uint16 skill_id)
 			npc_event_aide_killmvp(sd, mvp_sd, md);
 		}
 #endif // defined(Pandas_NpcEvent_KILLMVP) && defined(Pandas_BattleConfig_AlwaysTriggerMVPKillEvent)
+
+#ifdef Pandas_NpcExpress_UNIT_KILL
+		if (src && md) {
+			npc_event_aide_unitkill(src, md, skill_id);
+		}
+#endif // Pandas_NpcExpress_UNIT_KILL
 	}
 
 	if(md->deletetimer != INVALID_TIMER) {

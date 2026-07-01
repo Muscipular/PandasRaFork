@@ -42,6 +42,9 @@
 #include "log.hpp"
 #include "log.hpp"
 #include "map.hpp"
+#ifdef Pandas_NpcExpress_UNIT_KILL
+#include "mapreg.hpp"
+#endif // Pandas_NpcExpress_UNIT_KILL
 #include "mob.hpp"
 #include "navi.hpp"
 #include "pc.hpp"
@@ -156,6 +159,29 @@ void npc_event_aide_killmvp(map_session_data* sd, map_session_data* mvp_sd, mob_
 	npc_script_event(*sd, NPCE_KILLMVP);
 }
 #endif // Pandas_NpcEvent_KILLMVP
+
+#ifdef Pandas_NpcExpress_UNIT_KILL
+void npc_event_aide_unitkill(block_list* src, block_list* target, uint16 skill_id) {
+	nullpo_retv(target);
+
+	mapreg_setreg(add_str("$@killed_gid"), target->id);
+	mapreg_setreg(add_str("$@killed_type"), target->type);
+	mapreg_setreg(add_str("$@killed_mapid"), target->m);
+	mapreg_setregstr(add_str("$@killed_mapname$"), target->m >= 0 ? map[target->m].name : "");
+	mapreg_setreg(add_str("$@killed_x"), target->x);
+	mapreg_setreg(add_str("$@killed_y"), target->y);
+	mapreg_setreg(add_str("$@killed_classid"), status_get_class(target));
+	mapreg_setreg(add_str("$@killer_gid"), src ? src->id : 0);
+	mapreg_setreg(add_str("$@killer_type"), src ? src->type : 0);
+	mapreg_setreg(add_str("$@killer_mapid"), src ? src->m : -1);
+	mapreg_setregstr(add_str("$@killer_mapname$"), src && src->m >= 0 ? map[src->m].name : "");
+	mapreg_setreg(add_str("$@killer_x"), src ? src->x : 0);
+	mapreg_setreg(add_str("$@killer_y"), src ? src->y : 0);
+	mapreg_setreg(add_str("$@killer_classid"), src ? status_get_class(src) : 0);
+	mapreg_setreg(add_str("$@killer_skillid"), skill_id);
+	npc_event_doall(script_config.unit_kill_express_name);
+}
+#endif // Pandas_NpcExpress_UNIT_KILL
 
 #ifdef Pandas_NpcFilter_STORAGE_ADD
 bool npc_event_aide_storage_add(map_session_data* sd, struct s_storage* store, int32 idx, int32 amount, int32 item_from) {
@@ -6947,6 +6973,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCX_PROGRESSABORT:
 		return script_config.progressabort_express_name;	// OnPCProgressAbortExpress		// 当 progressbar 进度条被打断时触发实时事件
 #endif // Pandas_NpcExpress_PROGRESSABORT
+#ifdef Pandas_NpcExpress_UNIT_KILL
+	case NPCX_UNIT_KILL:
+		return script_config.unit_kill_express_name;	// OnUnitKillExpress		// 当某个单位被击杀时触发实时事件
+#endif // Pandas_NpcExpress_UNIT_KILL
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;

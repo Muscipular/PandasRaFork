@@ -247,6 +247,12 @@ int32 hom_dead(homun_data *hd, block_list *src, uint16 skill_id)
 	hom_hungry_timer_delete(hd);
 	hd->homunculus.hp = 0;
 
+#ifdef Pandas_NpcExpress_UNIT_KILL
+	if (src && hd) {
+		npc_event_aide_unitkill(src, hd, skill_id);
+	}
+#endif // Pandas_NpcExpress_UNIT_KILL
+
 #ifdef Pandas_BattleRecord
 	batrec_reset(hd);
 #endif // Pandas_BattleRecord

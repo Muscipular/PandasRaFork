@@ -2521,12 +2521,18 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcExpress_PROGRESSABORT
 	NPCX_PROGRESSABORT,	// progressabort_express_name	// OnPCProgressAbortExpress		// 当 progressbar 进度条被打断时触发实时事件
 #endif // Pandas_NpcExpress_PROGRESSABORT
+#ifdef Pandas_NpcExpress_UNIT_KILL
+	NPCX_UNIT_KILL,	// unit_kill_express_name	// OnUnitKillExpress		// 当某个单位被击杀时触发实时事件
+#endif // Pandas_NpcExpress_UNIT_KILL
 	NPCE_MAX
 };
 
 #ifdef Pandas_NpcEvent_KILLMVP
 void npc_event_aide_killmvp(map_session_data* sd, map_session_data* mvp_sd, mob_data* md);
 #endif // Pandas_NpcEvent_KILLMVP
+#ifdef Pandas_NpcExpress_UNIT_KILL
+void npc_event_aide_unitkill(block_list* src, block_list* target, uint16 skill_id);
+#endif // Pandas_NpcExpress_UNIT_KILL
 struct view_data* npc_get_viewdata(int32 class_);
 int32 npc_chat_sub(block_list* bl, va_list ap);
 int32 npc_event_dequeue(map_session_data* sd,bool free_script_stack=true);

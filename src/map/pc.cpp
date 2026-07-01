@@ -10331,6 +10331,12 @@ int32 pc_dead(map_session_data *sd,block_list *src, uint16 skill_id)
 		}
 	}
 
+#ifdef Pandas_NpcExpress_UNIT_KILL
+	if (src && sd) {
+		npc_event_aide_unitkill(src, sd, skill_id);
+	}
+#endif // Pandas_NpcExpress_UNIT_KILL
+
 	if(battle_config.bone_drop==2
 		|| (battle_config.bone_drop==1 && mapdata->getMapFlag(MF_PVP)))
 	{

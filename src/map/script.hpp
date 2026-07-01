@@ -267,6 +267,9 @@ struct Script_Config {
 #ifdef Pandas_NpcExpress_PROGRESSABORT
 	const char* progressabort_express_name;	// NPCX_PROGRESSABORT	// OnPCProgressAbortExpress	// 当 progressbar 进度条被打断时触发实时事件
 #endif // Pandas_NpcExpress_PROGRESSABORT
+#ifdef Pandas_NpcExpress_UNIT_KILL
+	const char* unit_kill_express_name;	// NPCX_UNIT_KILL	// OnUnitKillExpress	// 当某个单位被击杀时触发实时事件
+#endif // Pandas_NpcExpress_UNIT_KILL
 	// NPC related
 	const char* ontouch_event_name;
 	const char* ontouch2_event_name;

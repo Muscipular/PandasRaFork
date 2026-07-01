@@ -457,6 +457,13 @@ int32 elemental_dead(s_elemental_data *ed) {
 #else
 int32 elemental_dead(s_elemental_data *ed, block_list *src, uint16 skill_id) {
 #endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
+
+#ifdef Pandas_NpcExpress_UNIT_KILL
+	if (src && ed) {
+		npc_event_aide_unitkill(src, ed, skill_id);
+	}
+#endif // Pandas_NpcExpress_UNIT_KILL
+
 	elemental_delete(ed);
 	return 0;
 }

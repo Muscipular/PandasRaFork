@@ -452,6 +452,13 @@ bool mercenary_dead(s_mercenary_data *md) {
 #else
 bool mercenary_dead(s_mercenary_data *md, block_list *src, uint16 skill_id) {
 #endif // Pandas_FuncDefine_UnitDead_With_ExtendInfo
+
+#ifdef Pandas_NpcExpress_UNIT_KILL
+	if (md && src) {
+		npc_event_aide_unitkill(src, md, skill_id);
+	}
+#endif // Pandas_NpcExpress_UNIT_KILL
+
 	mercenary_delete(md, 1);
 	return false;
 }
