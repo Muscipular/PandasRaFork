@@ -8,6 +8,7 @@
 	#define Pandas_FuncIncrease
 	#define Pandas_PacketFunction
 	#define Pandas_CreativeWork
+	#define Pandas_Speedup
 	#define Pandas_Crashfix
 	#define Pandas_Mapflags
 	#define Pandas_ScriptEngine
@@ -914,6 +915,43 @@
 	// 避免非 DelayConsume 类型的道具在使用脚本中调用 laphine_upgrade 脚本指令时,
 	// 当最后一个物品被消耗时会导致地图服务器崩溃的问题 [Sola丶小克]
 #endif // Pandas_Crashfix
+
+// ============================================================================
+// 优化加速组 - Pandas_Speedup
+// ============================================================================
+
+#ifdef Pandas_Speedup
+	// 是否在一些关键耗时节点打印出耗时情况 [Sola丶小克]
+
+	// 优化 map_readfromcache 中对每个 cell 的分配方式 [Sola丶小克]
+	// 主要降低 map_gat2cell 的调用次数, 因为一张地图需要加载 40000 个 cell
+	// 虽然已经启用了 static 和 inline 但内部调用 struct 创建构体也是开销非常大的.
+	// 优化后性能表现参考信息 (VS2019 + Win32)
+	// 在 Debug 模式下越提速约 1.79 倍 (3350ms -> 1200ms)
+	// 在 Release 模式下提速约 17.65% (1000ms -> 850ms)
+
+	// 在 Windows 环境下对加载地图时滚动输出的信息进行限流 [Sola丶小克]
+	// 好处在于极大的提升加载速度, 坏处在于类似 LeeStarter 等工具中打开地图服务器,
+	// 会发现加载地图时的信息是跳跃显示的, 但并不影响实际情况下的使用
+	// 优化后性能表现参考信息
+	// VS2019 + Win32 启用 Pandas_Speedup_Map_Read_From_Cache 的情况下
+	// 在 Debug 模式下提速约 64% (1250ms -> 760ms)
+	// 在 Release 模式下地图加载信息默认不再显示 (通过 DETAILED_LOADING_OUTPUT 控制)
+	#ifdef _WIN32
+	#endif // _WIN32
+
+	// 规避卸载 NPC 时的 npc_read_event_script 调用 [Sola丶小克]
+	// OnInit 调用了大量的 unloadnpc, 而每次调用都会触发 npc_read_event_script
+	// 在 Pandas_Crashfix_EventDatabase_Clean_Synchronize 启用的情况下
+	// npc_unload_ev 每次卸载 NPC 时会将 script_event 中与 ev_db 相关的节点清理掉
+	// 因此没必要在卸载 NPC 的时候调用 npc_read_event_script
+	// 优化后性能表现参考信息 (VS2019 + Win32)
+	// 在 Debug 模式下越提速约 2.72 倍 (5608ms -> 1506ms)
+	// 在 Release 模式下提速约 1.65 倍 (1985ms -> 750ms)
+	// 以下选项开关需要依赖 Pandas_Crashfix_EventDatabase_Clean_Synchronize 的拓展
+
+	// 通过微调程序逻辑改善 C26817 这样的常量引用性能优化场景 [Sola丶小克]
+#endif // Pandas_Speedup
 
 // ============================================================================
 // 地图标记组 - Pandas_Mapflags
