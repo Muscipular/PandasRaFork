@@ -1839,6 +1839,7 @@
 	#endif // Pandas_FuncDefine_STORAGE_ADDITEM
 	// 是否启用 setinventoryinfo 脚本指令 [Sola丶小克]
 	// 该指令用于设置指定背包序号道具的部分详细信息, 与 getinventoryinfo 对应
+	#define Pandas_ScriptCommand_SetInventoryInfo
 	// 是否启用 updateinventory 脚本指令 [Sola丶小克]
 	// 该指令用于重新下发关联玩家的背包数据给客户端 (刷新客户端背包数据)
 	// 是否启用 getcharmac 脚本指令 [Sola丶小克]

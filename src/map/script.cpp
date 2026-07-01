@@ -31722,6 +31722,166 @@ BUILDIN_FUNC(renttimeidx) {
 }
 #endif // Pandas_ScriptCommand_RentTimeIdx
 
+#ifdef Pandas_ScriptCommand_SetInventoryInfo
+/* ===========================================================
+ * 指令: setinventoryinfo
+ * 描述: 设置指定背包序号道具的部分详细信息, 与 getinventoryinfo 对应
+ * 用法: setinventoryinfo <道具的背包序号>,<要设置的信息类型>,<值>{{,<标记位>},<角色编号>};
+ * 返回: 设置成功则返回 1, 设置失败或角色不存在则返回 0, 返回负数也是失败 (值表示不同失败原因)
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(setinventoryinfo) {
+	map_session_data* sd = nullptr;
+	int expire_tick = 0, flag = 0;
+	int idx = script_getnum(st, 2);
+	int type = script_getnum(st, 3);
+	uint64 value = script_getnum(st, 4);
+	bool need_recalc_status = false;
+
+	if (!script_charid2sd(6, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (idx < 0 || idx >= sd->status.inventory_slots || !sd->inventory_data[idx]) {
+		ShowError("buildin_setinventoryinfo: Nonexistant item index.\n");
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (script_hasdata(st, 5) && script_isint(st, 5)) {
+		//   0 : 维持默认行为
+		// & 1 : 跳过角色能力重算
+		// & 2 : 跳过全量刷新角色的背包数据
+		// & 4 : 忽略卡片插入合理性的校验(必须是卡片, 卡片位置和装备位置符合)
+		// & 8 : 插入卡片无需写入 picklog 记录(凭空生成)
+		flag = script_getnum(st, 5);
+	}
+
+	switch (type) {
+		case 3:
+			value = cap_value(value, 0, MAX_REFINE);
+			sd->inventory.u.items_inventory[idx].refine = (char)value;
+			need_recalc_status = true;
+			break;
+		case 4:
+			value = cap_value(value, 0, 1);
+			sd->inventory.u.items_inventory[idx].identify = (char)value;
+			if (sd->inventory.u.items_inventory[idx].equip && !value)
+				pc_unequipitem(sd, idx, 3);
+			break;
+		case 5:
+			value = cap_value(value, 0, 1);
+			sd->inventory.u.items_inventory[idx].attribute = (char)value;
+			if (sd->inventory.u.items_inventory[idx].equip && value)
+				pc_unequipitem(sd, idx, 3);
+			break;
+		case 6: case 7: case 8: case 9: {
+			if (!value) {
+				sd->inventory.u.items_inventory[idx].card[type - 6] = 0;
+				need_recalc_status = true;
+				break;
+			}
+
+			std::shared_ptr<item_data> card_itemdata = item_db.find((t_itemid)value);
+			if (!card_itemdata) {
+				ShowWarning("buildin_setinventoryinfo: Nonexistant item : %u.\n", static_cast<uint32>(value));
+				script_pushint(st, 0);
+				return SCRIPT_CMD_SUCCESS;
+			}
+			if (!(flag & 4)) {
+				if (card_itemdata->type != IT_CARD || (sd->inventory_data[idx]->equip & card_itemdata->equip) == 0) {
+					script_pushint(st, -1);
+					return SCRIPT_CMD_SUCCESS;
+				}
+			}
+			sd->inventory.u.items_inventory[idx].card[type - 6] = card_itemdata->nameid;
+			if (!(flag & 8)) {
+				struct item item_tmp = { 0 };
+				item_tmp.nameid = card_itemdata->nameid;
+				item_tmp.identify = 1;
+				if (card_itemdata->flag.guid && !item_tmp.unique_id)
+					item_tmp.unique_id = pc_generate_unique_id(sd);
+				log_pick_pc(sd, LOG_TYPE_SCRIPT, 1, &item_tmp);
+			}
+			need_recalc_status = true;
+			break;
+		}
+		case 10:
+			value = cap_value(value, 0, INT_MAX);
+			sd->inventory.u.items_inventory[idx].expire_time = (uint32)value; // Timestamp, not seconds
+			expire_tick = (uint32)(sd->inventory.u.items_inventory[idx].expire_time - time(nullptr));
+			if (expire_tick > 0) {
+				uint32 seconds = (uint32)(value - time(nullptr));
+				clif_rental_time(sd, sd->inventory.u.items_inventory[idx].nameid, seconds);
+				pc_inventory_rental_add(sd, seconds);
+			} else {
+				inventory_rental_update(sd);
+			}
+			need_recalc_status = true;
+			break;
+		case 11:
+			sd->inventory.u.items_inventory[idx].unique_id = value;
+			break;
+		case 12: case 13: case 14: case 15: case 16:
+			if (value) {
+				sd->inventory.u.items_inventory[idx].option[type - 12].id = (short)value;
+			} else {
+				sd->inventory.u.items_inventory[idx].option[type - 12].id = 0;
+				sd->inventory.u.items_inventory[idx].option[type - 12].value = 0;
+				sd->inventory.u.items_inventory[idx].option[type - 12].param = 0;
+			}
+			need_recalc_status = true;
+			break;
+		case 17: case 18: case 19: case 20: case 21:
+			sd->inventory.u.items_inventory[idx].option[type - 17].value = (short)value;
+			need_recalc_status = true;
+			break;
+		case 22: case 23: case 24: case 25: case 26:
+			sd->inventory.u.items_inventory[idx].option[type - 22].param = (char)value;
+			need_recalc_status = true;
+			break;
+		case 27:
+			if (value < BOUND_NONE || value >= BOUND_MAX) {
+				ShowWarning("buildin_setinventoryinfo: Invalid bound type\n");
+				script_pushint(st, 0);
+				return SCRIPT_CMD_SUCCESS;
+			}
+			sd->inventory.u.items_inventory[idx].bound = (char)value;
+			break;
+		case 28:
+			if (value < 0 || value > MAX_ENCHANTGRADE) {
+				ShowWarning("buildin_setinventoryinfo: The Value should be in range 0-%d, but you passed %d.\n", MAX_ENCHANTGRADE, static_cast<int32>(value));
+				script_pushint(st, 0);
+				return SCRIPT_CMD_SUCCESS;
+			}
+			sd->inventory.u.items_inventory[idx].enchantgrade = (uint8)value;
+			need_recalc_status = true;
+			break;
+		case 29:
+			sd->inventory.u.items_inventory[idx].equipSwitch = (uint32)value;
+			break;
+		case 30:
+			value = cap_value(value, 0, 1);
+			sd->inventory.u.items_inventory[idx].favorite = (char)value;
+			break;
+		default:
+			ShowWarning("buildin_setinventoryinfo: The type should be in range 3-%d, currently type is: %d.\n", 30, type);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (need_recalc_status && !(flag & 1))
+		status_calc_pc(sd, SCO_NONE);
+
+	if (!(flag & 2))
+		clif_inventorylist(sd);
+
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_SetInventoryInfo
+
 #ifdef Pandas_ScriptCommand_PartyLeave
 /* ===========================================================
  * 指令: party_leave
@@ -32427,6 +32587,9 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(storagegetitem, "vi?"),
 	BUILDIN_DEF2(storagegetitem, "storagegetitembound", "vii?"),
 #endif // Pandas_ScriptCommand_StorageGetItem
+#ifdef Pandas_ScriptCommand_SetInventoryInfo
+	BUILDIN_DEF(setinventoryinfo, "iii??"),				// 设置指定背包序号的道具的详细信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_SetInventoryInfo
 	BUILDIN_DEF(guildstoragecountitem,"v?"),
 	BUILDIN_DEF(cartcountitem,"v?"),
 	BUILDIN_DEF2(countitem,"countitem2","viiiiiii?"),
