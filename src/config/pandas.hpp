@@ -1732,6 +1732,7 @@
 	#define Pandas_ScriptCommand_ShowVend
 	// 是否启用 viewequip 脚本指令 [Sola丶小克]
 	// 使用该指令可以查看指定在线角色的装备面板信息 (注意: v2.0.0 以前是通过账号编号)
+	#define Pandas_ScriptCommand_ViewEquip
 	// 是否启用 countitemidx 脚本指令 [Sola丶小克]
 	// 获取指定背包序号的道具在背包中的数量 (该指令有一个用于兼容的别名: countinventory)
 	// 是否启用 delitemidx 脚本指令的别名 delinventory [Sola丶小克]

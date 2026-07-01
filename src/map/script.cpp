@@ -30769,6 +30769,45 @@ BUILDIN_FUNC(showvend) {
 }
 #endif // Pandas_ScriptCommand_ShowVend
 
+#ifdef Pandas_ScriptCommand_ViewEquip
+/* ===========================================================
+ * 指令: viewequip
+ * 描述: 查看指定在线角色的装备面板信息
+ * 用法: viewequip <目标的角色编号|目标的账号编号>{,<是否强制查看>};
+ * 返回: 操作成功则返回 1, 操作失败则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(viewequip) {
+	map_session_data *sd = nullptr;
+	int cid = script_getnum(st, 2), force = 0;
+	map_session_data *tsd = map_charid2sd(cid);
+
+	if (!tsd || !script_rid2sd(sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (script_hasdata(st, 3)) {
+		if (!script_isint(st, 3)) {
+			ShowError("buildin_showvend: The 'force' param must be a integer.\n");
+			script_pushint(st, 0);
+			return SCRIPT_CMD_SUCCESS;
+		}
+		force = cap_value(script_getnum(st, 3), 0, 1);
+	}
+
+	if (tsd->status.show_equip || pc_has_permission(sd, PC_PERM_VIEW_EQUIPMENT) || force == 1) {
+		clif_viewequip_ack(*sd, *tsd);
+		script_pushint(st, 1);
+	} else {
+		clif_msg(*sd, MSI_OPEN_EQUIPEDITEM_REFUSED);
+		script_pushint(st, 0);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_ViewEquip
+
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 /* ===========================================================
  * 指令: getmapspawns
@@ -31587,6 +31626,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_ShowVend
 	BUILDIN_DEF(showvend, "si?"), // 使指定的 NPC 头上可以显示露天商店的招牌 [Jian916]
 #endif // Pandas_ScriptCommand_ShowVend
+#ifdef Pandas_ScriptCommand_ViewEquip
+	BUILDIN_DEF(viewequip, "i?"), // 查看指定在线角色的装备面板信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_ViewEquip
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMapSpawns
