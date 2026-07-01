@@ -30977,6 +30977,32 @@ BUILDIN_FUNC(bonus_script_list) {
 }
 #endif // Pandas_ScriptCommand_BonusScriptList
 
+#ifdef Pandas_ScriptCommand_BonusScriptExists
+/* ===========================================================
+ * 指令: bonus_script_exists
+ * 描述: 查询指定角色是否已经激活了特定的 bonus_script 效果脚本
+ * 用法: bonus_script_exists <效果脚本编号>{,<角色编号>};
+ * 返回: 效果已经存在则返回 true, 角色不在线或效果不存在否则返回 false
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(bonus_script_exists) {
+	TBL_PC* sd = nullptr;
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	uint64 bonus_id = script_getnum64(st, 2);
+	if (pc_bonus_script_exists(sd, bonus_id)) {
+		script_pushint(st, true);
+	} else {
+		script_pushint(st, false);
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BonusScriptExists
+
 #ifdef Pandas_ScriptCommand_MobRemove
 /* ===========================================================
  * 指令: mobremove
@@ -33183,6 +33209,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_BonusScriptList
 	BUILDIN_DEF(bonus_script_list, "r?"), // 获取指定角色当前激活的全部 bonus_script 效果脚本编号 [Sola丶小克]
 #endif // Pandas_ScriptCommand_BonusScriptList
+#ifdef Pandas_ScriptCommand_BonusScriptExists
+	BUILDIN_DEF(bonus_script_exists, "i?"), // 查询指定角色是否已经激活了特定的 bonus_script 效果脚本 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BonusScriptExists
 #ifdef Pandas_ScriptCommand_MobRemove
 	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
 #endif // Pandas_ScriptCommand_MobRemove

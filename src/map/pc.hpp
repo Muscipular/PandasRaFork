@@ -1884,6 +1884,9 @@ uint64 pc_bonus_script_generate_unique_id(map_session_data* sd);
 #ifdef Pandas_ScriptCommand_BonusScriptRemove
 bool pc_bonus_script_remove(map_session_data* sd, uint64 bonus_id);
 #endif // Pandas_ScriptCommand_BonusScriptRemove
+#ifdef Pandas_ScriptCommand_BonusScriptExists
+bool pc_bonus_script_exists(map_session_data* sd, uint64 bonus_id);
+#endif // Pandas_ScriptCommand_BonusScriptExists
 
 void pc_cell_basilica(map_session_data *sd);
 

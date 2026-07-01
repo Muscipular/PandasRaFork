@@ -1919,6 +1919,7 @@
 	#define Pandas_ScriptCommand_BonusScriptList
 	// 是否启用 bonus_script_exists 脚本指令 [Sola丶小克]
 	// 该指令用于查询指定角色是否已经激活了特定的 bonus_script 效果脚本
+	#define Pandas_ScriptCommand_BonusScriptExists
 	// 是否启用 bonus_script_getid 脚本指令 [Sola丶小克]
 	// 该指令用于查询效果脚本代码对应的效果脚本编号
 	// 是否启用 bonus_script_info 脚本指令 [Sola丶小克]
