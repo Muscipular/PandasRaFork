@@ -29326,7 +29326,15 @@ BUILDIN_FUNC(copynpc) {
 			++(*npc_shop);
 			safestrncpy(nd->u.shop.pointshop_str, dnd->u.shop.pointshop_str, strlen(dnd->u.shop.pointshop_str));
 			nd->u.shop.itemshop_nameid = dnd->u.shop.itemshop_nameid;
+#ifndef Pandas_Fix_Duplicate_Shop_With_FullyShopItemList
 			nd->u.shop.shop_item = dnd->u.shop.shop_item;
+#else
+			// 为了避免被复制出来的[子商店]和[来源商店]使用相同的商品道具信息源,
+			// 而导致后面对[来源商店]或任意一个[子商店]的道具进行增删操作时影响到同一个[来源商店]的[子商店]
+			// 这里在复制商店 NPC 的时候, 将全部的商品列表完整的复制一份出来, 他们之间相互独立
+			CREATE(nd->u.shop.shop_item, struct npc_item_list, dnd->u.shop.count);
+			memcpy(nd->u.shop.shop_item, dnd->u.shop.shop_item, sizeof(struct npc_item_list) * dnd->u.shop.count);
+#endif // Pandas_Fix_Duplicate_Shop_With_FullyShopItemList
 			nd->u.shop.count = dnd->u.shop.count;
 			nd->u.shop.discount = dnd->u.shop.discount;
 #ifdef Pandas_Support_Pointshop_Variable_DisplayName

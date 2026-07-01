@@ -3748,7 +3748,13 @@ int32 npc_unload(npc_data* nd, bool single) {
 	if( single && nd->m != -1 )
 		map_remove_questinfo(nd->m, nd);
 
+#ifndef Pandas_Fix_Duplicate_Shop_With_FullyShopItemList
 	if( (nd->subtype == NPCTYPE_SHOP || nd->subtype == NPCTYPE_CASHSHOP || nd->subtype == NPCTYPE_ITEMSHOP || nd->subtype == NPCTYPE_POINTSHOP || nd->subtype == NPCTYPE_MARKETSHOP) && nd->src_id == 0) //src check for duplicate shops [Orcao]
+#else
+	// 由于现在已经完整的克隆了商店的出售列表，所以只要是商店类型的 NPC, 无论是否是复制出来的商店 (nd->src_id 非 0 表示这是一个复制出来的商店)
+	// 都需要释放 nd->u.shop.shop_item 对象, 否则会导致内存泄露 [Sola丶小克]
+	if( nd->subtype == NPCTYPE_SHOP || nd->subtype == NPCTYPE_CASHSHOP || nd->subtype == NPCTYPE_ITEMSHOP || nd->subtype == NPCTYPE_POINTSHOP || nd->subtype == NPCTYPE_MARKETSHOP )
+#endif // Pandas_Fix_Duplicate_Shop_With_FullyShopItemList
 		aFree(nd->u.shop.shop_item);
 	else if( nd->subtype == NPCTYPE_SCRIPT ) {
 		struct s_mapiterator* iter;
@@ -4897,7 +4903,15 @@ const char* npc_parse_duplicate( char* w1, char* w2, char* w3, char* w4, const c
 			++npc_shop;
 			safestrncpy( nd->u.shop.pointshop_str, dnd->u.shop.pointshop_str, strlen( dnd->u.shop.pointshop_str ) );
 			nd->u.shop.itemshop_nameid = dnd->u.shop.itemshop_nameid;
+#ifndef Pandas_Fix_Duplicate_Shop_With_FullyShopItemList
 			nd->u.shop.shop_item = dnd->u.shop.shop_item;
+#else
+			// 为了避免被复制出来的[子商店]和[来源商店]使用相同的商品道具信息源,
+			// 而导致后面对[来源商店]或任意一个[子商店]的道具进行增删操作时影响到同一个[来源商店]的[子商店]
+			// 这里在复制商店 NPC 的时候, 将全部的商品列表完整的复制一份出来, 他们之间相互独立
+			CREATE(nd->u.shop.shop_item, struct npc_item_list, dnd->u.shop.count);
+			memcpy(nd->u.shop.shop_item, dnd->u.shop.shop_item, sizeof(struct npc_item_list) * dnd->u.shop.count);
+#endif // Pandas_Fix_Duplicate_Shop_With_FullyShopItemList
 			nd->u.shop.count = dnd->u.shop.count;
 			nd->u.shop.discount =  dnd->u.shop.discount;
 #ifdef Pandas_Support_Pointshop_Variable_DisplayName
