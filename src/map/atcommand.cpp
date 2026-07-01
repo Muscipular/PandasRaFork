@@ -11736,6 +11736,31 @@ ACMD_FUNC(crashtest) {
 }
 #endif // Pandas_AtCommand_Crashtest
 
+#ifdef Pandas_AtCommand_Suspend
+/* ===========================================================
+ * 指令: suspend
+ * 描述: 使角色进入离线挂机模式, 维持当前的全部状态 (朝向, 站立与否)
+ * 用法: @suspend
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(suspend) {
+	nullpo_retr(-1, sd);
+
+	if (pc_isdead(sd)) {
+		clif_displaymessage(fd, msg_txt_cn(sd, 81)); // You cannot enter suspend mode when dead.
+		return -1;
+	}
+
+	if (map_flag_vs2(sd->m)) {
+		clif_displaymessage(fd, msg_txt_cn(sd, 82)); // You cannot enter suspend mode on this map.
+		return -1;
+	}
+
+	suspend_active(sd, SUSPEND_MODE_OFFLINE);
+	return 0;
+}
+#endif // Pandas_AtCommand_Suspend
+
 #ifdef Pandas_AtCommand_Title
 /* ===========================================================
  * 指令: title
@@ -11849,6 +11874,9 @@ void atcommand_basecommands(void) {
 #ifdef Pandas_AtCommand_Crashtest
 		ACMD_DEF(crashtest),			// 执行崩溃测试, 在比较严格的环境上故意触发地图服务器崩溃 [Sola丶小克]
 #endif // Pandas_AtCommand_Crashtest
+#ifdef Pandas_AtCommand_Suspend
+		ACMD_DEF(suspend),				// 使角色进入离线挂机模式 [Sola丶小克]
+#endif // Pandas_AtCommand_Suspend
 #ifdef Pandas_AtCommand_Title
 		ACMD_DEF(title),				// 给角色设置一个指定的称号ID [Sola丶小克]
 #endif // Pandas_AtCommand_Title
