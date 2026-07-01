@@ -398,6 +398,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcExpress_ENTERMAP
 	"OnPCEnterMapExpress",	// NPCX_ENTERMAP		// entermap_express_name	// 当玩家进入或者改变地图时触发实时事件
 #endif // Pandas_NpcExpress_ENTERMAP
+#ifdef Pandas_NpcExpress_PROGRESSABORT
+	"OnPCProgressAbortExpress",	// NPCX_PROGRESSABORT		// progressabort_express_name	// 当 progressbar 进度条被打断时触发实时事件
+#endif // Pandas_NpcExpress_PROGRESSABORT
 	// NPC related
 	"OnTouch_",	//ontouch_event_name (runs on first visible char to enter area, picks another char if the first char leaves)
 	"OnTouch",	//ontouch2_event_name (run whenever a char walks into the OnTouch area)

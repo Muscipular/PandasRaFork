@@ -1289,7 +1289,7 @@ void clif_party_show_picker( const map_session_data* sd, const item* item_data )
 
 // Progress Bar [Inkfish]
 void clif_progressbar( const map_session_data* sd, unsigned long color, uint32 second );
-void clif_progressbar_abort( const map_session_data* sd );
+void clif_progressbar_abort( map_session_data* sd );
 void clif_progressbar_npc( const npc_data* nd, const map_session_data* sd );
 #define clif_progressbar_npc_area(nd) clif_progressbar_npc((nd),nullptr)
 
