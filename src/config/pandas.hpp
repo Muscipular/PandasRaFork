@@ -1922,6 +1922,7 @@
 	#define Pandas_ScriptCommand_BonusScriptExists
 	// 是否启用 bonus_script_getid 脚本指令 [Sola丶小克]
 	// 该指令用于查询效果脚本代码对应的效果脚本编号
+	#define Pandas_ScriptCommand_BonusScriptGetId
 	// 是否启用 bonus_script_info 脚本指令 [Sola丶小克]
 	// 该指令用于查询指定效果脚本的相关信息
 	// 是否启用 expandinventory_adjust 脚本指令 [Sola丶小克]

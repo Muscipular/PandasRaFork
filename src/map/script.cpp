@@ -31003,6 +31003,55 @@ BUILDIN_FUNC(bonus_script_exists) {
 }
 #endif // Pandas_ScriptCommand_BonusScriptExists
 
+#ifdef Pandas_ScriptCommand_BonusScriptGetId
+/* ===========================================================
+ * 指令: bonus_script_getid
+ * 描述: 用于查询效果脚本代码对应的效果脚本编号
+ * 用法: bonus_script_getid <"效果脚本代码">,<返回效果脚本编号数组>{,<角色编号>};
+ * 返回: 查询到的记录数
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(bonus_script_getid) {
+	TBL_PC* sd = nullptr;
+	if (!script_charid2sd(4, sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	const char* script_str = nullptr;
+	script_str = script_getstr(st, 2);
+
+	int ret_varid = 0;
+	char* ret_varname = nullptr;
+	struct script_data* ret_vardata = nullptr;
+	if (!script_get_array(st, 3, ret_varid, ret_varname, ret_vardata)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+	script_cleararray_st(st, 3);
+
+	uint16 count = 0;
+	struct linkdb_node* node = nullptr;
+	struct s_bonus_script_entry* entry = nullptr;
+
+	if ((node = sd->bonus_script.head)) {
+		while (node) {
+			struct linkdb_node* next = node->next;
+			entry = (struct s_bonus_script_entry*)node->data;
+			if (strcmpi(script_str, StringBuf_Value(entry->script_buf)) == 0) {
+				int64 uid = reference_uid(ret_varid, count);
+				set_reg_num(st, sd, uid, ret_varname, entry->bonus_id, reference_getref(ret_vardata));
+				count++;
+			}
+			node = next;
+		}
+	}
+
+	script_pushint(st, count);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_BonusScriptGetId
+
 #ifdef Pandas_ScriptCommand_MobRemove
 /* ===========================================================
  * 指令: mobremove
@@ -33212,6 +33261,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_BonusScriptExists
 	BUILDIN_DEF(bonus_script_exists, "i?"), // 查询指定角色是否已经激活了特定的 bonus_script 效果脚本 [Sola丶小克]
 #endif // Pandas_ScriptCommand_BonusScriptExists
+#ifdef Pandas_ScriptCommand_BonusScriptGetId
+	BUILDIN_DEF(bonus_script_getid, "sr?"), // 查询效果脚本代码对应的效果脚本编号 [Sola丶小克]
+#endif // Pandas_ScriptCommand_BonusScriptGetId
 #ifdef Pandas_ScriptCommand_MobRemove
 	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
 #endif // Pandas_ScriptCommand_MobRemove
