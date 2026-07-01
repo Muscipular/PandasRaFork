@@ -4058,6 +4058,11 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 		it.clear();
 	}
 #endif // Pandas_Bonus3_bFinalAddRace
+#ifdef Pandas_Bonus3_bFinalAddClass
+	for (auto& it : sd->finaladd_class) {
+		it.clear();
+	}
+#endif // Pandas_Bonus3_bFinalAddClass
 
 #ifdef Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
 	sd->pandas.multi_catch_target_class.clear();

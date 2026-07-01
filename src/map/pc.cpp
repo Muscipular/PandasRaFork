@@ -5508,6 +5508,14 @@ void pc_bonus3(map_session_data *sd,int32 type,int32 type2,int32 type3,int32 val
 		pc_bonus_final_damage(sd->finaladd_race[type2], type2, val, type3);
 		break;
 #endif // Pandas_Bonus3_bFinalAddRace
+#ifdef Pandas_Bonus3_bFinalAddClass
+	case SP_PANDAS_FINALADDCLASS: // bonus3 bFinalAddClass,c,x,bf;
+		PC_BONUS_CHK_CLASS(type2, SP_PANDAS_FINALADDCLASS);
+		if (sd->state.lr_flag == LR_FLAG_ARROW)
+			break;
+		pc_bonus_final_damage(sd->finaladd_class[type2], type2, val, type3);
+		break;
+#endif // Pandas_Bonus3_bFinalAddClass
 	default:
 	#ifdef Pandas_NpcExpress_STATCALC
 		if (running_npc_stat_calc_event) {

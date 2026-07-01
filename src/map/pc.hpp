@@ -732,6 +732,9 @@ public:
 #ifdef Pandas_Bonus3_bFinalAddRace
 	std::vector<s_final_damage> finaladd_race[RC_MAX];
 #endif // Pandas_Bonus3_bFinalAddRace
+#ifdef Pandas_Bonus3_bFinalAddClass
+	std::vector<s_final_damage> finaladd_class[CLASS_MAX];
+#endif // Pandas_Bonus3_bFinalAddClass
 	std::vector<s_add_drop> add_drop;
 	std::vector<s_addele2> subele2;
 	std::vector<s_vanish_bonus> sp_vanish, hp_vanish;
