@@ -1353,6 +1353,7 @@
 	// 性能表现参考信息
 	// - 调整前 str_buf  需要被重新分配 1174 次, 调整后为 37 次
 	// - 调整前 str_data 需要被重新分配 185  次, 调整后为 47 次
+	#define Pandas_ScriptEngine_AddStr_Realloc_Memory
 
 	// 使脚本引擎能够支持备份无数个脚本堆栈 [Sola丶小克]
 	// 以此避免嵌套调用超过两层的脚本会导致程序崩溃的问题 (如: script4each -> getitem -> 成就系统)
