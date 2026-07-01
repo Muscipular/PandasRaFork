@@ -4053,6 +4053,11 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 #ifdef Pandas_Bonus4_bStatusAddDamageRate
 	sd->status_damagerate_adjust.clear();
 #endif // Pandas_Bonus4_bStatusAddDamageRate
+#ifdef Pandas_Bonus3_bFinalAddRace
+	for (auto& it : sd->finaladd_race) {
+		it.clear();
+	}
+#endif // Pandas_Bonus3_bFinalAddRace
 
 #ifdef Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
 	sd->pandas.multi_catch_target_class.clear();

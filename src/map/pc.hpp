@@ -263,6 +263,14 @@ struct s_sc_damage {
 };
 #endif // defined(Pandas_Bonus4_bStatusAddDamage) || defined(Pandas_Bonus4_bStatusAddDamageRate)
 
+#if defined(Pandas_Bonus3_bFinalAddRace) || defined(Pandas_Bonus3_bFinalAddClass)
+struct s_final_damage {
+	int8 type;
+	short battle_flag;
+	int damage_rate;
+};
+#endif // defined(Pandas_Bonus3_bFinalAddRace) || defined(Pandas_Bonus3_bFinalAddClass)
+
 /// Miscellaneous item bonus struct
 struct s_item_bonus {
 	uint16 id;
@@ -721,6 +729,9 @@ public:
 #ifdef Pandas_Bonus4_bStatusAddDamageRate
 	std::vector<s_sc_damage> status_damagerate_adjust;
 #endif // Pandas_Bonus4_bStatusAddDamageRate
+#ifdef Pandas_Bonus3_bFinalAddRace
+	std::vector<s_final_damage> finaladd_race[RC_MAX];
+#endif // Pandas_Bonus3_bFinalAddRace
 	std::vector<s_add_drop> add_drop;
 	std::vector<s_addele2> subele2;
 	std::vector<s_vanish_bonus> sp_vanish, hp_vanish;

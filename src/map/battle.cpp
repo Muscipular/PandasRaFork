@@ -7479,6 +7479,35 @@ enum damage_lv battle_weapon_attack(block_list* src, block_list* target, t_tick 
 	}
 #endif // Pandas_Bonus4_bStatusAddDamageRate
 
+#ifdef Pandas_Bonus3_bFinalAddRace
+	if (sd && tstatus) {
+		int total_rate = 100;
+		for (auto& it : sd->finaladd_race[tstatus->race]) {
+			if (!it.damage_rate)
+				continue;
+			if (!(((it.battle_flag) & wd.flag) & BF_WEAPONMASK &&
+				((it.battle_flag) & wd.flag) & BF_RANGEMASK &&
+				((it.battle_flag) & wd.flag) & BF_SKILLMASK))
+				continue;
+			total_rate = rathena::util::safe_addition_cap(total_rate, it.damage_rate, INT_MAX);
+		}
+		for (auto& it : sd->finaladd_race[RC_ALL]) {
+			if (!it.damage_rate)
+				continue;
+			if (!(((it.battle_flag) & wd.flag) & BF_WEAPONMASK &&
+				((it.battle_flag) & wd.flag) & BF_RANGEMASK &&
+				((it.battle_flag) & wd.flag) & BF_SKILLMASK))
+				continue;
+			total_rate = rathena::util::safe_addition_cap(total_rate, it.damage_rate, INT_MAX);
+		}
+		if (total_rate != 100) {
+			total_rate = cap_value(total_rate, -100, INT_MAX);
+			wd.damage = (int64)(wd.damage / 100.0 * total_rate);
+		}
+		damage = wd.damage + wd.damage2;
+	}
+#endif // Pandas_Bonus3_bFinalAddRace
+
 #ifdef Pandas_NpcExpress_PCHARMED
 	if (src && target && damage > 0) {
 		map_session_data* esd = nullptr;

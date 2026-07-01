@@ -3377,6 +3377,45 @@ static void pc_bonus_status_damage(std::vector<s_sc_damage>& dmgrule, enum sc_ty
 }
 #endif // defined(Pandas_Bonus4_bStatusAddDamage) || defined(Pandas_Bonus4_bStatusAddDamageRate)
 
+#if defined(Pandas_Bonus3_bFinalAddRace) || defined(Pandas_Bonus3_bFinalAddClass)
+static void pc_bonus_final_damage(std::vector<s_final_damage>& dmgrule, int8 type, short battle_flag, int damage_rate)
+{
+	if (!(battle_flag & BF_RANGEMASK))
+		battle_flag |= BF_SHORT | BF_LONG;
+	if (!(battle_flag & BF_WEAPONMASK))
+		battle_flag |= BF_WEAPON;
+	if (!(battle_flag & BF_SKILLMASK)) {
+		if (battle_flag & (BF_MAGIC | BF_MISC))
+			battle_flag |= BF_SKILL;
+		if (battle_flag & BF_WEAPON)
+			battle_flag |= BF_NORMAL;
+	}
+
+	for (auto& it : dmgrule) {
+		if (it.type == type && it.battle_flag == battle_flag) {
+			it.damage_rate = rathena::util::safe_addition_cap(it.damage_rate, damage_rate, INT_MAX);
+			return;
+		}
+	}
+
+	if (dmgrule.size() == MAX_PC_BONUS) {
+		ShowWarning("pc_bonus_final_damage: Reached max (%d) number of add final damage rule per character!\n", MAX_PC_BONUS);
+		return;
+	}
+
+	struct s_final_damage entry = {};
+
+	if (damage_rate < INT_MIN || damage_rate > INT_MAX)
+		ShowWarning("pc_bonus_final_damage: final damage adjust rate %d exceeds %d~%d range, capping.\n", INT_MIN, INT_MAX, damage_rate);
+
+	entry.type = type;
+	entry.damage_rate = cap_value(damage_rate, INT_MIN, INT_MAX);
+	entry.battle_flag = battle_flag;
+
+	dmgrule.push_back(entry);
+}
+#endif // defined(Pandas_Bonus3_bFinalAddRace) || defined(Pandas_Bonus3_bFinalAddClass)
+
 /**
  * Adjust/add drop rate modifier for player
  * @param drop: Player's sd->add_drop (struct s_add_drop)
@@ -5461,6 +5500,14 @@ void pc_bonus3(map_session_data *sd,int32 type,int32 type2,int32 type3,int32 val
 		}
 		break;
 #endif // Pandas_Bonus3_bRebirthWithHeal
+#ifdef Pandas_Bonus3_bFinalAddRace
+	case SP_PANDAS_FINALADDRACE: // bonus3 bFinalAddRace,r,x,bf;
+		PC_BONUS_CHK_RACE(type2, SP_PANDAS_FINALADDRACE);
+		if (sd->state.lr_flag == LR_FLAG_ARROW)
+			break;
+		pc_bonus_final_damage(sd->finaladd_race[type2], type2, val, type3);
+		break;
+#endif // Pandas_Bonus3_bFinalAddRace
 	default:
 	#ifdef Pandas_NpcExpress_STATCALC
 		if (running_npc_stat_calc_event) {
