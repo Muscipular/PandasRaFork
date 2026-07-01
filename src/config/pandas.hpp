@@ -1831,6 +1831,7 @@
 	#define Pandas_ScriptCommand_SelfDeletion
 	// 是否启用 npcexists 脚本指令 [Sola丶小克]
 	// 该指令用于判断指定名称的 NPC 是否存在, 就算不存在控制台也不会报错
+	#define Pandas_ScriptCommand_NpcExists
 	#ifdef Pandas_FuncDefine_STORAGE_ADDITEM
 		// 是否启用 storagegetitem 脚本指令 [Sola丶小克]
 		// 往仓库直接创造一个指定的道具, 必须在仓库关闭的时候才能调用
