@@ -11697,6 +11697,45 @@ ACMD_FUNC(recallmap) {
 }
 #endif // Pandas_AtCommand_RecallMap
 
+#ifdef Pandas_AtCommand_Crashtest
+/* ===========================================================
+ * 指令: crashtest
+ * 描述: 执行崩溃测试, 在比较严格的环境上故意触发地图服务器崩溃
+ * 用法: @crashtest
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(crashtest) {
+	map_session_data* pl_sd = nullptr;
+	struct s_mapiterator* iter = nullptr;
+	int count = 0;
+
+	iter = mapit_getallusers();
+	for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter)) {
+		count++;
+	}
+	mapit_free(iter);
+
+	// 若当前服务器只有一个人在线, 那么触发地图服务器崩溃
+	if (count <= 1) {
+		ShowWarning("Map-Server will trigger an crash for testing the crashrpt system.\n");
+
+		int* crashint = nullptr;
+		// 2015年08月17日是 rAthenaCN 第一个版本的发布日期
+		// 在迭代到 v1.8.0 版本后开源, 并更名为 Pandas 熊猫模拟器并重写相关功能
+		*crashint = 20150817;
+	} else {
+		if (sd) {
+			// Currently we have %d online player. For safety reasons, we does not trigger a crash.
+			char mes[CHAT_SIZE_MAX] = { 0 };
+			sprintf(mes, msg_txt_cn(sd, 2), count);
+			clif_displaymessage(fd, mes);
+		}
+	}
+
+	return 0;
+}
+#endif // Pandas_AtCommand_Crashtest
+
 #ifdef Pandas_AtCommand_Title
 /* ===========================================================
  * 指令: title
@@ -11807,6 +11846,9 @@ void atcommand_basecommands(void) {
 #ifdef Pandas_AtCommand_RecallMap
 		ACMD_DEF(recallmap),			// 召唤当前(或指定)地图的玩家来到身边 [Sola丶小克]
 #endif // Pandas_AtCommand_RecallMap
+#ifdef Pandas_AtCommand_Crashtest
+		ACMD_DEF(crashtest),			// 执行崩溃测试, 在比较严格的环境上故意触发地图服务器崩溃 [Sola丶小克]
+#endif // Pandas_AtCommand_Crashtest
 #ifdef Pandas_AtCommand_Title
 		ACMD_DEF(title),				// 给角色设置一个指定的称号ID [Sola丶小克]
 #endif // Pandas_AtCommand_Title
