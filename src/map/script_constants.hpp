@@ -829,6 +829,9 @@
 #ifdef Pandas_MapFlag_NoUseItem
 	export_constant(MF_NOUSEITEM);
 #endif // Pandas_MapFlag_NoUseItem
+#ifdef Pandas_MapFlag_HideDamage
+	export_constant(MF_HIDEDAMAGE);
+#endif // Pandas_MapFlag_HideDamage
 	export_constant(MF_NOBUYINGSTORE);
 	export_constant(MF_NODYNAMICNPC);
 	export_constant(MF_NOBANK);

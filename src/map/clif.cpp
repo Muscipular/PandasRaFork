@@ -5557,6 +5557,15 @@ void clif_damage(block_list& src, block_list& dst, t_tick tick, int32 sdelay, in
 		p.damage2 = static_cast<decltype(p.damage2)>( std::min( damage2, static_cast<decltype(damage2)>( std::numeric_limits<decltype(p.damage2)>::max() ) ) );
 	}
 
+#ifdef Pandas_MapFlag_HideDamage
+	if (map_getmapflag(src.m, MF_HIDEDAMAGE)) {
+		// 伤害会存在段数的概念, 客户端会把总伤害除以段数后显示每段伤害.
+		// 让每段伤害变成负数即可隐藏具体伤害, 同时保留攻击段数动画.
+		p.damage = div * -1;
+		p.damage2 = div * -1;
+	}
+#endif // Pandas_MapFlag_HideDamage
+
 #if PACKETVER >= 20131223
 	p.isSPDamage = (spdamage) ? 1 : 0; // IsSPDamage - Displays blue digits.
 #endif
@@ -6356,6 +6365,14 @@ void clif_skill_damage( const block_list& src, const block_list& dst, t_tick tic
 	}
 	packet.level = skill_lv;
 	packet.count = static_cast<decltype(packet.count)>(div);
+
+#ifdef Pandas_MapFlag_HideDamage
+	if (map_getmapflag(src.m, MF_HIDEDAMAGE)) {
+		// 伤害会存在段数的概念, 客户端会把总伤害除以段数后显示每段伤害.
+		// 让段数为负数即可让每段伤害变成负数, 从而隐藏具体伤害.
+		packet.count = static_cast<decltype(packet.count)>(div * -1);
+	}
+#endif // Pandas_MapFlag_HideDamage
 
 	// For some reason, late 2013 and newer clients have
 	// a issue that causes players and monsters to endure

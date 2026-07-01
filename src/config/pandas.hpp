@@ -1366,6 +1366,7 @@
 
 	// 是否启用 hidedamage 地图标记 [HongShin]
 	// 该标记用于隐藏此地图上任何攻击的实际伤害数值 (无论什么单位, 无论是否 MISS)
+	#define Pandas_MapFlag_HideDamage
 
 	// 是否启用 noattack 地图标记 [HongShin]
 	// 该标记用于禁止此地图上的任何单位进行普通攻击
