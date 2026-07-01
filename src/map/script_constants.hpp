@@ -826,6 +826,9 @@
 #ifdef Pandas_MapFlag_NoSlave
 	export_constant(MF_NOSLAVE);
 #endif // Pandas_MapFlag_NoSlave
+#ifdef Pandas_MapFlag_NoUseItem
+	export_constant(MF_NOUSEITEM);
+#endif // Pandas_MapFlag_NoUseItem
 	export_constant(MF_NOBUYINGSTORE);
 	export_constant(MF_NODYNAMICNPC);
 	export_constant(MF_NOBANK);

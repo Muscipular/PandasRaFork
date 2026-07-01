@@ -767,6 +767,9 @@ enum e_mapflag : int16 {
 #ifdef Pandas_MapFlag_NoSlave
 	MF_NOSLAVE,
 #endif // Pandas_MapFlag_NoSlave
+#ifdef Pandas_MapFlag_NoUseItem
+	MF_NOUSEITEM,
+#endif // Pandas_MapFlag_NoUseItem
 	MF_NOBUYINGSTORE,
 	MF_NODYNAMICNPC,
 	MF_NOBANK,

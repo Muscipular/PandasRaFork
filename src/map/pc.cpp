@@ -6636,6 +6636,13 @@ int32 pc_useitem(map_session_data *sd,int32 n)
 	if (sd->state.mail_writing)
 		return 0;
 
+#ifdef Pandas_MapFlag_NoUseItem
+	if (map_getmapflag(sd->m, MF_NOUSEITEM)) {
+		clif_messagecolor(sd, color_table[COLOR_RED], msg_txt_cn(sd, 11), false, SELF); // This map prohibit use the consumable items!
+		return 0;
+	}
+#endif // Pandas_MapFlag_NoUseItem
+
 #ifdef Pandas_NpcFilter_USE_ITEM
 	if (sd && sd->inventory_data[n]) {
 		item = sd->inventory.u.items_inventory[n];
