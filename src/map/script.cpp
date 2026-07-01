@@ -18940,6 +18940,10 @@ BUILDIN_FUNC(setd)
 	if(sscanf(buffer, "%99[^[][%11d]", varname, &elem) < 2)
 		elem = 0;
 
+#ifdef Pandas_Crashfix_ScriptCommand_Getd_And_Setd
+	trim(varname);
+#endif // Pandas_Crashfix_ScriptCommand_Getd_And_Setd
+
 	if( not_server_variable(*varname) ) {
 		if (!script_charid2sd(4,sd))
 			return SCRIPT_CMD_FAILURE;
@@ -19211,6 +19215,10 @@ BUILDIN_FUNC(getd)
 
 	if(sscanf(buffer, "%99[^[][%11d]", varname, &elem) < 2)
 		elem = 0;
+
+#ifdef Pandas_Crashfix_ScriptCommand_Getd_And_Setd
+	trim(varname);
+#endif // Pandas_Crashfix_ScriptCommand_Getd_And_Setd
 
 	// Push the 'pointer' so it's more flexible [Lance]
 	push_val(st->stack, C_NAME, reference_uid(add_str(varname), elem));
