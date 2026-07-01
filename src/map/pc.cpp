@@ -15905,6 +15905,16 @@ int16 pc_maxaspd( const map_session_data* sd ) {
 		aspd = max(aspd, battle_config.max_aspd_for_pvp);
 #endif // Pandas_BattleConfig_MaxAspdForPVP
 
+#ifdef Pandas_MapFlag_MaxASPD
+	if (map_getmapflag(sd->bl.m, MF_MAXASPD)) {
+		int32 val = map_getmapflag_param(sd->bl.m, MF_MAXASPD, 1);
+		if (val > 0) {
+			val = (AMOTION_ZERO_ASPD - val * AMOTION_INTERVAL) * AMOTION_DIVIDER_PC;
+			aspd = max(aspd, val);
+		}
+	}
+#endif // Pandas_MapFlag_MaxASPD
+
 	return static_cast<int16>(aspd);
 }
 

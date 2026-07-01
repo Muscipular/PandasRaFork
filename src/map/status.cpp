@@ -2816,6 +2816,41 @@ void status_calc_misc(block_list *bl, struct status_data *status, int32 level)
 		status_calc_regen(bl, status, status_get_regen_data(bl));
 }
 
+#ifdef Pandas_MapFlag_MaxASPD
+static int16 nopc_maxaspd(block_list& bl) {
+	if (bl.m < 0)
+		return MAX_ASPD_NOPC;
+
+	if (map_getmapflag(bl.m, MF_MAXASPD)) {
+		int32 val = map_getmapflag_param(bl.m, MF_MAXASPD, 1);
+		if (val > 0)
+			return max(MAX_ASPD_NOPC, (AMOTION_ZERO_ASPD - val * AMOTION_INTERVAL) * AMOTION_DIVIDER_NOPC);
+	}
+
+	return MAX_ASPD_NOPC;
+}
+
+static void mob_recalc_maxaspd(block_list& bl, status_data* b_status) {
+	if (bl.type != BL_MOB || b_status == nullptr)
+		return;
+
+	mob_data* md = BL_CAST(BL_MOB, &bl);
+	status_change* sc = status_get_sc(&bl);
+	if (md == nullptr || sc == nullptr)
+		return;
+
+	status_data* status = &md->status;
+	int32 amotion = b_status->amotion;
+	status->aspd_rate = status_calc_aspd_rate(&bl, sc, b_status->aspd_rate);
+	amotion = amotion * status->aspd_rate / 1000;
+	amotion = status_calc_fix_aspd(&bl, sc, amotion);
+	status->amotion = cap_value(amotion, nopc_maxaspd(bl) / AMOTION_DIVIDER_NOPC, MIN_ASPD / AMOTION_DIVIDER_NOPC);
+
+	int32 temp = b_status->adelay * min(status->aspd_rate, 1000) / 1000;
+	status->adelay = cap_value(temp, AMOTION_DIVIDER_NOPC * status->amotion, MIN_ASPD);
+}
+#endif // Pandas_MapFlag_MaxASPD
+
 /**
  * Calculates the initial status for the given mob
  * @param md: Mob object
@@ -2866,8 +2901,13 @@ int32 status_calc_mob_(mob_data* md, uint8 opt)
 			aFree(md->base_status);
 			md->base_status = nullptr;
 		}
-		if (opt&SCO_FIRST)
+		if (opt&SCO_FIRST) {
 			memcpy(&md->status, &md->db->status, sizeof(struct status_data));
+#ifdef Pandas_MapFlag_MaxASPD
+			if (md->db)
+				mob_recalc_maxaspd(*md, &md->db->status);
+#endif // Pandas_MapFlag_MaxASPD
+		}
 		return 0;
 	}
 	if (!md->base_status)
@@ -3105,6 +3145,11 @@ int32 status_calc_mob_(mob_data* md, uint8 opt)
 
 	if (opt&SCO_FIRST) // Initial battle status
 		memcpy(&md->status, status, sizeof(struct status_data));
+
+#ifdef Pandas_MapFlag_MaxASPD
+	if (md->db)
+		mob_recalc_maxaspd(*md, &md->db->status);
+#endif // Pandas_MapFlag_MaxASPD
 
 	return 1;
 }
@@ -5216,6 +5261,9 @@ int32 status_calc_homunculus_(homun_data *hd, uint8 opt)
 #endif
 
 	status->amotion = cap_value(amotion, MAX_ASPD_NOPC/AMOTION_DIVIDER_NOPC, MIN_ASPD/AMOTION_DIVIDER_NOPC);
+#ifdef Pandas_MapFlag_MaxASPD
+	status->amotion = cap_value(amotion, nopc_maxaspd(*hd)/AMOTION_DIVIDER_NOPC, MIN_ASPD/AMOTION_DIVIDER_NOPC);
+#endif // Pandas_MapFlag_MaxASPD
 	status->adelay = AMOTION_DIVIDER_NOPC * status->amotion; //It seems adelay = amotion for Homunculus.
 
 	status->max_hp = hom.max_hp;
@@ -6532,6 +6580,9 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 
 			amotion = status_calc_fix_aspd(&bl, sc, amotion);
 			status->amotion = cap_value(amotion, MAX_ASPD_NOPC/AMOTION_DIVIDER_NOPC, MIN_ASPD/AMOTION_DIVIDER_NOPC);
+#ifdef Pandas_MapFlag_MaxASPD
+			status->amotion = cap_value(amotion, nopc_maxaspd(bl)/AMOTION_DIVIDER_NOPC, MIN_ASPD/AMOTION_DIVIDER_NOPC);
+#endif // Pandas_MapFlag_MaxASPD
 
 			status->adelay = AMOTION_DIVIDER_NOPC * status->amotion;
 		} else if ( bl.type == BL_PC ) {
@@ -6570,6 +6621,9 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 
 			amotion = status_calc_fix_aspd(&bl, sc, amotion);
 			status->amotion = cap_value(amotion, MAX_ASPD_NOPC/AMOTION_DIVIDER_NOPC, MIN_ASPD/AMOTION_DIVIDER_NOPC);
+#ifdef Pandas_MapFlag_MaxASPD
+			status->amotion = cap_value(amotion, nopc_maxaspd(bl)/AMOTION_DIVIDER_NOPC, MIN_ASPD/AMOTION_DIVIDER_NOPC);
+#endif // Pandas_MapFlag_MaxASPD
 
 			// FIXME: Officially, adelay only considers a few buffs and is not affected by ASPD debuffs at all
 			// The only way to make monsters slower is to increase their amotion above their adelay
