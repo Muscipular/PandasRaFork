@@ -31838,6 +31838,9 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(deletearray,"r?"),
 	BUILDIN_DEF(getelementofarray,"ri"),
 	BUILDIN_DEF(inarray,"rv"),
+#ifdef Pandas_ScriptCommand_SearchArray
+	BUILDIN_DEF2(inarray, "searcharray", "rv"),			// 由于 rAthena 已经实现 inarray 指令, 这里兼容老版本 searcharray 指令 [Sola丶小克]
+#endif // Pandas_ScriptCommand_SearchArray
 	BUILDIN_DEF(countinarray,"rr"),
 	BUILDIN_DEF(getitem,"vi?"),
 	BUILDIN_DEF(rentitem,"vi?"),
