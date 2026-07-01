@@ -31237,6 +31237,51 @@ BUILDIN_FUNC(getinventoryinfo) {
 }
 #endif // Pandas_ScriptCommand_GetInventoryInfo
 
+#ifdef Pandas_ScriptCommand_StatusCheck
+/* ===========================================================
+ * 指令: statuscheck
+ * 描述: 判断状态是否存在, 并取得相关的状态参数
+ * 用法: statuscheck <状态编号>{,<游戏单位编号>};
+ * 返回: 获取成功则返回 1, 角色没有该状态则返回 0, 其他错误返回 -1
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(statuscheck) {
+	map_session_data *sd = nullptr;
+
+	if (!script_mapid2sd(3, sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int id = script_getnum(st, 2);
+	if (id <= SC_NONE || id >= SC_MAX) {
+		ShowWarning("buildin_statuscheck: Invalid status type given (%d).\n", id);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (sd->sc.empty() || !sd->sc.getSCE(id)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	pc_setreg(sd, add_str("@sc_val1"), sd->sc.getSCE(id)->val1);
+	pc_setreg(sd, add_str("@sc_val2"), sd->sc.getSCE(id)->val2);
+	pc_setreg(sd, add_str("@sc_val3"), sd->sc.getSCE(id)->val3);
+	pc_setreg(sd, add_str("@sc_val4"), sd->sc.getSCE(id)->val4);
+
+	// 这种返回方式若剩余时间过长的话 @sc_tickleft 保存的数值会被截断, 不可靠
+	// 建议还是多使用 rAthena 自带的 getstatus 指令来替代 statuscheck / sc_check
+	// 之所以实现 statuscheck / sc_check 完全出于兼容目的考虑
+	struct TimerData* timer = (struct TimerData*)get_timer(sd->sc.getSCE(id)->timer);
+	t_tick tickleft = (timer ? DIFF_TICK(timer->tick, gettick()) : -1);
+	pc_setreg(sd, add_str("@sc_tickleft"), tickleft);
+
+	script_pushint(st, 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_StatusCheck
+
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 /* ===========================================================
  * 指令: getmapspawns
@@ -32103,6 +32148,10 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF2(getinventoryinfo, "getguildstorageinfo", "ii?"), // 查询指定公会仓库序号的道具详细信息 [Sola丶小克]
 	BUILDIN_DEF2(getinventoryinfo, "getstorageinfo", "ii??"), // 查询指定个人仓库/扩充仓库序号的道具详细信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetInventoryInfo
+#ifdef Pandas_ScriptCommand_StatusCheck
+	BUILDIN_DEF(statuscheck, "i?"), // 判断状态是否存在, 并取得相关的状态参数 [Sola丶小克]
+	BUILDIN_DEF2(statuscheck, "sc_check", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_StatusCheck
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMapSpawns
