@@ -956,6 +956,7 @@
 	// - 加入公会, 开启公会仓库, 存入物品
 	// - 此时地图服务器在写入 guild_storage_log 的时候将抛出错误
 	// 感谢 "小林" 反馈此问题
+	#define Pandas_Fix_Guild_Storage_Log_Escape_For_CharName
 
 	// 修正使用 @showexp 指令后呈现的经验值数值会错误的问题 [Sola丶小克]
 	// 备注: 单次获得的经验超过 long 的有效阈值范围后就会溢出成负数, 但最新的有效经验值区间是 int64

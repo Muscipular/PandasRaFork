@@ -676,6 +676,12 @@ void storage_guild_log( map_session_data* sd, struct item* item, int16 amount ){
 	int32 i;
 	SqlStmt stmt{ *mmysql_handle };
 	StringBuf buf;
+
+#ifdef Pandas_Fix_Guild_Storage_Log_Escape_For_CharName
+	char esc_name[NAME_LENGTH * 2 + 1] = { 0 };
+	Sql_EscapeStringLen(mmysql_handle, esc_name, sd->status.name, strnlen(sd->status.name, NAME_LENGTH));
+#endif // Pandas_Fix_Guild_Storage_Log_Escape_For_CharName
+
 	StringBuf_Init(&buf);
 
 	StringBuf_Printf(&buf, "INSERT INTO `%s` (`time`, `guild_id`, `char_id`, `name`, `nameid`, `amount`, `identify`, `refine`, `attribute`, `unique_id`, `bound`, `enchantgrade`", guild_storage_log_table);
@@ -686,8 +692,13 @@ void storage_guild_log( map_session_data* sd, struct item* item, int16 amount ){
 		StringBuf_Printf(&buf, ", `option_val%d`", i);
 		StringBuf_Printf(&buf, ", `option_parm%d`", i);
 	}
+#ifndef Pandas_Fix_Guild_Storage_Log_Escape_For_CharName
 	StringBuf_Printf(&buf, ") VALUES(NOW(),'%u','%u', '%s', '%u', '%d','%d','%d','%d','%" PRIu64 "','%d','%d'",
 		sd->status.guild_id, sd->status.char_id, sd->status.name, item->nameid, amount, item->identify, item->refine,item->attribute, item->unique_id, item->bound, item->enchantgrade);
+#else
+	StringBuf_Printf(&buf, ") VALUES(NOW(),'%u','%u', '%s', '%u', '%d','%d','%d','%d','%" PRIu64 "','%d','%d'",
+		sd->status.guild_id, sd->status.char_id, esc_name, item->nameid, amount, item->identify, item->refine,item->attribute, item->unique_id, item->bound, item->enchantgrade);
+#endif // Pandas_Fix_Guild_Storage_Log_Escape_For_CharName
 
 	for (i = 0; i < MAX_SLOTS; i++)
 		StringBuf_Printf(&buf, ",'%u'", item->card[i]);
