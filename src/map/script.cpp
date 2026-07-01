@@ -31668,6 +31668,9 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(countitemidx, "i?"), // 获取指定背包序号的道具在背包中的数量 [Sola丶小克]
 	BUILDIN_DEF2(countitemidx, "countinventory", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
 #endif // Pandas_ScriptCommand_CountItemIdx
+#ifdef Pandas_ScriptCommand_DelItemIdx
+	BUILDIN_DEF2(delitemidx, "delinventory", "i??"), // 指定一个别名, 以便兼容的老版本或其他服务端 [Sola丶小克]
+#endif // Pandas_ScriptCommand_DelItemIdx
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMapSpawns

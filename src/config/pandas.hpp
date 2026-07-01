@@ -1739,6 +1739,7 @@
 	// 是否启用 delitemidx 脚本指令的别名 delinventory [Sola丶小克]
 	// https://github.com/rathena/rathena/commit/c18707bb6dd2bd6068bc0d3708401871a2d7270c
 	// 由于 rAthena 官方实现了 delitemidx, 因此使用它来接替原先熊猫模拟器的自定义实现
+	#define Pandas_ScriptCommand_DelItemIdx
 	// 是否启用 identifyidx 脚本指令 [Sola丶小克]
 	// 鉴定指定背包序号的道具 (该指令有一个用于兼容的别名: identifybyidx)
 	// 是否启用 unequipidx 脚本指令 [Sola丶小克]
