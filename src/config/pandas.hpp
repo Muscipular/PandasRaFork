@@ -15,6 +15,7 @@
 	#define Pandas_ScriptEngine
 	#define Pandas_Redeclaration
 	#define Pandas_UserExperience
+	#define Pandas_Cleanup
 	#define Pandas_NpcEvent
 	#define Pandas_AtCommands
 	#define Pandas_ScriptCommands
@@ -1459,6 +1460,15 @@
 	// 在 Debug 模式下隐藏玩家数据流转的子网掩码调试信息 [Sola丶小克]
 	#define Pandas_UserExperience_Debug_Hide_SubnetInfo
 #endif // Pandas_UserExperience
+
+// ============================================================================
+// 无用代码清理组 - Pandas_Cleanup
+// ============================================================================
+
+#ifdef Pandas_Cleanup
+	// 清理掉一些没啥作用看着还心烦的终端提示信息 [Sola丶小克]
+
+#endif // Pandas_Cleanup
 
 // ============================================================================
 // NPC 事件组 - Pandas_NpcEvent
