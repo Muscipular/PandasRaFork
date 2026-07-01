@@ -15555,7 +15555,17 @@ uint64 SkillDatabase::parseBodyNode(const ryml::NodeRef& node) {
 				std::shared_ptr<item_data> item = item_db.search_aegisname( item_name.c_str() );
 
 				if (item == nullptr) {
+#ifndef Pandas_Fix_SkillDB_ItemCost_NoexistsItem_Crash
 					this->invalidWarning(it["Item"], "Requires ItemCost Item %s does not exist.\n", item_name.c_str());
+#else
+					// 指定的必须是一个 ryml::NodeRef 节点,
+					// 没必要进一步指定到他 ItemCost 里面具体的某个 Item 节点.
+					// 目前已知的问题时, 若指定到具体的某个 Item 节点, 那么会导致 Item 不存在时
+					// invalidWarning 内部调用 node.Mark() 时直接崩溃报错
+					// 例如:
+					// 在复兴后版本中移除 12392 道具, 将导致读取 2275 技能时解析到 RepairA 不存在而崩溃
+					this->invalidWarning(it, "Requires ItemCost Item %s does not exist.\n", item_name.c_str());
+#endif // Pandas_Fix_SkillDB_ItemCost_NoexistsItem_Crash
 					return 0;
 				}
 

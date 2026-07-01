@@ -865,6 +865,7 @@
 
 	// 修正 skill_db.yml 的 ItemCost 字段指定的 Item 道具不存在时
 	// 会导致地图服务器直接崩溃的问题. 看代码应该是 rAthena 的工程师手误了 [Sola丶小克]
+	#define Pandas_Fix_SkillDB_ItemCost_NoexistsItem_Crash
 
 	// 修正离线挂店的角色在服务器重启自动上线后, 头饰外观会暂时丢失的问题 [Sola丶小克]
 
