@@ -30929,6 +30929,52 @@ BUILDIN_FUNC(unequipidx) {
 }
 #endif // Pandas_ScriptCommand_UnEquipIdx
 
+#ifdef Pandas_ScriptCommand_EquipIdx
+/* ===========================================================
+ * 指令: equipidx
+ * 描述: 穿戴指定背包序号的道具
+ * 用法: equipidx <背包序号>{,<角色编号>};
+ * 返回: 操作成功则返回 1, 操作失败则返回 0
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(equipidx) {
+	map_session_data *sd = nullptr;
+	int idx = -1;
+
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	idx = script_getnum(st, 2);
+	if (idx < 0 || idx >= sd->inventory.max_amount) {
+		ShowWarning("buildin_equipidx: Index (%d) should be from 0-%d.\n", idx, sd->inventory.max_amount - 1);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	std::shared_ptr<item_data> id = item_db.find(sd->inventory.u.items_inventory[idx].nameid);
+	if (id == nullptr) {
+		ShowWarning("buildin_equipidx: Invalid Item ID (%u).\n", sd->inventory.u.items_inventory[idx].nameid);
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!itemdb_isequip2(id.get())) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (sd->inventory.u.items_inventory[idx].equip != 0) {
+		script_pushint(st, 1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushint(st, pc_equipitem(sd, idx, id->equip) ? 1 : 0);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_EquipIdx
+
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 /* ===========================================================
  * 指令: getmapspawns
@@ -31765,6 +31811,10 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(unequipidx, "i?"), // 脱下指定背包序号的道具 [Sola丶小克]
 	BUILDIN_DEF2(unequipidx, "unequipinventory", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
 #endif // Pandas_ScriptCommand_UnEquipIdx
+#ifdef Pandas_ScriptCommand_EquipIdx
+	BUILDIN_DEF(equipidx, "i?"), // 穿戴指定背包序号的道具 [Sola丶小克]
+	BUILDIN_DEF2(equipidx, "equipinventory", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_EquipIdx
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMapSpawns

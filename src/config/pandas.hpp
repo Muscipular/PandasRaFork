@@ -1748,6 +1748,7 @@
 	#define Pandas_ScriptCommand_UnEquipIdx
 	// 是否启用 equipidx 脚本指令 [Sola丶小克]
 	// 穿戴指定背包序号的道具 (该指令有一个用于兼容的别名: equipinventory)
+	#define Pandas_ScriptCommand_EquipIdx
 	// 是否启用 itemexists 脚本指令 [Sola丶小克]
 	// 确认物品数据库中是否存在指定物品 (该指令有一个用于兼容的别名: existitem)
 	// 是否启用 renttime 脚本指令 [Sola丶小克]
