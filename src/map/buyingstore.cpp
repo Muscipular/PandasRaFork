@@ -803,6 +803,19 @@ void do_init_buyingstore_autotrade( void ) {
 	}
 }
 
+#ifdef Pandas_Fix_When_Relogin_Then_Clear_Autotrade_Store
+void buyingstore_autotrader_cleardb(map_session_data* sd)
+{
+	nullpo_retv(sd);
+
+	if (Sql_Query(mmysql_handle,
+		"DELETE FROM `%s` WHERE `account_id` = %d;",
+		buyingstores_table, sd->status.account_id) != SQL_SUCCESS) {
+		Sql_ShowDebug(mmysql_handle);
+	}
+}
+#endif // Pandas_Fix_When_Relogin_Then_Clear_Autotrade_Store
+
 /**
  * Remove an autotrader's data
  * @param at Autotrader

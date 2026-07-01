@@ -15195,6 +15195,13 @@ void pc_scdata_received(map_session_data *sd) {
 
 	sd->state.pc_loaded = true;
 
+#ifdef Pandas_Fix_When_Relogin_Then_Clear_Autotrade_Store
+	if (sd->state.pc_loaded && !sd->state.autotrade) {
+		vending_autotrader_cleardb(sd);
+		buyingstore_autotrader_cleardb(sd);
+	}
+#endif // Pandas_Fix_When_Relogin_Then_Clear_Autotrade_Store
+
 #ifdef Pandas_Player_Suspend_System
 	if (sd->state.pc_loaded && sd->state.autotrade) {
 		// 走到这里说明已经完成了背包、仓库、手推车的道具信息以及 sc_data 数据的加载。
