@@ -1798,6 +1798,7 @@
 	#define Pandas_ScriptCommand_WarpPartyRevive
 	// 是否启用 getareagid 脚本指令 [Sola丶小克]
 	// 获取指定范围内特定类型单位的全部 GID (注意: 该指令不再兼容以前 rAthenaCN 的同名指令)
+	#define Pandas_ScriptCommand_GetAreaGid
 	// 是否启用 processhalt 脚本指令 [Sola丶小克]
 	// 在事件处理代码中使用该指令, 可以中断源代码的后续处理逻辑
 	// 此选项开关需要依赖 Pandas_Struct_Map_Session_Data_EventHalt 的拓展
