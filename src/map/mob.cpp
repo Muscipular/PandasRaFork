@@ -3771,6 +3771,12 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type, uint16 skill_id)
 
 	if( !rebirth ) {
 
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+		unit_stop_attack(md);
+		unit_stop_walking(md, USW_FORCE_STOP);
+		unit_skillcastcancel(md, 0);
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
+
 		if( pcdb_checkid(md->vd->look[LOOK_BASE])) {//Player mobs are not removed automatically by the client.
 			/* first we set them dead, then we delay the outsight effect */
 			clif_clearunit_area( *md, CLR_DEAD );

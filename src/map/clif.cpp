@@ -83,6 +83,9 @@ static inline int32 client_exp(t_exp exp) {
 
 /* for clif_clearunit_delayed */
 static struct eri *delay_clearunit_ers;
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+static struct eri* twice_clearunit_ers;
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 
 struct s_packet_db packet_db[MAX_PACKET_DB + 1];
 unsigned long color_table[COLOR_MAX];
@@ -493,6 +496,15 @@ int32 clif_send(const void* buf, int32 len, const block_list* bl, enum send_targ
 	std::shared_ptr<s_battleground_data> bg;
 	int32 x0 = 0, x1 = 0, y0 = 0, y1 = 0, fd;
 	struct s_mapiterator* iter;
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+	uint16 area_size = AREA_SIZE;
+	if (type == AREA_DEAD) {
+		if (!AREA_DEAD_SIZE)
+			area_size = AREA_SIZE * 2;
+		else
+			area_size = AREA_DEAD_SIZE;
+	}
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 
 	if( type != ALL_CLIENT )
 		nullpo_ret(bl);
@@ -527,13 +539,21 @@ int32 clif_send(const void* buf, int32 len, const block_list* bl, enum send_targ
 
 	case AREA:
 	case AREA_WOSC:
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+	case AREA_DEAD:
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 		if (sd && bl->prev == nullptr) //Otherwise source misses the packet.[Skotlex]
 			clif_send (buf, len, bl, SELF);
 		[[fallthrough]];
 	case AREA_WOC:
 	case AREA_WOS:
+#ifndef Pandas_Ease_Mob_Stuck_After_Dead
 		map_foreachinallarea(clif_send_sub, bl->m, bl->x-AREA_SIZE, bl->y-AREA_SIZE, bl->x+AREA_SIZE, bl->y+AREA_SIZE,
 			BL_PC, buf, len, bl, type);
+#else
+		map_foreachinallarea(clif_send_sub, bl->m, bl->x - area_size, bl->y - area_size, bl->x + area_size, bl->y + area_size,
+			BL_PC, buf, len, bl, type);
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 		break;
 	case AREA_CHAT_WOC:
 		map_foreachinallarea(clif_send_sub, bl->m, bl->x-(AREA_SIZE-5), bl->y-(AREA_SIZE-5),
@@ -970,6 +990,28 @@ void clif_clearunit_single( uint32 GID, clr_type type, const map_session_data& t
 	clif_send( &packet, sizeof( packet ), &tsd, SELF );
 }
 
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+static TIMER_FUNC(clif_clearunit_twice_sub) {
+	block_list* bl = (block_list*)data;
+
+	if (!bl) {
+		ers_free(twice_clearunit_ers, bl);
+		return 0;
+	}
+
+	unsigned char buf[8] = { 0 };
+
+	WBUFW(buf, 0) = 0x80;
+	WBUFL(buf, 2) = bl->id;
+	WBUFB(buf, 6) = (clr_type)id;
+
+	clif_send(buf, packet_len(0x80), bl, (clr_type)id == CLR_DEAD ? AREA_DEAD : AREA_WOS);
+
+	ers_free(twice_clearunit_ers, bl);
+	return 0;
+}
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
+
 /// Makes a unit (char, npc, mob, homun) disappear to all clients in area.
 /// 0080 <id>.L <type>.B (ZC_NOTIFY_VANISH)
 /// type:
@@ -985,12 +1027,29 @@ void clif_clearunit_area( const block_list& bl, clr_type type ){
 	packet.gid = bl.id;
 	packet.type = static_cast<uint8>(type);
 
+#ifndef Pandas_Ease_Mob_Stuck_After_Dead
 	clif_send(&packet, sizeof(PACKET_ZC_NOTIFY_VANISH), &bl, type == CLR_DEAD ? AREA : AREA_WOS);
+#else
+	clif_send(&packet, sizeof(PACKET_ZC_NOTIFY_VANISH), &bl, type == CLR_DEAD ? AREA_DEAD : AREA_WOS);
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 
 	if(disguised(&bl)) {
 		packet.gid = disguised_bl_id( bl.id );
 		clif_send(&packet, sizeof(PACKET_ZC_NOTIFY_VANISH), &bl, SELF);
 	}
+
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+	if (!battle_config.repeat_clearunit_interval) {
+		if (bl.type == BL_MOB && type == CLR_DEAD) {
+			block_list* tbl = ers_alloc(twice_clearunit_ers, block_list);
+			if (tbl) {
+				memcpy(tbl, &bl, sizeof(block_list));
+				add_timer(gettick() + battle_config.repeat_clearunit_interval,
+					clif_clearunit_twice_sub, (int32)type, (intptr_t)tbl);
+			}
+		}
+	}
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 }
 
 
@@ -26528,8 +26587,14 @@ void do_init_clif(void) {
 #endif
 
 	delay_clearunit_ers = ers_new(sizeof(block_list),"clif.cpp::delay_clearunit_ers",ERS_OPT_CLEAR);
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+	twice_clearunit_ers = ers_new(sizeof(block_list),"clif.cpp::twice_clearunit_ers", ERS_OPT_CLEAR);
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 }
 
 void do_final_clif(void) {
 	ers_destroy(delay_clearunit_ers);
+#ifdef Pandas_Ease_Mob_Stuck_After_Dead
+	ers_destroy(twice_clearunit_ers);
+#endif // Pandas_Ease_Mob_Stuck_After_Dead
 }
