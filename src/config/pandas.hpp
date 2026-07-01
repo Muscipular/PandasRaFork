@@ -1453,6 +1453,7 @@
 
 	// 在 Linux 平台上使用 Ctrl+C 输出 ^C 符号之后换一行 [Sola丶小克]
 	#ifndef _WIN32
+		#define Pandas_UserExperience_Linux_Ctrl_C_WarpLine
 	#endif // _WIN32
 
 	// 在 Debug 模式下隐藏玩家数据流转的子网掩码调试信息 [Sola丶小克]
