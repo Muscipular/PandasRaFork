@@ -893,6 +893,7 @@
 	// script_free_code 释放掉 script/equip_script/unequip_script 的 script_code
 	// 但是释放后没有将对应的指针设为 NULL. 导致上述重现步骤中 script_free_state 函数针对 st->script->local.vars
 	// 和 st->script->local.arrays 的空指针判断被绕过, 继而触发崩溃
+	#define Pandas_Crashfix_ScriptFreeCode_SetPointerNull
 
 	// 修正 pc_setpos 在特殊操作情况下可能会导致崩溃的问题 [Sola丶小克]
 	// 重现方法:
