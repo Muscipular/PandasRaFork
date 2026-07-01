@@ -1771,6 +1771,7 @@
 	// getcartinfo <道具的手推车序号>,<要查看的信息类型>{,<角色编号>};
 	// getguildstorageinfo <道具的公会仓库序号>,<要查看的信息类型>{,<角色编号>};
 	// getstorageinfo <道具的个人仓库/扩充仓库序号>,<要查看的信息类型>{{,<仓库编号>},<角色编号>};
+	#define Pandas_ScriptCommand_GetInventoryInfo
 	// 是否启用 statuscheck 脚本指令 [Sola丶小克]
 	// 判断状态是否存在, 并取得相关的状态参数 (该指令有一个用于兼容的别名: sc_check)
 	// 是否启用 renttimeidx 脚本指令 [Sola丶小克]

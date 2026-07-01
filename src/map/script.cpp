@@ -31148,6 +31148,95 @@ BUILDIN_FUNC(getequipexpiretick) {
 }
 #endif // Pandas_ScriptCommand_GetEquipExpireTick
 
+#ifdef Pandas_ScriptCommand_GetInventoryInfo
+/* ===========================================================
+ * 指令: getinventoryinfo
+ * 描述: 查询指定背包序号的道具的详细信息
+ * 用法: getinventoryinfo <道具的背包序号>,<要查看的信息类型>{,<角色编号>};
+ * 用法: getcartinfo <道具的手推车序号>,<要查看的信息类型>{,<角色编号>};
+ * 用法: getguildstorageinfo <道具的公会仓库序号>,<要查看的信息类型>{,<角色编号>};
+ * 用法: getstorageinfo <道具的个人仓库/扩充仓库序号>,<要查看的信息类型>{{,<仓库编号>},<角色编号>};
+ * 返回: 查询失败返回 -1, 若查询成功则返回你所查询的信息
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getinventoryinfo) {
+	map_session_data *sd = nullptr;
+	int idx = script_getnum(st, 2);
+	const char* command = script_getfuncname(st);
+	int charid_slot = (!stricmp(command, "getstorageinfo") ? 5 : 4);
+
+	if (!script_charid2sd(charid_slot, sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	struct s_storage* stor = nullptr;
+	struct item* inventory = nullptr;
+	int stor_id = (script_hasdata(st, 4) ? script_getnum(st, 4) : 0);
+
+	if (!script_getstorage(st, sd, &stor, &inventory, stor_id)) {
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (st->state == RERUNLINE) {
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!stor || !inventory) {
+		ShowError("buildin_%s: cannot read inventory or storage data.\n", command);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	if (idx < 0 || idx >= stor->max_amount) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!item_db.exists(inventory[idx].nameid)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (inventory[idx].amount <= 0) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int type = script_getnum(st, 3);
+	switch (type) {
+		case 0:  script_pushint(st, inventory[idx].nameid); break;
+		case 1:  script_pushint(st, inventory[idx].amount); break;
+		case 2:  script_pushint(st, inventory[idx].equip); break;
+		case 3:  script_pushint(st, inventory[idx].refine); break;
+		case 4:  script_pushint(st, inventory[idx].identify); break;
+		case 5:  script_pushint(st, inventory[idx].attribute); break;
+		case 6:  script_pushint(st, inventory[idx].card[0]); break;
+		case 7:  script_pushint(st, inventory[idx].card[1]); break;
+		case 8:  script_pushint(st, inventory[idx].card[2]); break;
+		case 9:  script_pushint(st, inventory[idx].card[3]); break;
+		case 10: script_pushint(st, inventory[idx].expire_time); break;
+		case 11: script_pushint(st, inventory[idx].unique_id); break;
+		case 12: case 13: case 14: case 15: case 16:
+			script_pushint(st, inventory[idx].option[type - 12].id); break;
+		case 17: case 18: case 19: case 20: case 21:
+			script_pushint(st, inventory[idx].option[type - 17].value); break;
+		case 22: case 23: case 24: case 25: case 26:
+			script_pushint(st, inventory[idx].option[type - 22].param); break;
+		case 27: script_pushint(st, inventory[idx].bound); break;
+		case 28: script_pushint(st, inventory[idx].enchantgrade); break;
+		case 29: script_pushint(st, inventory[idx].equipSwitch); break;
+		case 30: script_pushint(st, inventory[idx].favorite); break;
+		default:
+			ShowWarning("buildin_%s: The type should be in range 0-%d, currently type is: %d.\n", command, 30, type);
+			script_pushint(st, -1);
+			return SCRIPT_CMD_FAILURE;
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetInventoryInfo
+
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 /* ===========================================================
  * 指令: getmapspawns
@@ -32008,6 +32097,12 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(getequipexpiretick, "i?"), // 获取指定位置装备的租赁到期剩余秒数 [Sola丶小克]
 	BUILDIN_DEF2(getequipexpiretick, "isrental", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
 #endif // Pandas_ScriptCommand_GetEquipExpireTick
+#ifdef Pandas_ScriptCommand_GetInventoryInfo
+	BUILDIN_DEF(getinventoryinfo, "ii?"), // 查询指定背包序号的道具详细信息 [Sola丶小克]
+	BUILDIN_DEF2(getinventoryinfo, "getcartinfo", "ii?"), // 查询指定手推车序号的道具详细信息 [Sola丶小克]
+	BUILDIN_DEF2(getinventoryinfo, "getguildstorageinfo", "ii?"), // 查询指定公会仓库序号的道具详细信息 [Sola丶小克]
+	BUILDIN_DEF2(getinventoryinfo, "getstorageinfo", "ii??"), // 查询指定个人仓库/扩充仓库序号的道具详细信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetInventoryInfo
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMapSpawns

@@ -868,8 +868,15 @@ bool char_memitemdata_from_sql(struct s_storage* p, int32 max, int32 id, enum st
 		stmt.BindColumn(13+offset+MAX_SLOTS+i*3, SQLDT_CHAR, &item.option[i].param);
  	}
 
-	for( i = 0; i < max && SQL_SUCCESS == stmt.NextRow(); ++i )
+	for( i = 0; i < max && SQL_SUCCESS == stmt.NextRow(); ++i ) {
+#ifdef Pandas_ScriptCommand_GetInventoryInfo
+		if (tableswitch != TABLE_INVENTORY) {
+			item.favorite = 0;
+			item.equipSwitch = 0;
+		}
+#endif // Pandas_ScriptCommand_GetInventoryInfo
 		memcpy(&storage[i], &item, sizeof(item));
+	}
 
 	p->amount = i;
 	ShowInfo("Loaded %s data from table %s for %s: %d (total: %d)\n", printname, tablename, selectoption, id, p->amount);
