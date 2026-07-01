@@ -1188,7 +1188,14 @@ int32 char_mmo_char_fromsql(uint32 char_id, struct mmo_charstatus* p, bool load_
 		SqlStmt_ShowDebug(stmt);
 		return 0;
 	}
+#ifndef Pandas_Fix_Char_FromSql_NextRow_Result_Logic
 	if( SQL_ERROR == stmt.NextRow() )
+#else
+	// 当使用 SqlStmt_NextRow 无法获取数据时返回的不是 SQL_ERROR
+	// 而是 SQL_NO_DATA, rAthena 官方判断的是 == SQL_ERROR 这会导致无数据时代码继续往下执行
+	// 此处将其修改成返回值 != SQL_SUCCESS 的时候则认为失败并中断
+	if( SQL_SUCCESS != stmt.NextRow())
+#endif // Pandas_Fix_Char_FromSql_NextRow_Result_Logic
 	{
 		ShowError("Requested non-existant character id: %d!\n", char_id);
 		return 0;
