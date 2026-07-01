@@ -808,6 +808,9 @@
 #ifdef Pandas_MapFlag_MaxDmg_Skill
 	export_constant(MF_MAXDMG_SKILL);
 #endif // Pandas_MapFlag_MaxDmg_Skill
+#ifdef Pandas_MapFlag_MaxDmg_Normal
+	export_constant(MF_MAXDMG_NORMAL);
+#endif // Pandas_MapFlag_MaxDmg_Normal
 #ifdef Pandas_MapFlag_NoCapture
 	export_constant(MF_NOCAPTURE);
 #endif // Pandas_MapFlag_NoCapture
