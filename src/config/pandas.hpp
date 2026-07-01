@@ -1299,6 +1299,7 @@
 
 	// 是否启用 hidepartyinfo 地图标记 [Sola丶小克]
 	// 使当前地图上的玩家无法见到其他人的队伍名称 (自己依然可见)
+	#define Pandas_MapFlag_HidePartyInfo
 
 	// 是否启用 nomail 地图标记 [Sola丶小克]
 	// 该标记用于禁止玩家在地图上打开邮件界面或进行邮件系统的相关操作

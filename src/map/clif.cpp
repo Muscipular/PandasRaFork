@@ -10289,13 +10289,24 @@ void clif_name( const block_list* src, const block_list* bl, send_target target 
 				p = party_search( sd->status.party_id );
 			}
 
+			const bool display_party_info = p && ( sd->guild || battle_config.display_party_name );
+
+#ifdef Pandas_MapFlag_HidePartyInfo
+			const bool hide_party_info = display_party_info && map_getmapflag(sd->bl.m, MF_HIDEPARTYINFO);
+#endif // Pandas_MapFlag_HidePartyInfo
+
 			// do not display party unless the player is also in a guild
-			if( p && ( sd->guild || battle_config.display_party_name ) ){
+			if( display_party_info ){
 				safestrncpy( packet.party_name, p->party.name, NAME_LENGTH );
+#ifdef Pandas_MapFlag_HidePartyInfo
+				// 若当前地图启用了 hidepartyinfo 标记, 除了自己之外不再返回角色的队伍名称.
+				if (hide_party_info && src->id != bl->id)
+					safestrncpy(packet.party_name, "", NAME_LENGTH);
+#endif // Pandas_MapFlag_HidePartyInfo
 			}
 
 #ifdef Pandas_MapFlag_HideGuildInfo
-			const bool hide_guild_info = map_getmapflag(sd->bl.m, MF_HIDEGUILDINFO);
+			const bool hide_guild_info = sd->guild && map_getmapflag(sd->bl.m, MF_HIDEGUILDINFO);
 #endif // Pandas_MapFlag_HideGuildInfo
 
 			if( sd->guild ){
@@ -10321,16 +10332,32 @@ void clif_name( const block_list* src, const block_list* bl, send_target target 
 			packet.title_id = sd->status.title_id; // Title ID
 #endif
 
+#if defined(Pandas_MapFlag_HidePartyInfo) || defined(Pandas_MapFlag_HideGuildInfo)
+			bool hide_name_area_info = false;
+#ifdef Pandas_MapFlag_HidePartyInfo
+			hide_name_area_info = hide_name_area_info || hide_party_info;
+#endif // Pandas_MapFlag_HidePartyInfo
 #ifdef Pandas_MapFlag_HideGuildInfo
-			if (sd->guild && hide_guild_info && src == bl && target == AREA) {
-				// clif_name_area 使用 src == bl 广播, 需要拆成自己完整可见、周围玩家隐藏公会信息.
+			hide_name_area_info = hide_name_area_info || hide_guild_info;
+#endif // Pandas_MapFlag_HideGuildInfo
+
+			if (hide_name_area_info && src == bl && target == AREA) {
+				// clif_name_area 使用 src == bl 广播, 需要拆成自己完整可见、周围玩家隐藏受限信息.
 				clif_send(&packet, sizeof(packet), src, SELF);
-				safestrncpy(packet.guild_name, "", NAME_LENGTH);
-				safestrncpy(packet.position_name, "", NAME_LENGTH);
+#ifdef Pandas_MapFlag_HidePartyInfo
+				if (hide_party_info)
+					safestrncpy(packet.party_name, "", NAME_LENGTH);
+#endif // Pandas_MapFlag_HidePartyInfo
+#ifdef Pandas_MapFlag_HideGuildInfo
+				if (hide_guild_info) {
+					safestrncpy(packet.guild_name, "", NAME_LENGTH);
+					safestrncpy(packet.position_name, "", NAME_LENGTH);
+				}
+#endif // Pandas_MapFlag_HideGuildInfo
 				clif_send(&packet, sizeof(packet), src, AREA_WOS);
 				return;
 			}
-#endif // Pandas_MapFlag_HideGuildInfo
+#endif // Pandas_MapFlag_HidePartyInfo || Pandas_MapFlag_HideGuildInfo
 
 			clif_send(&packet, sizeof(packet), src, target);
 		}
