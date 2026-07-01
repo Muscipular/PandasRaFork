@@ -1272,6 +1272,7 @@
 	// 常量名称: SP_ABSORB_DMG_MAXHP / 调整器名称: bAbsorbDmgMaxHP
 	// 变量位置: map_session_data.bonus / 变量名称: absorb_dmg_trigger_hpratio, absorb_dmg_cap_ratio
 	// 使用原型: bonus2 bAbsorbDmgMaxHP,n,x;
+	#define Pandas_Bonus2_bAbsorbDmgMaxHP
 
 	// PYHELP - BONUS - INSERT POINT - <Section 1>
 #endif // Pandas_Bonuses

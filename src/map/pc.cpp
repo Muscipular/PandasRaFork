@@ -5338,6 +5338,14 @@ void pc_bonus2(map_session_data *sd,int32 type,int32 type2,int32 val)
 		pc_bonus_itembonus_swtich(sd->skillnorequire, type2, val, true);
 		break;
 #endif // Pandas_Bonus2_bSkillNoRequire
+#ifdef Pandas_Bonus2_bAbsorbDmgMaxHP
+	case SP_ABSORB_DMG_MAXHP: // bonus2 bAbsorbDmgMaxHP,n,x;
+		if (sd->state.lr_flag != LR_FLAG_ARROW) {
+			sd->bonus.absorb_dmg_trigger_hpratio = max(sd->bonus.absorb_dmg_trigger_hpratio, type2);
+			sd->bonus.absorb_dmg_cap_ratio = max(sd->bonus.absorb_dmg_cap_ratio, val);
+		}
+		break;
+#endif // Pandas_Bonus2_bAbsorbDmgMaxHP
 	default:
 	#ifdef Pandas_NpcExpress_STATCALC
 		if (running_npc_stat_calc_event) {

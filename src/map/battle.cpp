@@ -1255,6 +1255,15 @@ static void battle_absorb_damage(block_list *bl, struct Damage *d) {
 						dmg_new = hp;
 					}
 				}
+#ifdef Pandas_Bonus2_bAbsorbDmgMaxHP
+				if (sd->bonus.absorb_dmg_trigger_hpratio && sd->bonus.absorb_dmg_cap_ratio) {
+					double dmg_ratio = (double)dmg_ori / status_get_max_hp(bl);
+					if (dmg_ratio * 100 >= min(sd->bonus.absorb_dmg_trigger_hpratio, 100)) {
+						int32 hp = min(sd->bonus.absorb_dmg_cap_ratio, 100) * status_get_max_hp(bl) / 100;
+						dmg_new = hp;
+					}
+				}
+#endif // Pandas_Bonus2_bAbsorbDmgMaxHP
 			}
 			break;
 	}

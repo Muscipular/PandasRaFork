@@ -798,6 +798,9 @@ public:
 		int32 eatk; // atk bonus from equipment
 		uint8 absorb_dmg_maxhp; // [Cydh]
 		uint8 absorb_dmg_maxhp2;
+#ifdef Pandas_Bonus2_bAbsorbDmgMaxHP
+		uint8 absorb_dmg_trigger_hpratio, absorb_dmg_cap_ratio;
+#endif // Pandas_Bonus2_bAbsorbDmgMaxHP
 		int16 critical_rangeatk;
 		int16 weapon_atk_rate, weapon_matk_rate;
 		int32 skill_ratio;
