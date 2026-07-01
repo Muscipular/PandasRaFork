@@ -7169,6 +7169,11 @@ enum e_setpos pc_setpos(map_session_data* sd, uint16 mapindex, int32 x, int32 y,
 {
 	nullpo_retr(SETPOS_OK,sd);
 
+#ifdef Pandas_Crashfix_PC_Setpos_With_Invaild_Player
+	if (sd->bl.type != BL_PC || sd->bl.id != sd->status.account_id)
+		return SETPOS_OK;
+#endif // Pandas_Crashfix_PC_Setpos_With_Invaild_Player
+
 #ifdef Pandas_Support_Transfer_Autotrade_Player
 	bool multitransfer = sd->pandas.multitransfer;
 	sd->pandas.multitransfer = false;

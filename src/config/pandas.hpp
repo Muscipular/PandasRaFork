@@ -901,6 +901,7 @@
 	// - 玩家与其对话然后立刻下线, 时间到之后会触发 warp 指令并导致崩溃
 	// 因为触发 atcommand 的时候角色已经下线, 因此 atcommand_sub 会生成一个 dummy_sd 来替代,
 	// 而 dummy_sd 并非真实存在的 sd 对象, 最后会导致地图服务器崩溃
+	#define Pandas_Crashfix_PC_Setpos_With_Invaild_Player
 
 	// 修正 getinstancevar 传递无效的副本编号会导致地图服务器崩溃的问题 [Sola丶小克]
 
