@@ -11086,6 +11086,9 @@ BUILDIN_FUNC(bonus)
 #ifdef Pandas_Bonus2_bAddSkillRange
 		case SP_PANDAS_ADDSKILLRANGE:
 #endif // Pandas_Bonus2_bAddSkillRange
+#ifdef Pandas_Bonus2_bSkillNoRequire
+		case SP_PANDAS_SKILLNOREQUIRE:
+#endif // Pandas_Bonus2_bSkillNoRequire
 			// these bonuses support skill names
 			if (script_isstring(st, 3)) {
 				const char *name = script_getstr(st, 3);

@@ -704,6 +704,9 @@ public:
 #ifdef Pandas_Bonus2_bAddSkillRange
 	std::vector<s_item_bonus> addskillrange;
 #endif // Pandas_Bonus2_bAddSkillRange
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	std::vector<s_item_bonus> skillnorequire;
+#endif // Pandas_Bonus2_bSkillNoRequire
 	std::vector<s_add_drop> add_drop;
 	std::vector<s_addele2> subele2;
 	std::vector<s_vanish_bonus> sp_vanish, hp_vanish;

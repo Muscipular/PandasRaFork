@@ -614,6 +614,9 @@ enum _sp {
 #ifdef Pandas_Bonus2_bAddSkillRange
 	SP_PANDAS_ADDSKILLRANGE,	// 调整器名称: bAddSkillRange / 说明: 增加 sk 技能 n 格攻击距离
 #endif // Pandas_Bonus2_bAddSkillRange
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	SP_PANDAS_SKILLNOREQUIRE,	// 调整器名称: bSkillNoRequire / 说明: 解除 sk 技能中由 n 指定的前置施法条件限制
+#endif // Pandas_Bonus2_bSkillNoRequire
 	// PYHELP - BONUS - INSERT POINT - <Section 2>
 	SP_PANDAS_EXTEND_BONUS_END,
 #endif // Pandas_Bonuses

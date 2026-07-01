@@ -4044,6 +4044,9 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 		clif_skillinfo(*sd, it);
 	}
 #endif // Pandas_Bonus2_bAddSkillRange
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	sd->skillnorequire.clear();
+#endif // Pandas_Bonus2_bSkillNoRequire
 
 #ifdef Pandas_Struct_Map_Session_Data_MultiCatchTargetClass
 	sd->pandas.multi_catch_target_class.clear();

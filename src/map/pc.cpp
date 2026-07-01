@@ -3724,6 +3724,28 @@ static void pc_bonus_itembonus(std::vector<s_item_bonus> &bonus, uint16 id, int3
 	bonus.push_back(entry);
 }
 
+#ifdef Pandas_Bonus2_bSkillNoRequire
+static void pc_bonus_itembonus_swtich(std::vector<s_item_bonus>& bonus, uint16 id, int val, bool switch_on)
+{
+	for (auto& it : bonus) {
+		if (it.id != id)
+			continue;
+		if (switch_on)
+			it.val |= val;
+		else
+			it.val &= ~val;
+		return;
+	}
+
+	struct s_item_bonus entry = {};
+
+	entry.id = id;
+	if (switch_on)
+		entry.val |= val;
+	bonus.push_back(entry);
+}
+#endif // Pandas_Bonus2_bSkillNoRequire
+
 /**
  * Remove HP/SP to player when attacking
  * @param bonus: Bonus array
@@ -5219,6 +5241,20 @@ void pc_bonus2(map_session_data *sd,int32 type,int32 type2,int32 val)
 		pc_bonus_itembonus(sd->addskillrange, type2, val, false);
 		break;
 #endif // Pandas_Bonus2_bAddSkillRange
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	case SP_PANDAS_SKILLNOREQUIRE: // bonus2 bSkillNoRequire,sk,n;
+		if (sd->state.lr_flag == LR_FLAG_ARROW) {
+			break;
+		}
+
+		if (sd->skillnorequire.size() == MAX_PC_BONUS) {
+			ShowWarning("pc_bonus2: SP_PANDAS_ADDSKILLRANGE: Reached max (%d) number of skills per character, bonus skill %d (+%d%%) lost.\n", MAX_PC_BONUS, type2, val);
+			break;
+		}
+
+		pc_bonus_itembonus_swtich(sd->skillnorequire, type2, val, true);
+		break;
+#endif // Pandas_Bonus2_bSkillNoRequire
 	default:
 	#ifdef Pandas_NpcExpress_STATCALC
 		if (running_npc_stat_calc_event) {

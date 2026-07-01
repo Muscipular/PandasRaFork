@@ -9940,6 +9940,16 @@ struct s_skill_condition skill_get_requirement(map_session_data* sd, uint16 skil
 
 	std::shared_ptr<s_skill_db> skill = skill_db.find(skill_id);
 
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	int noreq_opt = 0;
+	for (auto& it : sd->skillnorequire) {
+		if (it.id != skill_id)
+			continue;
+		noreq_opt = it.val;
+		break;
+	}
+#endif // Pandas_Bonus2_bSkillNoRequire
+
 	req.hp = skill->require.hp[skill_lv - 1];
 	hp_rate = skill->require.hp_rate[skill_lv - 1];
 	if(hp_rate > 0)
@@ -9959,6 +9969,16 @@ struct s_skill_condition skill_get_requirement(map_session_data* sd, uint16 skil
 		req.sp += (status->max_sp * (-sp_rate))/100;
 	if( sd->dsprate != 100 )
 		req.sp = req.sp * sd->dsprate / 100;
+
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	if ((noreq_opt & SKILL_REQ_HPRATECOST))
+		req.hp = skill->require.hp[skill_lv - 1];
+	if ((noreq_opt & SKILL_REQ_SPRATECOST)) {
+		req.sp = skill->require.sp[skill_lv - 1];
+		if ((sd->skill_id_old == BD_ENCORE) && skill_id == sd->skill_id_dance)
+			req.sp /= 2;
+	}
+#endif // Pandas_Bonus2_bSkillNoRequire
 
 	for (auto &it : sd->skillusesprate) {
 		if (it.id == skill_id) {
@@ -10006,6 +10026,10 @@ struct s_skill_condition skill_get_requirement(map_session_data* sd, uint16 skil
 		req.ap += (status->ap * ap_rate) / 100;
 	else
 		req.ap += (status->max_ap * (-ap_rate)) / 100;
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	if ((noreq_opt & SKILL_REQ_APRATECOST))
+		req.ap = skill->require.ap[skill_lv - 1];
+#endif // Pandas_Bonus2_bSkillNoRequire
 
 	req.zeny = skill->require.zeny[skill_lv-1];
 
@@ -10300,6 +10324,49 @@ struct s_skill_condition skill_get_requirement(map_session_data* sd, uint16 skil
 		if (req_opt & SKILL_REQ_APRATECOST)
 			req.ap_rate = 0;
 	}
+
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	if (noreq_opt & SKILL_REQ_HPCOST)
+		req.hp = 0;
+	if (noreq_opt & SKILL_REQ_MAXHPTRIGGER)
+		req.mhp = 0;
+	if (noreq_opt & SKILL_REQ_SPCOST)
+		req.sp = 0;
+	if (noreq_opt & SKILL_REQ_HPRATECOST)
+		req.hp_rate = 0;
+	if (noreq_opt & SKILL_REQ_SPRATECOST)
+		req.sp_rate = 0;
+	if (noreq_opt & SKILL_REQ_ZENYCOST)
+		req.zeny = 0;
+	if (noreq_opt & SKILL_REQ_WEAPON)
+		req.weapon = 0;
+	if (noreq_opt & SKILL_REQ_AMMO) {
+		req.ammo = 0;
+		req.ammo_qty = 0;
+	}
+	if (noreq_opt & SKILL_REQ_STATE)
+		req.state = ST_NONE;
+	if (noreq_opt & SKILL_REQ_STATUS) {
+		req.status.clear();
+		req.status.shrink_to_fit();
+	}
+	if (noreq_opt & SKILL_REQ_SPIRITSPHERECOST)
+		req.spiritball = 0;
+	if (noreq_opt & SKILL_REQ_ITEMCOST) {
+		memset(req.itemid, 0, sizeof(req.itemid));
+		memset(req.amount, 0, sizeof(req.amount));
+	}
+	if (noreq_opt & SKILL_REQ_EQUIPMENT) {
+		req.eqItem.clear();
+		req.eqItem.shrink_to_fit();
+	}
+	if (noreq_opt & SKILL_REQ_APCOST)
+		req.ap = 0;
+	if (noreq_opt & SKILL_REQ_APRATECOST)
+		req.ap_rate = 0;
+	if (noreq_opt & SKILL_REQ_AMMO_COUNT)
+		req.ammo_qty = 0;
+#endif // Pandas_Bonus2_bSkillNoRequire
 
 	return req;
 }
@@ -13015,6 +13082,23 @@ int16 skill_can_produce_mix(map_session_data *sd, t_itemid nameid, int32 trigger
 		}
 	}
 
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	int noreq_opt = 0;
+	uint16 req_skill = skill_produce_db[i].req_skill;
+
+	if (req_skill == GC_RESEARCHNEWPOISON)
+		req_skill = GC_CREATENEWPOISON;
+
+	if (req_skill) {
+		for (auto& it : sd->skillnorequire) {
+			if (it.id != req_skill)
+				continue;
+			noreq_opt = it.val;
+			break;
+		}
+	}
+#endif // Pandas_Bonus2_bSkillNoRequire
+
 	// Check on player's inventory
 	for (j = 0; j < MAX_PRODUCE_RESOURCE; j++) {
 		t_itemid nameid_produce;
@@ -13030,8 +13114,13 @@ int16 skill_can_produce_mix(map_session_data *sd, t_itemid nameid, int32 trigger
 			for (idx = 0, amt = 0; idx < MAX_INVENTORY; idx++)
 				if (sd->inventory.u.items_inventory[idx].nameid == nameid_produce)
 					amt += sd->inventory.u.items_inventory[idx].amount;
+#ifndef Pandas_Bonus2_bSkillNoRequire
 			if (amt < qty * skill_produce_db[i].mat_amount[j])
 				return 0;
+#else
+			if (amt < qty * skill_produce_db[i].mat_amount[j] && !(noreq_opt & SKILL_REQ_PRODUCTMAT_COUNT))
+				return 0;
+#endif // Pandas_Bonus2_bSkillNoRequire
 		}
 	}
 	return i + 1;
@@ -13080,6 +13169,18 @@ bool skill_produce_mix(map_session_data *sd, uint16 skill_id, t_itemid nameid, i
 	if( skill_id == GC_RESEARCHNEWPOISON )
 		skill_id = GC_CREATENEWPOISON;
 
+#ifdef Pandas_Bonus2_bSkillNoRequire
+	int noreq_opt = 0;
+	if (skill_id) {
+		for (auto& it : sd->skillnorequire) {
+			if (it.id != skill_id)
+				continue;
+			noreq_opt = it.val;
+			break;
+		}
+	}
+#endif // Pandas_Bonus2_bSkillNoRequire
+
 	slot[0] = slot1;
 	slot[1] = slot2;
 	slot[2] = slot3;
@@ -13110,6 +13211,10 @@ bool skill_produce_mix(map_session_data *sd, uint16 skill_id, t_itemid nameid, i
 			continue;
 		num++;
 		x = (skill_id == RK_RUNEMASTERY ? 1 : qty) * skill_produce_db[idx].mat_amount[i];
+#ifdef Pandas_Bonus2_bSkillNoRequire
+		if (noreq_opt & SKILL_REQ_PRODUCTMAT_COUNT)
+			continue;
+#endif // Pandas_Bonus2_bSkillNoRequire
 		do {
 			int32 y = 0;
 

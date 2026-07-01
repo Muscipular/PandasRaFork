@@ -1237,6 +1237,7 @@
 	// 常量名称: SP_PANDAS_SKILLNOREQUIRE / 调整器名称: bSkillNoRequire
 	// 变量位置: map_session_data / 变量名称: skillnorequire
 	// 使用原型: bonus2 bSkillNoRequire,sk,n;
+	#define Pandas_Bonus2_bSkillNoRequire
 
 	// 是否启用 bonus4 bStatusAddDamage 效果调整器 [聽風]
 	// 攻击拥有 sc 状态的目标时, 使用 bf 攻击有 r/100% 的概率使伤害增加 n
