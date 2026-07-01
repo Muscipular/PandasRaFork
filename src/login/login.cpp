@@ -226,7 +226,11 @@ void login_online_db_setoffline( int32 char_server ){
  * @return : 0
  */
 static TIMER_FUNC(login_online_data_cleanup){
+#ifndef Pandas_Speedup_Constant_References
 	for( std::pair<uint32,struct online_login_data> pair : online_db  ){
+#else
+	for (auto& pair : online_db) {
+#endif // Pandas_Speedup_Constant_References
 		// Unknown server.. set them offline
 		if( pair.second.char_server == -2 ){
 			login_remove_online_user( pair.first );

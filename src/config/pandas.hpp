@@ -1191,6 +1191,7 @@
 	#endif // Pandas_Crashfix_EventDatabase_Clean_Synchronize
 
 	// 通过微调程序逻辑改善 C26817 这样的常量引用性能优化场景 [Sola丶小克]
+	#define Pandas_Speedup_Constant_References
 #endif // Pandas_Speedup
 
 // ============================================================================
