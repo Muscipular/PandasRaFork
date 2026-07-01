@@ -960,6 +960,7 @@
 
 	// 修正使用 @showexp 指令后呈现的经验值数值会错误的问题 [Sola丶小克]
 	// 备注: 单次获得的经验超过 long 的有效阈值范围后就会溢出成负数, 但最新的有效经验值区间是 int64
+	#define Pandas_Fix_GainExp_Display_Overflow
 
 	// 修正 inter_server.yml 中的 Max 超大时没有妥善处理的问题 [Sola丶小克]
 	// 启用后 Max 字段的值最多不能超过 MAX_STORAGE 的值
