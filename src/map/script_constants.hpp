@@ -1108,6 +1108,9 @@
 	export_constant2("bAddItemGroupSPHealRate", SP_ADD_ITEMGROUP_SPHEAL_RATE);
 	export_constant2("bWeaponSubSize", SP_WEAPON_SUBSIZE);
 	export_constant2("bNonCritAtkRate", SP_NON_CRIT_ATK_RATE);
+#ifdef Pandas_Bonuses
+	// PYHELP - BONUS - INSERT POINT - <Section 3>
+#endif // Pandas_Bonuses
 
 	/* equip indices */
 	export_constant(EQI_COMPOUND_ON);
