@@ -1158,6 +1158,13 @@ int32 guild_member_added(int32 guild_id,uint32 account_id,uint32 char_id,int32 f
 	sd->guild = g;
 	//Packets which were sent in the previous 'guild_sent' implementation.
 	clif_guild_belonginfo( *sd );
+
+#ifdef Pandas_Fix_GuildEmblem_Update
+	// 当玩家加入一个有图标的公会时,
+	// 能立刻让自己可以看见自己的公会图标 [Sola丶小克]
+	clif_guild_emblem(*sd, g->guild);
+#endif // Pandas_Fix_GuildEmblem_Update
+
 	clif_guild_notice( *sd );
 
 	// Send emblem update to self and people around

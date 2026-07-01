@@ -845,6 +845,7 @@
 	#define Pandas_Fix_Ignore_sscanf_Return_Value
 
 	// 修正在部分情况下角色公会图标刷新不及时的问题 [Sola丶小克]
+	#define Pandas_Fix_GuildEmblem_Update
 
 	// 修正当 PACKETVER 小于 20131223 出现的 clif_mvp_exp 类型转换错误 [Sola丶小克]
 
