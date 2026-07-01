@@ -30077,6 +30077,79 @@ BUILDIN_FUNC(script4each) {
 	return SCRIPT_CMD_SUCCESS;
 }
 #endif // Pandas_ScriptCommand_Script4Each
+#ifdef Pandas_ScriptCommand_GetSameIpInfo
+/* ===========================================================
+ * 指令: buildin_getsameipinfo_sub
+ * 描述: 配合 getsameipinfo 指令使用的一个内部处理函数
+ * -----------------------------------------------------------*/
+static int32 buildin_getsameipinfo_sub(map_session_data* pl_sd, va_list ap)
+{
+	map_session_data *sd = va_arg(ap, map_session_data*);
+	uint32 ipaddr = va_arg(ap, uint32);
+	uint32 *count = va_arg(ap, uint32*);
+	int32 m = va_arg(ap, int32);	// int16 通过可变参数方式传递, 会被提升为 int32
+
+	if (!ipaddr || !sd || !count) return 0;
+	if (!pl_sd || pl_sd->state.autotrade) return 0;
+	if (m >= 0 && pl_sd->bl.m != m) return 0;
+
+	if (ipaddr == session[pl_sd->fd]->client_addr) {
+		pc_setreg(sd, reference_uid(add_str("@sameip_aid"), (*count)), pl_sd->status.account_id);
+		pc_setreg(sd, reference_uid(add_str("@sameip_cid"), (*count)), pl_sd->status.char_id);
+		pc_setregstr(sd, reference_uid(add_str("@sameip_name$"), (*count)), pl_sd->status.name);
+		(*count)++;
+		return 1;
+	}
+
+	return 0;
+}
+
+/* ===========================================================
+ * 指令: getsameipinfo
+ * 描述: 获得某个指定 IP 在线的玩家信息
+ * 用法: getsameipinfo {<"IP地址">{<,"地图名">}};
+ * 返回: 出错返回 -1, 其他含 0 正整数表示查到的此 IP 的在线玩家数
+ * 作者: Sola丶小克, 晓晓
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getsameipinfo) {
+	map_session_data *sd = nullptr;
+	uint32 ipaddr = 0, match_count = 0;
+	int16 m = -1;
+
+	if (!script_rid2sd(sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (script_hasdata(st, 2) && !script_isstring(st, 2)) {
+		ShowError("buildin_getsameipinfo: ip address must be string variable\n");
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (script_hasdata(st, 2)) {
+		ipaddr = str2ip(script_getstr(st, 2));
+	}
+	else {
+		ipaddr = session[sd->fd]->client_addr;
+	}
+
+	if (script_hasdata(st, 3)) {
+		const char* map_name = script_getstr(st, 3);
+		if ((m = map_mapname2mapid(map_name)) < 0) {
+			ShowWarning("buildin_getsameipinfo: Invalid map name '%s'.\n", map_name);
+			script_pushint(st, -1);
+			return SCRIPT_CMD_SUCCESS;
+		}
+	}
+
+	map_foreachpc(buildin_getsameipinfo_sub, sd, ipaddr, &match_count, m);
+	pc_setreg(sd, add_str("@sameip_amount"), match_count);
+
+	script_pushint(st, match_count);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetSameIpInfo
 #ifdef Pandas_ScriptCommand_ProcessHalt
 /* ===========================================================
  * 指令: processhalt
@@ -32148,6 +32221,9 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF2(script4each, "script4eachmob", "si?????"),	// 对指定范围的魔物执行相同的一段脚本
 	BUILDIN_DEF2(script4each, "script4eachnpc", "si?????"),	// 对指定范围的 NPC 执行相同的一段脚本
 #endif // Pandas_ScriptCommand_Script4Each
+#ifdef Pandas_ScriptCommand_GetSameIpInfo
+	BUILDIN_DEF(getsameipinfo, "??"),					// 获得某个指定 IP 在线的玩家信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetSameIpInfo
 #ifdef Pandas_ScriptCommand_ProcessHalt
 	BUILDIN_DEF(processhalt, "?"), // 用于中断源代码的后续处理逻辑 [Sola丶小克]
 #endif // Pandas_ScriptCommand_ProcessHalt

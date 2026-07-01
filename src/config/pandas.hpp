@@ -1789,6 +1789,7 @@
 	#define Pandas_ScriptCommand_SearchArray
 	// 是否启用 getsameipinfo 脚本指令 [Sola丶小克]
 	// 获得某个指定 IP 在线的玩家信息
+	#define Pandas_ScriptCommand_GetSameIpInfo
 	// 是否启用 logout 脚本指令 [Sola丶小克]
 	// 使指定的角色立刻登出游戏
 	// 是否启用 warppartyrevive 脚本指令 [Sola丶小克]
