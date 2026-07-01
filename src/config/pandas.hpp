@@ -1431,6 +1431,7 @@
 	#define Pandas_UserExperience_Yaml2Sql_AskConfirmation_Order
 
 	// 调整 Yaml2sql 辅助工具在发布版本中的文件保存位置 [Sola丶小克]
+	#define Pandas_UserExperience_Yaml2Sql_SaveFile_Location
 
 	// 将 barters.yml 数据库从 npc 目录移动回 db 目录 [Sola丶小克]
 

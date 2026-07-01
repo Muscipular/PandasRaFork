@@ -20,6 +20,7 @@
 #include <ryml_std.hpp>
 #include <ryml.hpp>
 
+#include <common/assistant.hpp>
 #include <common/cbasetypes.hpp>
 #include <common/core.hpp>
 #include <common/malloc.hpp>
@@ -162,7 +163,11 @@ bool process( const std::string& type, uint32 version, const std::vector<std::st
 	for( const std::string& path : paths ){
 		const std::string name_ext = name + ".yml";
 		const std::string from = path + name_ext;
+#ifndef Pandas_UserExperience_Yaml2Sql_SaveFile_Location
 		const std::string to = "sql-files/" + to_table + ".sql";
+#else
+		std::string to = "sql-files/" + to_table + ".sql";
+#endif // Pandas_UserExperience_Yaml2Sql_SaveFile_Location
 
 		if( fileExists( from ) ){
 #ifndef CONVERT_ALL
@@ -172,6 +177,41 @@ bool process( const std::string& type, uint32 version, const std::vector<std::st
 #else
 			ShowMessage("Found the file \"%s\", converting from yml to sql.\n", from.c_str());
 #endif
+
+#ifdef Pandas_UserExperience_Yaml2Sql_SaveFile_Location
+#ifdef RENEWAL
+			const std::string mode = "renewal";
+#else
+			const std::string mode = "pre-renewal";
+#endif // RENEWAL
+
+			if (!fileExists("src/config/pandas.hpp")) {
+				std::unordered_map<std::string, const char*> relocation;
+
+				relocation["item_db_re_equip"] = "03";
+				relocation["item_db_re_etc"] = "04";
+				relocation["item_db_re_usable"] = "05";
+				relocation["mob_db_re"] = "06";
+				relocation["mob_db2_re"] = "07";
+
+				relocation["item_db_equip"] = "03";
+				relocation["item_db_etc"] = "04";
+				relocation["item_db_usable"] = "05";
+				relocation["mob_db"] = "06";
+				relocation["mob_db2"] = "07";
+
+				if (relocation.find(to_table) != relocation.end()) {
+					to = "sql-files/main/creation/use_sql_db/" + mode + "/" + relocation[to_table] + "." + to_table + ".sql";
+				}
+
+				std::string current_path;
+				if (getExecuteFileDirectory(current_path)) {
+					std::string absolute_path = current_path + to;
+					standardizePathSep(absolute_path);
+					ensureDirectories(absolute_path);
+				}
+			}
+#endif // Pandas_UserExperience_Yaml2Sql_SaveFile_Location
 
 #ifdef Pandas_UserExperience_Yaml2Sql_AskConfirmation_Order
 #ifndef CONVERT_ALL
