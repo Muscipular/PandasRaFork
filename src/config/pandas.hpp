@@ -1700,6 +1700,7 @@
 	#define Pandas_ScriptCommand_SetHeadDir
 	// 是否启用 setbodydir 脚本指令 [Sola丶小克]
 	// 用于调整角色纸娃娃身体的朝向 (与 NPC 一致, 从 0 到 7 共 8 个方位可选择)
+	#define Pandas_ScriptCommand_SetBodyDir
 	// 是否启用 openbank 脚本指令 [Sola丶小克]
 	// 2022-4-20 修订备注:
 	// 由于 rAthena 官方已经实现了 openbank 指令且重名,

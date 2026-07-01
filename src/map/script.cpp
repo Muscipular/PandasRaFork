@@ -29800,6 +29800,30 @@ BUILDIN_FUNC(setheaddir) {
 }
 #endif // Pandas_ScriptCommand_SetHeadDir
 
+#ifdef Pandas_ScriptCommand_SetBodyDir
+/* ===========================================================
+ * 指令: setbodydir
+ * 描述: 用于调整角色纸娃娃身体的朝向
+ * 用法: setbodydir <朝向编号>{,<角色编号>};
+ * 返回: 该指令无论成功与否, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(setbodydir) {
+	map_session_data *sd = nullptr;
+	int body_dir = script_getnum(st, 2);
+	body_dir = cap_value(body_dir, 0, 7);
+
+	if (!script_charid2sd(3, sd))
+		return SCRIPT_CMD_SUCCESS;
+
+	pc_setdir(sd, body_dir, sd->head_dir);
+	clif_changed_dir(sd->bl, AREA_WOS);
+	clif_changed_dir(sd->bl, SELF);
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_SetBodyDir
+
 #ifdef Pandas_ScriptCommand_Script4Each
 /* ===========================================================
  * 指令: buildin_script4each_sub
@@ -31396,6 +31420,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_SetHeadDir
 	BUILDIN_DEF(setheaddir, "i?"), // 调整角色纸娃娃脑袋的朝向 [Sola丶小克]
 #endif // Pandas_ScriptCommand_SetHeadDir
+#ifdef Pandas_ScriptCommand_SetBodyDir
+	BUILDIN_DEF(setbodydir, "i?"), // 用于调整角色纸娃娃身体的朝向 [Sola丶小克]
+#endif // Pandas_ScriptCommand_SetBodyDir
 	BUILDIN_DEF(escape_sql,"v"),
 	BUILDIN_DEF(atoi,"s"),
 	BUILDIN_DEF(strtol,"si"),
