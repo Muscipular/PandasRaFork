@@ -1164,6 +1164,7 @@
 	// 优化后性能表现参考信息 (VS2019 + Win32)
 	// 在 Debug 模式下越提速约 1.79 倍 (3350ms -> 1200ms)
 	// 在 Release 模式下提速约 17.65% (1000ms -> 850ms)
+	#define Pandas_Speedup_Map_Read_From_Cache
 
 	// 在 Windows 环境下对加载地图时滚动输出的信息进行限流 [Sola丶小克]
 	// 好处在于极大的提升加载速度, 坏处在于类似 LeeStarter 等工具中打开地图服务器,

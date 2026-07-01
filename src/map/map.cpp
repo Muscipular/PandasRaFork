@@ -226,6 +226,12 @@ int32 console = 0;
 int32 enable_spy = 0; //To enable/disable @spy commands, which consume too much cpu time when sending packets. [Skotlex]
 int32 enable_grf = 0;	//To enable/disable reading maps from GRF files, bypassing mapcache [blackhole89]
 
+#ifdef Pandas_Speedup_Map_Read_From_Cache
+// 此处将 map_getcell 中存在的几种模式作为模板先行分配 [Sola丶小克]
+// 当前 map_getcell 内部只支持 0~6 共计 7 种类型, 因此预创建模板的长度为 7
+struct mapcell cell_template[7] = { 0 };
+#endif // Pandas_Speedup_Map_Read_From_Cache
+
 #ifdef Pandas_Support_Specify_PacketKeys
 // 用来保存 map_athena.conf 中设定封包混淆密钥 [Sola丶小克]
 uint32 clif_cryptKey_custom[3] = { 0 };
@@ -3895,8 +3901,16 @@ int32 map_readfromcache(struct map_data *m, char *buffer, char *decode_buffer)
 		CREATE(m->cell, struct mapcell, size);
 
 
+#ifndef Pandas_Speedup_Map_Read_From_Cache
 		for( xy = 0; xy < size; ++xy )
 			m->cell[xy] = map_gat2cell(decode_buffer[xy]);
+#else
+		for (xy = 0; xy < size; ++xy) {
+			if (decode_buffer[xy] < 0 || decode_buffer[xy] > 6)
+				continue;
+			memcpy(&m->cell[xy], &cell_template[decode_buffer[xy]], sizeof(struct mapcell));
+		}
+#endif // Pandas_Speedup_Map_Read_From_Cache
 
 		return 1;
 	}
@@ -6005,6 +6019,13 @@ bool MapServer::initialize( int32 argc, char *argv[] ){
 	mapindex_init();
 	if(enable_grf)
 		grfio_init(GRF_PATH_FILENAME);
+
+#ifdef Pandas_Speedup_Map_Read_From_Cache
+	// 填充预置的 cell 模板, 大量降低 map_gat2cell 被调用的机会
+	for (int x = 0; x < (sizeof(cell_template) / sizeof(struct mapcell)); x++) {
+		cell_template[x] = map_gat2cell(x);
+	}
+#endif // Pandas_Speedup_Map_Read_From_Cache
 
 	map_readallmaps();
 
