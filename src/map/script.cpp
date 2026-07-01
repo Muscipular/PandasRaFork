@@ -407,6 +407,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcExpress_MOBDROPITEM
 	"OnMobDropItemExpress",	// NPCX_MOBDROPITEM		// mobdropitem_express_name	// 当魔物即将掉落道具时触发实时事件
 #endif // Pandas_NpcExpress_MOBDROPITEM
+#ifdef Pandas_NpcExpress_PCATTACK
+	"OnPCAttackExpress",	// NPCX_PCATTACK		// pcattack_express_name	// 当玩家发起攻击并即将进行结算时触发实时事件 [聽風]
+#endif // Pandas_NpcExpress_PCATTACK
 	// NPC related
 	"OnTouch_",	//ontouch_event_name (runs on first visible char to enter area, picks another char if the first char leaves)
 	"OnTouch",	//ontouch2_event_name (run whenever a char walks into the OnTouch area)

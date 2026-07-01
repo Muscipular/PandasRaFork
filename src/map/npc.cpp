@@ -7018,6 +7018,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCX_MOBDROPITEM:
 		return script_config.mobdropitem_express_name;	// OnMobDropItemExpress		// 当魔物即将掉落道具时触发实时事件
 #endif // Pandas_NpcExpress_MOBDROPITEM
+#ifdef Pandas_NpcExpress_PCATTACK
+	case NPCX_PCATTACK:
+		return script_config.pcattack_express_name;	// OnPCAttackExpress		// 当玩家发起攻击并即将进行结算时触发实时事件 [聽風]
+#endif // Pandas_NpcExpress_PCATTACK
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;

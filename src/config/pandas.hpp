@@ -1336,6 +1336,7 @@
 		// 当玩家发起攻击并即将进行结算时触发实时事件 [聽風]
 		// 事件类型: Express / 事件名称: OnPCAttackExpress
 		// 常量名称: NPCX_PCATTACK / 变量名称: pcattack_express_name
+		#define Pandas_NpcExpress_PCATTACK
 
 		// 当玩家成功召唤出佣兵时触发实时事件 [HongShin]
 		// 事件类型: Express / 事件名称: OnPCMerCallExpress
