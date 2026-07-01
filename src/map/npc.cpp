@@ -7034,6 +7034,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCX_PC_TALK:
 		return script_config.pc_talk_express_name;	// OnPCTalkExpress		// 当玩家往聊天框发送信息时触发实时事件 [人鱼姬的思念]
 #endif // Pandas_NpcExpress_PC_TALK
+#ifdef Pandas_NpcExpress_PCHARMED
+	case NPCX_PCHARMED:
+		return script_config.pcharmed_express_name;	// OnPCHarmedExpress		// 当玩家受到伤害并即将进行结算时触发实时事件 [人鱼姬的思念]
+#endif // Pandas_NpcExpress_PCHARMED
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;

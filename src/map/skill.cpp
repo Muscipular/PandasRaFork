@@ -2887,6 +2887,39 @@ int64 skill_attack (int32 attack_type, block_list* src, block_list *dsrc, block_
 
 	damage = dmg.damage + dmg.damage2;
 
+#ifdef Pandas_NpcExpress_PCHARMED
+	if (src && bl && damage > 0) {
+		map_session_data* esd = nullptr;
+
+		if (bl->type != BL_PC) {
+			block_list* mbl = battle_get_master(bl);
+
+			if (mbl != nullptr && mbl->type == BL_PC)
+				esd = BL_CAST(BL_PC, mbl);
+		}
+
+		if (esd == nullptr && bl->type == BL_PC)
+			esd = BL_CAST(BL_PC, bl);
+
+		if (esd != nullptr) {
+			pc_setreg(esd, add_str("@harmed_target_type"), bl->type);
+			pc_setreg(esd, add_str("@harmed_target_gid"), bl->id);
+			pc_setreg(esd, add_str("@harmed_src_type"), src->type);
+			pc_setreg(esd, add_str("@harmed_src_gid"), src->id);
+			pc_setreg(esd, add_str("@harmed_src_mobid"), src->type == BL_MOB ? BL_CAST(BL_MOB, src)->mob_id : 0);
+			pc_setreg(esd, add_str("@harmed_damage_flag"), dmg.flag);
+			pc_setreg(esd, add_str("@harmed_damage_skillid"), skill_id);
+			pc_setreg(esd, add_str("@harmed_damage_skilllv"), skill_lv);
+			pc_setreg(esd, add_str("@harmed_damage_right"), dmg.damage);
+			pc_setreg(esd, add_str("@harmed_damage_left"), dmg.damage2);
+			npc_script_event(*esd, NPCX_PCHARMED);
+			dmg.damage = static_cast<int32>(cap_value(pc_readreg(esd, add_str("@harmed_damage_right")), INT_MIN, INT_MAX));
+			dmg.damage2 = static_cast<int32>(cap_value(pc_readreg(esd, add_str("@harmed_damage_left")), INT_MIN, INT_MAX));
+			damage = dmg.damage + dmg.damage2;
+		}
+	}
+#endif // Pandas_NpcExpress_PCHARMED
+
 #ifdef Pandas_NpcExpress_PCATTACK
 	if (src && bl && damage > 0) {
 		map_session_data* esd = nullptr;

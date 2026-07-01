@@ -1356,6 +1356,7 @@
 		// 当玩家受到伤害并即将进行结算时触发实时事件 [人鱼姬的思念]
 		// 事件类型: Express / 事件名称: OnPCHarmedExpress
 		// 常量名称: NPCX_PCHARMED / 变量名称: pcharmed_express_name
+		#define Pandas_NpcExpress_PCHARMED
 		// PYHELP - NPCEVENT - INSERT POINT - <Section 13>
 	#endif // Pandas_ScriptEngine_Express
 

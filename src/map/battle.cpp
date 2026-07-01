@@ -28,17 +28,17 @@
 #include "map.hpp"
 #include "mercenary.hpp"
 #include "mob.hpp"
-#ifdef Pandas_NpcExpress_PCATTACK
+#if defined(Pandas_NpcExpress_PCATTACK) || defined(Pandas_NpcExpress_PCHARMED)
 #include "npc.hpp"
-#endif // Pandas_NpcExpress_PCATTACK
+#endif // defined(Pandas_NpcExpress_PCATTACK) || defined(Pandas_NpcExpress_PCHARMED)
 #include "party.hpp"
 #include "path.hpp"
 #include "pc.hpp"
 #include "pc_groups.hpp"
 #include "pet.hpp"
-#ifdef Pandas_NpcExpress_PCATTACK
+#if defined(Pandas_NpcExpress_PCATTACK) || defined(Pandas_NpcExpress_PCHARMED)
 #include "script.hpp"
-#endif // Pandas_NpcExpress_PCATTACK
+#endif // defined(Pandas_NpcExpress_PCATTACK) || defined(Pandas_NpcExpress_PCHARMED)
 #include "./skills/skill_impl.hpp"
 
 using namespace rathena;
@@ -7409,6 +7409,39 @@ enum damage_lv battle_weapon_attack(block_list* src, block_list* target, t_tick 
 				skill_castend_damage_id(src, target, AB_DUPLELIGHT_MAGIC, sc->getSCE(SC_DUPLELIGHT)->val1, tick, flag | SD_LEVEL);
 		}
 	}
+
+#ifdef Pandas_NpcExpress_PCHARMED
+	if (src && target && damage > 0) {
+		map_session_data* esd = nullptr;
+
+		if (target->type != BL_PC) {
+			block_list* mbl = battle_get_master(target);
+
+			if (mbl != nullptr && mbl->type == BL_PC)
+				esd = BL_CAST(BL_PC, mbl);
+		}
+
+		if (esd == nullptr && target->type == BL_PC)
+			esd = BL_CAST(BL_PC, target);
+
+		if (esd != nullptr) {
+			pc_setreg(esd, add_str("@harmed_target_type"), target->type);
+			pc_setreg(esd, add_str("@harmed_target_gid"), target->id);
+			pc_setreg(esd, add_str("@harmed_src_type"), src->type);
+			pc_setreg(esd, add_str("@harmed_src_gid"), src->id);
+			pc_setreg(esd, add_str("@harmed_src_mobid"), src->type == BL_MOB ? BL_CAST(BL_MOB, src)->mob_id : 0);
+			pc_setreg(esd, add_str("@harmed_damage_flag"), wd.flag);
+			pc_setreg(esd, add_str("@harmed_damage_skillid"), 0);
+			pc_setreg(esd, add_str("@harmed_damage_skilllv"), 0);
+			pc_setreg(esd, add_str("@harmed_damage_right"), wd.damage);
+			pc_setreg(esd, add_str("@harmed_damage_left"), wd.damage2);
+			npc_script_event(*esd, NPCX_PCHARMED);
+			wd.damage = static_cast<int32>(cap_value(pc_readreg(esd, add_str("@harmed_damage_right")), INT_MIN, INT_MAX));
+			wd.damage2 = static_cast<int32>(cap_value(pc_readreg(esd, add_str("@harmed_damage_left")), INT_MIN, INT_MAX));
+			damage = wd.damage + wd.damage2;
+		}
+	}
+#endif // Pandas_NpcExpress_PCHARMED
 
 #ifdef Pandas_NpcExpress_PCATTACK
 	if (src && target && damage > 0) {

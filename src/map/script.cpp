@@ -419,6 +419,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcExpress_PC_TALK
 	"OnPCTalkExpress",	// NPCX_PC_TALK		// pc_talk_express_name	// 当玩家往聊天框发送信息时触发实时事件 [人鱼姬的思念]
 #endif // Pandas_NpcExpress_PC_TALK
+#ifdef Pandas_NpcExpress_PCHARMED
+	"OnPCHarmedExpress",	// NPCX_PCHARMED		// pcharmed_express_name	// 当玩家受到伤害并即将进行结算时触发实时事件 [人鱼姬的思念]
+#endif // Pandas_NpcExpress_PCHARMED
 	// NPC related
 	"OnTouch_",	//ontouch_event_name (runs on first visible char to enter area, picks another char if the first char leaves)
 	"OnTouch",	//ontouch2_event_name (run whenever a char walks into the OnTouch area)
