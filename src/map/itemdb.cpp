@@ -4078,6 +4078,41 @@ void ComboDatabase::loadingFinished() {
 	TypesafeYamlDatabase::loadingFinished();
 }
 
+#ifdef Pandas_Crashfix_RouletteData_UnInit
+// Method:      itemdb_dummy_roulette_db
+// Description: 禁用大乐透时的配置数据默认填充函数
+// Parameter:   void
+// Returns:     bool
+// Author:      Sola丶小克(CairoLee)  2020/8/11 22:39
+bool itemdb_dummy_roulette_db(void) {
+	// 由于 大乐透 功能可以在战斗配置选项中通过 feature.roulette 来禁用和启用
+	// 如果 GM 先将 feature.roulette 设置为 off, 进入游戏后再修改 feature.roulette 为 on 并使用
+	// @reloadbattleconf 来重新加载配置文件的话
+	// 在进行过上述操作后, 点击大乐透按钮会导致地图服务器崩溃.
+	// 为了修复上面这个问题, 改造了一下大乐透数据的加载逻辑, 当 feature.roulette 设为 off 的时候
+	// 会默认为 大乐透的数据变量 rd 填充上默认的 苹果
+	// 这样再进行上述操作的时候, 就不会再出现崩溃的问题了, 虽然看起来显得繁琐
+	int32 i, j;
+
+	for (j = 0; j < MAX_ROULETTE_LEVEL; j++) {
+		int32 limit = MAX_ROULETTE_COLUMNS - j;
+
+		rd.items[j] = limit;
+		RECREATE(rd.nameid[j], t_itemid, rd.items[j]);
+		RECREATE(rd.qty[j], uint16, rd.items[j]);
+		RECREATE(rd.flag[j], int32, rd.items[j]);
+
+		for (i = 0; i < rd.items[j]; i++) {
+			rd.nameid[j][i] = ITEMID_APPLE;
+			rd.qty[j][i] = 1;
+			rd.flag[j][i] = 0;
+		}
+	}
+
+	return true;
+}
+#endif // Pandas_Crashfix_RouletteData_UnInit
+
 /**
  * Process Roulette items
  */
@@ -5060,6 +5095,11 @@ static void itemdb_read(void) {
 
 	if (battle_config.feature_roulette)
 		itemdb_parse_roulette_db();
+#ifdef Pandas_Crashfix_RouletteData_UnInit
+	// 若没有启用大乐透功能, 那么也初始化一组默认的配置数据
+	else
+		itemdb_dummy_roulette_db();
+#endif // Pandas_Crashfix_RouletteData_UnInit
 
 #ifdef Pandas_Database_ItemProperties
 	// 加载 item_properties.yml 必须在 item_db.load(); 之后进行
@@ -5166,7 +5206,10 @@ void do_final_itemdb(void) {
 #ifdef Pandas_Database_ItemProperties
 	item_properties_db.clear();
 #endif // Pandas_Database_ItemProperties
+
+#ifndef Pandas_Crashfix_RouletteData_UnInit
 	if (battle_config.feature_roulette)
+#endif // Pandas_Crashfix_RouletteData_UnInit
 		itemdb_roulette_free();
 }
 
