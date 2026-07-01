@@ -28707,11 +28707,17 @@ BUILDIN_FUNC(openbank){
 	map_session_data* sd = nullptr;
 
 	if (!script_charid2sd(2, sd)) {
+#ifdef Pandas_ScriptCommand_OpenBank
+		script_pushint(st, 0);
+#endif // Pandas_ScriptCommand_OpenBank
 		return SCRIPT_CMD_FAILURE;
 	}
 
 	if( !battle_config.feature_banking ){
 		ShowError( "buildin_openbank: banking is disabled.\n" );
+#ifdef Pandas_ScriptCommand_OpenBank
+		script_pushint(st, 0);
+#endif // Pandas_ScriptCommand_OpenBank
 		return SCRIPT_CMD_FAILURE;
 	}
 
@@ -28727,6 +28733,9 @@ BUILDIN_FUNC(openbank){
 #endif // Pandas_MapFlag_NoBank
 
 	clif_ui_open( *sd, OUT_UI_BANK, 0 );
+#ifdef Pandas_ScriptCommand_OpenBank
+	script_pushint(st, 1);
+#endif // Pandas_ScriptCommand_OpenBank
 	return SCRIPT_CMD_SUCCESS;
 #endif
 }
