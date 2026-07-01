@@ -4513,6 +4513,13 @@ bool mobskill_use(mob_data *md, t_tick tick, int32 event, int64 damage)
 
 	std::vector<std::shared_ptr<s_mob_skill>> &ms = md->db->skill;
 
+#ifdef Pandas_MapFlag_NoSkill2
+	if (map_getmapflag(md->m, MF_NOSKILL2)) {
+		if ((map_getmapflag_param(md->m, MF_NOSKILL2, 1) & BL_MOB) == BL_MOB)
+			return 0;
+	}
+#endif // Pandas_MapFlag_NoSkill2
+
 	if (!battle_config.mob_skill_rate || md->ud.skilltimer != INVALID_TIMER || ms.empty() || status_has_mode(&md->status,MD_NOCAST))
 		return 0;
 

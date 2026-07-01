@@ -485,6 +485,13 @@ bool elemental_skillnotok( uint16 skill_id, s_elemental_data& ed ){
 		return false;
 	}
 
+#ifdef Pandas_MapFlag_NoSkill2
+	if (map_getmapflag(ed.m, MF_NOSKILL2)) {
+		if ((map_getmapflag_param(ed.m, MF_NOSKILL2, 1) & BL_ELEM) == BL_ELEM)
+			return false;
+	}
+#endif // Pandas_MapFlag_NoSkill2
+
 	// Check if it's ok for master as well
 	if( ed.master != nullptr ){
 		return skill_isNotOk( skill_id, *ed.master );

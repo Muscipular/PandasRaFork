@@ -889,6 +889,13 @@ bool skill_isNotOk( uint16 skill_id, map_session_data& sd ){
 	if( sd.sc.getSCE(SC_ALL_RIDING) )
 		return true; //You can't use skills while in the new mounts (The client doesn't let you, this is to make cheat-safe)
 
+#ifdef Pandas_MapFlag_NoSkill2
+	if (map_getmapflag(sd.m, MF_NOSKILL2)) {
+		if ((map_getmapflag_param(sd.m, MF_NOSKILL2, 1) & BL_PC) == BL_PC)
+			return true;
+	}
+#endif // Pandas_MapFlag_NoSkill2
+
 	switch (skill_id) {
 		case AL_WARP:
 		case RETURN_TO_ELDICASTES:
@@ -1015,6 +1022,13 @@ bool skill_isNotOk_hom(homun_data *hd, uint16 skill_id, uint16 skill_lv)
 {
 	nullpo_retr(true, hd);
 
+#ifdef Pandas_MapFlag_NoSkill2
+	if (map_getmapflag(hd->m, MF_NOSKILL2)) {
+		if ((map_getmapflag_param(hd->m, MF_NOSKILL2, 1) & BL_HOM) == BL_HOM)
+			return false;
+	}
+#endif // Pandas_MapFlag_NoSkill2
+
 	int8 spiritball = skill_get_spiritball(skill_id, skill_lv);
 	map_session_data* sd = hd->master;
 	status_change* sc = status_get_sc(hd);
@@ -1133,6 +1147,13 @@ bool skill_isNotOk_hom(homun_data *hd, uint16 skill_id, uint16 skill_lv)
  * @return true: Skill cannot be used, false: otherwise
  */
 bool skill_isNotOk_mercenary( uint16 skill_id, s_mercenary_data& md ){
+#ifdef Pandas_MapFlag_NoSkill2
+	if (map_getmapflag(md.m, MF_NOSKILL2)) {
+		if ((map_getmapflag_param(md.m, MF_NOSKILL2, 1) & BL_MER) == BL_MER)
+			return false;
+	}
+#endif // Pandas_MapFlag_NoSkill2
+
 	map_session_data* sd = md.master;
 
 	if (sd == nullptr)

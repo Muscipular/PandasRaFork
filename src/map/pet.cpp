@@ -717,6 +717,13 @@ int32 pet_attackskill(pet_data *pd, int32 target_id)
 	if (DIFF_TICK(pd->ud.canact_tick, gettick()) > 0)
 		return 0;
 
+#ifdef Pandas_MapFlag_NoSkill2
+	if (pd && map_getmapflag(pd->m, MF_NOSKILL2)) {
+		if ((map_getmapflag_param(pd->m, MF_NOSKILL2, 1) & BL_PET) == BL_PET)
+			return 0;
+	}
+#endif // Pandas_MapFlag_NoSkill2
+
 	if (rnd_chance((pd->a_skill->rate +pd->pet.intimate*pd->a_skill->bonusrate/1000), 100)) { // Skotlex: Use pet's skill
 		int32 inf;
 		block_list *bl;
@@ -2179,6 +2186,13 @@ TIMER_FUNC(pet_skill_support_timer){
 		return 1;
 
 	pd = sd->pd;
+
+#ifdef Pandas_MapFlag_NoSkill2
+	if (pd && map_getmapflag(pd->m, MF_NOSKILL2)) {
+		if ((map_getmapflag_param(pd->m, MF_NOSKILL2, 1) & BL_PET) == BL_PET)
+			return 1;
+	}
+#endif // Pandas_MapFlag_NoSkill2
 
 	if(pd->s_skill->timer != tid) {
 		ShowError("pet_skill_support_timer %d != %d\n",pd->s_skill->timer,tid);
