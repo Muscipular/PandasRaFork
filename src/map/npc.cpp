@@ -109,10 +109,14 @@ int32 npc_get_new_npc_id(void) {
 static DBMap* ev_db; // const char* event_name -> struct event_data*
 static DBMap* npcname_db; // const char* npc_name -> npc_data*
 
+#ifndef Pandas_Redeclaration_Struct_Event_Data
+// 此处的结构体需要暴露给 script.cpp 使用, 因此转移到 npc.hpp 中声明
+// 未来若 rAthena 修改了此结构体的声明, 那么必须复制到 npc.hpp 中去才可以 [Sola丶小克]
 struct event_data {
 	npc_data *nd;
 	int32 pos;
 };
+#endif // Pandas_Redeclaration_Struct_Event_Data
 
 static struct eri *timer_event_ers; //For the npc timer data. [Skotlex]
 

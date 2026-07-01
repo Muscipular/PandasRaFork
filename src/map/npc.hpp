@@ -157,6 +157,13 @@ enum e_npcv_status : uint8 {
 	NPCVIEW_CLOAK     = NPCVIEW_CLOAKOFF | NPCVIEW_CLOAKON,
 };
 
+#ifdef Pandas_Redeclaration_Struct_Event_Data
+struct event_data {
+	struct npc_data* nd;
+	int32 pos;
+};
+#endif // Pandas_Redeclaration_Struct_Event_Data
+
 struct npc_data : public block_list {
 	struct unit_data ud; //Because they need to be able to move....
 #ifdef Pandas_Struct_Unit_CommonData

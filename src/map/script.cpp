@@ -29733,8 +29733,19 @@ BUILDIN_FUNC(script4each) {
 	int pos = 0;
 	bool script_needfree = false;
 
-	script = parse_script(execute_script, script_getfuncname(st), 0, SCRIPT_IGNORE_EXTERNAL_BRACKETS);
-	script_needfree = (script != nullptr);
+#if !defined(Pandas_Helper_Common_Function) || !defined(Pandas_Redeclaration_Struct_Event_Data)
+	ShowWarning("This version is not support 'NPCNAME::EVENT' script in '%s' command.\n", script_getfuncname(st));
+#else
+	struct event_data* ev = npc_event_data(execute_script);
+	if (ev != nullptr) {
+		script = ev->nd->u.scr.script;
+		pos = ev->pos;
+	}
+	else {
+		script = parse_script(execute_script, script_getfuncname(st), 0, SCRIPT_IGNORE_EXTERNAL_BRACKETS);
+		script_needfree = (script != nullptr);
+	}
+#endif // !defined(Pandas_Helper_Common_Function) || !defined(Pandas_Redeclaration_Struct_Event_Data)
 	struct s_mapiterator *iter = nullptr;
 	struct block_list* bl = nullptr;
 	enum bl_type bltype = BL_PC;
