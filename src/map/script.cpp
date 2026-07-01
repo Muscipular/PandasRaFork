@@ -395,6 +395,9 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcEvent_USE_SKILL
 	"OnPCUseSkillEvent",	// NPCE_USE_SKILL		// use_skill_event_name	// 当玩家成功使用技能后触发事件
 #endif // Pandas_NpcEvent_USE_SKILL
+#ifdef Pandas_NpcEvent_EQUIP
+	"OnPCEquipEvent",	// NPCE_EQUIP		// equip_event_name	// 当玩家成功穿戴一件装备时触发事件
+#endif // Pandas_NpcEvent_EQUIP
 #ifdef Pandas_NpcExpress_STATCALC
 	"OnPCStatCalcEvent",	// NPCE_STATCALC		// statcalc_express_name	// 当角色能力被重新计算时触发事件
 #endif // Pandas_NpcExpress_STATCALC

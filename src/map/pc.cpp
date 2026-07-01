@@ -12748,6 +12748,15 @@ bool pc_equipitem(map_session_data *sd,int16 n,int32 req_pos,bool equipswitch, b
 	}
 	sd->npc_item_flag = iflag;
 
+#ifdef Pandas_NpcEvent_EQUIP
+	if (!equipswitch) {
+		pc_setreg(sd, add_str("@equip_idx"), (int)n);
+		pc_setreg(sd, add_str("@equip_pos"), (int)n);	// 为兼容脚本而添加
+		pc_setreg(sd, add_str("@equip_swapping"), swapping ? 1 : 0);
+		npc_script_event(*sd, NPCE_EQUIP);
+	}
+#endif // Pandas_NpcEvent_EQUIP
+
 	return true;
 }
 

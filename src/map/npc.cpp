@@ -7021,6 +7021,10 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCE_USE_SKILL:
 		return script_config.use_skill_event_name;	// OnPCUseSkillEvent		// 当玩家成功使用技能后触发事件
 #endif // Pandas_NpcEvent_USE_SKILL
+#ifdef Pandas_NpcEvent_EQUIP
+	case NPCE_EQUIP:
+		return script_config.equip_event_name;	// OnPCEquipEvent		// 当玩家成功穿戴一件装备时触发事件
+#endif // Pandas_NpcEvent_EQUIP
 #ifdef Pandas_NpcExpress_STATCALC
 	case NPCE_STATCALC:
 		return script_config.statcalc_express_name;	// OnPCStatCalcEvent		// 当角色能力被重新计算时触发事件
