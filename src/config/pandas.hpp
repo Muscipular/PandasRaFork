@@ -1424,6 +1424,7 @@
 
 	// 使 yaml2sql 辅助工具在加载 YAML 文件时能给个提示
 	// 否则容易因加载时间过长, 给使用者造成程序已经卡死的错觉 [Sola丶小克]
+	#define Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
 
 	// 调整 yaml2sql 辅助工具的询问确认流程 [Sola丶小克]
 	// 先询问是否能覆盖目标文件, 再尝试去加载来源数据文件, 以便优化体验

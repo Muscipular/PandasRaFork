@@ -176,6 +176,9 @@ bool process( const std::string& type, uint32 version, const std::vector<std::st
 			inNode.reset();
 
 			try {
+#ifdef Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
+				ShowStatus("Loading '" CL_WHITE "%s" CL_RESET "'..." CL_CLL "\r", from.c_str());
+#endif // Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
 				inNode = YAML::LoadFile(from);
 			} catch (YAML::Exception &e) {
 				ShowError("%s (Line %d: Column %d)\n", e.msg.c_str(), e.mark.line, e.mark.column);
@@ -746,8 +749,15 @@ static bool item_db_yaml2sql(const std::string &file, const std::string &table) 
 
 		outFile << "REPLACE INTO `" + table + "` (" + column + ") VALUES (" + value + ");\n";
 		entries++;
+
+#ifdef Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
+		ShowStatus("Converting %" PRIdPTR " items in '" CL_WHITE "%s" CL_RESET "'" CL_CLL "\r", entries, file.c_str());
+#endif // Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
 	}
 
+#ifdef Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
+	ShowMessage(CL_CLL);
+#endif // Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
 	ShowStatus("Done converting '" CL_WHITE "%zu" CL_RESET "' items in '" CL_WHITE "%s" CL_RESET "'.\n", entries, file.c_str());
 
 	return true;
@@ -961,8 +971,15 @@ static bool mob_db_yaml2sql(const std::string &file, const std::string &table) {
 
 		outFile << "REPLACE INTO `" + table + "` (" + column + ") VALUES (" + value + ");\n";
 		entries++;
+
+#ifdef Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
+		ShowStatus("Converting %" PRIdPTR " mobs in '" CL_WHITE "%s" CL_RESET "'" CL_CLL "\r", entries, file.c_str());
+#endif // Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
 	}
 
+#ifdef Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
+	ShowMessage(CL_CLL);
+#endif // Pandas_UserExperience_Yaml2Sql_LoadFile_Tips
 	ShowStatus("Done converting '" CL_WHITE "%zu" CL_RESET "' mobs in '" CL_WHITE "%s" CL_RESET "'.\n", entries, file.c_str());
 
 	return true;
