@@ -11854,6 +11854,22 @@ ACMD_FUNC(aura) {
 }
 #endif // Pandas_AtCommand_Aura
 
+#ifdef Pandas_AtCommand_ReloadLaphineDB
+/* ===========================================================
+ * 指令: reloadlaphinedb
+ * 描述: 重新加载 Laphine 数据库 (laphine_*.yml)
+ * 用法: @reloadlaphinedb
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+ACMD_FUNC(reloadlaphinedb) {
+	laphine_synthesis_db.reload();
+	laphine_upgrade_db.reload();
+	clif_displaymessage(fd, msg_txt_cn(sd, 142)); // Laphine database has been reloaded.
+
+	return 0;
+}
+#endif // Pandas_AtCommand_ReloadLaphineDB
+
 #ifdef Pandas_AtCommand_ReloadAuraDB
 /* ===========================================================
  * 指令: reloadauradb
@@ -11911,6 +11927,9 @@ void atcommand_basecommands(void) {
 #ifdef Pandas_AtCommand_Aura
 		ACMD_DEF(aura),					// 激活指定的光环组合 [Sola丶小克]
 #endif // Pandas_AtCommand_Aura
+#ifdef Pandas_AtCommand_ReloadLaphineDB
+		ACMD_DEF(reloadlaphinedb),		// 重新加载 Laphine 数据库 [Sola丶小克]
+#endif // Pandas_AtCommand_ReloadLaphineDB
 #ifdef Pandas_AtCommand_ReloadAuraDB
 		ACMD_DEF(reloadauradb),			// 重新加载光环数据库 [Sola丶小克]
 #endif // Pandas_AtCommand_ReloadAuraDB
