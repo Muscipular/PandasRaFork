@@ -1763,6 +1763,7 @@
 	#define Pandas_ScriptCommand_StatusCalc
 	// 是否启用 getequipexpiretick 脚本指令 [Sola丶小克]
 	// 获取指定位置装备的租赁到期剩余秒数 (该指令有一个用于兼容的别名: isrental)
+	#define Pandas_ScriptCommand_GetEquipExpireTick
 	// 是否启用 getinventoryinfo 系列脚本指令 [Sola丶小克]
 	// 查询指定背包、公会仓库、手推车、个人仓库/扩充仓库序号的道具详细信息
 	// 包含以下几个指令变体:

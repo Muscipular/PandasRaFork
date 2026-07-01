@@ -31103,6 +31103,51 @@ BUILDIN_FUNC(getequipidx) {
 }
 #endif // Pandas_ScriptCommand_GetEquipIdx
 
+#ifdef Pandas_ScriptCommand_GetEquipExpireTick
+/* ===========================================================
+ * 指令: getequipexpiretick
+ * 描述: 获取指定位置装备的租赁到期剩余秒数
+ * 用法: getequipexpiretick <EQI装备位置>{,<角色编号>};
+ * 返回: 获取失败返回各种负数, 返回 0 表示目标装备非租赁, 其他非 0 正整数则代表剩余秒数
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getequipexpiretick) {
+	map_session_data *sd = nullptr;
+	int equip_num = script_getnum(st, 2), idx = -1;
+	int64 left_seconds = 0;
+
+	if (!script_charid2sd(3, sd)) {
+		script_pushint(st, -3);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!equip_index_check(equip_num)) {
+		script_pushint(st, -2);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	idx = pc_checkequip(sd, equip_bitmask[equip_num]);
+	if (idx < 0 || idx >= sd->inventory.max_amount) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (!sd->inventory.u.items_inventory[idx].expire_time) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	left_seconds = (int64)(sd->inventory.u.items_inventory[idx].expire_time - time(nullptr));
+	if (left_seconds < 0) {
+		script_pushint(st, -4);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	script_pushint(st, left_seconds);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetEquipExpireTick
+
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 /* ===========================================================
  * 指令: getmapspawns
@@ -31959,6 +32004,10 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF2(recalculatestat, "statuscalc", ""), // 由于 rAthena 已经实现 recalculatestat 指令, 这里兼容老版本 statuscalc 指令 [Sola丶小克]
 	BUILDIN_DEF2(recalculatestat, "status_calc", ""), // 由于 rAthena 已经实现 recalculatestat 指令, 这里兼容老版本 status_calc 指令
 #endif // Pandas_ScriptCommand_StatusCalc
+#ifdef Pandas_ScriptCommand_GetEquipExpireTick
+	BUILDIN_DEF(getequipexpiretick, "i?"), // 获取指定位置装备的租赁到期剩余秒数 [Sola丶小克]
+	BUILDIN_DEF2(getequipexpiretick, "isrental", "i?"), // 指定一个别名, 以便兼容的老版本或其他服务端
+#endif // Pandas_ScriptCommand_GetEquipExpireTick
 #ifdef Pandas_ScriptCommand_GetMapSpawns
 	BUILDIN_DEF(getmapspawns, "s?"), // 获取指定地图的魔物刷新点信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetMapSpawns
