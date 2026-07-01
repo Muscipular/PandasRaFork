@@ -14,6 +14,11 @@ void SkillMeteorStorm::castendPos2(block_list* src, int32 x, int32 y, uint16 ski
 	int32 area = skill_get_splash(getSkillId(), skill_lv);
 	int16 tmpx = 0, tmpy = 0;
 
+#ifdef Pandas_Crashfix_Divide_by_Zero
+	if (skill_get_unit_interval(getSkillId()) == 0)
+		return;
+#endif // Pandas_Crashfix_Divide_by_Zero
+
 	for (int32 i = 1; i <= skill_get_time(getSkillId(), skill_lv) / skill_get_unit_interval(getSkillId()); i++) {
 		// Creates a random Cell in the Splash Area
 		tmpx = x - area + rnd() % (area * 2 + 1);

@@ -12393,6 +12393,11 @@ static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_t
 			}
 			break;
 		case SC_GLOOMYDAY_SK:
+#ifdef Pandas_Crashfix_Divide_by_Zero
+			// 极端情况下可能会造成除数为零的情况, 曾经有人崩溃后上报过 [Sola丶小克]
+			if (((sd ? pc_checkskill(sd, WM_LESSON) * 5 : 0) + val1 * 10) == 0)
+				break;
+#endif // Pandas_Crashfix_Divide_by_Zero
 			// Random number between [15 ~ (Voice Lesson Skill Level x 5) + (Skill Level x 10)] %.
 			val2 = 15 + rnd()%( (sd?pc_checkskill(sd, WM_LESSON)*5:0) + val1*10 );
 			break;
