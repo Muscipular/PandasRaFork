@@ -31461,6 +31461,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_InstanceUsers
 	BUILDIN_DEF(instance_users, "i"), // 获取指定的副本实例中, 已经进入副本地图的人数 [Sola丶小克]
 #endif // Pandas_ScriptCommand_InstanceUsers
+#ifdef Pandas_ScriptCommand_CapValue
+	BUILDIN_DEF2(cap_value, "cap", "iii"), // 为 cap_value 指定一个别名, 以便兼容的老版本或其他服务端 [Sola丶小克]
+#endif // Pandas_ScriptCommand_CapValue
 	BUILDIN_DEF(escape_sql,"v"),
 	BUILDIN_DEF(atoi,"s"),
 	BUILDIN_DEF(strtol,"si"),

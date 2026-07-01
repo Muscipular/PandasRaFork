@@ -1711,6 +1711,7 @@
 	#define Pandas_ScriptCommand_InstanceUsers
 	// 是否启用 cap 脚本指令 [Sola丶小克]
 	// 由于 rAthena 已经实现 cap_value 指令, 这里兼容老版本 cap 指令
+	#define Pandas_ScriptCommand_CapValue
 	// 是否启用 mobremove 脚本指令 [Sola丶小克]
 	// 根据 GID 移除一个魔物单位 (只是移除, 不会让魔物死亡)
 	#define Pandas_ScriptCommand_MobRemove
