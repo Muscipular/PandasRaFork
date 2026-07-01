@@ -19,6 +19,7 @@
 #endif // _WIN32
 
 bool isRegexMatched(const std::string& content, const std::string& patterns);
+void isaAvailableHotfix();
 void deployImportDirectories();
 bool getExecuteFilepath(std::string& outFilepath);
 bool getExecuteFileDirectory(std::string& outFileDirectory);

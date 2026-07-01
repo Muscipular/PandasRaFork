@@ -15,6 +15,10 @@
 #include "processmutex.hpp"
 #include "showmsg.hpp"
 
+#if defined(_MSC_VER)
+extern "C" int __isa_available;
+#endif // defined(_MSC_VER)
+
 #ifdef _WIN32
 #include <Windows.h>
 #else
@@ -32,6 +36,14 @@ bool isRegexMatched(const std::string& content, const std::string& patterns) {
 		ShowWarning("%s throw regex_error : %s\n", __func__, e.what());
 		return false;
 	}
+}
+
+void isaAvailableHotfix() {
+#if defined(_MSC_VER) && _MSC_VER == 1923
+	if (__isa_available > 5) {
+		__isa_available = 5;
+	}
+#endif // defined(_MSC_VER) && _MSC_VER == 1923
 }
 
 bool deployImportDirectory(std::string fromImportDir, std::string toImportDir) {
