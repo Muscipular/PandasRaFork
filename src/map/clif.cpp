@@ -10294,6 +10294,10 @@ void clif_name( const block_list* src, const block_list* bl, send_target target 
 				safestrncpy( packet.party_name, p->party.name, NAME_LENGTH );
 			}
 
+#ifdef Pandas_MapFlag_HideGuildInfo
+			const bool hide_guild_info = map_getmapflag(sd->bl.m, MF_HIDEGUILDINFO);
+#endif // Pandas_MapFlag_HideGuildInfo
+
 			if( sd->guild ){
 				int32 position;
 
@@ -10302,6 +10306,13 @@ void clif_name( const block_list* src, const block_list* bl, send_target target 
 
 				safestrncpy( packet.guild_name, sd->guild->guild.name, NAME_LENGTH );
 				safestrncpy( packet.position_name, sd->guild->guild.position[position].name, NAME_LENGTH );
+#ifdef Pandas_MapFlag_HideGuildInfo
+				// 若当前地图启用了 hideguildinfo 标记, 除了自己之外不再返回角色的公会名称和职位名称.
+				if (hide_guild_info && src->id != bl->id) {
+					safestrncpy(packet.guild_name, "", NAME_LENGTH);
+					safestrncpy(packet.position_name, "", NAME_LENGTH);
+				}
+#endif // Pandas_MapFlag_HideGuildInfo
 			}else if( sd->clan ){
 				safestrncpy( packet.position_name, sd->clan->name, NAME_LENGTH );
 			}
@@ -10309,6 +10320,17 @@ void clif_name( const block_list* src, const block_list* bl, send_target target 
 #if PACKETVER_MAIN_NUM >= 20150225 || PACKETVER_RE_NUM >= 20141126 || defined( PACKETVER_ZERO )
 			packet.title_id = sd->status.title_id; // Title ID
 #endif
+
+#ifdef Pandas_MapFlag_HideGuildInfo
+			if (sd->guild && hide_guild_info && src == bl && target == AREA) {
+				// clif_name_area 使用 src == bl 广播, 需要拆成自己完整可见、周围玩家隐藏公会信息.
+				clif_send(&packet, sizeof(packet), src, SELF);
+				safestrncpy(packet.guild_name, "", NAME_LENGTH);
+				safestrncpy(packet.position_name, "", NAME_LENGTH);
+				clif_send(&packet, sizeof(packet), src, AREA_WOS);
+				return;
+			}
+#endif // Pandas_MapFlag_HideGuildInfo
 
 			clif_send(&packet, sizeof(packet), src, target);
 		}

@@ -778,6 +778,9 @@
 #ifdef Pandas_MapFlag_NoToken
 	export_constant(MF_NOTOKEN);
 #endif // Pandas_MapFlag_NoToken
+#ifdef Pandas_MapFlag_HideGuildInfo
+	export_constant(MF_HIDEGUILDINFO);
+#endif // Pandas_MapFlag_HideGuildInfo
 #ifdef Pandas_MapFlag_NoCapture
 	export_constant(MF_NOCAPTURE);
 #endif // Pandas_MapFlag_NoCapture

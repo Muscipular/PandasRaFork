@@ -1295,6 +1295,7 @@
 
 	// 是否启用 hideguildinfo 地图标记 [Sola丶小克]
 	// 使当前地图上的玩家无法见到其他人的公会图标、公会名称、职位等信息 (自己依然可见)
+	#define Pandas_MapFlag_HideGuildInfo
 
 	// 是否启用 hidepartyinfo 地图标记 [Sola丶小克]
 	// 使当前地图上的玩家无法见到其他人的队伍名称 (自己依然可见)

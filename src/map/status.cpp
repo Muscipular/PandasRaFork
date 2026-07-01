@@ -9465,6 +9465,11 @@ int32 status_get_guild_id(const block_list* bl)
 int32 status_get_emblem_id(const block_list* bl)
 {
 	nullpo_ret(bl);
+#ifdef Pandas_MapFlag_HideGuildInfo
+	// 若当前地图有 hideguildinfo 标记, 不返回角色公会的图标编号.
+	if (bl->m != -1 && map_getmapflag(bl->m, MF_HIDEGUILDINFO))
+		return 0;
+#endif // Pandas_MapFlag_HideGuildInfo
 	switch (bl->type) {
 		case BL_PC:
 			return static_cast<const map_session_data*>(bl)->guild_emblem_id;
