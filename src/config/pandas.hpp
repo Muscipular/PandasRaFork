@@ -1,5 +1,15 @@
 #pragma once
 
+#include "../custom/defines_pre.hpp"
+#include "./packets.hpp"
+#include "./renewal.hpp"
+#include "./secure.hpp"
+#include "./classes/general.hpp"
+#include "../custom/defines_post.hpp"
+
+#define Pandas
+
+#ifdef Pandas
 	#define Pandas_Basic
 	#define Pandas_DatabaseIncrease
 	#define Pandas_InternalConfigure
@@ -24,6 +34,7 @@
 	#define Pandas_ScriptResults
 	#define Pandas_ScriptParams
 	#define Pandas_WebServer
+#endif // Pandas
 
 #ifndef GIT_BRANCH
 	#define GIT_BRANCH ""

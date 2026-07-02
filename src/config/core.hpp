@@ -12,6 +12,8 @@
 #include <custom/defines_pre.hpp>
 
 #include <config/pandas.hpp>
+#include <common/assistant.hpp>
+#include <common/performance.hpp>
 #include <common/utf8_defines.hpp>
 
 /// Max number of items on @autolootid list
