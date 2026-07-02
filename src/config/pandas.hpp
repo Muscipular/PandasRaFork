@@ -1946,6 +1946,7 @@
 	#endif // Pandas_Struct_Map_Data_Mob_Spawns
 	// 是否启用 getcalendartime 脚本指令 [Haru]
 	// 该指令用于获取下次出现指定时间的 UNIX 时间戳
+	#define Pandas_ScriptCommand_GetCalendarTime
 	// 是否启用 getskillinfo 脚本指令 [聽風]
 	// 该指令用于获取指定技能在技能数据库中所配置的各项信息
 	// 是否启用 boss_monster 脚本指令 [人鱼姬的思念]
