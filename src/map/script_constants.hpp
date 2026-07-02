@@ -871,6 +871,7 @@
 	export_constant(MF_SPECIALPOPUP);
 	export_constant(MF_NOMACROCHECKER);
 	export_constant(MF_INVINCIBLE_TIME);
+	// PYHELP - MAPFLAG - INSERT POINT - <Section 3>
 
 	/* setcell types */
 	export_constant(CELL_WALKABLE);
