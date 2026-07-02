@@ -17480,7 +17480,7 @@ void clif_parse_Mail_return(int32 fd, map_session_data *sd){
 	int32 mail_id = p->msgId;
 
 	// not supported for now
-	return;
+	// return;
 #else
 	int32 mail_id = RFIFOL(fd,packet_db[RFIFOW(fd,0)].pos[0]);
 #endif
