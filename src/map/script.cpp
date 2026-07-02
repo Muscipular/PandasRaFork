@@ -8827,8 +8827,13 @@ BUILDIN_FUNC(getitem2)
 		if (strcmpi(command,"getitem3") == 0) {
 			offset = 11;
 			aid_pos = 14;
-		} 
+		}
+#ifndef Pandas_ScriptCommand_GetGradeItem
 		if (strcmpi(command,"getitem4") == 0) {
+#else
+		// 给 getitem4 添加一个别名叫 getgradeitem
+		if (strcmpi(command,"getitem4") == 0 || strcmpi(command, "getgradeitem") == 0) {
+#endif // Pandas_ScriptCommand_GetGradeItem
 			grade_offset = 11;
 			offset = 12;
 			aid_pos = 15;
@@ -33819,6 +33824,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_Next_Dropitem_Special
 	BUILDIN_DEF(next_dropitem_special, "iii"), // 对下一个掉落到地面上的物品进行特殊设置 [Sola丶小克]
 #endif // Pandas_ScriptCommand_Next_Dropitem_Special
+#ifdef Pandas_ScriptCommand_GetGradeItem
+	BUILDIN_DEF2(getitem2, "getgradeitem", "viiiiiiiiirrr?"), // 创造带有指定附魔评级的道具 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetGradeItem
 #ifdef Pandas_ScriptCommand_MobRemove
 	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
 #endif // Pandas_ScriptCommand_MobRemove
