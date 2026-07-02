@@ -1949,6 +1949,7 @@
 	#define Pandas_ScriptCommand_GetCalendarTime
 	// 是否启用 getskillinfo 脚本指令 [聽風]
 	// 该指令用于获取指定技能在技能数据库中所配置的各项信息
+	#define Pandas_ScriptCommand_GetSkillInfo
 	// 是否启用 boss_monster 脚本指令 [人鱼姬的思念]
 	// 该指令用于召唤魔物并使之能被 BOSS 雷达探测 (哪怕被召唤魔物本身不是 BOSS)
 	// 此选项依赖 Pandas_FuncDefine_Mob_Once_Spawn 的拓展

@@ -31271,6 +31271,144 @@ BUILDIN_FUNC(getcalendartime) {
 }
 #endif // Pandas_ScriptCommand_GetCalendarTime
 
+#ifdef Pandas_ScriptCommand_GetSkillInfo
+/* ===========================================================
+ * 指令: getskillinfo
+ * 描述: 获取指定技能在技能数据库中所配置的各项信息
+ * 用法: getskillinfo <查询的信息类型>,<技能编号>{,<技能等级>{,<角色编号>}};
+ * 用法: getskillinfo <查询的信息类型>,<"技能名称">{,<技能等级>{,<角色编号>}};
+ * 返回: 请查阅 doc/pandas_script_commands.txt 中的说明
+ * 作者: 聽風
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getskillinfo) {
+	int type = 0;
+	uint16 skill_id = 0;
+	int i = 0, j = 0;
+	int skill_lv = (script_hasdata(st, 4) && script_isint(st, 4)) ? script_getnum(st, 4) : 0;
+	int char_id = (script_hasdata(st, 5) && script_isint(st, 5)) ? script_getnum(st, 5) : 0;
+
+	type = script_getnum(st, 2);
+	if (script_isstring(st, 3)) {
+		const char *name = script_getstr(st, 3);
+		if (!(skill_id = skill_name2id(name))) {
+			ShowError("buildin_getskillinfo: Invalid skill name %s.\n", name);
+			return SCRIPT_CMD_FAILURE;
+		}
+	} else {
+		skill_id = script_getnum(st, 3);
+		if (!skill_get_index(skill_id)) {
+			ShowError("buildin_getskillinfo: Invalid skill ID %d.\n", skill_id);
+			return SCRIPT_CMD_FAILURE;
+		}
+	}
+
+	std::shared_ptr<s_skill_db> skill = skill_db.find(skill_id);
+	if (skill == nullptr) {
+		ShowError("buildin_getskillinfo: Invalid skill ID %d.\n", skill_id);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	switch (type) {
+		case SKI_CASTTYPE: script_pushint(st, skill_get_casttype(skill_id)); break;
+		case SKI_NAME: script_pushstrcopy(st, skill_get_name(skill_id)); break;
+		case SKI_DESCRIPTION: script_pushstrcopy(st, skill_get_desc(skill_id)); break;
+		case SKI_MAXLEVEL_IN_SKILLTREE: script_pushint(st, skill_tree_get_max(skill_id,skill_lv)); break;
+		case SKI_SKILLTYPE: script_pushint(st, skill_get_type(skill_id)); break;
+		case SKI_HIT: script_pushint(st, skill_get_hit(skill_id)); break;
+		case SKI_TARGETTYPE: script_pushint(st, skill_get_inf(skill_id)); break;
+		case SKI_ELEMENT: script_pushint(st, skill_get_ele(skill_id,skill_lv)); break;
+		case SKI_MAXLEVEL: script_pushint(st, skill_get_max(skill_id)); break;
+		case SKI_RANGE: script_pushint(st, skill_get_range(skill_id,skill_lv)); break;
+		case SKI_SPLASHAREA: script_pushint(st, skill_get_splash(skill_id,skill_lv)); break;
+		case SKI_HITCOUNT: script_pushint(st, skill_get_num(skill_id,skill_lv)); break;
+		case SKI_CASTTIME: script_pushint(st, skill_get_cast(skill_id,skill_lv)); break;
+#ifdef RENEWAL_CAST
+		case SKI_FIXEDCASTTIME: script_pushint(st, skill_get_fixed_cast(skill_id,skill_lv)); break;
+#else
+		case SKI_FIXEDCASTTIME: script_pushint(st, -1); break;
+#endif // RENEWAL_CAST
+		case SKI_AFTERCASTACTDELAY: script_pushint(st, skill_get_delay(skill_id,skill_lv)); break;
+		case SKI_AFTERCASTWALKDELAY: script_pushint(st, skill_get_walkdelay(skill_id,skill_lv)); break;
+		case SKI_DURATION1: script_pushint(st, skill_get_time(skill_id,skill_lv)); break;
+		case SKI_DURATION2: script_pushint(st, skill_get_time2(skill_id,skill_lv)); break;
+		case SKI_CASTTIMEFLAGS: script_pushint(st, skill_get_castnodex(skill_id)); break;
+		case SKI_CASTDELAYFLAGS: script_pushint(st, skill_get_delaynodex(skill_id)); break;
+		case SKI_CASTDEFENSEREDUCTION: script_pushint(st, skill_get_castdef(skill_id)); break;
+		case SKI_CASTCANCEL: script_pushint(st, skill_get_castcancel(skill_id)); break;
+		case SKI_ACTIVEINSTANCE: script_pushint(st, skill_get_maxcount(skill_id,skill_lv)); break;
+		case SKI_KNOCKBACK: script_pushint(st, skill_get_blewcount(skill_id,skill_lv)); break;
+		case SKI_COOLDOWN: script_pushint(st, skill_get_cooldown(skill_id,skill_lv)); break;
+		case SKI_NONEARNPC_TYPE: script_pushint(st, skill->unit_nonearnpc_type); break;
+		case SKI_NONEARNPC_ADDITIONALRANGE: script_pushint(st, skill->unit_nonearnpc_range); break;
+		case SKI_COPYFLAGS_SKILL: script_pushint(st, skill->copyable.option); break;
+		case SKI_COPYFLAGS_REMOVEREQUIREMENT: script_pushint(st, skill->copyable.req_opt); break;
+		case SKI_UNIT_ID: script_pushint(st, skill_get_unit_id(skill_id)); break;
+		case SKI_UNIT_ALTERNATEID: script_pushint(st, skill_get_unit_id2(skill_id)); break;
+		case SKI_UNIT_LAYOUT: script_pushint(st, skill_get_unit_layout_type(skill_id,skill_lv)); break;
+		case SKI_UNIT_RANGE: script_pushint(st, skill_get_unit_range(skill_id,skill_lv)); break;
+		case SKI_UNIT_INTERVAL: script_pushint(st, skill_get_unit_interval(skill_id)); break;
+		case SKI_UNIT_TARGET: script_pushint(st, skill_get_unit_target(skill_id)); break;
+		case SKI_REQUIRES_HPCOST: script_pushint(st, skill_get_hp(skill_id,skill_lv)); break;
+		case SKI_REQUIRES_SPCOST: script_pushint(st, skill_get_sp(skill_id,skill_lv)); break;
+		case SKI_REQUIRES_MAXHPTRIGGER: script_pushint(st, skill_get_mhp(skill_id,skill_lv)); break;
+		case SKI_REQUIRES_HPRATECOST: script_pushint(st, skill_get_hp_rate(skill_id,skill_lv)); break;
+		case SKI_REQUIRES_SPRATECOST: script_pushint(st, skill_get_sp_rate(skill_id,skill_lv)); break;
+		case SKI_REQUIRES_ZENYCOST: script_pushint(st, skill_get_zeny(skill_id,skill_lv)); break;
+		case SKI_REQUIRES_WEAPON: script_pushint(st, skill_get_weapontype(skill_id)); break;
+		case SKI_REQUIRES_AMMO: script_pushint(st, skill_get_ammotype(skill_id)); break;
+		case SKI_REQUIRES_AMMOAMOUNT: script_pushint(st, skill_get_ammo_qty(skill_id,skill_lv)); break;
+		case SKI_REQUIRES_STATE: script_pushint(st, skill_get_state(skill_id)); break;
+		case SKI_REQUIRES_SPHERECOST: script_pushint(st, skill_get_spiritball(skill_id,skill_lv)); break;
+		case SKI_REQUIRES_STATUS:
+			for (const auto& sc : skill->require.status) {
+				script_both_setreg(st, "skill_requires_status", (int64)sc, true, j, char_id);
+				j++;
+			}
+			script_pushint(st, j);
+			break;
+		case SKI_DAMAGEFLAGS:
+			for (i = 0; i < NK_MAX; i++) {
+				script_both_setreg(st, "skill_damage_flags", skill->nk[i], true, i, char_id);
+			}
+			script_pushint(st, NK_MAX);
+			break;
+		case SKI_FLAGS:
+			for (i = 0; i < INF2_MAX; i++) {
+				script_both_setreg(st, "skill_flags", skill->inf2[i], true, i, char_id);
+			}
+			script_pushint(st, INF2_MAX);
+			break;
+		case SKI_UNIT_FLAG:
+			for (i = 0; i < UF_MAX; i++) {
+				script_both_setreg(st, "skill_unit_flag", skill->unit_flag[i], true, i, char_id);
+			}
+			script_pushint(st, UF_MAX);
+			break;
+		case SKI_REQUIRES_EQUIPMENT:
+			for (const auto& item : skill->require.eqItem) {
+				script_both_setreg(st, "skill_requires_equipment", (int64)item, true, j, char_id);
+				j++;
+			}
+			script_pushint(st, j);
+			break;
+		case SKI_REQUIRES_ITEMCOST:
+			for (i = 0; i < MAX_SKILL_ITEM_REQUIRE; i++) {
+				if (!skill->require.itemid[i]) continue;
+				script_both_setreg(st, "skill_requires_itemid", skill->require.itemid[i], true, j, char_id);
+				script_both_setreg(st, "skill_requires_amount", skill->require.amount[i], true, j, char_id);
+				j++;
+			}
+			script_pushint(st, j);
+			break;
+		default:
+			script_pushint(st, -1);
+			return SCRIPT_CMD_FAILURE;
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetSkillInfo
+
 #ifdef Pandas_ScriptCommand_MobRemove
 /* ===========================================================
  * 指令: mobremove
@@ -33495,6 +33633,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_GetCalendarTime
 	BUILDIN_DEF(getcalendartime, "ii??"), // 获取下次出现指定时间的 UNIX 时间戳 [Haru]
 #endif // Pandas_ScriptCommand_GetCalendarTime
+#ifdef Pandas_ScriptCommand_GetSkillInfo
+	BUILDIN_DEF(getskillinfo, "iv??"), // 获取指定技能在技能数据库中所配置的各项信息 [聽風]
+#endif // Pandas_ScriptCommand_GetSkillInfo
 #ifdef Pandas_ScriptCommand_MobRemove
 	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
 #endif // Pandas_ScriptCommand_MobRemove
