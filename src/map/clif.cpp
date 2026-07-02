@@ -93,6 +93,10 @@ static struct eri* twice_clearunit_ers;
 struct s_packet_db packet_db[MAX_PACKET_DB + 1];
 unsigned long color_table[COLOR_MAX];
 
+#ifdef Pandas_ScriptCommand_Next_Dropitem_Special
+s_next_dropitem_special next_dropitem_special;
+#endif // Pandas_ScriptCommand_Next_Dropitem_Special
+
 #include "clif_obfuscation.hpp"
 static bool clif_session_isValid( const map_session_data* sd );
 static void clif_loadConfirm( map_session_data *sd );
@@ -953,6 +957,13 @@ void clif_dropflooritem( const flooritem_data* fitem, bool canShowEffect ){
 		p.showdropeffect = 0;
 		p.dropeffectmode = DROPEFFECT_NONE;
 	}
+#ifdef Pandas_ScriptCommand_Next_Dropitem_Special
+	if (next_dropitem_special.drop_effect != -1) {
+		p.showdropeffect = 1;
+		p.dropeffectmode = next_dropitem_special.drop_effect - 1;
+		next_dropitem_special.drop_effect = -1;
+	}
+#endif // Pandas_ScriptCommand_Next_Dropitem_Special
 #endif
 	clif_send( &p, sizeof(p), fitem, AREA );
 }

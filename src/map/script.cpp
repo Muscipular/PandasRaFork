@@ -9253,6 +9253,18 @@ BUILDIN_FUNC(makeitem) {
 #ifdef Pandas_BattleConfig_Force_Identified
 	item_tmp.identify = (battle_config.force_identified & 32 ? 1 : item_tmp.identify);
 #endif // Pandas_BattleConfig_Force_Identified
+#ifdef Pandas_ScriptCommand_Next_Dropitem_Special
+	if (next_dropitem_special.bound != -1) {
+		item_tmp.bound = cap_value(next_dropitem_special.bound, BOUND_NONE, BOUND_MAX - 1);
+		next_dropitem_special.bound = -1;
+	}
+	if (next_dropitem_special.rent_duration != 0) {
+		item_tmp.expire_time = static_cast<uint32>(time(nullptr) + next_dropitem_special.rent_duration);
+		next_dropitem_special.rent_duration = 0;
+	}
+	// 提示: 在这里无需处理 next_dropitem_special.drop_effect,
+	// 这部分放在了 clif_dropflooritem 进行, 底部的 map_addflooritem 最终会调用它
+#endif // Pandas_ScriptCommand_Next_Dropitem_Special
 
 	map_addflooritem(&item_tmp, amount, m, x, y, 0, 0, 0, 4, 0, canShowEffect);
 	return SCRIPT_CMD_SUCCESS;
@@ -9340,6 +9352,18 @@ BUILDIN_FUNC(makeitem2) {
 		item_tmp.card[1] = script_getnum(st,11);
 		item_tmp.card[2] = script_getnum(st,12);
 		item_tmp.card[3] = script_getnum(st,13);
+#ifdef Pandas_ScriptCommand_Next_Dropitem_Special
+		if (next_dropitem_special.bound != -1) {
+			item_tmp.bound = cap_value(next_dropitem_special.bound, BOUND_NONE, BOUND_MAX - 1);
+			next_dropitem_special.bound = -1;
+		}
+		if (next_dropitem_special.rent_duration != 0) {
+			item_tmp.expire_time = static_cast<uint32>(time(nullptr) + next_dropitem_special.rent_duration);
+			next_dropitem_special.rent_duration = 0;
+		}
+		// 提示: 在这里无需处理 next_dropitem_special.drop_effect,
+		// 这部分放在了 clif_dropflooritem 进行, 底部的 map_addflooritem 最终会调用它
+#endif // Pandas_ScriptCommand_Next_Dropitem_Special
 
 		bool canShowEffect = false;
 
@@ -31540,6 +31564,22 @@ BUILDIN_FUNC(unitspecialeffect) {
 }
 #endif // Pandas_ScriptCommand_UnitSpecialEffect
 
+#ifdef Pandas_ScriptCommand_Next_Dropitem_Special
+/* ===========================================================
+ * 指令: next_dropitem_special
+ * 描述: 对下一个掉落到地面上的物品进行特殊设置
+ * 用法: next_dropitem_special <道具绑定类型>,<租赁时长>,<掉落光柱颜色>;
+ * 返回: 该指令无论成功与否, 都不会有返回值
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(next_dropitem_special) {
+	next_dropitem_special.bound = cap_value(script_getnum(st, 2), BOUND_NONE, BOUND_MAX - 1);
+	next_dropitem_special.rent_duration = cap_value(script_getnum(st, 3), 0, INT32_MAX);
+	next_dropitem_special.drop_effect = cap_value(script_getnum(st, 4), -1, DROPEFFECT_MAX - 1);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_Next_Dropitem_Special
+
 #ifdef Pandas_ScriptCommand_MobRemove
 /* ===========================================================
  * 指令: mobremove
@@ -33776,6 +33816,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_UnitSpecialEffect
 	BUILDIN_DEF(unitspecialeffect, "ii??"), // 使指定游戏单位可以显示某个特效, 并支持控制特效可见范围 [人鱼姬的思念]
 #endif // Pandas_ScriptCommand_UnitSpecialEffect
+#ifdef Pandas_ScriptCommand_Next_Dropitem_Special
+	BUILDIN_DEF(next_dropitem_special, "iii"), // 对下一个掉落到地面上的物品进行特殊设置 [Sola丶小克]
+#endif // Pandas_ScriptCommand_Next_Dropitem_Special
 #ifdef Pandas_ScriptCommand_MobRemove
 	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
 #endif // Pandas_ScriptCommand_MobRemove

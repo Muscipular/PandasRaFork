@@ -1967,6 +1967,7 @@
 	#define Pandas_ScriptCommand_UnitSpecialEffect
 	// 是否启用 next_dropitem_special 脚本指令 [Sola丶小克]
 	// 该指令用于对下一个掉落到地面上的物品进行特殊设置, 支持魔物掉落道具和 makeitem 系列指令
+	#define Pandas_ScriptCommand_Next_Dropitem_Special
 	// 是否启用 getgradeitem 脚本指令 [Sola丶小克]
 	// 该指令用于创造带有指定附魔评级的道具, 由于 rAthena 已经正式实现了 getitem4,
 	// getgradeitem 仅用于兼容旧版本的脚本, 请尽量使用 getitem4
