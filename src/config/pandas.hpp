@@ -22,6 +22,7 @@
 	#define Pandas_ScriptCommands
 	#define Pandas_ScriptConstants
 	#define Pandas_ScriptResults
+	#define Pandas_ScriptParams
 
 #ifndef GIT_BRANCH
 	#define GIT_BRANCH ""
@@ -2038,3 +2039,24 @@
 	// 使 OnSellItem 标签可以返回被出售道具的背包序号 [Sola丶小克]
 	#define Pandas_ScriptResults_OnSellItem
 #endif // Pandas_ScriptResults
+
+// ============================================================================
+// 脚本参数拓展组 - Pandas_ScriptParams
+// ============================================================================
+
+#ifdef Pandas_ScriptParams
+	// 是否拓展 readparam 脚本指令的可用参数 [Sola丶小克]
+
+	// 是否拓展 getiteminfo 脚本指令的可用参数 [Sola丶小克]
+
+	// 是否拓展 getunitdata 指令的参数
+	// 使之能读取指定魔物在 DB 中设置的承伤倍率 (UMOB_DAMAGETAKEN_DB) [Sola丶小克]
+
+	// 是否扩展 setunitdata / getunitdata 指令的参数
+	// 使 UMOB_DAMAGETAKEN 能支持 -1 的值, 表示采用 DB 中设置的承伤倍率 [Sola丶小克]
+	// 该选项主要为了兼容旧版本熊猫模拟器的用户可能已经使用了 -1 值的情况
+
+	// 是否拓展 setunitdata / getunitdata 指令的参数
+	// 使之能设置或者读取指定魔物实例的经验值 (BASEEXP / JOBEXP) [人鱼姬的思念]
+	// 此选项依赖 Pandas_Struct_Mob_Data_SpecialExperience 的拓展
+#endif // Pandas_ScriptParams
