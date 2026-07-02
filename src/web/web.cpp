@@ -324,7 +324,7 @@ int32 inter_config_read(const char* cfgName)
 
 void web_set_defaults() {
 	web_config.web_ip = "0.0.0.0";
-	web_config.web_port = 8888;
+	web_config.web_port = 3000;
 	web_config.print_req_res = false;
 	safestrncpy(web_config.webconf_name, "conf/web_athena.conf", sizeof(web_config.webconf_name));
 	safestrncpy(web_config.msgconf_name, "conf/msg_conf/web_msg.conf", sizeof(web_config.msgconf_name));
@@ -506,15 +506,15 @@ void logger(const Request & req, const Response & res) {
 #endif // Pandas_WebServer_Logger_Improved_Presentation
 		ShowDebug("Incoming Headers are:\n");
 		for (const auto & header : req.headers) {
-			ShowDebug("\t%s: %s\n", header.first.c_str(), header.second.c_str());
+			ShowDebug("\t%s: %s\n", U2ACE(header.first).c_str(), U2ACE(header.second).c_str());
 		}
 		ShowDebug("Incoming Pages are:\n");
 		for (const auto & file : req.files) {
-			ShowDebug("\t%s: %s\n", file.first.c_str(), file.second.content.c_str());
+			ShowDebug("\t%s: %s\n", U2ACE(file.first).c_str(), U2ACE(file.second.content).c_str());
 		}
 		ShowDebug("Outgoing Headers are:\n");
 		for (const auto & header : res.headers) {
-			ShowDebug("\t%s: %s\n", header.first.c_str(), header.second.c_str());
+			ShowDebug("\t%s: %s\n", U2ACE(header.first).c_str(), U2ACE(header.second).c_str());
 		}
 		ShowDebug("Response status is: %d\n", res.status);
 		// since the body may be binary, might not print entire body (has null character).

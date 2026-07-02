@@ -6,6 +6,8 @@
 
 #include <string>
 
+#include <httplib.h>
+
 #include <common/cbasetypes.hpp>
 #include <common/core.hpp> // CORE_ST_LAST
 #include <common/mmo.hpp> // NAME_LENGTH,SEX_*
