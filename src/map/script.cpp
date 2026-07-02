@@ -31409,6 +31409,40 @@ BUILDIN_FUNC(getskillinfo) {
 }
 #endif // Pandas_ScriptCommand_GetSkillInfo
 
+#ifdef Pandas_ScriptCommand_Sleep3
+/* ===========================================================
+ * 指令: sleep3
+ * 描述: 休眠一段时间再执行后续脚本, 与 sleep2 类似但忽略报错
+ * 用法: sleep3 <休眠毫秒数>;
+ * 返回: 该指令无论成功与否, 都不会有返回值
+ * 作者: 人鱼姬的思念
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(sleep3) {
+	// First call(by function call)
+	if (st->sleep.tick == 0) {
+		int32 ticks;
+
+		ticks = script_getnum(st, 2);
+
+		if (ticks <= 0) {
+			ShowError("buildin_sleep3: negative or zero amount('%d') of milli seconds is not supported\n", ticks);
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		// sleep for the target amount of time
+		st->state = RERUNLINE;
+		st->sleep.tick = ticks;
+	// Second call(by timer after sleeping time is over)
+	} else {
+		// The unit is still attached - continue the script
+		st->state = RUN;
+		st->sleep.tick = 0;
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_Sleep3
+
 #ifdef Pandas_ScriptCommand_MobRemove
 /* ===========================================================
  * 指令: mobremove
@@ -33636,6 +33670,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_GetSkillInfo
 	BUILDIN_DEF(getskillinfo, "iv??"), // 获取指定技能在技能数据库中所配置的各项信息 [聽風]
 #endif // Pandas_ScriptCommand_GetSkillInfo
+#ifdef Pandas_ScriptCommand_Sleep3
+	BUILDIN_DEF(sleep3, "i"), // 休眠一段时间再执行后续脚本, 与 sleep2 类似但忽略报错 [人鱼姬的思念]
+#endif // Pandas_ScriptCommand_Sleep3
 #ifdef Pandas_ScriptCommand_MobRemove
 	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
 #endif // Pandas_ScriptCommand_MobRemove
