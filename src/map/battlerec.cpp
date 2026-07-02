@@ -105,7 +105,7 @@ void batrec_sortout(struct block_list* bl, e_batrec_type type) {
 		map_session_data* sd = map_charid2sd(iter->first);
 
 		if (sd != nullptr)
-			tbl = &sd->bl;
+			tbl = sd;
 		if (tbl == nullptr)
 			tbl = map_id2bl(iter->first);
 
@@ -138,7 +138,7 @@ inline int32 batrec_masterid(struct block_list* bl) {
 			if (hd == nullptr)
 				return 0;
 			sd = map_charid2sd(hd->homunculus.char_id);
-			return sd != nullptr ? sd->bl.id : 0;
+			return sd != nullptr ? sd->id : 0;
 		}
 		case BL_PET: {
 			TBL_PET* pd = map_id2pd(bl->id);
@@ -149,14 +149,14 @@ inline int32 batrec_masterid(struct block_list* bl) {
 			if (mc == nullptr)
 				return 0;
 			sd = map_charid2sd(mc->mercenary.char_id);
-			return sd != nullptr ? sd->bl.id : 0;
+			return sd != nullptr ? sd->id : 0;
 		}
 		case BL_ELEM: {
 			TBL_ELEM* ed = map_id2ed(bl->id);
 			if (ed == nullptr)
 				return 0;
 			sd = map_charid2sd(ed->elemental.char_id);
-			return sd != nullptr ? sd->bl.id : 0;
+			return sd != nullptr ? sd->id : 0;
 		}
 	}
 

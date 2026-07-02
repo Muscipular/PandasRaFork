@@ -36,6 +36,6 @@ void SkillAcidBreath::castendDamageId(block_list *src, block_list *target, uint1
 	}
 }
 
-void SkillAcidBreath::modifyHitRate(int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
+void SkillAcidBreath::modifyHitRate(pec_int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
 	hit_rate *= 2;
 }

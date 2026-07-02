@@ -21,6 +21,10 @@ target_compile_definitions(tools INTERFACE
 	"MINICORE"
 )
 
+if( MSVC )
+	target_compile_options(tools INTERFACE /utf-8)
+endif()
+
 target_link_libraries(tools INTERFACE
 	${GLOBAL_LIBRARIES}
 	${ZLIB_LIBRARIES}

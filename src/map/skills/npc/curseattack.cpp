@@ -12,6 +12,6 @@ void SkillCurseAttack::applyAdditionalEffects(block_list *src, block_list *targe
 	sc_start(src,target,SC_CURSE,(20*skill_lv),skill_lv,skill_get_time2(getSkillId(),skill_lv));
 }
 
-void SkillCurseAttack::modifyHitRate(int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
+void SkillCurseAttack::modifyHitRate(pec_int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
 	hit_rate += hit_rate * 20 / 100;
 }

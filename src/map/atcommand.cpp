@@ -11847,7 +11847,7 @@ ACMD_FUNC(aura) {
 		return -1;
 	}
 
-	aura_make_effective(&sd->bl, aura_id);
+	aura_make_effective(sd, aura_id);
 	clif_displaymessage(fd, msg_txt_cn(sd, aura_id ? 103 : 104));
 
 	return 0;

@@ -17,6 +17,6 @@ void SkillCounterAttack::castendNoDamageId(block_list* src, block_list* target, 
 	skill_addtimerskill(src, tick + 100, target->id, 0, 0, getSkillId(), skill_lv, BF_WEAPON, flag);
 }
 
-void SkillCounterAttack::modifyHitRate(int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
+void SkillCounterAttack::modifyHitRate(pec_int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
 	hit_rate += hit_rate * 20 / 100;
 }

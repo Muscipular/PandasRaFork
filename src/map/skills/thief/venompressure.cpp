@@ -11,6 +11,6 @@ void SkillVenomPressure::calculateSkillRatio(const Damage *wd, const block_list 
 	base_skillratio += 900;
 }
 
-void SkillVenomPressure::modifyHitRate(int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
+void SkillVenomPressure::modifyHitRate(pec_int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
 	hit_rate += 10 + 4 * skill_lv;
 }

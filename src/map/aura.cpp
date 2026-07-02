@@ -279,7 +279,7 @@ void aura_refresh_client(struct block_list* bl) {
 #else
 		TBL_PC* sd = map_id2sd(bl->id);
 		if (sd) {
-			pc_setpos(sd, sd->mapindex, sd->bl.x, sd->bl.y, CLR_OUTSIGHT);
+			pc_setpos(sd, sd->mapindex, sd->x, sd->y, CLR_OUTSIGHT);
 		}
 #endif // PACKETVER_MAIN_NUM >= 20181002 || PACKETVER_RE_NUM >= 20181002
 		break;

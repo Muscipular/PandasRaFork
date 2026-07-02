@@ -2411,7 +2411,7 @@ void pc_reg_received(map_session_data *sd)
 	std::shared_ptr<s_aura> aura = aura_search(sd->ucd.aura.id);
 	if (aura != nullptr) {
 		// 若是一个有效的光环编号则将其特效组合放到生效列表
-		aura_effects_refill(&sd->bl);
+		aura_effects_refill(sd);
 	} else {
 		// 若不是一个有效的光环编号, 则将相关变量和值重置为 0
 		sd->ucd.aura.id = 0;
@@ -7453,7 +7453,7 @@ enum e_setpos pc_setpos(map_session_data* sd, uint16 mapindex, int32 x, int32 y,
 	nullpo_retr(SETPOS_OK,sd);
 
 #ifdef Pandas_Crashfix_PC_Setpos_With_Invaild_Player
-	if (sd->bl.type != BL_PC || sd->bl.id != sd->status.account_id)
+	if (sd->type != BL_PC || sd->id != sd->status.account_id)
 		return SETPOS_OK;
 #endif // Pandas_Crashfix_PC_Setpos_With_Invaild_Player
 
@@ -10815,7 +10815,7 @@ bool pc_revive_item(map_session_data *sd) {
 		return false;
 
 #ifdef Pandas_MapFlag_NoToken
-	if (sd && sd->bl.m >= 0 && map_getmapflag(sd->bl.m, MF_NOTOKEN)) {
+	if (sd && sd->m >= 0 && map_getmapflag(sd->m, MF_NOTOKEN)) {
 		clif_displaymessage(sd->fd, msg_txt_cn(sd, 17));	// 此地图禁止原地复活!
 		return false;
 	}
@@ -16228,18 +16228,18 @@ int16 pc_maxaspd( const map_session_data* sd ) {
 			battle_config.max_aspd ));
 
 #ifdef Pandas_BattleConfig_MaxAspdForGVG
-	if (map_flag_gvg(sd->bl.m) && battle_config.max_aspd_for_gvg > 0)
+	if (map_flag_gvg(sd->m) && battle_config.max_aspd_for_gvg > 0)
 		return static_cast<int16>(max(aspd, battle_config.max_aspd_for_gvg));
 #endif // Pandas_BattleConfig_MaxAspdForGVG
 
 #ifdef Pandas_BattleConfig_MaxAspdForPVP
-	if (map_flag_vs(sd->bl.m) && battle_config.max_aspd_for_pvp > 0)
+	if (map_flag_vs(sd->m) && battle_config.max_aspd_for_pvp > 0)
 		aspd = max(aspd, battle_config.max_aspd_for_pvp);
 #endif // Pandas_BattleConfig_MaxAspdForPVP
 
 #ifdef Pandas_MapFlag_MaxASPD
-	if (map_getmapflag(sd->bl.m, MF_MAXASPD)) {
-		int32 val = map_getmapflag_param(sd->bl.m, MF_MAXASPD, 1);
+	if (map_getmapflag(sd->m, MF_MAXASPD)) {
+		int32 val = map_getmapflag_param(sd->m, MF_MAXASPD, 1);
 		if (val > 0) {
 			val = (AMOTION_ZERO_ASPD - val * AMOTION_INTERVAL) * AMOTION_DIVIDER_PC;
 			aspd = max(aspd, val);

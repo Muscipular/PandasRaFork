@@ -24,7 +24,7 @@ void SkillSlugShot::calculateSkillRatio(const Damage* wd, const block_list* src,
 	skillratio *= 2 + tstatus->size;
 }
 
-void SkillSlugShot::modifyHitRate(int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
+void SkillSlugShot::modifyHitRate(pec_int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
 	int8 dist = distance_bl(src, target);
 
 	if (dist > 3) {

@@ -77,7 +77,7 @@ void SkillBackStab::applyAdditionalEffects(block_list *src, block_list *target, 
 #endif
 }
 
-void SkillBackStab::modifyHitRate(int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
+void SkillBackStab::modifyHitRate(pec_int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
 #ifdef RENEWAL
 	hit_rate += skill_lv; // !TODO: What's the rate increase?
 #endif

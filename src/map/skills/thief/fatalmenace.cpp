@@ -42,7 +42,7 @@ void SkillFatalMenace::castendDamageId(block_list *src, block_list *target, uint
 	}
 }
 
-void SkillFatalMenace::modifyHitRate(int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
+void SkillFatalMenace::modifyHitRate(pec_int16& hit_rate, const block_list* src, const block_list* target, uint16 skill_lv) const {
 	if (skill_lv < 6)
 		hit_rate -= 35 - 5 * skill_lv;
 	else if (skill_lv > 6)

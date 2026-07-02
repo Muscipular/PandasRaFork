@@ -5404,7 +5404,7 @@ TIMER_FUNC(skill_castend_id){
 		}
 
 #ifdef Pandas_NpcEvent_USE_SKILL
-		if (sd && sd->bl.type == BL_PC && ud && target && target->prev != nullptr) {
+		if (sd && sd->type == BL_PC && ud && target && target->prev != nullptr) {
 			pc_setreg(sd, add_str("@useskill_id"), ud->skill_id);
 			pc_setreg(sd, add_str("@useskill_lv"), ud->skill_lv);
 			pc_setreg(sd, add_str("@useskill_pos_x"), -1);
@@ -5607,7 +5607,7 @@ TIMER_FUNC(skill_castend_pos){
 			status_change_end(src, SC_CAMOUFLAGE); // Applies to the first skill if active
 
 #ifdef Pandas_NpcEvent_USE_SKILL
-		if (sd && sd->bl.type == BL_PC && ud) {
+		if (sd && sd->type == BL_PC && ud) {
 			pc_setreg(sd, add_str("@useskill_id"), ud->skill_id);
 			pc_setreg(sd, add_str("@useskill_lv"), ud->skill_lv);
 			pc_setreg(sd, add_str("@useskill_pos_x"), ud->skillx);

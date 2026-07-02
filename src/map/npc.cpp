@@ -2434,14 +2434,14 @@ int32 npc_globalmessage(const char* name, const char* mes)
 void run_tomb(map_session_data* sd, npc_data* nd)
 {
 #ifdef Pandas_NpcFilter_CLICKTOMB
-	if (sd && sd->bl.type == BL_PC && nd && nd->u.tomb.md) {
-		pc_setreg(sd, add_str("@tomb_mapid"), nd->bl.m);
-		pc_setreg(sd, add_str("@tomb_x"), nd->bl.x);
-		pc_setreg(sd, add_str("@tomb_y"), nd->bl.y);
-		pc_setregstr(sd, add_str("@tomb_mapname$"), map[nd->bl.m].name);
-		pc_setreg(sd, add_str("@tomb_gid"), nd->bl.id);
+	if (sd && sd->type == BL_PC && nd && nd->u.tomb.md) {
+		pc_setreg(sd, add_str("@tomb_mapid"), nd->m);
+		pc_setreg(sd, add_str("@tomb_x"), nd->x);
+		pc_setreg(sd, add_str("@tomb_y"), nd->y);
+		pc_setregstr(sd, add_str("@tomb_mapname$"), map[nd->m].name);
+		pc_setreg(sd, add_str("@tomb_gid"), nd->id);
 		pc_setreg(sd, add_str("@tomb_createtime"), nd->u.tomb.kill_time);
-		pc_setreg(sd, add_str("@tomb_mob_gid"), nd->u.tomb.md->bl.id);
+		pc_setreg(sd, add_str("@tomb_mob_gid"), nd->u.tomb.md->id);
 		pc_setreg(sd, add_str("@tomb_mob_classid"), nd->u.tomb.md->mob_id);
 		pc_setreg(sd, add_str("@tomb_mob_respawnsecs"), -1);
 		t_tick respawntime = -1;
@@ -3112,7 +3112,7 @@ static int32 npc_buylist_sub(map_session_data* sd, std::vector<s_npc_buy_list>& 
 
 #ifdef Pandas_Fix_ScriptControl_Shop_Missing_NpcID_Error
 	if (sd && nd) {
-		sd->callshop_master_npcid = nd->bl.id;
+		sd->callshop_master_npcid = nd->id;
 	}
 #endif // Pandas_Fix_ScriptControl_Shop_Missing_NpcID_Error
 
@@ -3369,7 +3369,7 @@ static int32 npc_selllist_sub(map_session_data* sd, int32 list_length, const PAC
 
 #ifdef Pandas_Fix_ScriptControl_Shop_Missing_NpcID_Error
 	if (sd && nd) {
-		sd->callshop_master_npcid = nd->bl.id;
+		sd->callshop_master_npcid = nd->id;
 	}
 #endif // Pandas_Fix_ScriptControl_Shop_Missing_NpcID_Error
 
@@ -7490,7 +7490,7 @@ bool npc_change_title_event(map_session_data* sd, uint32 title_id, int mode) {
 			sd->status.title_id = title_id;
 		}
 
-		clif_name_area(&sd->bl);
+		clif_name_area(sd);
 		clif_change_title_ack(sd, 0, title_id);
 	}
 

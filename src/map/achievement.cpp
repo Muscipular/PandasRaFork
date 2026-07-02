@@ -1058,7 +1058,7 @@ static bool achievement_update_objectives(map_session_data *sd, std::shared_ptr<
 			if (ad->targets.empty())
 				return false;
 
-			if (ad->mapindex > -1 && sd->bl.m != ad->mapindex)
+			if (ad->mapindex > -1 && sd->m != ad->mapindex)
 				return false;
 
 			for (const auto &it : ad->targets) {

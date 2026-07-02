@@ -1793,7 +1793,7 @@ int32 status_damage(block_list *src,block_list *target,int64 dhp, int64 dsp, int
 
 		if (tsd && rnd() % 10000 < tsd->bonus.rebirth_rate
 #ifdef Pandas_MapFlag_NoToken
-			&& tsd->bl.m >= 0 && !map_getmapflag(tsd->bl.m, MF_NOTOKEN)
+			&& tsd->m >= 0 && !map_getmapflag(tsd->m, MF_NOTOKEN)
 #endif // Pandas_MapFlag_NoToken
 		) {
 			if (tsd->special_state.restart_full_recover) {
@@ -6764,7 +6764,7 @@ void status_calc_bl_main(block_list& bl, std::bitset<SCB_MAX> flag)
 void restore_special_unitdata_for_mob(mob_data* md, status_data* status, status_data* previous_status, uint8 type) {
 	if (md == nullptr || status == nullptr || previous_status == nullptr)
 		return;
-	if (md->bl.type != BL_MOB)
+	if (md->type != BL_MOB)
 		return;
 	if (previous_status->max_hp == 0)
 		return;
@@ -10649,7 +10649,7 @@ bool status_change_start(block_list* src, block_list* bl, sc_type type, int32 ra
 	int32 tick = (int32)duration;
 
 #ifdef Pandas_NpcFilter_SC_START
-	if (map_session_data* sd = BL_CAST(BL_PC, bl); sd != nullptr && sd->bl.type == BL_PC) {
+	if (map_session_data* sd = BL_CAST(BL_PC, bl); sd != nullptr && sd->type == BL_PC) {
 		pc_setreg(sd, add_str("@about2start_sc_id"), static_cast<int64>(type));
 		pc_setreg(sd, add_str("@about2start_sc_rate"), rate);
 		pc_setreg(sd, add_str("@about2start_sc_tick"), tick);
@@ -13726,11 +13726,11 @@ static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_t
 #else
 					// 若跟踪的 BOSS 游戏单位编号已经不存在, 那么跟踪下一个存活的 BOSS
 					// 备注: 临时召唤的 BOSS 才会出现这样的情况, 脚本里写死的自然重生 BOSS 就算死亡, 游戏单位编号也还在
-					mob_data* next_boss_md = map_getmob_boss(sd->bl.m, true);
+					mob_data* next_boss_md = map_getmob_boss(sd->m, true);
 
 					if (next_boss_md && boss_md != next_boss_md) {
 						boss_md = next_boss_md;
-						sce->val1 = boss_md->bl.id;
+						sce->val1 = boss_md->id;
 
 						// 若新跟踪的 BOSS 处于存活状态, 那么重新告诉玩家我们探测到了新的 BOSS
 						if (boss_md->spawn_timer == INVALID_TIMER) {
@@ -13827,7 +13827,7 @@ static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_t
 		npc_touchnext_areanpc(sd,false); // Run OnTouch_ on next char in range
 
 #ifdef Pandas_NpcExpress_SC_START
-	if (sd && sd->bl.type == BL_PC) {
+	if (sd && sd->type == BL_PC) {
 		pc_setreg(sd, add_str("@startedsc"), (int64)type);			// 为了兼容SEA和CSEA
 		pc_setreg(sd, add_str("@started_sc_id"), (int64)type);
 		pc_setreg(sd, add_str("@started_sc_rate"), rate);
@@ -14613,7 +14613,7 @@ int32 status_change_end( block_list* bl, enum sc_type type, int32 tid ){
 		status_change_start(bl, bl, SC_STONE, 100, val1, val2, 0, 0, val3, SCSTART_NOAVOID);
 
 #ifdef Pandas_NpcExpress_SC_END
-	if (sd && sd->bl.type == BL_PC) {
+	if (sd && sd->type == BL_PC) {
 		pc_setreg(sd, add_str("@endedsc"), (int64)type);			// 为了兼容SEA和CSEA
 		pc_setreg(sd, add_str("@ended_sc_id"), (int64)type);
 		npc_script_event(*sd, NPCX_SC_END);
@@ -14896,11 +14896,11 @@ TIMER_FUNC(status_change_timer){
 #else
 				// 若跟踪的 BOSS 游戏单位编号已经不存在, 那么跟踪下一个存活的 BOSS
 				// 备注: 临时召唤的 BOSS 才会出现这样的情况, 脚本里写死的自然重生 BOSS 就算死亡, 游戏单位编号也还在
-				mob_data* next_boss_md = map_getmob_boss(sd->bl.m, true);
+				mob_data* next_boss_md = map_getmob_boss(sd->m, true);
 
 				if (next_boss_md && boss_md != next_boss_md) {
 					boss_md = next_boss_md;
-					sce->val1 = boss_md->bl.id;
+					sce->val1 = boss_md->id;
 
 					// 若新跟踪的 BOSS 处于存活状态, 那么重新告诉玩家我们探测到了新的 BOSS
 					if (boss_md->spawn_timer == INVALID_TIMER) {
@@ -14933,11 +14933,11 @@ TIMER_FUNC(status_change_timer){
 #ifdef Pandas_ScriptCommand_BossMonster
 			// 若之前跟踪的 BOSS 已经死亡并等待重生, 那么跟踪下一个存活的 BOSS
 			if (sce->val2) {
-				mob_data* next_boss_md = map_getmob_boss(sd->bl.m, true);
+				mob_data* next_boss_md = map_getmob_boss(sd->m, true);
 
 				if (next_boss_md && boss_md != next_boss_md) {
 					boss_md = next_boss_md;
-					sce->val1 = boss_md->bl.id;
+					sce->val1 = boss_md->id;
 
 					// 若新跟踪的 BOSS 处于存活状态, 那么重新告诉玩家我们探测到了新的 BOSS
 					if (boss_md->spawn_timer == INVALID_TIMER) {

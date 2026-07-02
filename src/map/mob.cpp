@@ -2703,7 +2703,7 @@ static void mob_item_drop(mob_data *md, std::shared_ptr<s_item_drop_list>& dlist
 		&& (flag ? ((battle_config.homunculus_autoloot ? (battle_config.hom_idle_no_share == 0 || !pc_isidle_hom(sd)) : 0) || (battle_config.mercenary_autoloot ? (battle_config.mer_idle_no_share == 0 || !pc_isidle_mer(sd)) : 0)) :
 			(battle_config.idle_no_autoloot == 0 || DIFF_TICK(last_tick, sd->idletime) < battle_config.idle_no_autoloot));
 #ifdef Pandas_MapFlag_NoAutoLoot
-	test_autoloot = test_autoloot && (sd && sd->bl.m >= 0 && !map_getmapflag(sd->bl.m, MF_NOAUTOLOOT));
+	test_autoloot = test_autoloot && (sd && sd->m >= 0 && !map_getmapflag(sd->m, MF_NOAUTOLOOT));
 #endif // Pandas_MapFlag_NoAutoLoot
 #ifdef AUTOLOOT_DISTANCE
 		test_autoloot = test_autoloot && sd->m == md->m
@@ -3887,7 +3887,7 @@ int32 mob_dead(mob_data *md, block_list *src, int32 type, uint16 skill_id)
 #ifndef Pandas_FuncParams_Mob_MvpTomb_Create
 		mvptomb_create(md, mvp_sd != nullptr ? mvp_sd->status.name : (first_sd != nullptr ? first_sd->status.name : nullptr), time(nullptr));
 #else
-		mvptomb_create(md, mvp_sd != nullptr ? mvp_sd->status.name : (first_sd != nullptr ? first_sd->status.name : nullptr), time(nullptr), mvp_sd != nullptr ? mvp_sd->bl.id : 0);
+		mvptomb_create(md, mvp_sd != nullptr ? mvp_sd->status.name : (first_sd != nullptr ? first_sd->status.name : nullptr), time(nullptr), mvp_sd != nullptr ? mvp_sd->id : 0);
 #endif // Pandas_FuncParams_Mob_MvpTomb_Create
 
 	if( !rebirth )

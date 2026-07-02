@@ -30,7 +30,7 @@ void SkillImpl::calculateSkillRatio(const Damage*, const block_list*, const bloc
 	// no-op
 }
 
-void SkillImpl::modifyHitRate(int16&, const block_list*, const block_list*, uint16) const {
+void SkillImpl::modifyHitRate(pec_int16&, const block_list*, const block_list*, uint16) const {
 	// no-op
 }
 

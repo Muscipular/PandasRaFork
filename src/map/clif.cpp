@@ -1124,7 +1124,7 @@ void clif_send_auras_single(struct block_list* bl, map_session_data* tsd) {
 	if (!bl || !tsd || bl->m == -1) return;
 	struct s_unit_common_data* ucd = status_get_ucd(bl);
 	if (!ucd) return;
-	if (aura_need_hiding(bl, &tsd->bl)) return;
+	if (aura_need_hiding(bl, tsd)) return;
 #ifdef Pandas_MapFlag_NoAura
 	if (map_getmapflag(bl->m, MF_NOAURA)) return;
 #endif // Pandas_MapFlag_NoAura
@@ -10312,7 +10312,7 @@ void clif_refresh(map_session_data *sd)
 #endif // Pandas_Fix_Progressbar_Refresh_Stuck
 
 #ifdef Pandas_Aura_Mechanism
-	clif_send_auras_single(&sd->bl, sd);
+	clif_send_auras_single(sd, sd);
 #endif // Pandas_Aura_Mechanism
 }
 
@@ -10358,7 +10358,7 @@ void clif_name( const block_list* src, const block_list* bl, send_target target 
 			const bool display_party_info = p && ( sd->guild || battle_config.display_party_name );
 
 #ifdef Pandas_MapFlag_HidePartyInfo
-			const bool hide_party_info = display_party_info && map_getmapflag(sd->bl.m, MF_HIDEPARTYINFO);
+			const bool hide_party_info = display_party_info && map_getmapflag(sd->m, MF_HIDEPARTYINFO);
 #endif // Pandas_MapFlag_HidePartyInfo
 
 			// do not display party unless the player is also in a guild
@@ -10372,7 +10372,7 @@ void clif_name( const block_list* src, const block_list* bl, send_target target 
 			}
 
 #ifdef Pandas_MapFlag_HideGuildInfo
-			const bool hide_guild_info = sd->guild && map_getmapflag(sd->bl.m, MF_HIDEGUILDINFO);
+			const bool hide_guild_info = sd->guild && map_getmapflag(sd->m, MF_HIDEGUILDINFO);
 #endif // Pandas_MapFlag_HideGuildInfo
 
 			if( sd->guild ){
@@ -10519,8 +10519,8 @@ void clif_name( const block_list* src, const block_list* bl, send_target target 
 				int option = battle_config.show_mob_info;
 
 #ifdef Pandas_MapFlag_MobInfo
-				if (md->bl.m >= 0 && map_getmapflag(md->bl.m, MF_MOBINFO)) {
-					option = map_getmapflag_param(md->bl.m, MF_MOBINFO, 1);
+				if (md->m >= 0 && map_getmapflag(md->m, MF_MOBINFO)) {
+					option = map_getmapflag_param(md->m, MF_MOBINFO, 1);
 				}
 #endif // Pandas_MapFlag_MobInfo
 
@@ -13529,7 +13529,7 @@ void clif_parse_skill_toid( map_session_data* sd, uint16 skill_id, uint16 skill_
 		return; //Using a ground/passive skill on a target? WRONG.
 
 #ifdef Pandas_NpcFilter_USE_SKILL
-	if (sd && sd->bl.type == BL_PC) {
+	if (sd && sd->type == BL_PC) {
 		pc_setreg(sd, add_str("@useskill_id"), skill_id);
 		pc_setreg(sd, add_str("@useskill_lv"), skill_lv);
 		pc_setreg(sd, add_str("@useskill_pos_x"), -1);
@@ -13672,7 +13672,7 @@ static void clif_parse_UseSkillToPosSub( int32 fd, map_session_data& sd, uint16 
 		return; //Using a target skill on the ground? WRONG.
 
 #ifdef Pandas_NpcFilter_USE_SKILL
-	if (sd.bl.type == BL_PC) {
+	if (sd.type == BL_PC) {
 		pc_setreg(&sd, add_str("@useskill_id"), skill_id);
 		pc_setreg(&sd, add_str("@useskill_lv"), skill_lv);
 		pc_setreg(&sd, add_str("@useskill_pos_x"), x);
@@ -18531,7 +18531,7 @@ void clif_parse_ViewPlayerEquip(int32 fd, map_session_data* sd)
 		return;
 
 #ifdef Pandas_NpcFilter_VIEW_EQUIP
-	if (sd && sd->bl.type == BL_PC && tsd->bl.type == BL_PC && sd->m == tsd->m) {
+	if (sd && sd->type == BL_PC && tsd->type == BL_PC && sd->m == tsd->m) {
 		pc_setregstr(sd, add_str("@vieweq_name$"), tsd->status.name);
 		pc_setreg(sd, add_str("@vieweq_cid"), tsd->status.char_id);
 		pc_setreg(sd, add_str("@vieweq_aid"), tsd->status.account_id);
@@ -21755,7 +21755,7 @@ void clif_parse_roulette_open( int32 fd, map_session_data* sd ){
 	}
 
 	// 避免过滤事件中的 NPC 对话被绕过 processhalt 后直接打开大乐透面板。
-	if (sd && sd->bl.type == BL_PC && !sd->npc_id) {
+	if (sd && sd->type == BL_PC && !sd->npc_id) {
 		if (npc_script_filter(sd, NPCF_ROULETTE_OPEN))
 			return;
 	}

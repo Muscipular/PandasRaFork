@@ -2323,7 +2323,7 @@ void map_mobiddb(block_list* bl, int32 new_blockid)
 
 		s_mapiterator* iter = mapit_getallusers();
 		for (map_session_data* pl_sd = reinterpret_cast<TBL_PC*>(mapit_first(iter)); mapit_exists(iter); pl_sd = reinterpret_cast<TBL_PC*>(mapit_next(iter))) {
-			status_change* sc = status_get_sc(&pl_sd->bl);
+			status_change* sc = status_get_sc(pl_sd);
 			if (sc == nullptr)
 				continue;
 
@@ -5758,7 +5758,7 @@ bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, pds_mapfla
 			map_session_data* pl_sd = nullptr;
 
 			for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter)) {
-				if (!pl_sd || pl_sd->bl.m != m)
+				if (!pl_sd || pl_sd->m != m)
 					continue;
 
 				clif_refresh(pl_sd);
@@ -5775,7 +5775,7 @@ bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, pds_mapfla
 			map_session_data* pl_sd = nullptr;
 
 			for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter)) {
-				if (!pl_sd || pl_sd->bl.m != m)
+				if (!pl_sd || pl_sd->m != m)
 					continue;
 
 				clif_refresh(pl_sd);
@@ -5792,7 +5792,7 @@ bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, pds_mapfla
 			map_session_data* pl_sd = nullptr;
 
 			for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter)) {
-				if (!pl_sd || pl_sd->bl.m != m)
+				if (!pl_sd || pl_sd->m != m)
 					continue;
 				if (pl_sd->pd && status) {
 					clif_displaymessage(pl_sd->fd, msg_txt_cn(pl_sd, 4));
@@ -5814,7 +5814,7 @@ bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, pds_mapfla
 			map_session_data* pl_sd = nullptr;
 
 			for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter)) {
-				if (!pl_sd || pl_sd->bl.m != m)
+				if (!pl_sd || pl_sd->m != m)
 					continue;
 				if (hom_is_active(pl_sd->hd) && status) {
 					// 当前地图禁止使用人工生命体, 已自动将其安息
@@ -5834,7 +5834,7 @@ bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, pds_mapfla
 			map_session_data* pl_sd = nullptr;
 
 			for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter)) {
-				if (!pl_sd || pl_sd->bl.m != m)
+				if (!pl_sd || pl_sd->m != m)
 					continue;
 				if (pl_sd->md && status) {
 					// 当前地图禁止使用佣兵, 已自动将其隐藏
@@ -5854,7 +5854,7 @@ bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, pds_mapfla
 			map_session_data* pl_sd = nullptr;
 
 			for (pl_sd = (TBL_PC*)mapit_first(iter); mapit_exists(iter); pl_sd = (TBL_PC*)mapit_next(iter)) {
-				if (!pl_sd || pl_sd->bl.m != m)
+				if (!pl_sd || pl_sd->m != m)
 					continue;
 
 				clif_refresh(pl_sd);

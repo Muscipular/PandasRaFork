@@ -5424,7 +5424,7 @@ bool script_get_mapindex(struct script_state *st, const char* mapname, int &mapi
 			return false;
 		}
 	}
-	mapindex = sd->bl.m;
+	mapindex = sd->m;
 
 	return (mapindex >= 0);
 }
@@ -8390,7 +8390,7 @@ BUILDIN_FUNC(storagegetitem)
 	for (i = 0; i < amount; i += get_count) {
 		if (storage_additem(sd, &sd->storage, &it, get_count, true)) {
 			if (pc_candrop(sd, &it))
-				map_addflooritem(&it, get_count, sd->bl.m, sd->bl.x, sd->bl.y, 0, 0, 0, 0, 0);
+				map_addflooritem(&it, get_count, sd->m, sd->x, sd->y, 0, 0, 0, 0, 0);
 			else
 				script_pushint(st, -9);
 		}
@@ -30048,8 +30048,8 @@ BUILDIN_FUNC(setheaddir) {
 		return SCRIPT_CMD_SUCCESS;
 
 	pc_setdir(sd, sd->ud.dir, head_dir);
-	clif_changed_dir(sd->bl, AREA_WOS);
-	clif_changed_dir(sd->bl, SELF);
+	clif_changed_dir(*sd, AREA_WOS);
+	clif_changed_dir(*sd, SELF);
 
 	return SCRIPT_CMD_SUCCESS;
 }
@@ -30072,8 +30072,8 @@ BUILDIN_FUNC(setbodydir) {
 		return SCRIPT_CMD_SUCCESS;
 
 	pc_setdir(sd, body_dir, sd->head_dir);
-	clif_changed_dir(sd->bl, AREA_WOS);
-	clif_changed_dir(sd->bl, SELF);
+	clif_changed_dir(*sd, AREA_WOS);
+	clif_changed_dir(*sd, SELF);
 
 	return SCRIPT_CMD_SUCCESS;
 }
@@ -30337,7 +30337,7 @@ static int32 buildin_getsameipinfo_sub(map_session_data* pl_sd, va_list ap)
 
 	if (!ipaddr || !sd || !count) return 0;
 	if (!pl_sd || pl_sd->state.autotrade) return 0;
-	if (m >= 0 && pl_sd->bl.m != m) return 0;
+	if (m >= 0 && pl_sd->m != m) return 0;
 
 	if (ipaddr == session[pl_sd->fd]->client_addr) {
 		pc_setreg(sd, reference_uid(add_str("@sameip_aid"), (*count)), pl_sd->status.account_id);
@@ -31713,7 +31713,7 @@ BUILDIN_FUNC(unitspecialeffect) {
 		return SCRIPT_CMD_SUCCESS;
 	}
 
-	if (sd->bl.type == BL_PC) {
+	if (sd->type == BL_PC) {
 		clif_specialeffect_single(bl, type, sd->fd);
 	}
 
@@ -33198,11 +33198,11 @@ BUILDIN_FUNC(getbossinfo) {
 		script_both_setreg(st, "boss_spawn", (boss_respawn_tick != -1 ? DIFF_TICK(boss_respawn_tick, gettick()) : 0), true, count, char_id);
 		script_both_setreg(st, "boss_classid", md->mob_id, true, count, char_id);
 
-		script_both_setreg(st, "boss_tomb_mapid", (tomb_nd ? tomb_nd->bl.m : -1), true, count, char_id);
-		script_both_setregstr(st, "boss_tomb_mapname$", (tomb_nd && tomb_nd->bl.m >= 0 ? map[tomb_nd->bl.m].name : ""), true, count, char_id);
-		script_both_setreg(st, "boss_tomb_x", (tomb_nd ? tomb_nd->bl.x : 0), true, count, char_id);
-		script_both_setreg(st, "boss_tomb_y", (tomb_nd ? tomb_nd->bl.y : 0), true, count, char_id);
-		script_both_setreg(st, "boss_tomb_gid", (tomb_nd ? tomb_nd->bl.id : 0), true, count, char_id);
+		script_both_setreg(st, "boss_tomb_mapid", (tomb_nd ? tomb_nd->m : -1), true, count, char_id);
+		script_both_setregstr(st, "boss_tomb_mapname$", (tomb_nd && tomb_nd->m >= 0 ? map[tomb_nd->m].name : ""), true, count, char_id);
+		script_both_setreg(st, "boss_tomb_x", (tomb_nd ? tomb_nd->x : 0), true, count, char_id);
+		script_both_setreg(st, "boss_tomb_y", (tomb_nd ? tomb_nd->y : 0), true, count, char_id);
+		script_both_setreg(st, "boss_tomb_gid", (tomb_nd ? tomb_nd->id : 0), true, count, char_id);
 		script_both_setreg(st, "boss_tomb_createtime", (tomb_nd ? tomb_nd->u.tomb.kill_time : 0), true, count, char_id);
 		script_both_setreg(st, "boss_tomb_respawnsecs", -1, true, count, char_id);
 
@@ -33423,7 +33423,7 @@ TIMER_FUNC(selfdeletion_timer) {
 		bool interacting = false;
 
 		for (bl = mapit_first(iter); mapit_exists(iter); bl = mapit_next(iter)) {
-			if (!bl || bl->m != nd->bl.m)
+			if (!bl || bl->m != nd->m)
 				continue;
 
 			struct script_state* bl_st = ((TBL_PC*)bl)->st;
@@ -33477,7 +33477,7 @@ BUILDIN_FUNC(selfdeletion) {
 	if (sd && sd->state.using_fake_npc)
 		return SCRIPT_CMD_SUCCESS;
 
-	if (nd->bl.id == fake_nd->bl.id)
+	if (nd->id == fake_nd->id)
 		return SCRIPT_CMD_SUCCESS;
 
 	if (!immediately) {
@@ -33492,7 +33492,7 @@ BUILDIN_FUNC(selfdeletion) {
 	struct block_list* bl = nullptr;
 
 	for (bl = mapit_first(iter); mapit_exists(iter); bl = mapit_next(iter)) {
-		if (!bl || bl->m != nd->bl.m)
+		if (!bl || bl->m != nd->m)
 			continue;
 		if (bl->id == st->rid)
 			continue;
@@ -33630,7 +33630,7 @@ BUILDIN_FUNC(npcexists) {
 	if ((nd = npc_name2id(script_getstr(st, 2))) != nullptr) {
 		script_pushint(st, 1);
 		if (vardata != nullptr)
-			set_reg_num(st, sd, num, name, nd->bl.id, script_getref(st, 3));
+			set_reg_num(st, sd, num, name, nd->id, script_getref(st, 3));
 	} else {
 		script_pushint(st, 0);
 	}
@@ -33667,7 +33667,7 @@ BUILDIN_FUNC(aura) {
 		return SCRIPT_CMD_FAILURE;
 	}
 
-	aura_make_effective(&sd->bl, aura_id);
+	aura_make_effective(sd, aura_id);
 	script_pushint(st, 1);
 	return SCRIPT_CMD_SUCCESS;
 }
