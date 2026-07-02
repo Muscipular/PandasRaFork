@@ -2023,6 +2023,7 @@
 
 #ifdef Pandas_ScriptConstants
 	// 是否扩展 CartWeight 脚本常量 [人鱼姬的思念]
+	#define Pandas_ScriptConstants_CartWeight
 
 	// 是否扩展 MaxCartWeight 脚本常量 [人鱼姬的思念]
 #endif // Pandas_ScriptConstants

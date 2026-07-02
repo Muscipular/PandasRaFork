@@ -635,6 +635,9 @@ enum _sp {
 
 #ifdef Pandas_ScriptConstants
 	SP_PANDAS_EXTEND_CONSTANTS_START = 3600,
+#ifdef Pandas_ScriptConstants_CartWeight
+	SP_CARTWEIGHT,
+#endif // Pandas_ScriptConstants_CartWeight
 	SP_PANDAS_EXTEND_CONSTANTS_END,
 #endif // Pandas_ScriptConstants
 };
