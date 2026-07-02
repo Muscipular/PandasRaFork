@@ -16038,6 +16038,23 @@ BUILDIN_FUNC(getiteminfo)
 		case ITEMINFO_ID: script_pushint(st, i_data->nameid); break;
 		case ITEMINFO_AEGISNAME: script_pushstrcopy(st, i_data->name.c_str()); break;
 		case ITEMINFO_SUBTYPE: script_pushint(st, i_data->subtype); break;
+#ifdef Pandas_ScriptParams_GetItemInfo
+		case -1: script_pushint(st, i_data->flag.no_refine ? 0 : 1); break;
+		case -2: {
+			int64 trade_mask = 0;
+			if (i_data && i_data->flag.trade_restriction.drop) trade_mask |= 1;
+			if (i_data && i_data->flag.trade_restriction.trade) trade_mask |= 2;
+			if (i_data && i_data->flag.trade_restriction.trade_partner) trade_mask |= 4;
+			if (i_data && i_data->flag.trade_restriction.sell) trade_mask |= 8;
+			if (i_data && i_data->flag.trade_restriction.cart) trade_mask |= 16;
+			if (i_data && i_data->flag.trade_restriction.storage) trade_mask |= 32;
+			if (i_data && i_data->flag.trade_restriction.guild_storage) trade_mask |= 64;
+			if (i_data && i_data->flag.trade_restriction.mail) trade_mask |= 128;
+			if (i_data && i_data->flag.trade_restriction.auction) trade_mask |= 256;
+			script_pushint(st, trade_mask);
+			break;
+		}
+#endif // Pandas_ScriptParams_GetItemInfo
 #ifdef Pandas_Persistence_Itemdb_Script
 		case -7:
 			script_pushstrcopy(st, i_data->pandas.script_plaintext.script.c_str());
@@ -34327,7 +34344,11 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(setnpcdisplay,"sv??"),
 	BUILDIN_DEF(compare,"ss"), // Lordalfa - To bring strstr to scripting Engine.
 	BUILDIN_DEF(strcmp,"ss"),
+#ifndef Pandas_ScriptParams_GetItemInfo
 	BUILDIN_DEF(getiteminfo,"vi"), //[Lupus] returns Items Buy / sell Price, etc info
+#else
+	BUILDIN_DEF(getiteminfo, "vi?"), //[Lupus] returns Items Buy / sell Price, etc info
+#endif // Pandas_ScriptParams_GetItemInfo
 	BUILDIN_DEF(setiteminfo,"vii"), //[Lupus] set Items Buy / sell Price, etc info
 	BUILDIN_DEF(getequipcardid,"ii"), //[Lupus] returns CARD ID or other info from CARD slot N of equipped item
 	// [zBuffer] List of mathematics commands --->

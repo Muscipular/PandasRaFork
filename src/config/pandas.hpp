@@ -2049,6 +2049,7 @@
 	#define Pandas_ScriptParams_ReadParam
 
 	// 是否拓展 getiteminfo 脚本指令的可用参数 [Sola丶小克]
+	#define Pandas_ScriptParams_GetItemInfo
 
 	// 是否拓展 getunitdata 指令的参数
 	// 使之能读取指定魔物在 DB 中设置的承伤倍率 (UMOB_DAMAGETAKEN_DB) [Sola丶小克]
