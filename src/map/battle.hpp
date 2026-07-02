@@ -123,7 +123,7 @@ int64 battle_calc_gvg_damage(block_list *src,block_list *bl,int64 damage,uint16 
 int64 battle_calc_bg_damage(block_list *src,block_list *bl,int64 damage,uint16 skill_id,int32 flag);
 int64 battle_calc_pk_damage(block_list &src, block_list &bl, int64 damage, uint16 skill_id, int32 flag);
 
-int32 battle_damage(block_list *src, block_list *target, int64 damage, int16 div_, uint16 skill_lv, uint16 skill_id, enum damage_lv dmg_lv, uint16 attack_type, bool additional_effects, t_tick tick, bool isspdamage, bool is_norm_attacked = false);
+int32 battle_damage(block_list *src, block_list *target, int64 damage, int16 div_, uint16 skill_lv, uint16 skill_id, enum damage_lv dmg_lv, pec_uint16 attack_type, bool additional_effects, t_tick tick, bool isspdamage, bool is_norm_attacked = false);
 int32 battle_delay_damage (t_tick tick, int32 amotion, block_list *src, block_list *target, int32 attack_type, uint16 skill_id, uint16 skill_lv, int64 damage, enum damage_lv dmg_lv, int16 div_, bool additional_effects, bool isspdamage, bool is_norm_attacked = false);
 int32 battle_fix_damage(block_list* src, block_list* target, int64 damage, int16 div_, uint16 skill_id);
 
@@ -782,6 +782,7 @@ struct Battle_Config
 	int32 hide_cloaked_units;
 	int32 oridecon_research_fix;
 
+	// Pandas Configure
 #ifdef Pandas_BattleConfig_Force_LoadEvent
 	int32 force_loadevent; // 强制触发 OnPCLoadMapEvent 事件
 #endif // Pandas_BattleConfig_Force_LoadEvent
@@ -901,6 +902,7 @@ struct Battle_Config
 #ifdef Pandas_BattleConfig_Mob_SetUnitData_Persistence
 	int32 mob_setunitdata_persistence; // 是否高优先级持久化保存 setunitdata 对魔物的设置
 #endif // Pandas_BattleConfig_Mob_SetUnitData_Persistence
+	// PYHELP - BATTLECONFIG - INSERT POINT - <Section 2>
 
 #include <custom/battle_config_struct.inc>
 };

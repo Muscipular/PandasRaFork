@@ -17,7 +17,7 @@ void SkillSpeedUp::castendNoDamageId(block_list *src, block_list *target, uint16
 		int32 trickstop = (MOB_SKILL_INTERVAL * 7) / 10;
 		if (DIFF_TICK(md->trickcasting, tick) >= trickstop) {
 			// This skill directly modifies a monster's base speed value
-			md->base_status->speed = std::max(md->base_status->speed - 250, MIN_WALK_SPEED);
+			md->base_status->speed = std::max<pec_uint16>(md->base_status->speed - 250, MIN_WALK_SPEED);
 			// Need to recalc speed based on new base value
 			status_calc_bl(md, { SCB_SPEED });
 			// We use skills only on each full cell, to fix the inaccuracy we do this on last move interval

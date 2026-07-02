@@ -23,7 +23,7 @@ void SkillGentleTouchCure::castendNoDamageId(block_list *src, block_list *target
 		status_heal(target, heal, 0, 0);
 	}
 
-	if( tsc != nullptr && !tsc->empty() && rnd_chance( ( skill_lv * 5 + ( status_get_dex( src ) + status_get_lv( src ) ) / 4 ) - rnd_value( 1, 10 ), 100 ) ){
+	if( tsc != nullptr && !tsc->empty() && rnd_chance( ( skill_lv * 5 + ( status_get_dex( src ) + status_get_lv( src ) ) / 4 ) - rnd_value( 1, 10 ), (pec_uint16)100 ) ){
 		status_change_end(target, SC_STONE);
 		status_change_end(target, SC_FREEZE);
 		status_change_end(target, SC_STUN);

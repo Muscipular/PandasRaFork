@@ -322,7 +322,7 @@ static t_tick battle_calc_walkdelay(block_list& bl, int64 damage, int16 div_, t_
 * @param is_norm_attacked: If it should trigger the special normal attacked event on monsters
 * @return HP+SP+AP (0 if HP/SP/AP remained unchanged)
 */
-int32 battle_damage(block_list *src, block_list *target, int64 damage, int16 div_, uint16 skill_lv, uint16 skill_id, enum damage_lv dmg_lv, uint16 attack_type, bool additional_effects, t_tick tick, bool isspdamage, bool is_norm_attacked) {
+int32 battle_damage(block_list *src, block_list *target, int64 damage, int16 div_, uint16 skill_lv, uint16 skill_id, enum damage_lv dmg_lv, pec_uint16 attack_type, bool additional_effects, t_tick tick, bool isspdamage, bool is_norm_attacked) {
 	if (target == nullptr)
 		return 0;
 
@@ -380,7 +380,7 @@ struct delay_damage {
 	uint16 skill_lv;
 	uint16 skill_id;
 	enum damage_lv dmg_lv;
-	uint16 attack_type;
+	pec_uint16 attack_type;
 	bool additional_effects;
 	enum bl_type src_type;
 	bool isspdamage;
@@ -944,7 +944,7 @@ int32 battle_calc_cardfix(int32 attack_type, block_list *src, block_list *target
 		case BF_WEAPON:
 			// Affected by attacker ATK bonuses
 			if( sd && !nk[NK_IGNOREATKCARD] && (left&2) ) {
-				int16 cardfix_ = 1000;
+				pec_int16 cardfix_ = 1000;
 
 				if( sd->state.arrow_atk ) { // Ranged attack
 					cardfix = cardfix * (100 + sd->right_weapon.addrace[tstatus->race] + sd->indexed_bonus.arrow_addrace[tstatus->race] +
@@ -2536,7 +2536,7 @@ static int32 battle_calc_base_weapon_attack(block_list *src, struct status_data 
 static int64 battle_calc_base_damage(block_list *src, struct status_data *status, struct weapon_atk *wa, status_change *sc, uint16 t_size, int32 flag)
 {
 	uint32 atkmin = 0, atkmax = 0;
-	int16 type = 0;
+	pec_int16 type = 0;
 	int64 damage = 0;
 	map_session_data *sd = nullptr;
 
@@ -3064,7 +3064,7 @@ static bool is_attack_critical(struct Damage* wd, block_list *src, const block_l
 		status_change *sc = status_get_sc(src);
 		const status_change *tsc = status_get_sc(target);
 		const map_session_data *tsd = BL_CAST(BL_PC, target);
-		int16 cri = sstatus->cri;
+		pec_int16 cri = sstatus->cri;
 
 		if (sd) {
 			cri += sd->indexed_bonus.critaddrace[tstatus->race] + sd->indexed_bonus.critaddrace[RC_ALL];
@@ -3254,7 +3254,7 @@ static bool is_attack_hitting(struct Damage* wd, block_list *src, block_list *ta
 	status_change *tsc = status_get_sc(target);
 	map_session_data *sd = BL_CAST(BL_PC, src);
 	std::bitset<NK_MAX> nk = battle_skill_get_damage_properties(skill_id, wd->miscflag);
-	int16 flee, hitrate;
+	pec_int16 flee, hitrate;
 
 	if (!first_call)
 		return (wd->dmg_lv != ATK_FLEE);
@@ -4579,7 +4579,7 @@ static void battle_attack_sc_bonus(struct Damage* wd, block_list *src, block_lis
 		if (sc->getSCE(SC_MADNESSCANCEL))
 			ATK_ADD(wd->equipAtk, wd->equipAtk2, 100);
 		if (sc->getSCE(SC_MAGICALBULLET)) {
-			int16 tmdef = tstatus->mdef + tstatus->mdef2;
+			pec_int16 tmdef = tstatus->mdef + tstatus->mdef2;
 
 			if (sstatus->matk_min > tmdef && sstatus->matk_max > sstatus->matk_min) {
 				ATK_ADD(wd->weaponAtk, wd->weaponAtk2, i64max((sstatus->matk_min + rnd() % (sstatus->matk_max - sstatus->matk_min)) - tmdef, 0));
@@ -4752,9 +4752,9 @@ static void battle_calc_defense_reduction( Damage* wd, block_list* src, block_li
 	status_data* tstatus = status_get_status_data(*target);
 
 	//Defense reduction
-	int16 vit_def;
-	defType def1 = status_get_def(target); //Don't use tstatus->def1 due to skill timer reductions.
-	int16 def2 = tstatus->def2;
+	pec_int16 vit_def;
+	pec_defType def1 = status_get_def(target); //Don't use tstatus->def1 due to skill timer reductions.
+	pec_int16 def2 = tstatus->def2;
 
 	if (sd) {
 		int32 i = sd->indexed_bonus.ignore_def_by_race[tstatus->race] + sd->indexed_bonus.ignore_def_by_race[RC_ALL];
@@ -4767,7 +4767,7 @@ static void battle_calc_defense_reduction( Damage* wd, block_list* src, block_li
 
 		//Kagerou/Oboro Earth Charm effect +10% eDEF
 		if(sd->spiritcharm_type == CHARM_TYPE_LAND && sd->spiritcharm > 0) {
-			int16 si = 10 * sd->spiritcharm;
+			pec_int16 si = 10 * sd->spiritcharm;
 			def1 = (def1 * (100 + si)) / 100;
 		}
 	}
@@ -4782,13 +4782,13 @@ static void battle_calc_defense_reduction( Damage* wd, block_list* src, block_li
 
 	if (tsc) {
 		if (tsc->getSCE(SC_FORCEOFVANGUARD)) {
-			int16 i = 2 * tsc->getSCE(SC_FORCEOFVANGUARD)->val1;
+			pec_int16 i = 2 * tsc->getSCE(SC_FORCEOFVANGUARD)->val1;
 
 			def1 = (def1 * (100 + i)) / 100;
 		}
 
 		if( tsc->getSCE(SC_CAMOUFLAGE) ){
-			int16 i = 5 * tsc->getSCE(SC_CAMOUFLAGE)->val3; //5% per second
+			pec_int16 i = 5 * tsc->getSCE(SC_CAMOUFLAGE)->val3; //5% per second
 
 			i = min(i,100); //cap it to 100 for 0 def min
 			def1 = (def1*(100-i))/100;
@@ -5826,7 +5826,7 @@ static struct Damage battle_calc_weapon_attack(block_list *src, block_list *targ
 struct Damage battle_calc_magic_attack(block_list *src,block_list *target,uint16 skill_id,uint16 skill_lv,int32 mflag)
 {
 	int32 i, skill_damage = 0;
-	int16 s_ele = 0;
+	pec_int16 s_ele = 0;
 
 	TBL_PC *sd;
 	TBL_PC *tsd;
@@ -6095,7 +6095,7 @@ struct Damage battle_calc_magic_attack(block_list *src,block_list *target,uint16
 
 		if(!flag.imdef){
 			// Bonuses ignoring Mdef are added together
-			defType mdef = tstatus->mdef;
+			pec_defType mdef = tstatus->mdef;
 			int32 mdef2 = tstatus->mdef2;
 			i = 0;	// Bonus ratio that ignores Mdef
 
@@ -6319,7 +6319,7 @@ struct Damage battle_calc_magic_attack(block_list *src,block_list *target,uint16
 struct Damage battle_calc_misc_attack(block_list *src,block_list *target,uint16 skill_id,uint16 skill_lv,int32 mflag)
 {
 	int32 skill_damage = 0;
-	int16 i, s_ele;
+	pec_int16 i, s_ele;
 
 	map_session_data *sd, *tsd;
 	struct Damage md; //DO NOT CONFUSE with md of mob_data!
@@ -6541,7 +6541,7 @@ struct Damage battle_calc_misc_attack(block_list *src,block_list *target,uint16 
 			// final damage = base damage + ((mirror image count + 1) / 5 * base damage) - (edef + sdef)
 			// modified def formula
 			{
-				int16 totaldef;
+				pec_int16 totaldef;
 				struct Damage atk = battle_calc_weapon_attack(src, target, skill_id, skill_lv, 0);
 				status_change *sc = status_get_sc(src);
 
@@ -9025,7 +9025,7 @@ static const struct _battle_data {
 	{ "refresh_song",                       &battle_config.refresh_song,                    0,      0,      1,              },
 	{ "refresh_song_icon",                  &battle_config.refresh_song_icon,               0,      0,      1,              },
 	{ "guild_maprespawn_clones",			&battle_config.guild_maprespawn_clones,			0,		0,		1,				},
-	{ "hide_fav_sell", 			&battle_config.hide_fav_sell,			0,      0,      1,              },
+	{ "hide_fav_sell", 						&battle_config.hide_fav_sell,					0,      0,      1,              },
 	{ "mail_daily_count",					&battle_config.mail_daily_count,				100,	0,		INT32_MAX,		},
 	{ "mail_zeny_fee",						&battle_config.mail_zeny_fee,					2,		0,		100,			},
 	{ "mail_attachment_price",				&battle_config.mail_attachment_price,			2500,	0,		INT32_MAX,		},
@@ -9033,7 +9033,7 @@ static const struct _battle_data {
 	{ "banana_bomb_duration",				&battle_config.banana_bomb_duration,			0,		0,		UINT16_MAX,		},
 	{ "guild_leaderchange_delay",			&battle_config.guild_leaderchange_delay,		1440,	0,		INT32_MAX,		},
 	{ "guild_leaderchange_woe",				&battle_config.guild_leaderchange_woe,			0,		0,		1,				},
-	{ "guild_alliance_onlygm",              &battle_config.guild_alliance_onlygm,           0,      0,      1, },
+	{ "guild_alliance_onlygm",              &battle_config.guild_alliance_onlygm,           0,      0,      1,				},
 	{ "feature.achievement",                &battle_config.feature_achievement,             1,      0,      1,              },
 	{ "allow_bound_sell",                   &battle_config.allow_bound_sell,                0,      0,      0xF,            },
 	{ "autoloot_adjust",                    &battle_config.autoloot_adjust,                 0,      0,      1,              },
@@ -9125,7 +9125,7 @@ static const struct _battle_data {
 	{ "feature.dynamicnpc_rangey",          &battle_config.feature_dynamicnpc_rangey,       2,      0,      INT_MAX,        },
 	{ "feature.dynamicnpc_direction",       &battle_config.feature_dynamicnpc_direction,    0,      0,      1,              },
 
-	{ "mob_respawn_time",                   &battle_config.mob_respawn_time,                1000,   1000,   INT_MAX,        },
+	{ "mob_respawn_time",                   &battle_config.mob_respawn_time,                1000,   0,      INT_MAX,        },
 	{ "mob_unlock_time",                    &battle_config.mob_unlock_time,                 2000,   0,      INT_MAX,        },
 	{ "map_edge_size",                      &battle_config.map_edge_size,                   15,     1,      40,             },
 	{ "randomize_center_cell",              &battle_config.randomize_center_cell,           1,      0,      1,              },
@@ -9156,6 +9156,7 @@ static const struct _battle_data {
 	{ "hide_cloaked_units",                 &battle_config.hide_cloaked_units,              0,      0,      BL_ALL,         },
 	{ "oridecon_research_fix",              &battle_config.oridecon_research_fix,           0,      0,      1,              },
 
+	// Pandas Configure
 #ifdef Pandas_BattleConfig_Suspend_MonsterIgnore
 	{ "suspend_monsterignore",              &battle_config.suspend_monsterignore,           3,      0,      7,              },
 #endif // Pandas_BattleConfig_Suspend_MonsterIgnore
@@ -9252,6 +9253,7 @@ static const struct _battle_data {
 	{ "cashmount_useitem_limit",            &battle_config.cashmount_useitem_limit,         64,     0,      511,            },
 #endif // Pandas_BattleConfig_CashMounting_UseitemLimit
 
+	// PYHELP - BATTLECONFIG - INSERT POINT - <Section 3>
 #include <custom/battle_config_init.inc>
 };
 
@@ -9365,63 +9367,81 @@ void battle_adjust_conf()
 
 #if PACKETVER < 20100427
 	if (battle_config.feature_buying_store) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf:buying_store is enabled but it requires PACKETVER 2010-04-27 or newer, disabling...\n");
+#endif
 		battle_config.feature_buying_store = 0;
 	}
 #endif
 
 #if PACKETVER < 20100803
 	if (battle_config.feature_search_stores) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf:search_stores is enabled but it requires PACKETVER 2010-08-03 or newer, disabling...\n");
+#endif
 		battle_config.feature_search_stores = 0;
 	}
 #endif
 
 #if PACKETVER < 20120101
 	if (battle_config.feature_bgqueue) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf:bgqueue is enabled but it requires PACKETVER 2012-01-01 or newer, disabling...\n");
+#endif
 		battle_config.feature_bgqueue = 0;
 	}
 #endif
 
 #if PACKETVER > 20120000 && PACKETVER < 20130515 /* Exact date (when it started) not known */
 	if (battle_config.feature_auction) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf:feature.auction is enabled but it is not stable on PACKETVER " EXPAND_AND_QUOTE(PACKETVER) ", disabling...\n");
 		ShowWarning("conf/battle/feature.conf:feature.auction change value to '2' to silence this warning and maintain it enabled\n");
+#endif
 		battle_config.feature_auction = 0;
 	}
 #elif PACKETVER >= 20141112
 	if (battle_config.feature_auction) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf:feature.auction is enabled but it is not available for clients from 2014-11-12 on, disabling...\n");
 		ShowWarning("conf/battle/feature.conf:feature.auction change value to '2' to silence this warning and maintain it enabled\n");
+#endif
 		battle_config.feature_auction = 0;
 	}
 #endif
 
 #if PACKETVER < 20130724
 	if (battle_config.feature_banking) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf banking is enabled but it requires PACKETVER 2013-07-24 or newer, disabling...\n");
+#endif
 		battle_config.feature_banking = 0;
 	}
 #endif
 
 #if PACKETVER < 20131223
 	if (battle_config.mvp_exp_reward_message) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/client.conf MVP EXP reward message is enabled but it requires PACKETVER 2013-12-23 or newer, disabling...\n");
+#endif
 		battle_config.mvp_exp_reward_message = 0;
 	}
 #endif
 
 #if PACKETVER < 20141022
 	if (battle_config.feature_roulette) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf roulette is enabled but it requires PACKETVER 2014-10-22 or newer, disabling...\n");
+#endif
 		battle_config.feature_roulette = 0;
 	}
 #endif
 
 #if PACKETVER < 20150513
 	if (battle_config.feature_achievement) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf achievement is enabled but it requires PACKETVER 2015-05-13 or newer, disabling...\n");
+#endif
 		battle_config.feature_achievement = 0;
 	}
 #endif
@@ -9442,60 +9462,78 @@ void battle_adjust_conf()
 
 #if PACKETVER < 20141008
 	if (battle_config.feature_petevolution) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf petevolution is enabled but it requires PACKETVER 2014-10-08 or newer, disabling...\n");
+#endif
 		battle_config.feature_petevolution = 0;
 	}
 	if (battle_config.feature_pet_autofeed) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf pet auto feed is enabled but it requires PACKETVER 2014-10-08 or newer, disabling...\n");
+#endif
 		battle_config.feature_pet_autofeed = 0;
 	}
 #endif
 
 #if PACKETVER < 20161012
 	if (battle_config.feature_refineui) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf refine UI is enabled but it requires PACKETVER 2016-10-12 or newer, disabling...\n");
+#endif
 		battle_config.feature_refineui = 0;
 	}
 #endif
 
 #if PACKETVER < 20170208
 	if (battle_config.feature_equipswitch) {
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf equip switch is enabled but it requires PACKETVER 2017-02-08 or newer, disabling...\n");
+#endif
 		battle_config.feature_equipswitch = 0;
 	}
 #endif
 
 #if PACKETVER < 20170920
 	if( battle_config.feature_homunculus_autofeed ){
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf homunculus autofeeding is enabled but it requires PACKETVER 2017-09-20 or newer, disabling...\n");
+#endif
 		battle_config.feature_homunculus_autofeed = 0;
 	}
 #endif
 
 #if PACKETVER < 20180307
 	if( battle_config.feature_attendance ){
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf attendance system is enabled but it requires PACKETVER 2018-03-07 or newer, disabling...\n");
+#endif
 		battle_config.feature_attendance = 0;
 	}
 #endif
 
 #if PACKETVER < 20180321
 	if( battle_config.feature_privateairship ){
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf private airship system is enabled but it requires PACKETVER 2018-03-21 or newer, disabling...\n");
+#endif
 		battle_config.feature_privateairship = 0;
 	}
 #endif
 
 #if !( PACKETVER_MAIN_NUM >= 20190116 || PACKETVER_RE_NUM >= 20190116 || PACKETVER_ZERO_NUM >= 20181226 )
 	if( battle_config.feature_barter ){
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf barter shop system is enabled but it requires PACKETVER 2019-01-16 or newer, disabling...\n");
+#endif
 		battle_config.feature_barter = 0;
 	}
 #endif
 
 #if !( PACKETVER_MAIN_NUM >= 20191120 || PACKETVER_RE_NUM >= 20191106 || PACKETVER_ZERO_NUM >= 20191127 )
 	if( battle_config.feature_barter_extended ){
+#ifndef BUILDBOT
 		ShowWarning("conf/battle/feature.conf extended barter shop system is enabled but it requires PACKETVER 2019-11-06 or newer, disabling...\n");
+#endif
 		battle_config.feature_barter_extended = 0;
 	}
 #endif
