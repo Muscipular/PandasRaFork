@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cstddef>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -20,6 +21,7 @@
 
 void systemPause();
 bool isRegexMatched(const std::string& content, const std::string& patterns);
+std::string regexExtract(const std::string& content, const std::string& patterns, size_t extract_group, bool icase = true);
 void isaAvailableHotfix();
 void deployImportDirectories();
 bool getExecuteFilepath(std::string& outFilepath);
@@ -40,12 +42,16 @@ void strReplace(char* str, const char* from, const char* to);
 bool strContain(std::vector<std::string> needle, const std::string& str);
 bool strContain(std::string needle, const std::string& str);
 std::vector<std::string> strExplode(std::string const& s, char delim);
+bool strIsNumber(const std::string& str);
 void standardizePathSep(std::string& path);
 void standardizePathSep(std::wstring& path);
 void ensurePathEndwithSep(std::string& path, const std::string& sep);
 void ensurePathEndwithSep(std::wstring& path, const std::wstring& sep);
+std::wstring strToWideStr(const std::string& s);
+std::string wideStrToStr(const std::wstring& ws);
 std::string formatVersion(std::string ver, bool bPrefix, bool bSuffix, int ver_type);
 bool isCommercialVersion();
 std::string getPandasVersion(bool bPrefix = true, bool bSuffix = true);
 bool isDoubleByteCharacter(unsigned char high, unsigned char low);
 bool isEscapeSequence(const char* start_p);
+bool icontains(const std::string& haystack, const std::string& needle);

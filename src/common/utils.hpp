@@ -7,6 +7,7 @@
 #include <cstdio> // FILE*
 
 #include "cbasetypes.hpp"
+#include "assistant.hpp"
 
 // generate a hex dump of the first 'length' bytes of 'buffer'
 void WriteDump(FILE* fp, const void* buffer, size_t length);

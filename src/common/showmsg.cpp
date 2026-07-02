@@ -44,6 +44,7 @@
 #include "cbasetypes.hpp"
 #include "core.hpp" //[Ind] - For SERVER_TYPE
 #include "strlib.hpp" // StringBuf
+#include "assistant.hpp"
 #ifdef Pandas_Console_Charset_SmartConvert
 #include "utf8.hpp"
 #endif // Pandas_Console_Charset_SmartConvert
@@ -62,7 +63,7 @@ char console_log_filepath[32] = "./log/unknown.log";
 ///////////////////////////////////////////////////////////////////////////////
 /// static/dynamic buffer for the messages
 
-#define SBUF_SIZE 2054 // never put less that what's required for the debug message
+#define SBUF_SIZE 1024 * 4
 
 #define NEWBUF(buf)				\
 	struct {					\

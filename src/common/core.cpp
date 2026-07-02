@@ -379,6 +379,10 @@ static void display_title(void) {
 	translate_status();
 #endif // Pandas_Console_Translate
 
+#ifdef Pandas_Disclaimer
+	ShowInfo("This program is completely free! You don't need to pay for it.\n");
+#endif // Pandas_Disclaimer
+
 #ifdef Pandas_Deploy_Import_Directories
 	deployImportDirectories();
 #endif // Pandas_Deploy_Import_Directories

@@ -5,11 +5,14 @@
 #include <cstring>
 #include <cstdlib>
 #include <filesystem>
+#include <iterator>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
+
+#include <utf8.h>
 
 #include <config/pandas.hpp>
 
@@ -45,6 +48,27 @@ bool isRegexMatched(const std::string& content, const std::string& patterns) {
 	catch (const std::regex_error& e) {
 		ShowWarning("%s throw regex_error : %s\n", __func__, e.what());
 		return false;
+	}
+}
+
+std::string regexExtract(const std::string& content, const std::string& patterns, size_t extract_group, bool icase) {
+	try {
+		std::regex re(patterns, icase ? std::regex::icase : std::regex::ECMAScript);
+		std::smatch match_result;
+
+		if (!std::regex_search(content, match_result, re)) {
+			return "";
+		}
+
+		if (extract_group >= match_result.size()) {
+			return "";
+		}
+
+		return match_result[extract_group];
+	}
+	catch (const std::regex_error& e) {
+		ShowWarning("%s throw regex_error : %s\n", __func__, e.what());
+		return "";
 	}
 }
 
@@ -372,6 +396,20 @@ std::vector<std::string> strExplode(std::string const& s, char delim) {
 	return result;
 }
 
+bool strIsNumber(const std::string& str) {
+	if (str.empty()) {
+		return false;
+	}
+
+	for (unsigned char c : str) {
+		if (std::isdigit(c) == 0) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 bool strEndWith(std::string fullstring, std::string ending) {
 	if (fullstring.length() >= ending.length()) {
 		return (0 == fullstring.compare(fullstring.length() - ending.length(), ending.length(), ending));
@@ -406,6 +444,18 @@ void ensurePathEndwithSep(std::wstring& path, const std::wstring& sep) {
 	if (!(strEndWith(path, L"\\") || strEndWith(path, L"/"))) {
 		path.append(sep);
 	}
+}
+
+std::wstring strToWideStr(const std::string& s) {
+	std::wstring ws;
+	utf8::utf8to16(s.begin(), s.end(), std::back_inserter(ws));
+	return ws;
+}
+
+std::string wideStrToStr(const std::wstring& ws) {
+	std::string s;
+	utf8::utf16to8(ws.begin(), ws.end(), std::back_inserter(s));
+	return s;
 }
 
 std::string formatVersion(std::string ver, bool bPrefix, bool bSuffix, int ver_type) {
@@ -555,4 +605,14 @@ bool isEscapeSequence(const char* start_p) {
 		return false;
 	size_t n = sv_unescape_c(buf, start_p, len);
 	return (n == 1);
+}
+
+bool icontains(const std::string& haystack, const std::string& needle) {
+	auto it = std::search(
+		haystack.begin(), haystack.end(),
+		needle.begin(), needle.end(),
+		[](unsigned char ch1, unsigned char ch2) { return std::toupper(ch1) == std::toupper(ch2); }
+	);
+
+	return it != haystack.end();
 }

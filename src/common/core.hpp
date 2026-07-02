@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include <config/pandas.hpp>
+
 #include "timer.hpp"
 
 #ifdef _WIN32

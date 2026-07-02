@@ -10,6 +10,10 @@
 #include "core.hpp"
 #include "showmsg.hpp"
 
+#ifdef LOG_MEMMGR
+#include "assistant.hpp"
+#endif // LOG_MEMMGR
+
 #if defined(__64BIT__)
 	#define FREED_POINTER 0xdeadbeafL
 #else

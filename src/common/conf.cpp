@@ -10,6 +10,7 @@
 #include "utf8.hpp"
 
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
 #ifndef Pandas_Support_UTF8BOM_Files
