@@ -2969,7 +2969,7 @@ ACMD_FUNC(param)
 
 	uint8 stat;
 	int32 value = 0;
-	uint16 new_value, status, max_status;
+	pec_uint16 new_value, status, max_status;
 
 	memset(atcmd_output, '\0', sizeof(atcmd_output));
 
@@ -2997,7 +2997,7 @@ ACMD_FUNC(param)
 	}
 
 	if( pc_has_permission( sd, PC_PERM_BYPASS_MAX_STAT ) ){
-		max_status = SHRT_MAX;
+		max_status = PEC_SHRT_MAX;
 	}else{
 		max_status = pc_maxparameter( sd, static_cast<e_params>( stat ) );
 	}
@@ -3048,7 +3048,7 @@ ACMD_FUNC(stat_all)
 
 	int32 value = 0;
 	uint8 count, i;
-	uint16 status[PARAM_MAX] = {}, max_status[PARAM_MAX] = {};
+	pec_uint16 status[PARAM_MAX] = {}, max_status[PARAM_MAX] = {};
 
 	for (i = PARAM_STR; i < PARAM_POW; i++)
 		status[i] = pc_getstat(sd, SP_STR + i);
@@ -3056,11 +3056,11 @@ ACMD_FUNC(stat_all)
 	if (!message || !*message || sscanf(message, "%11d", &value) < 1 || value == 0) {
 		for (i = PARAM_STR; i < PARAM_POW; i++)
 			max_status[i] = pc_maxparameter(sd, static_cast<e_params>(i));
-		value = SHRT_MAX;
+		value = PEC_SHRT_MAX;
 	} else {
 		if (pc_has_permission(sd, PC_PERM_BYPASS_MAX_STAT)) {
 			for (i = PARAM_STR; i < PARAM_POW; i++)
-				max_status[i] = SHRT_MAX;
+				max_status[i] = PEC_SHRT_MAX;
 		} else {
 			for (i = PARAM_STR; i < PARAM_POW; i++)
 				max_status[i] = pc_maxparameter(sd, static_cast<e_params>(i));
@@ -3069,7 +3069,7 @@ ACMD_FUNC(stat_all)
 	
 	count = 0;
 	for (i = PARAM_STR; i < PARAM_POW; i++) {
-		int16 new_value;
+		pec_int16 new_value;
 
 		if (value > 0 && status[i] + value >= max_status[i])
 			new_value = max_status[i];
@@ -3121,7 +3121,7 @@ ACMD_FUNC(trait_all) {
 
 	int32 value = 0;
 	uint8 i;
-	uint16 status[PARAM_MAX] = {}, max_status[PARAM_MAX] = {};
+	pec_uint16 status[PARAM_MAX] = {}, max_status[PARAM_MAX] = {};
 
 	for (i = PARAM_POW; i < PARAM_MAX; i++)
 		status[i] = pc_getstat(sd, SP_POW + i - PARAM_POW);
@@ -3129,11 +3129,11 @@ ACMD_FUNC(trait_all) {
 	if (!message || !*message || sscanf(message, "%11d", &value) < 1 || value == 0) {
 		for (i = PARAM_POW; i < PARAM_MAX; i++)
 			max_status[i] = pc_maxparameter(sd, static_cast<e_params>(i));
-		value = SHRT_MAX;
+		value = PEC_SHRT_MAX;
 	} else {
 		if (pc_has_permission(sd, PC_PERM_BYPASS_MAX_STAT)) {
 			for (i = PARAM_POW; i < PARAM_MAX; i++)
-				max_status[i] = SHRT_MAX;
+				max_status[i] = PEC_SHRT_MAX;
 		} else {
 			for (i = PARAM_POW; i < PARAM_MAX; i++)
 				max_status[i] = pc_maxparameter(sd, static_cast<e_params>(i));
@@ -3143,7 +3143,7 @@ ACMD_FUNC(trait_all) {
 	uint8 count = 0;
 
 	for (i = PARAM_POW; i < PARAM_MAX; i++) {
-		int16 new_value;
+		pec_int16 new_value;
 
 		if (value > 0 && status[i] + value >= max_status[i])
 			new_value = max_status[i];
@@ -11102,14 +11102,14 @@ ACMD_FUNC(clonestat) {
 	}
 	else {
 		uint8 i;
-		int16 max_status[PARAM_MAX] = {};
+		pec_int16 max_status[PARAM_MAX] = {};
 
 		pc_resetstate(sd);
 		if (pc_has_permission(sd, PC_PERM_BYPASS_STAT_ONCLONE)) {
 			for (i = PARAM_STR; i < PARAM_MAX; i++) {
 				if (i >= PARAM_POW && !pc_is_trait_job(sd->class_))
 					continue;
-				max_status[i] = SHRT_MAX;
+				max_status[i] = PEC_SHRT_MAX;
 			}
 		} else {
 			for (i = PARAM_STR; i < PARAM_MAX; i++) {
@@ -11895,6 +11895,8 @@ ACMD_FUNC(reloadauradb) {
 }
 #endif // Pandas_AtCommand_ReloadAuraDB
 
+// PYHELP - ATCMD - INSERT POINT - <Section 2>
+
 /**
  * Fills the reference of available commands in atcommand DBMap
  **/
@@ -11933,6 +11935,7 @@ void atcommand_basecommands(void) {
 #ifdef Pandas_AtCommand_ReloadAuraDB
 		ACMD_DEF(reloadauradb),			// 重新加载光环数据库 [Sola丶小克]
 #endif // Pandas_AtCommand_ReloadAuraDB
+		// PYHELP - ATCMD - INSERT POINT - <Section 3>
 #include <custom/atcommand_def.inc>
 		ACMD_DEF(mapmove),
 		ACMD_DEF(where),
