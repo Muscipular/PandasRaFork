@@ -168,6 +168,7 @@ struct Script_Config {
 	const char *baselvup_event_name;
 	const char *joblvup_event_name;
 	const char *identify_event_name;
+	/* Filter 类型的过滤事件，这些事件可以被 processhalt 中断                    */
 #ifdef Pandas_NpcFilter_IDENTIFY
 	const char* identify_filter_name;
 #endif // Pandas_NpcFilter_IDENTIFY
@@ -249,6 +250,8 @@ struct Script_Config {
 #ifdef Pandas_NpcFilter_FAVORITE_DEL
 	const char* favorite_del_filter_name;
 #endif // Pandas_NpcFilter_FAVORITE_DEL
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 4>
+	/* Event  类型的标准事件，这些事件不能被 processhalt 打断                    */
 #ifdef Pandas_NpcEvent_KILLMVP
 	const char* killmvp_event_name;	// NPCE_KILLMVP		// OnPCKillMvpEvent		// 当玩家杀死 MVP 魔物后触发事件
 #endif // Pandas_NpcEvent_KILLMVP
@@ -267,6 +270,8 @@ struct Script_Config {
 #ifdef Pandas_NpcEvent_UNEQUIP
 	const char* unequip_event_name;	// NPCE_UNEQUIP	// OnPCUnequipEvent	// 当玩家成功脱下一件装备时触发事件
 #endif // Pandas_NpcEvent_UNEQUIP
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 10>
+	/* Express 类型的快速事件，这些事件将会被立刻执行, 不进事件队列                */
 #ifdef Pandas_NpcExpress_STATCALC
 	const char* statcalc_express_name;	// NPCE_STATCALC	// OnPCStatCalcEvent	// 当角色能力被重新计算时触发事件
 #endif // Pandas_NpcExpress_STATCALC
@@ -303,6 +308,7 @@ struct Script_Config {
 #ifdef Pandas_NpcExpress_PCHARMED
 	const char* pcharmed_express_name;	// NPCX_PCHARMED	// OnPCHarmedExpress	// 当玩家受到伤害并即将进行结算时触发实时事件 [人鱼姬的思念]
 #endif // Pandas_NpcExpress_PCHARMED
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 16>
 	// NPC related
 	const char* ontouch_event_name;
 	const char* ontouch2_event_name;

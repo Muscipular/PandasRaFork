@@ -311,6 +311,7 @@ struct Script_Config script_config = {
 	"OnPCBaseLvUpEvent", //baselvup_event_name
 	"OnPCJobLvUpEvent", //joblvup_event_name
 	"OnPCIdentifyEvent", //identify_event_name
+	/* Filter 类型的过滤事件，这些事件可以被 processhalt 中断                    */
 #ifdef Pandas_NpcFilter_IDENTIFY
 	"OnPCIdentifyFilter", //identify_filter_name
 #endif // Pandas_NpcFilter_IDENTIFY
@@ -392,6 +393,8 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcFilter_FAVORITE_DEL
 	"OnPCFavoriteDelFilter", //favorite_del_filter_name
 #endif // Pandas_NpcFilter_FAVORITE_DEL
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 5>
+	/* Event  类型的标准事件，这些事件不能被 processhalt 打断                    */
 #ifdef Pandas_NpcEvent_KILLMVP
 	"OnPCKillMvpEvent",	// NPCE_KILLMVP		// killmvp_event_name	// 当玩家杀死 MVP 魔物后触发事件
 #endif // Pandas_NpcEvent_KILLMVP
@@ -410,6 +413,8 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcEvent_UNEQUIP
 	"OnPCUnequipEvent",	// NPCE_UNEQUIP		// unequip_event_name	// 当玩家成功脱下一件装备时触发事件
 #endif // Pandas_NpcEvent_UNEQUIP
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 11>
+	/* Express 类型的快速事件，这些事件将会被立刻执行, 不进事件队列                */
 #ifdef Pandas_NpcExpress_STATCALC
 	"OnPCStatCalcEvent",	// NPCE_STATCALC		// statcalc_express_name	// 当角色能力被重新计算时触发事件
 #endif // Pandas_NpcExpress_STATCALC
@@ -446,6 +451,7 @@ struct Script_Config script_config = {
 #ifdef Pandas_NpcExpress_PCHARMED
 	"OnPCHarmedExpress",	// NPCX_PCHARMED		// pcharmed_express_name	// 当玩家受到伤害并即将进行结算时触发实时事件 [人鱼姬的思念]
 #endif // Pandas_NpcExpress_PCHARMED
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 17>
 	// NPC related
 	"OnTouch_",	//ontouch_event_name (runs on first visible char to enter area, picks another char if the first char leaves)
 	"OnTouch",	//ontouch2_event_name (run whenever a char walks into the OnTouch area)
@@ -21077,8 +21083,8 @@ BUILDIN_FUNC(setunitdata)
 			case UMOB_ATKMAX: md->base_status->rhw.atk2 = (uint16)value; calc_status = true; break;
 			case UMOB_MATKMIN: md->base_status->matk_min = (uint16)value; calc_status = true; break;
 			case UMOB_MATKMAX: md->base_status->matk_max = (uint16)value; calc_status = true; break;
-			case UMOB_DEF: md->base_status->def = (defType)value; calc_status = true; break;
-			case UMOB_MDEF: md->base_status->mdef = (defType)value; calc_status = true; break;
+			case UMOB_DEF: md->base_status->def = (pec_defType)value; calc_status = true; break;
+			case UMOB_MDEF: md->base_status->mdef = (pec_defType)value; calc_status = true; break;
 			case UMOB_HIT: md->base_status->hit = (int16)value; calc_status = true; break;
 			case UMOB_FLEE: md->base_status->flee = (int16)value; calc_status = true; break;
 			case UMOB_PDODGE: md->base_status->flee2 = (int16)value; calc_status = true; break;
@@ -21171,8 +21177,8 @@ BUILDIN_FUNC(setunitdata)
 			case UHOM_ATKMAX: hd->base_status.rhw.atk2 = (uint16)value; calc_status = true; break;
 			case UHOM_MATKMIN: hd->base_status.matk_min = (uint16)value; calc_status = true; break;
 			case UHOM_MATKMAX: hd->base_status.matk_max = (uint16)value; calc_status = true; break;
-			case UHOM_DEF: hd->base_status.def = (defType)value; calc_status = true; break;
-			case UHOM_MDEF: hd->base_status.mdef = (defType)value; calc_status = true; break;
+			case UHOM_DEF: hd->base_status.def = (pec_defType)value; calc_status = true; break;
+			case UHOM_MDEF: hd->base_status.mdef = (pec_defType)value; calc_status = true; break;
 			case UHOM_HIT: hd->base_status.hit = (int16)value; calc_status = true; break;
 			case UHOM_FLEE: hd->base_status.flee = (int16)value; calc_status = true; break;
 			case UHOM_PDODGE: hd->base_status.flee2 = (int16)value; calc_status = true; break;
@@ -21242,8 +21248,8 @@ BUILDIN_FUNC(setunitdata)
 			case UPET_ATKMAX: pd->status.rhw.atk2 = (uint16)value; break;
 			case UPET_MATKMIN: pd->status.matk_min = (uint16)value; break;
 			case UPET_MATKMAX: pd->status.matk_max = (uint16)value; break;
-			case UPET_DEF: pd->status.def = (defType)value; break;
-			case UPET_MDEF: pd->status.mdef = (defType)value; break;
+			case UPET_DEF: pd->status.def = (pec_defType)value; break;
+			case UPET_MDEF: pd->status.mdef = (pec_defType)value; break;
 			case UPET_HIT: pd->status.hit = (int16)value; break;
 			case UPET_FLEE: pd->status.flee = (int16)value; break;
 			case UPET_PDODGE: pd->status.flee2 = (int16)value; break;
@@ -21297,8 +21303,8 @@ BUILDIN_FUNC(setunitdata)
 			case UMER_ATKMAX: mc->base_status.rhw.atk2 = (uint16)value; calc_status = true; break;
 			case UMER_MATKMIN: mc->base_status.matk_min = (uint16)value; calc_status = true; break;
 			case UMER_MATKMAX: mc->base_status.matk_max = (uint16)value; calc_status = true; break;
-			case UMER_DEF: mc->base_status.def = (defType)value; calc_status = true; break;
-			case UMER_MDEF: mc->base_status.mdef = (defType)value; calc_status = true; break;
+			case UMER_DEF: mc->base_status.def = (pec_defType)value; calc_status = true; break;
+			case UMER_MDEF: mc->base_status.mdef = (pec_defType)value; calc_status = true; break;
 			case UMER_HIT: mc->base_status.hit = (int16)value; calc_status = true; break;
 			case UMER_FLEE: mc->base_status.flee = (int16)value; calc_status = true; break;
 			case UMER_PDODGE: mc->base_status.flee2 = (int16)value; calc_status = true; break;
@@ -21372,8 +21378,8 @@ BUILDIN_FUNC(setunitdata)
 			case UELE_ATKMAX: ed->base_status.rhw.atk2 = (uint16)value; calc_status = true; break;
 			case UELE_MATKMIN: ed->base_status.matk_min = (uint16)value; calc_status = true; break;
 			case UELE_MATKMAX: ed->base_status.matk_max = (uint16)value; calc_status = true; break;
-			case UELE_DEF: ed->base_status.def = (defType)value; calc_status = true; break;
-			case UELE_MDEF: ed->base_status.mdef = (defType)value; calc_status = true; break;
+			case UELE_DEF: ed->base_status.def = (pec_defType)value; calc_status = true; break;
+			case UELE_MDEF: ed->base_status.mdef = (pec_defType)value; calc_status = true; break;
 			case UELE_HIT: ed->base_status.hit = (int16)value; calc_status = true; break;
 			case UELE_FLEE: ed->base_status.flee = (int16)value; calc_status = true; break;
 			case UELE_PDODGE: ed->base_status.flee2 = (int16)value; calc_status = true; break;
@@ -21444,8 +21450,8 @@ BUILDIN_FUNC(setunitdata)
 			case UNPC_ATKMAX: nd->status.rhw.atk2 = (uint16)value; break;
 			case UNPC_MATKMIN: nd->status.matk_min = (uint16)value; break;
 			case UNPC_MATKMAX: nd->status.matk_max = (uint16)value; break;
-			case UNPC_DEF: nd->status.def = (defType)value; break;
-			case UNPC_MDEF: nd->status.mdef = (defType)value; break;
+			case UNPC_DEF: nd->status.def = (pec_defType)value; break;
+			case UNPC_MDEF: nd->status.mdef = (pec_defType)value; break;
 			case UNPC_HIT: nd->status.hit = (int16)value; break;
 			case UNPC_FLEE: nd->status.flee = (int16)value; break;
 			case UNPC_PDODGE: nd->status.flee2 = (int16)value; break;
@@ -34391,6 +34397,7 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(axtoi,"s"),
 	BUILDIN_DEF(query_sql,"s*"),
 	BUILDIN_DEF(query_logsql,"s*"),
+	// 熊猫模拟器拓展脚本指令 - 开始
 #ifdef Pandas_ScriptCommand_QuerySql_Async
 	BUILDIN_DEF(query_sql_async, "s*"),
 	BUILDIN_DEF(query_logsql_async, "s*"),
@@ -34753,6 +34760,7 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF( mesitemicon, "v??" ),
 	BUILDIN_DEF(meshyperlink, "ss"),
 	BUILDIN_DEF(mesemotion,"i"),
+	// PYHELP - SCRIPTCMD - INSERT POINT - <Section 3>
 
 #include <custom/script_def.inc>
 
