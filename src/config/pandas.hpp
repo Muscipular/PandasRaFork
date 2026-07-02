@@ -1980,6 +1980,7 @@
 	#define Pandas_ScriptCommand_GetBossInfo
 	// 是否启用 whodropitem 脚本指令 [Sola丶小克]
 	// 该指令用于查询指定道具会从哪些魔物身上掉落以及掉落的机率信息
+	#define Pandas_ScriptCommand_WhoDropItem
 	// 是否扩充 getinventorylist 脚本指令 [Sola丶小克]
 	// 主要包括了查询返回值的信息扩充, 衍生查询仓库和手推车的变体指令, 可控制每次需要被赋值的具体数组
 	// - 查询返回值的信息扩充相比 rAthena 多返回以下内容

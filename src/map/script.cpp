@@ -18,6 +18,11 @@
 #include <atomic>
 #include <map>
 #endif // Pandas_ScriptCommand_QuerySql_Async
+#ifdef Pandas_ScriptCommand_WhoDropItem
+#include <algorithm>
+#include <map>
+#include <vector>
+#endif // Pandas_ScriptCommand_WhoDropItem
 #ifdef Pandas_ScriptEngine_Express
 #include <algorithm>
 #include <cctype>
@@ -33084,6 +33089,160 @@ BUILDIN_FUNC(getbossinfo) {
 }
 #endif // Pandas_ScriptCommand_GetBossInfo
 
+#ifdef Pandas_ScriptCommand_WhoDropItem
+/* ===========================================================
+ * 指令: whodropitem
+ * 描述: 查询指定道具会从哪些魔物身上掉落以及掉落的机率信息
+ * 用法: whodropitem <物品编号/"物品名称">{,<返回的最大记录数>{,<角色编号>}};
+ * 返回: 返回查询到的记录数量
+ * 作者: Sola丶小克 (感谢 "人鱼姬的思念")
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(whodropitem) {
+	t_itemid nameid = 0;
+	int32 max_result = (script_hasdata(st, 3) && script_isint(st, 3)) ? script_getnum(st, 3) : 0;
+	int32 char_id = (script_hasdata(st, 4) && script_isint(st, 4)) ? script_getnum(st, 4) : 0;
+	std::shared_ptr<item_data> id;
+	map_session_data* sd = nullptr;
+
+	script_both_setreg(st, "whodropitem_count", 0, false, 0, char_id);
+
+	if (script_isstring(st, 2)) {
+		const char* name = script_getstr(st, 2);
+
+		id = item_db.searchname(name);
+
+		if (id == nullptr) {
+			ShowError("buildin_whodropitem: Nonexistant item %s requested.\n", name);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		nameid = id->nameid;
+	} else {
+		nameid = script_getnum(st, 2);
+		id = item_db.find(nameid);
+
+		if (id == nullptr) {
+			ShowError("buildin_whodropitem: Nonexistant item %u requested.\n", nameid);
+			script_pushint(st, 0);
+			return SCRIPT_CMD_FAILURE;
+		}
+	}
+
+	max_result = max_result ? max_result : MAX_SEARCH;
+	max_result = cap_value(max_result, 1, 500);
+
+	if (id->mob[0].chance == 0) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	if (char_id && !(sd = map_charid2sd(char_id))) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	} else if (st->rid != 0) {
+		sd = map_id2sd(st->rid);
+	}
+
+	std::map<uint32, int32> result_cache;
+
+	for (auto const& pair : mob_db) {
+		if (mob_is_clone(pair.first)) {
+			continue;
+		}
+
+		for (const std::shared_ptr<s_mob_drop>& entry : pair.second->dropitem) {
+			if (entry->nameid != nameid) {
+				continue;
+			}
+
+			if (rathena::util::map_exists(result_cache, pair.first)) {
+				if (result_cache[pair.first] < entry->rate) {
+					result_cache[pair.first] = entry->rate;
+				}
+			} else {
+				result_cache[pair.first] = entry->rate;
+			}
+		}
+	}
+
+	for (auto const& it : result_cache) {
+		int32 dropchance = it.second;
+
+#ifdef RENEWAL_DROP
+		if (sd && battle_config.atcommand_mobinfo_type) {
+			std::shared_ptr<s_mob_db> mob = mob_db.find(it.first);
+			dropchance = dropchance * pc_level_penalty_mod(sd, PENALTY_DROP, mob) / 100;
+
+			if (dropchance <= 0 && !battle_config.drop_rate0item) {
+				dropchance = 1;
+			}
+		}
+#endif // RENEWAL_DROP
+		if (sd && pc_isvip(sd)) {
+			dropchance += (dropchance * battle_config.vip_drop_increase) / 100;
+		}
+
+#ifdef Pandas_Database_MobItem_FixedRatio
+		if (mobdrop_strict_droprate(nameid, it.first)) {
+			dropchance = it.second;
+		}
+#endif // Pandas_Database_MobItem_FixedRatio
+
+		result_cache[it.first] = dropchance;
+	}
+
+	std::vector<std::pair<uint32, int32>> result_sortd;
+
+	for (auto const& pair : result_cache) {
+		result_sortd.push_back(std::make_pair(pair.first, pair.second));
+	}
+
+	std::sort(result_sortd.begin(), result_sortd.end(),
+		[](const std::pair<uint32, int32>& a, const std::pair<uint32, int32>& b) {
+			return a.first < b.first;
+		}
+	);
+
+	std::sort(result_sortd.begin(), result_sortd.end(),
+		[](const std::pair<uint32, int32>& a, const std::pair<uint32, int32>& b) {
+			return a.second > b.second;
+		}
+	);
+
+	if (result_sortd.empty()) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	int32 current_index = 0;
+
+	for (const auto& it : result_sortd) {
+		int32 dropchance = it.second;
+		std::shared_ptr<s_mob_db> mob = mob_db.find(it.first);
+
+		if (!mob) {
+			continue;
+		}
+
+		script_both_setreg(st, "whodropitem_mob_id", mob->id, true, current_index, char_id);
+		script_both_setregstr(st, "whodropitem_mob_jname$", mob->jname.c_str(), true, current_index, char_id);
+		script_both_setreg(st, "whodropitem_chance", dropchance, true, current_index, char_id);
+
+		current_index++;
+
+		if (current_index >= max_result) {
+			break;
+		}
+	}
+
+	script_both_setreg(st, "whodropitem_count", current_index, false, 0, char_id);
+	script_pushint(st, current_index);
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_WhoDropItem
+
 #ifdef Pandas_ScriptCommand_SelfDeletion
 // 当一个玩家结束与某 NPC 的交互时, 检查是否需要自毁此 NPC
 void selfdeletion_exec_endtalk(struct script_state* st) {
@@ -34010,6 +34169,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_GetBossInfo
 	BUILDIN_DEF(getbossinfo, "???"), // 查询 BOSS 魔物重生时间及其坟墓等信息 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetBossInfo
+#ifdef Pandas_ScriptCommand_WhoDropItem
+	BUILDIN_DEF(whodropitem, "v??"), // 查询指定道具会从哪些魔物身上掉落以及掉落的机率信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_WhoDropItem
 	BUILDIN_DEF(dispbottom,"s??"), //added from jA [Lupus]
 	BUILDIN_DEF(recovery,"i???"),
 	BUILDIN_DEF(getpetinfo,"i?"),
