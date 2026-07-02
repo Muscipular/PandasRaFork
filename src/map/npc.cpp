@@ -3295,6 +3295,9 @@ static int32 npc_selllist_sub(map_session_data* sd, int32 list_length, const PAC
 	char card_slot[NAME_LENGTH];
 	char option_id[NAME_LENGTH], option_val[NAME_LENGTH], option_param[NAME_LENGTH];
 	int32 i, j;
+#ifdef Pandas_ScriptResults_OnSellItem
+	int32 key_idx = 0;
+#endif // Pandas_ScriptResults_OnSellItem
 	int32 key_nameid = 0;
 	int32 key_amount = 0;
 	int32 key_refine = 0;
@@ -3305,6 +3308,9 @@ static int32 npc_selllist_sub(map_session_data* sd, int32 list_length, const PAC
 	int32 key_option_id[MAX_ITEM_RDM_OPT], key_option_val[MAX_ITEM_RDM_OPT], key_option_param[MAX_ITEM_RDM_OPT];
 
 	// discard old contents
+#ifdef Pandas_ScriptResults_OnSellItem
+	script_cleararray_pc( sd, "@sold_idx" );
+#endif // Pandas_ScriptResults_OnSellItem
 	script_cleararray_pc( sd, "@sold_nameid" );
 	script_cleararray_pc( sd, "@sold_quantity" );
 	script_cleararray_pc( sd, "@sold_refine" );
@@ -3335,6 +3341,9 @@ static int32 npc_selllist_sub(map_session_data* sd, int32 list_length, const PAC
 	{
 		int32 idx = item_list[i].index - 2;
 
+#ifdef Pandas_ScriptResults_OnSellItem
+		script_setarray_pc( sd, "@sold_idx", i, idx, &key_idx );
+#endif // Pandas_ScriptResults_OnSellItem
 		script_setarray_pc( sd, "@sold_nameid", i, sd->inventory.u.items_inventory[idx].nameid, &key_nameid );
 		script_setarray_pc( sd, "@sold_quantity", i, item_list[i].amount, &key_amount );
 		script_setarray_pc( sd, "@sold_refine", i, sd->inventory.u.items_inventory[idx].refine, &key_refine );
