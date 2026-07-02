@@ -23,6 +23,7 @@
 	#define Pandas_ScriptConstants
 	#define Pandas_ScriptResults
 	#define Pandas_ScriptParams
+	#define Pandas_WebServer
 
 #ifndef GIT_BRANCH
 	#define GIT_BRANCH ""
@@ -2064,3 +2065,29 @@
 	// 使之能设置或者读取指定魔物实例的经验值 (BASEEXP / JOBEXP) [人鱼姬的思念]
 	// 此选项依赖 Pandas_Struct_Mob_Data_SpecialExperience 的拓展
 #endif // Pandas_ScriptParams
+
+// ============================================================================
+// WEB 服务器修改组 - Pandas_WebServer
+// ============================================================================
+
+#ifdef Pandas_WebServer
+	// 是否解决数据表中看到中文乱码的问题 [Sola丶小克]
+	// 客户端发送给 WEB 接口的内容使用的是 UTF8 编码, 我们需要将内容存放到数据库中去
+	// 但数据库本身的编码可能不是 UTF8, 因此在入库之前需要将内容进行适当的编码转换, 否则数据库中看到的会是乱码
+	// 同理, 将数据库中保存的内容读取出来后也需要转换成 UTF8 编码才能发送给客户端
+
+	// 是否解决终端看到客户端发来的中文乱码问题 [Sola丶小克]
+	// 客户端发送给 WEB 接口的内容使用的是 UTF8 编码, 但我们的终端程序通常不是工作在 UTF8 编码环境下,
+	// 因此如果将客户端发送来的中文直接打印到终端就会变成乱码.
+	// 启用该选项后将会对客户端发送来的 UTF8 信息在输出时转换成当前终端使用的编码再打印到终端
+
+	// 是否改进开启 print_req_res 后打印信息的呈现方式, 使信息的区域划分更清晰 [Sola丶小克]
+
+	// 是否重写部分控制器的核心处理代码 [Sola丶小克]
+	// 此选项依赖 Pandas_WebServer_Database_EncodingAdaptive 的拓展
+
+	// 在执行 logger 日志函数时是否在内部进行互斥处理 [Sola丶小克]
+	// 如果不进行互斥操作的话, 在打开 print_req_res 的情况下，
+	// 如果请求间隔很短会导致终端输出日志信息的时候由于并发而混在一起
+	// 比如: 冒险者查询接口就是 party/list 然后立刻 party/get 两个请求间隔非常短
+#endif // Pandas_WebServer
