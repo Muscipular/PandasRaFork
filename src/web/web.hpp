@@ -28,6 +28,18 @@
 	#define A2UWE(x) x
 #endif // Pandas_WebServer_Database_EncodingAdaptive
 
+#ifdef Pandas_WebServer_Console_EncodingAdaptive
+	// Utf8 to Ansi with Console Encoding
+	#define U2ACE(x) PandasUtf8::utf8ToAnsi(x, 0x1)
+	// Ansi to Utf8 with Console Encoding
+	#define A2UCE(x) PandasUtf8::ansiToUtf8(x)
+#else
+	// Utf8 to Ansi with Console Encoding
+	#define U2ACE(x) x
+	// Ansi to Utf8 with Console Encoding
+	#define A2UCE(x) x
+#endif // Pandas_WebServer_Console_EncodingAdaptive
+
 using rathena::server_core::Core;
 using rathena::server_core::e_core_type;
 
