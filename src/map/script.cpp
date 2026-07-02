@@ -31153,6 +31153,25 @@ BUILDIN_FUNC(expandinventory_adjust) {
 }
 #endif // Pandas_ScriptCommand_ExpandInventoryAdjust
 
+#ifdef Pandas_ScriptCommand_GetInventorySize
+/* ===========================================================
+ * 指令: getinventorysize
+ * 描述: 查询并获取当前角色的背包容量上限
+ * 用法: getinventorysize {<角色编号>};
+ * 返回: 找不到角色则返回 0, 否则返回查询到的背包容量
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getinventorysize) {
+	TBL_PC* sd = nullptr;
+	if (!script_charid2sd(2, sd)) {
+		script_pushint(st, 0);
+		return SCRIPT_CMD_FAILURE;
+	}
+	script_pushint(st, sd->status.inventory_slots);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetInventorySize
+
 #ifdef Pandas_ScriptCommand_MobRemove
 /* ===========================================================
  * 指令: mobremove
@@ -33371,6 +33390,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_ExpandInventoryAdjust
 	BUILDIN_DEF(expandinventory_adjust, "i"), // 增加角色的背包容量上限 [Sola丶小克]
 #endif // Pandas_ScriptCommand_ExpandInventoryAdjust
+#ifdef Pandas_ScriptCommand_GetInventorySize
+	BUILDIN_DEF(getinventorysize, "?"), // 查询并获取当前角色的背包容量上限 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetInventorySize
 #ifdef Pandas_ScriptCommand_MobRemove
 	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
 #endif // Pandas_ScriptCommand_MobRemove

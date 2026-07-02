@@ -1931,6 +1931,7 @@
 	#define Pandas_ScriptCommand_ExpandInventoryAdjust
 	// 是否启用 getinventorysize 脚本指令 [Sola丶小克]
 	// 该指令用于查询并获取当前角色的背包容量上限
+	#define Pandas_ScriptCommand_GetInventorySize
 	// 是否启用 getmapspawns 脚本指令 [Sola丶小克]
 	// 该指令用于获取指定地图的魔物刷新点信息
 	// 此选项开关需要依赖 Pandas_Struct_Map_Data_Mob_Spawns 的拓展
