@@ -718,13 +718,11 @@ set( TARGET_LIST  CACHE INTERNAL "" )
 add_subdirectory( 3rdparty )
 
 # Pandas local third-party dependencies used by the console translate runtime.
-set( fmt_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include"
-	CACHE PATH "fmt include directories" )
 set( utfcpp_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/utfcpp/source"
 	CACHE PATH "utfcpp include directories" )
 set( uchardet_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/uchardet/src"
 	CACHE PATH "uchardet include directories" )
-mark_as_advanced( fmt_INCLUDE_DIRS utfcpp_INCLUDE_DIRS uchardet_INCLUDE_DIRS )
+mark_as_advanced( utfcpp_INCLUDE_DIRS uchardet_INCLUDE_DIRS )
 
 file( GLOB PANDAS_UCHARDET_SOURCES
 	"${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/uchardet/src/*.cpp"

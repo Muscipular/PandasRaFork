@@ -77,14 +77,13 @@ target_include_directories(minicore PUBLIC
 	${COMMON_SOURCE_DIR}
 	${LIBCONFIG_INCLUDE_DIRS}
 	${YAML_INCLUDE_DIRS}
-	${fmt_INCLUDE_DIRS}
 	${utfcpp_INCLUDE_DIRS}
 	${uchardet_INCLUDE_DIRS}
 	${COMMON_ADDITIONALL_HPP} # needed by Windows
 )
 
 set_target_properties( minicore PROPERTIES COMPILE_FLAGS "${GLOBAL_DEFINITIONS}" )
-target_compile_definitions(minicore PRIVATE "-DMINICORE" "FMT_HEADER_ONLY" ${LIBCONFIG_DEFINITIONS})
+target_compile_definitions(minicore PRIVATE "-DMINICORE" ${LIBCONFIG_DEFINITIONS})
 target_link_libraries(minicore PUBLIC yaml-cpp ryml libuchardet)
 
 #
@@ -156,13 +155,11 @@ set( COMMON_BASE_SOURCES
 set( COMMON_BASE_INCLUDE_DIRS
 	${LIBCONFIG_INCLUDE_DIRS}
 	${YAML_INCLUDE_DIRS}
-	${fmt_INCLUDE_DIRS}
 	${utfcpp_INCLUDE_DIRS}
 	${uchardet_INCLUDE_DIRS}
 	CACHE INTERNAL "common_base include dirs" )
 set( COMMON_BASE_DEFINITIONS
 	${LIBCONFIG_DEFINITIONS}
-	"-DFMT_HEADER_ONLY"
 	CACHE INTERNAL "common_base definitions" )
 set( LIBRARIES ${GLOBAL_LIBRARIES} ${ZLIB_LIBRARIES} yaml-cpp ryml libuchardet )
 set( INCLUDE_DIRS ${GLOBAL_INCLUDE_DIRS} ${RA_INCLUDE_DIRS} ${YAML_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${COMMON_BASE_INCLUDE_DIRS} )
