@@ -68,9 +68,6 @@
     <ClInclude Include="utf8.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cryptopp.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="translate.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -284,9 +281,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rdparty\uchardet\src\uchardet.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="cryptopp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="translate.cpp">
