@@ -2075,6 +2075,7 @@
 	// 客户端发送给 WEB 接口的内容使用的是 UTF8 编码, 我们需要将内容存放到数据库中去
 	// 但数据库本身的编码可能不是 UTF8, 因此在入库之前需要将内容进行适当的编码转换, 否则数据库中看到的会是乱码
 	// 同理, 将数据库中保存的内容读取出来后也需要转换成 UTF8 编码才能发送给客户端
+	#define Pandas_WebServer_Database_EncodingAdaptive
 
 	// 是否解决终端看到客户端发来的中文乱码问题 [Sola丶小克]
 	// 客户端发送给 WEB 接口的内容使用的是 UTF8 编码, 但我们的终端程序通常不是工作在 UTF8 编码环境下,
@@ -2085,6 +2086,8 @@
 
 	// 是否重写部分控制器的核心处理代码 [Sola丶小克]
 	// 此选项依赖 Pandas_WebServer_Database_EncodingAdaptive 的拓展
+	#ifdef Pandas_WebServer_Database_EncodingAdaptive
+	#endif // Pandas_WebServer_Database_EncodingAdaptive
 
 	// 在执行 logger 日志函数时是否在内部进行互斥处理 [Sola丶小克]
 	// 如果不进行互斥操作的话, 在打开 print_req_res 的情况下，

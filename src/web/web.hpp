@@ -12,6 +12,22 @@
 #include <common/timer.hpp>
 #include <config/core.hpp>
 
+#ifdef Pandas_WebServer_Database_EncodingAdaptive
+#include <common/utf8.hpp>
+#endif // Pandas_WebServer_Database_EncodingAdaptive
+
+#ifdef Pandas_WebServer_Database_EncodingAdaptive
+	// Utf8 to Ansi with Web Encoding
+	#define U2AWE(x) PandasUtf8::utf8ToAnsi(x, !stricmp(web_connection_encoding, "latin1") ? character_codepage : web_connection_encoding, 0x1)
+	// Ansi to Utf8 with Web Encoding
+	#define A2UWE(x) PandasUtf8::ansiToUtf8(x, !stricmp(web_connection_encoding, "latin1") ? character_codepage : web_connection_encoding)
+#else
+	// Utf8 to Ansi with Web Encoding
+	#define U2AWE(x) x
+	// Ansi to Utf8 with Web Encoding
+	#define A2UWE(x) x
+#endif // Pandas_WebServer_Database_EncodingAdaptive
+
 using rathena::server_core::Core;
 using rathena::server_core::e_core_type;
 
@@ -68,6 +84,11 @@ extern char char_db_table[32];
 extern char merchant_configs_table[32];
 extern char party_table[32];
 extern char partybookings_table[32];
+
+#ifdef Pandas_WebServer_Database_EncodingAdaptive
+extern char web_connection_encoding[32];
+extern char character_codepage[32];
+#endif // Pandas_WebServer_Database_EncodingAdaptive
 
 #define msg_config_read(cfgName) web_msg_config_read(cfgName)
 #define msg_txt(msg_number) web_msg_txt(msg_number)
