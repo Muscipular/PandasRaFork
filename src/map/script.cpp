@@ -31585,6 +31585,99 @@ BUILDIN_FUNC(next_dropitem_special) {
 }
 #endif // Pandas_ScriptCommand_Next_Dropitem_Special
 
+#ifdef Pandas_ScriptCommand_GetRateIdx
+/* ===========================================================
+ * 指令: getrateidx
+ * 描述: 随机获取一个数值型数组的索引序号, 数组中每个元素的值为权重值
+ * 用法: getrateidx <数值型数组变量>;
+ * 用法: getrateidx <数值1>{, <数值2>{, ...<数值n>}};
+ * 返回: 返回随机命中的索引序号
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getrateidx) {
+	uint64 total_weight = 0;
+	struct script_data* data = script_getdata(st, 2);
+	std::vector<uint64> weights;
+
+	// 如果不是一个数组, 那么将参数逐个累加
+	if (!data_isreference(data)) {
+		for (int32 i = 0; i < script_lastdata(st) - 1; i++) {
+			uint64 weight = script_getnum(st, i + 2);
+			weights.push_back(weight);
+			total_weight += weight;
+		}
+	}
+	// 否则说明传递的是一个数组, 从数组中读取内容
+	else {
+		map_session_data* sd = nullptr;
+		int32 varid = reference_getid(data);
+		const char* varname = reference_getname(data);
+
+		// 若不是服务器变量, 那么必须要关联到玩家
+		if (not_server_variable(*varname)) {
+			if (!script_rid2sd(sd)) {
+				ShowError("buildin_getrateidx: '%s' is not server variable, please attach to a player.\n", varname);
+				script_abort(st);
+				return SCRIPT_CMD_FAILURE;
+			}
+		}
+
+		// 检查是否为数值类型的数组变量, 不是则报错并终止
+		if (is_string_variable(varname)) {
+			ShowError("buildin_getrateidx: '%s' is not an int array.\n", varname);
+			script_abort(st);
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		// 获取数组的元素个数, 并判断是否在有效范围内
+		uint32 array_size = script_array_highest_key(st, sd, varname, reference_getref(data));
+		if (array_size == 0 || array_size > SCRIPT_MAX_ARRAYSIZE) {
+			ShowError("buildin_getrateidx: The size of '%s' is not in valid range.\n", varname);
+			script_abort(st);
+			return SCRIPT_CMD_FAILURE;
+		}
+
+		for (uint32 i = 0; i < array_size; i++) {
+			uint64 weight = get_val2_num(st, reference_uid(varid, i), reference_getref(data));
+			weights.push_back(weight);
+			total_weight += weight;
+		}
+	}
+
+	if (!weights.size() || !total_weight) {
+		ShowError("buildin_getrateidx: Could not find any valid data for the calculation.\n");
+		script_abort(st);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	uint64 randNum = rnd() % total_weight;
+	uint64 start = 0, end = 0;
+	size_t idx = 0;
+
+	for (idx = 0; idx < weights.size(); idx++) {
+		if (weights[idx] == 0) {
+			continue;
+		}
+
+		end = start + weights[idx];
+		if (start <= randNum && randNum < end) {
+			break;
+		}
+		start = end;
+	}
+
+	if (idx == weights.size()) {
+		// Shouldn't happen
+		ShowError("buildin_getrateidx: Some accidents happened.\n");
+		script_abort(st);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	script_pushint(st, idx);
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetRateIdx
+
 #ifdef Pandas_ScriptCommand_MobRemove
 /* ===========================================================
  * 指令: mobremove
@@ -33827,6 +33920,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_GetGradeItem
 	BUILDIN_DEF2(getitem2, "getgradeitem", "viiiiiiiiirrr?"), // 创造带有指定附魔评级的道具 [Sola丶小克]
 #endif // Pandas_ScriptCommand_GetGradeItem
+#ifdef Pandas_ScriptCommand_GetRateIdx
+	BUILDIN_DEF(getrateidx, "*"), // 随机获取一个数值型数组的索引序号 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetRateIdx
 #ifdef Pandas_ScriptCommand_MobRemove
 	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
 #endif // Pandas_ScriptCommand_MobRemove
