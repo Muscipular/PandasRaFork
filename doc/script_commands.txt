@@ -343,7 +343,7 @@ these floating NPC objects are for. More on that below.
 
 <map name>,<x>,<y>,<facing>%TAB%marketshop%TAB%<NPC Name>%TAB%<sprite id>,<itemid>:<price>:<stock>{,<itemid>:<price>:<stock>...}
 
-Note: Additionally barter shops can be defined in npc/barters.yml
+Note: Additionally barter shops can be defined in db/barters.yml
 
 This will define a shop NPC, which, when triggered (which can only be done by
 clicking) will cause a shop window to come up. No code whatsoever runs in shop
@@ -9419,11 +9419,19 @@ Example:
 
 *query_sql("your MySQL query"{, <array variable>{, <array variable>{, ...}}});
 *query_logsql("your MySQL query"{, <array variable>{, <array variable>{, ...}}});
+*query_sql_async("your MySQL query"{, <array variable>{, <array variable>{, ...}}});
+*query_logsql_async("your MySQL query"{, <array variable>{, <array variable>{, ...}}});
 
 Executes an SQL query. A 'select' query can fill array variables with up to 2 billion rows of
 values, and will return the number of rows (i.e. array size) or -1 on failure.
 
 Note that 'query_sql' runs on the main database while 'query_logsql' runs on the log database.
+
+The *_async commands will execute asynchronously, which means that db query time won't block
+the script-thread (and mostly importantly, the whole map-server.) When calling with query string
+only, it won't make the script-thread sleep or block. When calling with array variables folloing
+the query string, it'll make script-thread sleep and awken it with fetched data when the query
+execution finished.
 
 Example:
 	.@nb = query_sql("select name,fame from `char` ORDER BY fame DESC LIMIT 5", .@name$, .@fame);
