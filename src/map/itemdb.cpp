@@ -3892,7 +3892,7 @@ void ItemGroupDatabase::loadingFinished() {
 		}
 	}
 
-	TypesafeYamlDatabase::loadingFinished();
+	TypesafeCachedYamlDatabase::loadingFinished();
 }
 
 /** Read item forbidden by mapflag (can't equip item)

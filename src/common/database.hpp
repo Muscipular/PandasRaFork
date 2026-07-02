@@ -16,7 +16,7 @@
 #include "core.hpp"
 #include "utilities.hpp"
 
-class YamlDatabase{
+class YamlDatabase {
 // Internal stuff
 private:
 	std::string type;
@@ -68,7 +68,7 @@ protected:
 	virtual void loadingFinished();
 
 public:
-	YamlDatabase( const std::string& type_, uint16 version_, uint16 minimumVersion_ ){
+	YamlDatabase( const std::string& type_, uint16 version_, uint16 minimumVersion_ ) {
 		this->type = type_;
 		this->version = version_;
 		this->minimumVersion = minimumVersion_;

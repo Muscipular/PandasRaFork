@@ -105,8 +105,8 @@ bool YamlDatabase::verifyCompatibility( const ryml::Tree& tree ){
 	return true;
 }
 
-bool YamlDatabase::load(){
-	bool ret = this->load( this->getDefaultLocation() );
+bool YamlDatabase::load() {
+	bool ret = this->load(this->getDefaultLocation());
 
 	this->loadingFinished();
 
