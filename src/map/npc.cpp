@@ -2616,8 +2616,16 @@ bool npc_scriptcont(map_session_data* sd, int32 id, bool closing){
 
 	if(id != fake_nd->id) { // Not item script
 		if ((npc_checknear(sd, target)) == nullptr) {
-			ShowWarning("npc_scriptcont: failed npc_checknear test.\n");
-			return true;
+			bool skip_near_warning = false;
+#ifdef Pandas_ScriptCommand_GetInventoryList
+			if (sd->st && (sd->st->waiting_guild_storage || sd->st->waiting_premium_storage)) {
+				skip_near_warning = true;
+			}
+#endif // Pandas_ScriptCommand_GetInventoryList
+			if (!skip_near_warning) {
+				ShowWarning("npc_scriptcont: failed npc_checknear test.\n");
+				return true;
+			}
 		}
 	}
 #ifdef SECURE_NPCTIMEOUT

@@ -1515,6 +1515,9 @@ bool pc_can_sell_item( const map_session_data* sd, const item* item, enum npc_su
 bool pc_can_give_items( const map_session_data* sd );
 bool pc_can_give_bounded_items( const map_session_data* sd );
 bool pc_can_trade_item( const map_session_data* sd, int32 index );
+#ifdef Pandas_ScriptCommand_GetInventoryList
+bool pc_can_trade_item( const map_session_data* sd, struct item& item );
+#endif // Pandas_ScriptCommand_GetInventoryList
 
 bool pc_can_use_command( const map_session_data* sd, const char *command, AtCommandType type );
 bool pc_has_permission( const map_session_data* sd, e_pc_permission permission );

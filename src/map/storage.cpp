@@ -1239,6 +1239,18 @@ void storage_guild_storage_quit(map_session_data* sd, int32 flag)
 void storage_premiumStorage_open(map_session_data *sd) {
 	nullpo_retv(sd);
 
+#ifdef Pandas_ScriptCommand_GetInventoryList
+	if (sd->state.connect_new) {
+		return;
+	}
+
+	if (sd->st && sd->npc_id) {
+		if (sd->st->waiting_premium_storage && sd->st->state == RERUNLINE) {
+			return;
+		}
+	}
+#endif // Pandas_ScriptCommand_GetInventoryList
+
 	sd->state.storage_flag = 3;
 	storage_sortitem(sd->premiumStorage.u.items_storage, ARRAYLENGTH(sd->premiumStorage.u.items_storage));
 	clif_storagelist(sd, sd->premiumStorage.u.items_storage, ARRAYLENGTH(sd->premiumStorage.u.items_storage), storage_getName(sd->premiumStorage.stor_id));

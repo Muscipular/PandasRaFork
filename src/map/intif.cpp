@@ -1548,6 +1548,15 @@ int32 intif_parse_LoadGuildStorage(int32 fd)
 	}
 
 	memcpy(gstor,RFIFOP(fd,13 + packet_offset),sizeof(struct s_storage));
+
+#ifdef Pandas_ScriptCommand_GetInventoryList
+	if (sd && sd->st && sd->npc_id) {
+		if (sd->st->waiting_guild_storage && sd->st->state == RERUNLINE) {
+			npc_scriptcont(sd, sd->npc_id, false);
+			return 1;
+		}
+	}
+#endif // Pandas_ScriptCommand_GetInventoryList
 	if( flag )
 		storage_guild_storageopen(sd);
 
@@ -3586,6 +3595,30 @@ static bool intif_parse_StorageReceived(int32 fd)
 	return true;
 }
 
+#ifdef Pandas_ScriptCommand_GetInventoryList
+// 在 intif_parse_StorageReceived 之后继续等待扩充仓库数据的脚本.
+static bool intif_parse_StorageReceived_hook(int32 fd) {
+	bool result = intif_parse_StorageReceived(fd);
+#ifdef Pandas_Unlock_Storage_Capacity_Limit
+	const int32 packet_offset = 2;
+#else
+	const int32 packet_offset = 0;
+#endif // Pandas_Unlock_Storage_Capacity_Limit
+	uint32 account_id = RFIFOL(fd, 5 + packet_offset);
+	map_session_data* sd = map_id2sd(account_id);
+
+	if (!sd || !sd->st || !sd->npc_id) {
+		return result;
+	}
+
+	if (sd->st->waiting_premium_storage && sd->st->state == RERUNLINE) {
+		npc_scriptcont(sd, sd->npc_id, false);
+	}
+
+	return result;
+}
+#endif // Pandas_ScriptCommand_GetInventoryList
+
 /**
  * Save inventory/cart/storage data for a player
  * IZ 0x388b <account_id>.L <result>.B <type>.B <storage_id>.B
@@ -3960,7 +3993,11 @@ int32 intif_parse(int32 fd)
 	case 0x3883:	intif_parse_DeletePetOk(fd); break;
 
 	// Storage
+#ifndef Pandas_ScriptCommand_GetInventoryList
 	case 0x388a:	intif_parse_StorageReceived(fd); break;
+#else
+	case 0x388a:	intif_parse_StorageReceived_hook(fd); break;
+#endif // Pandas_ScriptCommand_GetInventoryList
 	case 0x388b:	intif_parse_StorageSaved(fd); break;
 	case 0x388c:	intif_parse_StorageInfo_recv(fd); break;
 
