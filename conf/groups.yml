@@ -90,7 +90,7 @@ Body:
       go: true
       breakguild: true
       channel: true
-      langtype: true
+      # langtype: true
     Permissions:
       attendance: false
   - Id: 2

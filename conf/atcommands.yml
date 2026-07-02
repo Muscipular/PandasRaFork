@@ -808,10 +808,35 @@ Body:
       Params: party. Enables kill stealing protection against any other players not in your party.
       Params: guilds. Enables kill stealing protection against any other players not in your guild.
       Prevents other players from kill stealing.
-  - Command: langtype
+#  - Command: langtype
+#    Help: |
+#      Params: <language>
+#      Changes your language setting.
+  # 熊猫模拟器拓展的管理员指令
+  - Command: crashtest
     Help: |
-      Params: <language>
-      Changes your language setting.
+      触发地图服务器崩溃以测试崩溃处理流程 (要求: 在线人数为 1 人)
+  - Command: suspend
+    Help: |
+      使角色进入离线挂机模式, 维持当前的全部状态 (朝向, 站立与否)
+  - Command: afk
+    Help: |
+      使角色进入离开模式, 角色将会坐到地上并自动使用 AFK 头饰
+  - Command: aura
+    Help: |
+      参数: <光环编号> - 激活指定的光环组合
+  - Command: recallmap
+    Help: |
+      参数: [<地图名称>] - 召唤当前 (或指定) 地图的玩家来到身边
+  - Command: title
+    Help: |
+      参数: <称号编号> - 给角色设置指定的称号
+  - Command: reloadauradb
+    Help: |
+      重新加载光环数据库 (aura_db.yml)
+  - Command: reloadlaphinedb
+    Help: |
+      重新加载 Laphine 数据库 (laphine_*.yml)
   - Command: leave
     Help: |
       Leaves a duel.
