@@ -2089,6 +2089,7 @@
 	// 是否重写部分控制器的核心处理代码 [Sola丶小克]
 	// 此选项依赖 Pandas_WebServer_Database_EncodingAdaptive 的拓展
 	#ifdef Pandas_WebServer_Database_EncodingAdaptive
+		#define Pandas_WebServer_Rewrite_Controller_HandlerFunc
 	#endif // Pandas_WebServer_Database_EncodingAdaptive
 
 	// 在执行 logger 日志函数时是否在内部进行互斥处理 [Sola丶小克]
