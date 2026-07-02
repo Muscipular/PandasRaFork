@@ -4495,6 +4495,9 @@
 	export_constant(UMOB_RES);
 	export_constant(UMOB_MRES);
 	export_constant(UMOB_DAMAGETAKEN);
+#ifdef Pandas_ScriptParams_DamageTaken_From_Database
+	export_constant(UMOB_DAMAGETAKEN_DB);
+#endif // Pandas_ScriptParams_DamageTaken_From_Database
 #ifdef Pandas_Struct_Unit_CommonData_Aura
 	export_constant(UMOB_AURA);
 #endif // Pandas_Struct_Unit_CommonData_Aura

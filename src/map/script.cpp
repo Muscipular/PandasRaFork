@@ -20693,6 +20693,9 @@ BUILDIN_FUNC(getunitdata)
 			getunitdata_sub(UMOB_RES, md->status.res);
 			getunitdata_sub(UMOB_MRES, md->status.mres);
 			getunitdata_sub(UMOB_DAMAGETAKEN, md->damagetaken);
+#ifdef Pandas_ScriptParams_DamageTaken_From_Database
+			getunitdata_sub(UMOB_DAMAGETAKEN_DB, md->db->damagetaken);
+#endif // Pandas_ScriptParams_DamageTaken_From_Database
 #ifdef Pandas_Struct_Unit_CommonData_Aura
 			getunitdata_sub(UMOB_AURA, md->ucd.aura.id);
 #endif // Pandas_Struct_Unit_CommonData_Aura

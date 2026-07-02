@@ -2053,6 +2053,7 @@
 
 	// 是否拓展 getunitdata 指令的参数
 	// 使之能读取指定魔物在 DB 中设置的承伤倍率 (UMOB_DAMAGETAKEN_DB) [Sola丶小克]
+	#define Pandas_ScriptParams_DamageTaken_From_Database
 
 	// 是否扩展 setunitdata / getunitdata 指令的参数
 	// 使 UMOB_DAMAGETAKEN 能支持 -1 的值, 表示采用 DB 中设置的承伤倍率 [Sola丶小克]

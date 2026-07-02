@@ -711,6 +711,9 @@ enum unitdata_mobtypes {
 	UMOB_RES,
 	UMOB_MRES,
 	UMOB_DAMAGETAKEN,
+#ifdef Pandas_ScriptParams_DamageTaken_From_Database
+	UMOB_DAMAGETAKEN_DB,
+#endif // Pandas_ScriptParams_DamageTaken_From_Database
 #ifdef Pandas_Struct_Unit_CommonData_Aura
 	UMOB_AURA,
 #endif // Pandas_Struct_Unit_CommonData_Aura
