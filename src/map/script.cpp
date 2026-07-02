@@ -21106,9 +21106,13 @@ BUILDIN_FUNC(setunitdata)
 			case UMOB_BODY2: clif_changelook(bl, LOOK_BODY2, (uint16)value); break;
 			case UMOB_GROUP_ID: md->ud.group_id = value; unit_refresh(bl); break;
 			case UMOB_IGNORE_CELL_STACK_LIMIT: md->ud.state.ignore_cell_stack_limit = value > 0; break;
-			case UMOB_RES: md->base_status->res = (int16)value; calc_status = true; break;
-			case UMOB_MRES: md->base_status->mres = (int16)value; calc_status = true; break;
+			case UMOB_RES: md->base_status->res = (pec_int16)value; calc_status = true; break;
+			case UMOB_MRES: md->base_status->mres = (pec_int16)value; calc_status = true; break;
+#ifndef Pandas_ScriptParams_DamageTaken_Extend
 			case UMOB_DAMAGETAKEN: md->damagetaken = (uint16)value; break;
+#else
+			case UMOB_DAMAGETAKEN: md->damagetaken = cap_value(value, -1, UINT16_MAX); break;
+#endif // Pandas_ScriptParams_DamageTaken_Extend
 #if defined(Pandas_Struct_Unit_CommonData_Aura) && defined(Pandas_Aura_Mechanism)
 			case UMOB_AURA:
 				aura_make_effective(bl, value);

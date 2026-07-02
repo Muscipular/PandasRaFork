@@ -2061,6 +2061,12 @@ int64 battle_calc_damage(block_list *src,block_list *bl,struct Damage *d,int64 d
 	if (bl->type == BL_MOB) { // Reduces damage received for Green Aura MVP
 		mob_data *md = BL_CAST(BL_MOB, bl);
 
+#ifdef Pandas_ScriptParams_DamageTaken_Extend
+		if (md && md->damagetaken < 0) {
+			md->damagetaken = md->db->damagetaken;
+		}
+#endif // Pandas_ScriptParams_DamageTaken_Extend
+
 		if (md && md->damagetaken != 100)
 			damage = i64max(damage * md->damagetaken / 100, 1);
 	}

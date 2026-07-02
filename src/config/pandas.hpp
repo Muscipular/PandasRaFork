@@ -2058,6 +2058,7 @@
 	// 是否扩展 setunitdata / getunitdata 指令的参数
 	// 使 UMOB_DAMAGETAKEN 能支持 -1 的值, 表示采用 DB 中设置的承伤倍率 [Sola丶小克]
 	// 该选项主要为了兼容旧版本熊猫模拟器的用户可能已经使用了 -1 值的情况
+	#define Pandas_ScriptParams_DamageTaken_Extend
 
 	// 是否拓展 setunitdata / getunitdata 指令的参数
 	// 使之能设置或者读取指定魔物实例的经验值 (BASEEXP / JOBEXP) [人鱼姬的思念]

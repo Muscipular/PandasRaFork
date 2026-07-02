@@ -400,7 +400,11 @@ struct mob_data : public block_list {
 	 * MvP Tombstone NPC ID
 	 **/
 	int32 tomb_nid;
+#ifndef Pandas_ScriptParams_DamageTaken_Extend
 	uint16 damagetaken;
+#else
+	int damagetaken = -1;	// 魔物实例的承伤倍率, 若为 -1 则表示使用 db 中设置的承伤倍率 [Sola丶小克]
+#endif // Pandas_ScriptParams_DamageTaken_Extend
 
 #ifdef Pandas_Struct_Mob_Data_Pandas
 	struct {

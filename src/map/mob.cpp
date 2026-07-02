@@ -509,6 +509,10 @@ mob_data* mob_spawn_dataset(struct spawn_data *data)
 	status_set_viewdata(md, md->mob_id);
 	unit_dataset(md);
 
+#ifdef Pandas_ScriptParams_DamageTaken_Extend
+	md->damagetaken = -1;
+#endif // Pandas_ScriptParams_DamageTaken_Extend
+
 #ifdef Pandas_Struct_Mob_Data_SpecialExperience
 	md->pandas.base_exp = -1;
 	md->pandas.job_exp = -1;
@@ -1252,6 +1256,12 @@ int32 mob_spawn (mob_data *md)
 #ifdef Pandas_BattleRecord
 	batrec_reset(md);
 #endif // Pandas_BattleRecord
+
+#ifdef Pandas_ScriptParams_DamageTaken_Extend
+	if (md->db) {
+		md->damagetaken = md->db->damagetaken;
+	}
+#endif // Pandas_ScriptParams_DamageTaken_Extend
 
 #ifdef Pandas_Struct_Mob_Data_SpecialExperience
 	md->pandas.base_exp = -1;
