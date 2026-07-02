@@ -31443,6 +31443,59 @@ BUILDIN_FUNC(sleep3) {
 }
 #endif // Pandas_ScriptCommand_Sleep3
 
+#ifdef Pandas_ScriptCommand_GetQuestTime
+/* ===========================================================
+ * 指令: getquesttime
+ * 描述: 查询角色指定任务的时间信息
+ * 用法: getquesttime <任务编号>{,<想查询的时间类型>{,<角色编号>}};
+ * 返回: 成功返回时间戳, 失败返回 -1
+ * 作者: Sola丶小克
+ * -----------------------------------------------------------*/
+BUILDIN_FUNC(getquesttime) {
+	int32 quest_id = script_getnum(st, 2);
+	int32 query_time_type = (script_hasdata(st, 3) && script_isint(st, 3)) ? script_getnum(st, 3) : 0;
+	map_session_data* sd = nullptr;
+
+	if (!script_charid2sd(4, sd)) {
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	std::shared_ptr<s_quest_db> qi = quest_search(quest_id);
+	if (!qi) {
+		ShowError("buildin_getquesttime: Quest %d not found in DB.\n", quest_id);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	int32 i = 0;
+	ARR_FIND(0, sd->num_quests, i, sd->quest_log[i].quest_id == quest_id);
+	if (i == sd->num_quests) {
+		ShowError("buildin_getquesttime: Character %d doesn't have quest %d.\n", sd->status.char_id, quest_id);
+		script_pushint(st, -1);
+		return SCRIPT_CMD_FAILURE;
+	}
+
+	switch (query_time_type) {
+		case 0:
+			script_pushint(st, sd->quest_log[i].time);
+			break;
+		case 1:
+			script_pushint(st, sd->quest_log[i].time - qi->time);
+			break;
+		case 2:
+			script_pushint(st, i64max(static_cast<int64>(sd->quest_log[i].time) - time(nullptr), 0));
+			break;
+		default:
+			ShowError("buildin_getquesttime: Invaild type for quest time.\n");
+			script_pushint(st, -1);
+			break;
+	}
+
+	return SCRIPT_CMD_SUCCESS;
+}
+#endif // Pandas_ScriptCommand_GetQuestTime
+
 #ifdef Pandas_ScriptCommand_MobRemove
 /* ===========================================================
  * 指令: mobremove
@@ -33673,6 +33726,9 @@ struct script_function buildin_func[] = {
 #ifdef Pandas_ScriptCommand_Sleep3
 	BUILDIN_DEF(sleep3, "i"), // 休眠一段时间再执行后续脚本, 与 sleep2 类似但忽略报错 [人鱼姬的思念]
 #endif // Pandas_ScriptCommand_Sleep3
+#ifdef Pandas_ScriptCommand_GetQuestTime
+	BUILDIN_DEF(getquesttime, "i??"), // 查询角色指定任务的时间信息 [Sola丶小克]
+#endif // Pandas_ScriptCommand_GetQuestTime
 #ifdef Pandas_ScriptCommand_MobRemove
 	BUILDIN_DEF(mobremove, "i"), // 根据 GID 移除一个魔物单位 [Sola丶小克]
 #endif // Pandas_ScriptCommand_MobRemove

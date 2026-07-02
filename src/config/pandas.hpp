@@ -1961,6 +1961,7 @@
 	#define Pandas_ScriptCommand_Sleep3
 	// 是否启用 getquesttime 脚本指令 [Sola丶小克]
 	// 该指令用于查询角色指定任务的时间信息 (感谢 "SSBoyz" 建议)
+	#define Pandas_ScriptCommand_GetQuestTime
 	// 是否启用 unitspecialeffect 脚本指令 [人鱼姬的思念]
 	// 该指令用于使指定游戏单位可以显示某个特效, 并支持控制特效可见范围
 	// 是否启用 next_dropitem_special 脚本指令 [Sola丶小克]
