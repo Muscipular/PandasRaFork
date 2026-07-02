@@ -1257,6 +1257,10 @@ int32 mob_spawn (mob_data *md)
 	batrec_reset(md);
 #endif // Pandas_BattleRecord
 
+// =======================================================================
+// 非 md->base_status 中的数据但可以被 setunitdata 修改的属性重置 - 以下开始
+// =======================================================================
+
 #ifdef Pandas_ScriptParams_DamageTaken_Extend
 	if (md->db) {
 		md->damagetaken = md->db->damagetaken;
@@ -1298,6 +1302,10 @@ int32 mob_spawn (mob_data *md)
 			md->special_state.size = md->spawn->state.size;
 	}
 #endif // Pandas_Fix_SetUnitData_Forget_Reset_After_Monster_Dead
+
+// =======================================================================
+// 非 md->base_status 中的数据但可以被 setunitdata 修改的属性重置 - 到此结束
+// =======================================================================
 
 	if (md->lootitems)
 		memset(md->lootitems, 0, sizeof(*md->lootitems));

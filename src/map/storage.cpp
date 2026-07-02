@@ -863,7 +863,7 @@ bool storage_guild_additem(map_session_data* sd, struct s_storage* stor, struct 
 }
 
 /**
- * Attempt to add an item in guild storage, then refresh i
+ * Attempt to add an item in guild storage, then refresh it
  * @param stor : guild_storage
  * @param item : item to add
  * @param amount : number of item to add

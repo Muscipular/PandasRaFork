@@ -2277,6 +2277,8 @@ bool pc_authok(map_session_data *sd, uint32 login_id2, time_t expiration_time, i
 	sd->die_counter=-1;
 
 	//display login notice
+	// 以下这行注释是为了方便 pyhelp_extracter.py 提取翻译文本使用的
+	// ShowInfo("'" CL_WHITE "%s" CL_RESET "' logged in. (AID/CID: '" CL_WHITE "%d/%d" CL_RESET "', IP: '" CL_WHITE "%d.%d.%d.%d" CL_RESET "', Group '" CL_WHITE "%d" CL_RESET "').\n", sd->status.name, sd->status.account_id, sd->status.char_id, CONVIP(ip), sd->group_id);
 	ShowInfo("'" CL_WHITE "%s" CL_RESET "' logged in."
 	         " (AID/CID: '" CL_WHITE "%d/%d" CL_RESET "',"
 	         " IP: '" CL_WHITE "%d.%d.%d.%d" CL_RESET "',"
@@ -2672,8 +2674,13 @@ void pc_calc_skilltree(map_session_data *sd)
 		uint16 skill_id = skill.second->nameid;
 		uint16 idx = skill_get_index(skill_id);
 
-		if( sd->status.skill[idx].flag != SKILL_FLAG_PLAGIARIZED && sd->status.skill[idx].flag != SKILL_FLAG_PERM_GRANTED ) //Don't touch these
+		if (sd->status.skill[idx].flag != SKILL_FLAG_PLAGIARIZED && sd->status.skill[idx].flag != SKILL_FLAG_PERM_GRANTED) { //Don't touch these
+#if PACKETVER_MAIN_NUM >= 20190807 || PACKETVER_RE_NUM >= 20190807 || PACKETVER_ZERO_NUM >= 20190918
+			if (sd->status.skill[idx].flag == SKILL_FLAG_TEMPORARY || sd->status.skill[idx].flag == SKILL_FLAG_PERMANENT)
+				clif_deleteskill(*sd, skill_id, true);
+#endif
 			sd->status.skill[idx].id = 0; //First clear skills.
+		}
 		/* permanent skills that must be re-checked */
 		if( sd->status.skill[idx].flag == SKILL_FLAG_PERM_GRANTED ) {
 			if (skill_id == 0) {
@@ -3916,28 +3923,28 @@ void pc_bonus(map_session_data *sd,int32 type,int32 val)
 		case SP_ATK1:
 			if (sd->state.lr_flag == LR_FLAG_NONE) {
 				bonus = status->rhw.atk + val;
-				status->rhw.atk = cap_value(bonus, 0, USHRT_MAX);
+				status->rhw.atk = cap_value(bonus, 0, PEC_USHRT_MAX);
 			}
 			else if (sd->state.lr_flag == LR_FLAG_WEAPON) {
 				bonus = status->lhw.atk + val;
-				status->lhw.atk =  cap_value(bonus, 0, USHRT_MAX);
+				status->lhw.atk =  cap_value(bonus, 0, PEC_USHRT_MAX);
 			}
 			break;
 		case SP_ATK2:
 			if (sd->state.lr_flag == LR_FLAG_NONE) {
 				bonus = status->rhw.atk2 + val;
-				status->rhw.atk2 = cap_value(bonus, 0, USHRT_MAX);
+				status->rhw.atk2 = cap_value(bonus, 0, PEC_USHRT_MAX);
 			}
 			else if (sd->state.lr_flag == LR_FLAG_WEAPON) {
 				bonus = status->lhw.atk2 + val;
-				status->lhw.atk2 =  cap_value(bonus, 0, USHRT_MAX);
+				status->lhw.atk2 =  cap_value(bonus, 0, PEC_USHRT_MAX);
 			}
 			break;
 		case SP_BASE_ATK:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 #ifdef RENEWAL
 				bonus = sd->bonus.eatk + val;
-				sd->bonus.eatk = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				sd->bonus.eatk = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 #else
 				status->batk += val;
 #endif
@@ -3947,25 +3954,25 @@ void pc_bonus(map_session_data *sd,int32 type,int32 val)
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->def + val;
 #ifdef RENEWAL
-				status->def = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->def = cap_value(bonus, PEC_DEFTYPE_MIN, PEC_DEFTYPE_MAX);
 #else
-				status->def = cap_value(bonus, CHAR_MIN, CHAR_MAX);
+				status->def = cap_value(bonus, PEC_DEFTYPE_MIN, PEC_DEFTYPE_MAX);
 #endif
 			}
 			break;
 		case SP_DEF2:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->def2 + val;
-				status->def2 = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->def2 = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_MDEF1:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->mdef + val;
 #ifdef RENEWAL
-				status->mdef = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->mdef = cap_value(bonus, PEC_DEFTYPE_MIN, PEC_DEFTYPE_MAX);
 #else
-				status->mdef = cap_value(bonus, CHAR_MIN, CHAR_MAX);
+				status->mdef = cap_value(bonus, PEC_DEFTYPE_MIN, PEC_DEFTYPE_MAX);
 #endif
 				if( sd->state.lr_flag == LR_FLAG_SHIELD ) {//Shield, used for royal guard
 					sd->bonus.shieldmdef += bonus;
@@ -3975,69 +3982,69 @@ void pc_bonus(map_session_data *sd,int32 type,int32 val)
 		case SP_MDEF2:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->mdef2 + val;
-				status->mdef2 = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->mdef2 = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_HIT:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->hit + val;
-				status->hit = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->hit = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			} else
 				sd->bonus.arrow_hit+=val;
 			break;
 		case SP_FLEE1:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->flee + val;
-				status->flee = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->flee = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_FLEE2:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->flee2 + val*10;
-				status->flee2 = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->flee2 = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_CRITICAL:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->cri + val*10;
-				status->cri = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->cri = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			} else
 				sd->bonus.arrow_cri += val*10;
 			break;
 		case SP_PATK:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->patk + val;
-				status->patk = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->patk = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_SMATK:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->smatk + val;
-				status->smatk = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->smatk = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_RES:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->res + val;
-				status->res = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->res = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_MRES:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->mres + val;
-				status->mres = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->mres = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_HPLUS:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->hplus + val;
-				status->hplus = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->hplus = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_CRATE:
 			if (sd->state.lr_flag != LR_FLAG_ARROW) {
 				bonus = status->crate + val;
-				status->crate = cap_value(bonus, SHRT_MIN, SHRT_MAX);
+				status->crate = cap_value(bonus, PEC_SHRT_MIN, PEC_SHRT_MAX);
 			}
 			break;
 		case SP_ATKELE:
@@ -4643,6 +4650,7 @@ void pc_bonus(map_session_data *sd,int32 type,int32 val)
 				sd->special_state.nofieldgemstone = 1;
 			break;
 #endif // Pandas_Bonus_bNoFieldGemStone
+		// PYHELP - BONUS - INSERT POINT - <Section 6>
 		default:
 		#ifdef Pandas_NpcExpress_STATCALC
 			if (running_npc_stat_calc_event) {
@@ -5355,6 +5363,7 @@ void pc_bonus2(map_session_data *sd,int32 type,int32 type2,int32 val)
 		}
 		break;
 #endif // Pandas_Bonus2_bAbsorbDmgMaxHP
+	// PYHELP - BONUS - INSERT POINT - <Section 7>
 	default:
 	#ifdef Pandas_NpcExpress_STATCALC
 		if (running_npc_stat_calc_event) {
@@ -5533,6 +5542,7 @@ void pc_bonus3(map_session_data *sd,int32 type,int32 type2,int32 type3,int32 val
 		pc_bonus_final_damage(sd->finaladd_class[type2], type2, val, type3);
 		break;
 #endif // Pandas_Bonus3_bFinalAddClass
+	// PYHELP - BONUS - INSERT POINT - <Section 8>
 	default:
 	#ifdef Pandas_NpcExpress_STATCALC
 		if (running_npc_stat_calc_event) {
@@ -5639,6 +5649,7 @@ void pc_bonus4(map_session_data *sd,int32 type,int32 type2,int32 type3,int32 typ
 		break;
 #endif // Pandas_Bonus4_bStatusAddDamageRate
 
+	// PYHELP - BONUS - INSERT POINT - <Section 9>
 	default:
 	#ifdef Pandas_NpcExpress_STATCALC
 		if (running_npc_stat_calc_event) {
@@ -5697,6 +5708,8 @@ void pc_bonus5(map_session_data *sd,int32 type,int32 type2,int32 type3,int32 typ
 		if( sd->state.lr_flag != LR_FLAG_ARROW )
 			pc_bonus_addeff_onskill(sd->addeff_onskill, (sc_type)type3, type4, type2, type5, val);
 		break;
+
+	// PYHELP - BONUS - INSERT POINT - <Section 10>
 
 	default:
 	#ifdef Pandas_NpcExpress_STATCALC

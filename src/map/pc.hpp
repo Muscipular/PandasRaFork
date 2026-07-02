@@ -565,6 +565,7 @@ public:
 #ifdef Pandas_Bonus_bNoFieldGemStone
 		uint32 nofieldgemstone : 1;
 #endif // Pandas_Bonus_bNoFieldGemStone
+		// PYHELP - BONUS - INSERT POINT - <Section 4>
 		uint32 intravision : 1; // Maya Purple Card effect [DracoRPG]
 		uint32 perfect_hiding : 1; // [Valaris]
 		uint32 no_knockback : 1;
@@ -801,6 +802,7 @@ public:
 #ifdef Pandas_Bonus2_bAbsorbDmgMaxHP
 		uint8 absorb_dmg_trigger_hpratio, absorb_dmg_cap_ratio;
 #endif // Pandas_Bonus2_bAbsorbDmgMaxHP
+		// PYHELP - BONUS - INSERT POINT - <Section 5>
 		int16 critical_rangeatk;
 		int16 weapon_atk_rate, weapon_matk_rate;
 		int32 skill_ratio;
