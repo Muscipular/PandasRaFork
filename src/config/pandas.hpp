@@ -21,6 +21,7 @@
 	#define Pandas_AtCommands
 	#define Pandas_ScriptCommands
 	#define Pandas_ScriptConstants
+	#define Pandas_ScriptResults
 
 #ifndef GIT_BRANCH
 	#define GIT_BRANCH ""
@@ -2028,3 +2029,11 @@
 	// 是否扩展 MaxCartWeight 脚本常量 [人鱼姬的思念]
 	#define Pandas_ScriptConstants_MaxCartWeight
 #endif // Pandas_ScriptConstants
+
+// ============================================================================
+// 脚本返回值拓展组 - Pandas_ScriptResults
+// ============================================================================
+
+#ifdef Pandas_ScriptResults
+	// 使 OnSellItem 标签可以返回被出售道具的背包序号 [Sola丶小克]
+#endif // Pandas_ScriptResults
