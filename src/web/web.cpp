@@ -494,6 +494,9 @@ void display_helpscreen(bool do_exit)
 void logger(const Request & req, const Response & res) {
 	// make this a config
 	if (web_config.print_req_res) {
+#ifdef Pandas_WebServer_Logger_Improved_Presentation
+		ShowDebug("--- Request Information Begin ---------------------------------------\n");
+#endif // Pandas_WebServer_Logger_Improved_Presentation
 		ShowDebug("Incoming Headers are:\n");
 		for (const auto & header : req.headers) {
 			ShowDebug("\t%s: %s\n", header.first.c_str(), header.second.c_str());
@@ -508,9 +511,17 @@ void logger(const Request & req, const Response & res) {
 		}
 		ShowDebug("Response status is: %d\n", res.status);
 		// since the body may be binary, might not print entire body (has null character).
-		ShowDebug("Body is:\n%s\n", res.body.c_str());
+		ShowDebug("Body is:\n%s\n", U2ACE(res.body).c_str());
+#ifdef Pandas_WebServer_Logger_Improved_Presentation
+		ShowDebug("--- Request Information End -----------------------------------------\n");
+#endif // Pandas_WebServer_Logger_Improved_Presentation
 	}
 	ShowInfo("%s [%s %s] %d\n", req.remote_addr.c_str(), req.method.c_str(), req.path.c_str(), res.status);
+#ifdef Pandas_WebServer_Logger_Improved_Presentation
+	if (web_config.print_req_res) {
+		printf("\n\n");
+	}
+#endif // Pandas_WebServer_Logger_Improved_Presentation
 }
 
 

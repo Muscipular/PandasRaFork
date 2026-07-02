@@ -2084,6 +2084,7 @@
 	#define Pandas_WebServer_Console_EncodingAdaptive
 
 	// 是否改进开启 print_req_res 后打印信息的呈现方式, 使信息的区域划分更清晰 [Sola丶小克]
+	#define Pandas_WebServer_Logger_Improved_Presentation
 
 	// 是否重写部分控制器的核心处理代码 [Sola丶小克]
 	// 此选项依赖 Pandas_WebServer_Database_EncodingAdaptive 的拓展
