@@ -11040,6 +11040,14 @@ int64 pc_readparam( const map_session_data* sd, int64 type )
 #ifdef Pandas_ScriptConstants_MaxCartWeight
 		case SP_MAXCARTWEIGHT: val = sd->cart_weight_max; break;
 #endif // Pandas_ScriptConstants_MaxCartWeight
+#ifdef Pandas_ScriptParams_ReadParam
+		case SP_STR_ALL:	val = sd->battle_status.str; break;
+		case SP_AGI_ALL:	val = sd->battle_status.agi; break;
+		case SP_VIT_ALL:	val = sd->battle_status.vit; break;
+		case SP_INT_ALL:	val = sd->battle_status.int_; break;
+		case SP_DEX_ALL:	val = sd->battle_status.dex; break;
+		case SP_LUK_ALL:	val = sd->battle_status.luk; break;
+#endif // Pandas_ScriptParams_ReadParam
 #ifdef Pandas_Bonus_bNoFieldGemStone
 		case SP_PANDAS_NOFIELDGEMSTONE: val = sd->special_state.nofieldgemstone; break;
 #endif // Pandas_Bonus_bNoFieldGemStone

@@ -1234,6 +1234,15 @@
 	// PYHELP - BONUS - INSERT POINT - <Section 3>
 #endif // Pandas_Bonuses
 
+#ifdef Pandas_ScriptParams_ReadParam
+	export_constant2("bAllStr", SP_STR_ALL);
+	export_constant2("bAllAgi", SP_AGI_ALL);
+	export_constant2("bAllVit", SP_VIT_ALL);
+	export_constant2("bAllInt", SP_INT_ALL);
+	export_constant2("bAllDex", SP_DEX_ALL);
+	export_constant2("bAllLuk", SP_LUK_ALL);
+#endif // Pandas_ScriptParams_ReadParam
+
 	/* equip indices */
 	export_constant(EQI_COMPOUND_ON);
 	export_constant(EQI_HEAD_TOP);
