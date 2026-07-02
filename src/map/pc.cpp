@@ -11037,6 +11037,9 @@ int64 pc_readparam( const map_session_data* sd, int64 type )
 #ifdef Pandas_ScriptConstants_CartWeight
 		case SP_CARTWEIGHT: val = sd->cart_weight; break;
 #endif // Pandas_ScriptConstants_CartWeight
+#ifdef Pandas_ScriptConstants_MaxCartWeight
+		case SP_MAXCARTWEIGHT: val = sd->cart_weight_max; break;
+#endif // Pandas_ScriptConstants_MaxCartWeight
 #ifdef Pandas_Bonus_bNoFieldGemStone
 		case SP_PANDAS_NOFIELDGEMSTONE: val = sd->special_state.nofieldgemstone; break;
 #endif // Pandas_Bonus_bNoFieldGemStone
@@ -11930,6 +11933,9 @@ bool pc_setcart(map_session_data *sd,int32 type) {
 #ifdef Pandas_ScriptConstants_CartWeight
 			sd->cart_weight = 0;
 #endif // Pandas_ScriptConstants_CartWeight
+#ifdef Pandas_ScriptConstants_MaxCartWeight
+			sd->cart_weight_max = 0;
+#endif // Pandas_ScriptConstants_MaxCartWeight
 			break;
 		default:/* everything else is an allowed ID so we can move on */
 			if( !sd->sc.getSCE(SC_PUSH_CART) ) { /* first time, so fill cart data */

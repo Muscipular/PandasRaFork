@@ -638,6 +638,9 @@ enum _sp {
 #ifdef Pandas_ScriptConstants_CartWeight
 	SP_CARTWEIGHT,
 #endif // Pandas_ScriptConstants_CartWeight
+#ifdef Pandas_ScriptConstants_MaxCartWeight
+	SP_MAXCARTWEIGHT,
+#endif // Pandas_ScriptConstants_MaxCartWeight
 	SP_PANDAS_EXTEND_CONSTANTS_END,
 #endif // Pandas_ScriptConstants
 };
