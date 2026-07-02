@@ -185,7 +185,7 @@ struct npc_data : public block_list {
 	struct status_data status;
 	uint32 level,stat_point;
 	struct s_npc_params {
-		uint16 str, agi, vit, int_, dex, luk;
+		pec_uint16 str, agi, vit, int_, dex, luk;
 	} params;
 
 	void* chatdb; // pointer to a npc_parse struct (see npc_chat.cpp)
@@ -2438,6 +2438,7 @@ enum npce_event : uint8 {
 	NPCE_KILLPC,
 	NPCE_KILLNPC,
 	NPCE_IDENTIFY,
+	/* Filter 类型的过滤事件，这些事件可以被 processhalt 中断                    */
 #ifdef Pandas_NpcFilter_IDENTIFY
 	NPCF_IDENTIFY,
 #endif // Pandas_NpcFilter_IDENTIFY
@@ -2519,6 +2520,8 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcFilter_FAVORITE_DEL
 	NPCF_FAVORITE_DEL,
 #endif // Pandas_NpcFilter_FAVORITE_DEL
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 2>
+	/* Event  类型的标准事件，这些事件不能被 processhalt 打断                    */
 #ifdef Pandas_NpcEvent_KILLMVP
 	NPCE_KILLMVP,	// killmvp_event_name	// OnPCKillMvpEvent		// 当玩家杀死 MVP 魔物后触发事件
 #endif // Pandas_NpcEvent_KILLMVP
@@ -2537,6 +2540,8 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcEvent_UNEQUIP
 	NPCE_UNEQUIP,	// unequip_event_name	// OnPCUnequipEvent		// 当玩家成功脱下一件装备时触发事件
 #endif // Pandas_NpcEvent_UNEQUIP
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 8>
+	/* Express 类型的快速事件，这些事件将会被立刻执行, 不进事件队列                */
 #ifdef Pandas_NpcExpress_STATCALC
 	NPCE_STATCALC,	// statcalc_express_name	// OnPCStatCalcEvent		// 当角色能力被重新计算时触发事件
 #endif // Pandas_NpcExpress_STATCALC
@@ -2573,6 +2578,7 @@ enum npce_event : uint8 {
 #ifdef Pandas_NpcExpress_PCHARMED
 	NPCX_PCHARMED,	// pcharmed_express_name	// OnPCHarmedExpress		// 当玩家受到伤害并即将进行结算时触发实时事件 [人鱼姬的思念]
 #endif // Pandas_NpcExpress_PCHARMED
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 14>
 	NPCE_MAX
 };
 

@@ -6918,6 +6918,7 @@ const char *npc_get_script_event_name(int32 npce_index)
 		return script_config.kill_mob_event_name;
 	case NPCE_IDENTIFY:
 		return script_config.identify_event_name;
+	/* Filter 类型的过滤事件，这些事件可以被 processhalt 中断                    */
 #ifdef Pandas_NpcFilter_IDENTIFY
 	case NPCF_IDENTIFY:
 		return script_config.identify_filter_name;
@@ -7026,6 +7027,8 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCF_FAVORITE_DEL:
 		return script_config.favorite_del_filter_name;
 #endif // Pandas_NpcFilter_FAVORITE_DEL
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 3>
+	/* Event  类型的标准事件，这些事件不能被 processhalt 打断                    */
 #ifdef Pandas_NpcEvent_KILLMVP
 	case NPCE_KILLMVP:
 		return script_config.killmvp_event_name;	// OnPCKillMvpEvent		// 当玩家杀死 MVP 魔物后触发事件
@@ -7050,6 +7053,8 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCE_UNEQUIP:
 		return script_config.unequip_event_name;	// OnPCUnequipEvent		// 当玩家成功脱下一件装备时触发事件
 #endif // Pandas_NpcEvent_UNEQUIP
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 9>
+	/* Express 类型的快速事件，这些事件将会被立刻执行, 不进事件队列                */
 #ifdef Pandas_NpcExpress_STATCALC
 	case NPCE_STATCALC:
 		return script_config.statcalc_express_name;	// OnPCStatCalcEvent		// 当角色能力被重新计算时触发事件
@@ -7098,6 +7103,7 @@ const char *npc_get_script_event_name(int32 npce_index)
 	case NPCX_PCHARMED:
 		return script_config.pcharmed_express_name;	// OnPCHarmedExpress		// 当玩家受到伤害并即将进行结算时触发实时事件 [人鱼姬的思念]
 #endif // Pandas_NpcExpress_PCHARMED
+	// PYHELP - NPCEVENT - INSERT POINT - <Section 15>
 	default:
 		ShowError("npc_get_script_event_name: npce_index is outside the array limits: %d (max: %d).\n", npce_index, NPCE_MAX);
 		return nullptr;
