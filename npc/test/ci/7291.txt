@@ -4,6 +4,9 @@ OnInit:
 		if( PACKETVER >= 20200724 ){
 			// Change of separators and add grade
 			.@expected$ = "<ITEML>0000213v0%0g&00'00)18X)1ck)00)00+2R,00-00</ITEML>";
+		}else if( PACKETVER >= 20180620 ){
+			// Grade does not exist (clientside) yet
+			.@expected$ = "<ITEML>0000213v0%0g&00(18X(1ck(00(00*2R+00,00</ITEML>";
 		}else if( PACKETVER >= 20161116 ){
 			// Change of separators and add equip preview
 			.@expected$ = "<ITEML>0000213v0%0g&00(18X(1ck(00(00*2R+00,00</ITEML>";
@@ -25,6 +28,9 @@ OnInit:
 		if( PACKETVER >= 20200724 ){
 			// Change of separators and add grade (not used in pre-renewal)
 			.@expected$ = "<ITEML>000021hS%0a&00'00)18X)00)00)00</ITEML>";
+		}else if( PACKETVER >= 20180620 ){
+			// Grade does not exist (clientside) yet
+			.@expected$ = "<ITEML>000021hS%0a&00(18X(00(00(00</ITEML>";
 		}else if( PACKETVER >= 20161116 ){
 			// Change of separators and add equip preview
 			.@expected$ = "<ITEML>000021hS%0a&00(18X(00(00(00</ITEML>";
