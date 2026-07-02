@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <mutex>
 #include <string>
 #include <thread>
 
@@ -43,6 +44,9 @@ static char* msg_table[WEB_MAX_MSG];	/// Web Server messages_conf
 
 struct Web_Config web_config {};
 struct Inter_Config inter_config {};
+#ifdef Pandas_WebServer_ApplyMutex_For_Logger
+std::mutex g_logger_lock;
+#endif // Pandas_WebServer_ApplyMutex_For_Logger
 std::shared_ptr<httplib::Server> http_server;
 
 std::string login_server_ip = "127.0.0.1";
@@ -492,6 +496,9 @@ void display_helpscreen(bool do_exit)
 
 // called just before sending repsonse
 void logger(const Request & req, const Response & res) {
+#ifdef Pandas_WebServer_ApplyMutex_For_Logger
+	std::lock_guard<std::mutex> locker(g_logger_lock);
+#endif // Pandas_WebServer_ApplyMutex_For_Logger
 	// make this a config
 	if (web_config.print_req_res) {
 #ifdef Pandas_WebServer_Logger_Improved_Presentation

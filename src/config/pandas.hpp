@@ -2096,4 +2096,5 @@
 	// 如果不进行互斥操作的话, 在打开 print_req_res 的情况下，
 	// 如果请求间隔很短会导致终端输出日志信息的时候由于并发而混在一起
 	// 比如: 冒险者查询接口就是 party/list 然后立刻 party/get 两个请求间隔非常短
+	#define Pandas_WebServer_ApplyMutex_For_Logger
 #endif // Pandas_WebServer
