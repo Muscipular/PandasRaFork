@@ -20,6 +20,7 @@
 	#define Pandas_Bonuses
 	#define Pandas_AtCommands
 	#define Pandas_ScriptCommands
+	#define Pandas_ScriptConstants
 
 #ifndef GIT_BRANCH
 	#define GIT_BRANCH ""
@@ -2015,3 +2016,13 @@
 	#endif // Pandas_Character_Title_Controller
 	// PYHELP - SCRIPTCMD - INSERT POINT - <Section 1>
 #endif // Pandas_ScriptCommands
+
+// ============================================================================
+// 脚本常量拓展组 - Pandas_ScriptConstants
+// ============================================================================
+
+#ifdef Pandas_ScriptConstants
+	// 是否扩展 CartWeight 脚本常量 [人鱼姬的思念]
+
+	// 是否扩展 MaxCartWeight 脚本常量 [人鱼姬的思念]
+#endif // Pandas_ScriptConstants

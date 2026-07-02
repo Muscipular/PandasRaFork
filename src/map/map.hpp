@@ -632,6 +632,11 @@ enum _sp {
 	// PYHELP - BONUS - INSERT POINT - <Section 2>
 	SP_PANDAS_EXTEND_BONUS_END,
 #endif // Pandas_Bonuses
+
+#ifdef Pandas_ScriptConstants
+	SP_PANDAS_EXTEND_CONSTANTS_START = 3600,
+	SP_PANDAS_EXTEND_CONSTANTS_END,
+#endif // Pandas_ScriptConstants
 };
 
 enum _look {
