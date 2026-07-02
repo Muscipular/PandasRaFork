@@ -63,6 +63,9 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{93d3a304-6bcc-4965-af18-8bf765ee82e9}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Header Files\Skills">
       <UniqueIdentifier>{09f35c48-a96f-4e32-a5fc-19ca82a6b44f}</UniqueIdentifier>
     </Filter>
@@ -120,6 +123,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="asyncquery.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="atcommand.hpp">
@@ -185,6 +191,12 @@
     <ClInclude Include="itemdb.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="itemamulet.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="itemprops.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="log.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -201,6 +213,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mob.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mobdrop.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="navi.hpp">
@@ -233,6 +248,9 @@
     <ClInclude Include="quest.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="script.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -263,6 +281,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="achievement.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="asyncquery.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="atcommand.cpp">
@@ -319,6 +340,12 @@
     <ClCompile Include="itemdb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="itemamulet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="itemprops.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="log.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -335,6 +362,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mob.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mobdrop.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="navi.cpp">
@@ -7856,5 +7886,10 @@
     <ClCompile Include="skills/thief/weaponcrush.cpp">
       <Filter>Source Files\Skills\Thief</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="map-server.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

@@ -288,7 +288,7 @@ bool Csv2YamlTool::initialize( int32 argc, char* argv[] ){
 	}
 
 	if( !process( "PET_DB", 1, root_paths, "pet_db", []( const std::string& path, const std::string& name_ext ) -> bool {
-		return pet_read_db( ( path + name_ext ).c_str() );
+		return (pet_read_db( ( path + name_ext ).c_str() ) != 0 ? 1 : 0);
 	} ) ){
 		return false;
 	}

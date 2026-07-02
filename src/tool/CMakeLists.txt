@@ -34,6 +34,9 @@ message( STATUS "Creating target mapcache" )
 add_executable(mapcache)
 target_link_libraries(mapcache PRIVATE tools)
 target_sources(mapcache PRIVATE "mapcache.cpp")
+if( WIN32 )
+	target_sources(mapcache PRIVATE "mapcache.rc")
+endif()
 
 
 # csv2yaml
@@ -41,18 +44,27 @@ message( STATUS "Creating target csv2yaml" )
 add_executable(csv2yaml)
 target_link_libraries(csv2yaml PRIVATE tools)
 target_sources(csv2yaml PRIVATE "csv2yaml.cpp")
+if( WIN32 )
+	target_sources(csv2yaml PRIVATE "csv2yaml.rc")
+endif()
 
 # yaml2sql
 message( STATUS "Creating target yaml2sql" )
 add_executable(yaml2sql)
 target_link_libraries(yaml2sql PRIVATE tools)
 target_sources(yaml2sql PRIVATE "yaml2sql.cpp")
+if( WIN32 )
+	target_sources(yaml2sql PRIVATE "yaml2sql.rc")
+endif()
 
 # yamlupgrade
 message( STATUS "Creating target yamlupgrade" )
 add_executable(yamlupgrade)
 target_link_libraries(yamlupgrade PRIVATE tools)
 target_sources(yamlupgrade PRIVATE "yamlupgrade.cpp")
+if( WIN32 )
+	target_sources(yamlupgrade PRIVATE "yamlupgrade.rc")
+endif()
 
 set( TARGET_LIST ${TARGET_LIST} mapcache csv2yaml yaml2sql yamlupgrade  CACHE INTERNAL "" )
 

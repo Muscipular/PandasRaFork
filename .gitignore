@@ -10,6 +10,8 @@ autom4te.cache/
 .local.vimrc
 .ycm_extra_conf.py*
 Thumbs.db
+/*.lib
+/*.exp
 
 # /
 /*_fifo
@@ -152,3 +154,52 @@ Thumbs.db
 
 # generated files
 generated
+
+# ====================================================
+# Pandas Project
+# ====================================================
+
+# Dlls
+/dbghelp.dll
+
+# VMProtect
+/VMProtectSDK32.dll
+/VMProtectSDK64.dll
+/VMProtectLicense.ini
+
+# Intel Parallel Studio XE
+My Advisor Results*
+My Amplifier Results*
+My Inspector Results*
+
+# Python
+__pycache__
+/tools/python/*.env
+/tools/python/cache
+
+# Boost C++ Libraries
+3rdparty/boost/bin.v2
+3rdparty/boost/stage
+3rdparty/boost/tools/build/src/engine/*.obj
+3rdparty/boost/tools/build/src/engine/*.pdb
+3rdparty/boost/tools/build/src/engine/*.exe
+3rdparty/boost/tools/build/src/engine/b2
+3rdparty/boost/tools/build/src/engine/bjam
+3rdparty/boost/b2.exe
+3rdparty/boost/b2
+3rdparty/boost/bootstrap.log
+3rdparty/boost/project-config.jam*
+
+# Visual Lint
+/.visuallint
+/*.sln.vlconfig
+
+# IDE
+.vscode
+.idea
+/*.diagsession
+/*.map
+
+# Other
+/src/*/*.aps
+/db/cache
