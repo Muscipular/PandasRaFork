@@ -618,8 +618,6 @@ set( SVN_FOLDER_PATTERN "[\\.]svn"  CACHE STRING "pattern of svn folder that we 
 mark_as_advanced( SVN_FOLDER_PATTERN )
 set( DEVELOPMENT_FILES
 	"${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt"
-	"${CMAKE_CURRENT_SOURCE_DIR}/configure"
-	"${CMAKE_CURRENT_SOURCE_DIR}/configure.in"
 	)
 set( DEVELOPMENT_DIRECTORIES
 	"3rdparty"
