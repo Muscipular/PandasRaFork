@@ -31,9 +31,9 @@
 #include "suspend.hpp"
 #endif // Pandas_Player_Suspend_System
 
-#ifdef Pandas_Struct_Map_Session_Data_WorkInEvent
-#include "npc.hpp" // enum npce_event
-#endif // Pandas_Struct_Map_Session_Data_WorkInEvent
+#if defined(Pandas_Struct_Map_Session_Data_WorkInEvent) || defined(Pandas_NpcExpress_PCATTACK) || defined(Pandas_NpcExpress_PCHARMED)
+#include "npc.hpp" // enum npce_event, npc_script_event
+#endif // defined(Pandas_Struct_Map_Session_Data_WorkInEvent) || defined(Pandas_NpcExpress_PCATTACK) || defined(Pandas_NpcExpress_PCHARMED)
 
 #ifdef Pandas_ScriptEngine_MutliStackBackup
 #include <stack> // std::stack

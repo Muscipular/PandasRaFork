@@ -30002,7 +30002,11 @@ BUILDIN_FUNC(preg_match) {
 	try {
 		std::regex re(pattern);
 		std::cmatch match_result;
-		if (!std::regex_search(subject + offset, subject + subject_len, match_result, re)) {
+		auto flags = std::regex_constants::match_default;
+		if (offset > 0)
+			flags |= std::regex_constants::match_prev_avail | std::regex_constants::match_not_bol;
+
+		if (!std::regex_search(subject + offset, subject + subject_len, match_result, re, flags)) {
 			script_pushint(st,0);
 		} else {
 			script_pushint(st,static_cast<int32>(match_result.size()));

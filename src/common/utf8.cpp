@@ -1012,6 +1012,10 @@ char* fgets(char* _Buffer, int _MaxCount, FILE* _Stream, int flag/* = 0*/) {
 		return ::fgets(_Buffer, _MaxCount, _Stream);
 	}
 
+	if (_MaxCount <= 0) {
+		return ::fgets(_Buffer, _MaxCount, _Stream);
+	}
+
 	// 使用 UTF8-BOM 编码时, 若指针在文件的前 3 个字节, 那么将指针移动到前 3 个字节的后面,
 	// 避免后续进行 fgets 的时候读取到前 3 个字节, 同时将当前位置记录到 curpos
 	int64 curpos = ftell(_Stream);
@@ -1032,14 +1036,16 @@ char* fgets(char* _Buffer, int _MaxCount, FILE* _Stream, int flag/* = 0*/) {
 	std::string strAnsi = utf8ToAnsi(line, flag);
 	memset(_Buffer, 0, _MaxCount);
 
-	if (strAnsi.size() > (size_t)_MaxCount) {
-		// 如果转换后的字符串长度大于 _Buffer 的容量, 那么放弃转换并报错
-		ShowWarning("%s: _Buffer size is only %lu but we need %lu, Could not realloc...\n", __func__, sizeof(_Buffer), strAnsi.size());
-		memcpy(_Buffer, buffer, _MaxCount);
+	if (strAnsi.size() >= static_cast<size_t>(_MaxCount)) {
+		// 如果转换后的字符串长度大于等于 _Buffer 的容量, 那么放弃转换并报错
+		ShowWarning("%s: _Buffer size is only %d but we need %lu, Could not realloc...\n", __func__, _MaxCount, static_cast<unsigned long>(strAnsi.size() + 1));
+		memcpy(_Buffer, buffer, _MaxCount - 1);
+		_Buffer[_MaxCount - 1] = '\0';
 	}
 	else {
 		// 外部函数定义的 _Buffer 容量足够, 直接进行赋值
 		memcpy(_Buffer, strAnsi.c_str(), strAnsi.size());
+		_Buffer[strAnsi.size()] = '\0';
 	}
 
 	delete[] buffer;
@@ -1084,25 +1090,23 @@ size_t fread(void* _Buffer, size_t _ElementSize, size_t _ElementCount, FILE* _St
 		return ::fread(_Buffer, _ElementSize, _ElementCount, _Stream);
 	}
 
+	if (_ElementCount == 0) {
+		return 0;
+	}
+
 	size_t extracted = 0;
 	int64 curpos = ftell(_Stream);
-	size_t elementlen = (_ElementSize * _ElementCount) + 1;
-	char* buffer = new char[elementlen];
+	size_t buffer_capacity = _ElementSize * _ElementCount;
+	char* buffer = new char[buffer_capacity + 1];
 
 	// 使用 UTF8-BOM 编码时, 若指针在文件的前 3 个字节, 那么将指针移动到前 3 个字节后面,
 	// 避免后续进行 fread 的时候读取到前 3 个字节的 BOM
 	if (mode == FILE_CHARSETMODE_UTF8_BOM && curpos < 3) {
 		fseek(_Stream, 3, SEEK_SET);
-
-		// 需要重新分配缓冲区大小, 以及调整 _ElementCount 的大小
-		delete[] buffer;
-		if (_ElementCount >= 3) _ElementCount -= 3;
-		if (elementlen >= 3) elementlen -= 3;
-		buffer = new char[elementlen];
 	}
 
 	// 将缓冲区的内容全部重置为 0x00
-	memset(buffer, 0, elementlen);
+	memset(buffer, 0, buffer_capacity + 1);
 
 	// 读取特定长度的内容并保存到 buffer 中
 	extracted = ::fread(buffer, _ElementSize, _ElementCount, _Stream);
@@ -1121,10 +1125,10 @@ size_t fread(void* _Buffer, size_t _ElementSize, size_t _ElementCount, FILE* _St
 	std::string strAnsi = utf8ToAnsi(std::string(buffer), flag);
 	memset(_Buffer, 0, _ElementSize * _ElementCount);
 
-	if (strAnsi.size() > elementlen) {
+	if (strAnsi.size() > buffer_capacity) {
 		// 如果转换后的字符串长度大于 _Buffer 的容量, 那么放弃转换并报错
-		ShowWarning("%s: _Buffer size is only %lu but we need %lu, Could not realloc...\n", __func__, _ElementCount, strAnsi.size());
-		memcpy(_Buffer, buffer, elementlen);
+		ShowWarning("%s: _Buffer size is only %lu but we need %lu, Could not realloc...\n", __func__, static_cast<unsigned long>(_ElementCount), static_cast<unsigned long>(strAnsi.size()));
+		memcpy(_Buffer, buffer, extracted);
 	}
 	else {
 		// 外部函数定义的 _Buffer 容量足够, 直接进行赋值

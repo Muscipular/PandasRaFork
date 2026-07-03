@@ -28,17 +28,11 @@
 #include "map.hpp"
 #include "mercenary.hpp"
 #include "mob.hpp"
-#if defined(Pandas_NpcExpress_PCATTACK) || defined(Pandas_NpcExpress_PCHARMED)
-#include "npc.hpp"
-#endif // defined(Pandas_NpcExpress_PCATTACK) || defined(Pandas_NpcExpress_PCHARMED)
 #include "party.hpp"
 #include "path.hpp"
 #include "pc.hpp"
 #include "pc_groups.hpp"
 #include "pet.hpp"
-#if defined(Pandas_NpcExpress_PCATTACK) || defined(Pandas_NpcExpress_PCHARMED)
-#include "script.hpp"
-#endif // defined(Pandas_NpcExpress_PCATTACK) || defined(Pandas_NpcExpress_PCHARMED)
 #include "./skills/skill_impl.hpp"
 
 using namespace rathena;
