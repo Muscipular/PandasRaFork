@@ -12177,10 +12177,8 @@ void clif_parse_GlobalMessage(int32 fd, map_session_data* sd)
 	safestrncpy(WFIFOCP(fd,4), output, length );
 	WFIFOSET(fd, WFIFOW(fd,2));
 
-#ifdef PCRE_SUPPORT
 	// trigger listening npcs
 	map_foreachinallrange(npc_chat_sub, sd, AREA_SIZE, BL_NPC, output, strlen(output), sd);
-#endif
 
 	// Chat logging type 'O' / Global Chat
 	log_chat(LOG_CHAT_GLOBAL, 0, sd->status.char_id, sd->status.account_id, mapindex_id2name(sd->mapindex), sd->x, sd->y, nullptr, message);

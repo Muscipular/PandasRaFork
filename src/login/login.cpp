@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <regex>
 #include <string>
 #include <unordered_map>
 
@@ -32,10 +33,6 @@
 #include "loginclif.hpp"
 #include "logincnslif.hpp"
 #include "loginlog.hpp"
-
-#ifdef Pandas_Strict_Userid_Verification
-#include "../../3rdparty/pcre/include/pcre.h"
-#endif // Pandas_Strict_Userid_Verification
 
 using namespace rathena;
 using namespace rathena::server_login;
@@ -378,19 +375,9 @@ int32 login_mmo_auth(struct login_session_data* sd, bool isServer) {
 
 #ifdef Pandas_Strict_Userid_Verification
 			if (login_config.strict_new_account_userid) {
-				pcre *re;
-				pcre_extra *extra;
-				const char *error;
-				int erroffset, r = -1, ovector[30];
-				std::string rules = R"(^[A-Za-z0-9~!@#%%&_=`,;:'"/<>\$\^\*\(\)\-\+\[\]\{\}\|\.\?\\]+$)";
+				static const std::regex userid_rule(R"(^[A-Za-z0-9~!@#%%&_=`,;:'"/<>\$\^\*\(\)\-\+\[\]\{\}\|\.\?\\]+$)");
 
-				re = pcre_compile(rules.c_str(), 0, &error, &erroffset, NULL);
-				extra = pcre_study(re, 0, &error);
-				r = pcre_exec(re, extra, sd->userid, (int)strlen(sd->userid), 0, 0, ovector, 30);
-				pcre_free(re);
-
-				if (extra != NULL) pcre_free(extra);
-				if (r == PCRE_ERROR_NOMATCH) {
+				if (!std::regex_match(sd->userid, userid_rule)) {
 					ShowNotice("Attempt of creation of an contains special characters account (account: %s, sex: %c, ip: %s)\n", sd->userid, TOUPPER(sd->userid[len + 1]), ip);
 					return 3;
 				}

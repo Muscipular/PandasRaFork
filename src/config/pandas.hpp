@@ -695,10 +695,7 @@
 	#define Pandas_Support_UTF8BOM_Files
 
 	// 在使用 _M/_F 注册的时候, 能够限制使用中文等字符作为游戏账号 [Sola丶小克]
-	// 这里的 PCRE_SUPPORT 在"项目属性 -> C/C++ -> 预处理器"中定义
-	#ifdef PCRE_SUPPORT
-		#define Pandas_Strict_Userid_Verification
-	#endif // PCRE_SUPPORT
+	#define Pandas_Strict_Userid_Verification
 
 	// 是否支持隐藏角色服务器的在线人数 [Sola丶小克]
 	#define Pandas_Support_Hide_Online_Players_Count

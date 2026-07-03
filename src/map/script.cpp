@@ -13,6 +13,7 @@
 #include <cmath>
 #include <csetjmp>
 #include <cstdlib> // atoi, strtol, strtoll, exit
+#include <regex> // preg_match, preg_search
 
 #ifdef Pandas_ScriptCommand_QuerySql_Async
 #include <atomic>
@@ -27,14 +28,6 @@
 #include <algorithm>
 #include <cctype>
 #endif // Pandas_ScriptEngine_Express
-
-#ifdef Pandas_ScriptCommand_Preg_Search
-#include <regex>
-#endif // Pandas_ScriptCommand_Preg_Search
-
-#ifdef PCRE_SUPPORT
-#include <pcre.h> // preg_match
-#endif
 
 #include <common/cbasetypes.hpp>
 #include <common/ers.hpp>  // ers_destroy
@@ -29714,12 +29707,10 @@ BUILDIN_FUNC(mesemotion){
 #include <custom/script.inc>
 
 // declarations that were supposed to be exported from npc_chat.cpp
-#ifdef PCRE_SUPPORT
 BUILDIN_FUNC(defpattern);
 BUILDIN_FUNC(activatepset);
 BUILDIN_FUNC(deactivatepset);
 BUILDIN_FUNC(deletepset);
-#endif
 
 #ifdef Pandas_ScriptCommand_Copynpc
 /* ===========================================================
@@ -29996,38 +29987,33 @@ BUILDIN_FUNC(gettimefmt) {
  * preg_match(<pattern>,<string>{,<offset>})
  */
 BUILDIN_FUNC(preg_match) {
-#ifdef PCRE_SUPPORT
-	pcre *re;
-	pcre_extra *pcreExtra;
-	const char *error;
-	int32 erroffset, r, offset = 0;
-	int32 subStrVec[30];
-
 	const char* pattern = script_getstr(st,2);
 	const char* subject = script_getstr(st,3);
+	int32 offset = 0;
 	if (script_hasdata(st,4))
 		offset = script_getnum(st,4);
 
-	re = pcre_compile(pattern, 0, &error, &erroffset, nullptr);
-	pcreExtra = pcre_study(re, 0, &error);
-
-	r = pcre_exec(re, pcreExtra, subject, (int32)strlen(subject), offset, 0, subStrVec, 30);
-
-	pcre_free(re);
-	if (pcreExtra != nullptr)
-		pcre_free(pcreExtra);
-
-	if (r < 0)
+	int32 subject_len = static_cast<int32>(strlen(subject));
+	if (offset < 0 || offset > subject_len) {
 		script_pushint(st,0);
-	else
-		script_pushint(st,(r > 0) ? r : 30 / 3);
+		return SCRIPT_CMD_SUCCESS;
+	}
+
+	try {
+		std::regex re(pattern);
+		std::cmatch match_result;
+		if (!std::regex_search(subject + offset, subject + subject_len, match_result, re)) {
+			script_pushint(st,0);
+		} else {
+			script_pushint(st,static_cast<int32>(match_result.size()));
+		}
+	} catch (const std::regex_error& e) {
+		ShowError("%s: throw regex_error : %s\n", __func__, e.what());
+		script_pushint(st,0);
+		return SCRIPT_CMD_FAILURE;
+	}
 
 	return SCRIPT_CMD_SUCCESS;
-#else
-	ShowDebug("script:preg_match: cannot run without PCRE library enabled.\n");
-	script_pushint(st,0);
-	return SCRIPT_CMD_SUCCESS;
-#endif
 }
 
 #ifdef Pandas_ScriptCommand_SetHeadDir
@@ -34121,12 +34107,10 @@ struct script_function buildin_func[] = {
 	BUILDIN_DEF(getrefine,""), // returns the refined number of the current item, or an item with index specified [celest]
 	BUILDIN_DEF(night,""), // sets the server to night time
 	BUILDIN_DEF(day,""), // sets the server to day time
-#ifdef PCRE_SUPPORT
 	BUILDIN_DEF(defpattern,"iss"), // Define pattern to listen for [MouseJstr]
 	BUILDIN_DEF(activatepset,"i"), // Activate a pattern set [MouseJstr]
 	BUILDIN_DEF(deactivatepset,"i"), // Deactive a pattern set [MouseJstr]
 	BUILDIN_DEF(deletepset,"i"), // Delete a pattern set [MouseJstr]
-#endif
 	BUILDIN_DEF(preg_match,"ss?"),
 #ifdef Pandas_ScriptCommand_Script4Each
 	BUILDIN_DEF(script4each, "si?????"),					// 对指定范围的玩家执行相同的一段脚本 [Sola丶小克]

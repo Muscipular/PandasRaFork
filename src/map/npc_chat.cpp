@@ -1,11 +1,9 @@
 // Copyright (c) rAthena Dev Teams - Licensed under GNU GPL
 // For more information, see LICENCE in the main folder
 
-#ifdef PCRE_SUPPORT
-
 #include "npc.hpp"
 
-#include <pcre.h>
+#include <regex>
 
 #include <common/malloc.hpp>
 #include <common/showmsg.hpp>
@@ -19,8 +17,8 @@
  *  Written by MouseJstr in a vision... (2/21/2005)
  *
  *  This allows you to make npc listen for spoken text (global
- *  messages) and pattern match against that spoken text using perl
- *  regular expressions.
+ *  messages) and pattern match against that spoken text using regular
+ *  expressions.
  *
  *  Please feel free to copy this code into your own personal ragnarok
  *  servers or distributions but please leave my name.  Also, please
@@ -33,8 +31,7 @@
  *
  *    defpattern 1, "[^:]+: (.*) loves (.*)", "label";
  *
- *  this defines a new pattern in set 1 using perl syntax 
- *    (http://www.troubleshooters.com/codecorn/littperl/perlreg.htm)
+ *  this defines a new pattern in set 1 using std::regex ECMAScript syntax.
  *  and tells it to jump to the supplied label when the pattern
  *  is matched.
  *
@@ -66,8 +63,7 @@
 struct pcrematch_entry {
 	struct pcrematch_entry* next;
 	char* pattern;
-	pcre* pcre_;
-	pcre_extra* pcre_extra_;
+	std::regex* regex_;
 	char* label;
 };
 
@@ -101,8 +97,7 @@ struct npc_parse {
  */
 void finalize_pcrematch_entry(struct pcrematch_entry* e)
 {
-	pcre_free(e->pcre_);
-	pcre_free(e->pcre_extra_);
+	delete e->regex_;
 	aFree(e->pattern);
 	aFree(e->label);
 }
@@ -302,15 +297,20 @@ static struct pcrematch_entry* create_pcrematch_entry(struct pcrematch_set* set)
  */
 void npc_chat_def_pattern(npc_data* nd, int64 setid, const char* pattern, const char* label)
 {
-	const char *err;
-	int32 erroff;
+	std::regex* compiled = nullptr;
+
+	try {
+		compiled = new std::regex(pattern, std::regex_constants::ECMAScript | std::regex_constants::icase);
+	} catch (const std::regex_error& e) {
+		ShowWarning("npc_chat_def_pattern: unsupported regex pattern '%s': %s\n", pattern, e.what());
+		return;
+	}
 	
 	struct pcrematch_set * s = lookup_pcreset(nd, setid);
 	struct pcrematch_entry *e = create_pcrematch_entry(s);
 	e->pattern = aStrdup(pattern);
 	e->label = aStrdup(label);
-	e->pcre_ = pcre_compile(pattern, PCRE_CASELESS, &err, &erroff, nullptr);
-	e->pcre_extra_ = pcre_study(e->pcre_, 0, &err);
+	e->regex_ = compiled;
 }
 
 /**
@@ -363,18 +363,18 @@ int32 npc_chat_sub(block_list* bl, va_list ap)
 		// interate across all patterns in that set
 		for (e = pcreset->head; e != nullptr; e = e->next)
 		{
-			int32 offsets[2*10 + 10]; // 1/3 reserved for temp space requred by pcre_exec
-			
 			// perform pattern match
-			int32 r = pcre_exec(e->pcre_, e->pcre_extra_, msg, len, 0, 0, offsets, ARRAYLENGTH(offsets));
-			if (r > 0)
+			const char* msg_begin = msg;
+			const char* msg_end = msg + len;
+			std::cmatch match_result;
+			if (e->regex_ != nullptr && std::regex_search(msg_begin, msg_end, match_result, *e->regex_))
 			{
 				// save out the matched strings
-				for (i = 0; i < r; i++)
+				for (i = 0; i < static_cast<int32>(match_result.size()); i++)
 				{
 					char var[255], val[255];
 					snprintf(var, sizeof(var), "$@p%i$", i);
-					pcre_copy_substring(msg, offsets, r, i, val, sizeof(val));
+					safestrncpy(val, match_result[i].str().c_str(), sizeof(val));
 					set_var_str( sd, var, val );
 				}
 				
@@ -439,5 +439,3 @@ int32 buildin_deletepset(struct script_state* st)
 	
 	return 0;
 }
-
-#endif //PCRE_SUPPORT

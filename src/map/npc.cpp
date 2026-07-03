@@ -3860,9 +3860,7 @@ int32 npc_unload(npc_data* nd, bool single) {
 	if (nd->chat_id) // remove npc chatroom object and kick users
 		chat_deletenpcchat(nd);
 
-#ifdef PCRE_SUPPORT
-	npc_chat_finalize(nd); // deallocate npc PCRE data structures
-#endif
+	npc_chat_finalize(nd); // deallocate npc regex data structures
 
 	if( single && nd->path ) {
 		struct npc_path_data* npd = nullptr;

@@ -56,7 +56,6 @@ if(WIN32)
 	set( PANDAS_RUNTIME_DLLS )
 	foreach( _DLL IN ITEMS
 		"${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/mysql/lib/${architecture}/libmysql.dll"
-		"${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/pcre/lib/${architecture}/pcre8.dll"
 		"${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/zlib/lib/${architecture}/zlib.dll" )
 		if( EXISTS "${_DLL}" )
 			list( APPEND PANDAS_RUNTIME_DLLS "${_DLL}" )
