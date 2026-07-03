@@ -17,15 +17,17 @@
 
 #ifdef Pandas_ScriptCommand_QuerySql_Async
 #include <atomic>
-#include <map>
 #endif // Pandas_ScriptCommand_QuerySql_Async
-#ifdef Pandas_ScriptCommand_WhoDropItem
-#include <algorithm>
+#if defined(Pandas_ScriptCommand_QuerySql_Async) || defined(Pandas_ScriptCommand_WhoDropItem)
 #include <map>
+#endif // defined(Pandas_ScriptCommand_QuerySql_Async) || defined(Pandas_ScriptCommand_WhoDropItem)
+#if defined(Pandas_ScriptCommand_WhoDropItem) || defined(Pandas_ScriptEngine_Express)
+#include <algorithm>
+#endif // defined(Pandas_ScriptCommand_WhoDropItem) || defined(Pandas_ScriptEngine_Express)
+#ifdef Pandas_ScriptCommand_WhoDropItem
 #include <vector>
 #endif // Pandas_ScriptCommand_WhoDropItem
 #ifdef Pandas_ScriptEngine_Express
-#include <algorithm>
 #include <cctype>
 #endif // Pandas_ScriptEngine_Express
 
