@@ -556,7 +556,7 @@ Body:
   Translation: ""
 - Original: "Cannot read directory '%s'\n"
   Translation: ""
-- Original: "Cannot read file '%s' for channel connfig.\n"
+- Original: "Cannot read file '%s' for channel config.\n"
   Translation: ""
 - Original: "Cannot upgrade automatically, Item is missing"
   Translation: ""

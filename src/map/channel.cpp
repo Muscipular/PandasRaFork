@@ -1399,7 +1399,7 @@ void channel_read_config(void) {
 	config_setting_t *chan_setting = nullptr;
 
 	if (conf_read_file(&channels_conf, channel_conf)) {
-		ShowError("Cannot read file '%s' for channel connfig.\n", channel_conf);
+		ShowError("Cannot read file '%s' for channel config.\n", channel_conf);
 		return;
 	}
 

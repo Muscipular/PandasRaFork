@@ -14613,7 +14613,7 @@ uint64 JobDatabase::parseBodyNode(const ryml::NodeRef& node) {
 			int64 job_id;
 
 			if (!script_get_constant(job_name_constant.c_str(), &job_id)) {
-				this->invalidWarning(node["Job"], "Job %s does not exist.\n", job_name.c_str());
+				this->invalidWarning(jobit, "Job %s does not exist.\n", job_name.c_str());
 				return 0;
 			}
 
