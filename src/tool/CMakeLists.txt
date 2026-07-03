@@ -41,6 +41,7 @@ target_sources(mapcache PRIVATE "mapcache.cpp")
 if( WIN32 )
 	target_sources(mapcache PRIVATE "mapcache.rc")
 endif()
+PANDAS_COPY_RUNTIME_DLLS( mapcache )
 
 
 # csv2yaml
@@ -51,6 +52,7 @@ target_sources(csv2yaml PRIVATE "csv2yaml.cpp")
 if( WIN32 )
 	target_sources(csv2yaml PRIVATE "csv2yaml.rc")
 endif()
+PANDAS_COPY_RUNTIME_DLLS( csv2yaml )
 
 # yaml2sql
 message( STATUS "Creating target yaml2sql" )
@@ -60,6 +62,7 @@ target_sources(yaml2sql PRIVATE "yaml2sql.cpp")
 if( WIN32 )
 	target_sources(yaml2sql PRIVATE "yaml2sql.rc")
 endif()
+PANDAS_COPY_RUNTIME_DLLS( yaml2sql )
 
 # yamlupgrade
 message( STATUS "Creating target yamlupgrade" )
@@ -69,6 +72,7 @@ target_sources(yamlupgrade PRIVATE "yamlupgrade.cpp")
 if( WIN32 )
 	target_sources(yamlupgrade PRIVATE "yamlupgrade.rc")
 endif()
+PANDAS_COPY_RUNTIME_DLLS( yamlupgrade )
 
 set( TARGET_LIST ${TARGET_LIST} mapcache csv2yaml yaml2sql yamlupgrade  CACHE INTERNAL "" )
 

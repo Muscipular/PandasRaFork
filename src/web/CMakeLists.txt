@@ -34,6 +34,7 @@ add_executable( web-server ${SOURCE_FILES} )
 add_dependencies( web-server ${DEPENDENCIES} )
 target_link_libraries( web-server ${LIBRARIES} ${DEPENDENCIES} )
 set_target_properties( web-server PROPERTIES COMPILE_FLAGS "${DEFINITIONS}" )
+PANDAS_COPY_RUNTIME_DLLS( web-server )
 if( INSTALL_COMPONENT_RUNTIME )
 	cpack_add_component( Runtime_webserver DESCRIPTION "web-server" DISPLAY_NAME "web-server" GROUP Runtime )
 	install( TARGETS web-server

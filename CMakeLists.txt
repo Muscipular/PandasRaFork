@@ -52,6 +52,27 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_DEBUG_POSTFIX "d")
 set(CMAKE_RELEASE_POSTFIX "r")
 
+if(WIN32)
+	set( PANDAS_RUNTIME_DLLS )
+	foreach( _DLL IN ITEMS
+		"${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/mysql/lib/${architecture}/libmysql.dll"
+		"${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/pcre/lib/${architecture}/pcre8.dll"
+		"${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/zlib/lib/${architecture}/zlib.dll" )
+		if( EXISTS "${_DLL}" )
+			list( APPEND PANDAS_RUNTIME_DLLS "${_DLL}" )
+		endif()
+	endforeach()
+endif()
+
+function( PANDAS_COPY_RUNTIME_DLLS _TARGET )
+	if( WIN32 AND PANDAS_RUNTIME_DLLS )
+		add_custom_command( TARGET ${_TARGET} POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PANDAS_RUNTIME_DLLS} "$<TARGET_FILE_DIR:${_TARGET}>"
+			COMMAND_EXPAND_LISTS
+			COMMENT "Copying runtime DLLs for ${_TARGET}" )
+	endif()
+endfunction()
+
 # 在 CMake 的较新版本中, 明确指定一下 CMP0075 策略的处理方式
 # CMP0075 Include file check macros honor CMAKE_REQUIRED_LIBRARIES
 if(POLICY CMP0075)
@@ -617,10 +638,7 @@ set( RUNTIME_FILES
 if (WIN32)
 	set (RUNTIME_FILES 
 		${RUNTIME_FILES}
-		"${CMAKE_CURRENT_SOURCE_DIR}/dbghelp.dll"
-		"${CMAKE_CURRENT_SOURCE_DIR}/libmysql.dll"
-		"${CMAKE_CURRENT_SOURCE_DIR}/pcre3.dll"
-		"${CMAKE_CURRENT_SOURCE_DIR}/zlib1.dll"
+		${PANDAS_RUNTIME_DLLS}
 		"${CMAKE_CURRENT_SOURCE_DIR}/tools/charserv.bat"
 		"${CMAKE_CURRENT_SOURCE_DIR}/tools/logserv.bat"
 		"${CMAKE_CURRENT_SOURCE_DIR}/tools/mapserv.bat"
